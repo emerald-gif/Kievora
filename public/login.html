@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Welcome to Kievora — Set up your profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#7c3aed;--p2:#a855f7;--p3:#ede9fe;--p4:#f5f3ff;
+  --g:linear-gradient(135deg,#7c3aed,#a855f7);
+  --txt:#0f0e17;--sub:#6b7280;--mute:#9ca3af;--border:#e7e6ec;
+  --bg:#fafafa;--card:#fff;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;color:var(--txt);background:var(--bg);overflow-x:hidden}
+body{display:flex;flex-direction:column;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;padding:0 20px}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-icon{width:30px;height:30px;border-radius:8px;overflow:hidden}
+.logo-icon img{width:100%;height:100%;object-fit:cover}
+.logo-name{font-size:16.5px;font-weight:900;color:var(--txt);letter-spacing:-.3px;font-family:'Lexend',sans-serif}
+.logo-name span{color:var(--p)}
+
+/* ── HERO ── */
+.hero{position:relative;padding:30px 20px 26px;overflow:hidden;
+  background:linear-gradient(160deg,#1c0b3d 0%,#5b21b6 48%,#9333ea 100%)}
+.hero::before{content:'';position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.16) 1px, transparent 1.6px);
+  background-size:22px 22px;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 85%)}
+.hero::after{content:'';position:absolute;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);
+  top:-90px;right:-70px;pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:520px;margin:0 auto}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;
+  letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:10px}
+.hero-eyebrow svg{flex-shrink:0}
+.hero h1{font-family:'Lexend',sans-serif;font-size:23px;font-weight:800;letter-spacing:-.4px;
+  line-height:1.28;margin-bottom:6px;color:#fff}
+.hero p{font-size:13px;line-height:1.55;color:rgba(255,255,255,.78);max-width:330px}
+
+/* ── PROGRESS BAR ── */
+.progress-track{height:4px;border-radius:99px;background:rgba(255,255,255,.18);
+  overflow:hidden;margin-top:18px;max-width:200px}
+.progress-fill{height:100%;width:50%;border-radius:99px;background:#fff;
+  transition:width .5s cubic-bezier(.4,0,.2,1)}
+.progress-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);margin-top:7px;
+  letter-spacing:.2px}
+
+/* ── STEP WRAP ── */
+.step-wrap{flex:1;padding:22px 16px 36px;max-width:520px;margin:0 auto;width:100%}
+.step{display:none;animation:rise .4s cubic-bezier(.16,1,.3,1)}
+.step.active{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.section-label{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;
+  color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+.section-label .num{width:20px;height:20px;border-radius:6px;background:var(--p3);color:var(--p);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:0}
+
+/* ── CATEGORY GRID ── */
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:26px}
+.cat-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px;
+  padding:14px;background:var(--card);border-radius:16px;border:1.5px solid var(--border);
+  cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s;
+  -webkit-tap-highlight-color:transparent}
+.cat-card:active{transform:scale(.98)}
+.cat-card:hover{border-color:#d8d4ea;box-shadow:0 2px 10px rgba(20,10,50,.05)}
+.cat-card.selected{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+.cat-icon-tile{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0}
+.cat-icon-tile svg{width:19px;height:19px;stroke-width:1.9}
+.cat-name{font-size:12.5px;font-weight:700;color:var(--txt);line-height:1.3;letter-spacing:-.1px}
+.cat-check{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;
+  background:var(--g);display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.4);transition:all .18s}
+.cat-card.selected .cat-check{opacity:1;transform:scale(1)}
+.cat-check svg{width:11px;height:11px;stroke:#fff;stroke-width:3}
+
+/* ── INTEREST PILLS ── */
+.int-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.int-pill{display:inline-flex;align-items:center;gap:6px;padding:9px 14px 9px 11px;
+  border-radius:99px;border:1.5px solid var(--border);background:var(--card);
+  font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer;
+  transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.int-pill svg{width:14px;height:14px;stroke-width:2;flex-shrink:0;color:var(--mute);transition:color .15s}
+.int-pill:hover{border-color:#d8d4ea;color:var(--txt)}
+.int-pill.selected{background:var(--p3);border-color:var(--p);color:var(--p)}
+.int-pill.selected svg{color:var(--p)}
+.int-hint{font-size:11.5px;color:var(--mute);margin-top:10px;margin-bottom:22px}
+
+/* ── JOB TITLE ── */
+.jt-field{margin-bottom:26px}
+.jt-field label{display:block;font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:7px;
+  text-transform:uppercase;letter-spacing:.6px}
+.jt-field label .opt{font-weight:500;text-transform:none;letter-spacing:0;font-size:10.5px;color:var(--mute)}
+.jt-wrap{position:relative}
+.jt-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mute);
+  pointer-events:none;width:16px;height:16px;stroke-width:1.9}
+.jt-inp{width:100%;padding:13px 16px 13px 41px;border:1.5px solid var(--border);border-radius:12px;
+  font-size:14px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;background:var(--card);
+  transition:border-color .15s,box-shadow .15s}
+.jt-inp:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.jt-inp::placeholder{color:var(--mute)}
+
+/* ── CTA ── */
+.cta-btn{width:100%;padding:16px;background:var(--g);color:#fff;font-size:14.5px;font-weight:800;
+  border:none;border-radius:14px;cursor:pointer;font-family:inherit;display:flex;align-items:center;
+  justify-content:center;gap:8px;box-shadow:0 6px 22px rgba(124,58,237,.3);transition:all .18s;letter-spacing:-.1px}
+.cta-btn svg{width:16px;height:16px;stroke-width:2.5;transition:transform .18s}
+.cta-btn:hover:not(:disabled){box-shadow:0 8px 28px rgba(124,58,237,.4)}
+.cta-btn:hover:not(:disabled) svg{transform:translateX(2px)}
+.cta-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.cta-secondary{width:100%;padding:14px;background:var(--card);color:var(--txt);font-size:13.5px;
+  font-weight:700;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;transition:all .15s}
+.cta-secondary svg{width:15px;height:15px;stroke-width:2}
+.cta-secondary:hover{border-color:#d8d4ea;background:#fcfcfd}
+.skip-link{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:var(--mute);
+  cursor:pointer;font-weight:600;text-decoration:none}
+.skip-link:hover{color:var(--sub)}
+
+/* ── LOADING OVERLAY ── */
+.loading-overlay{position:fixed;inset:0;background:rgba(15,10,30,.55);z-index:999;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.loading-overlay.show{display:flex}
+.loading-card{background:#fff;border-radius:18px;padding:28px 38px;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.18)}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--p3);border-top-color:var(--p);
+  border-radius:50%;margin:0 auto 14px;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-card p{font-size:14px;font-weight:700;color:var(--txt)}
+.loading-card span{font-size:12px;color:var(--mute);display:block;margin-top:4px}
+
+@media(min-width:480px){
+  .cat-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+
+const fbApp = initializeApp({
+  apiKey:"AIzaSyAtL5I-BrnePMIeITDLsPqsvffdiPWcEb0",
+  authDomain:"resumaker-9ad7f.firebaseapp.com",
+  projectId:"resumaker-9ad7f",
+  storageBucket:"resumaker-9ad7f.firebasestorage.app",
+  messagingSenderId:"945024215083",
+  appId:"1:945024215083:web:57c682be4e26c92546a26e"
+});
+const auth = getAuth(fbApp);
+const db   = getFirestore(fbApp);
+
+// Shared localStorage keys used across dashboard, articles, profile, find-jobs
+function userCatKey(uid){ return `kievora_user_cat_${uid}`; }
+function userProfKey(uid){ return `kievora_jobs_prof_${uid}`; }
+
+let currentUser = null;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = '/login'; return; }
+  currentUser = user;
+
+  // Check if already onboarded
+  try {
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if (snap.exists() && snap.data().onboardingDone) {
+      window.location.href = '/dashboard';
+      return;
+    }
+  } catch(e) {}
+
+  // Pre-fill greeting
+  const name = (user.displayName || user.email || '').split(' ')[0] || 'there';
+  const greetEl = document.getElementById('heroGreet');
+  if (greetEl) greetEl.textContent = `Welcome to Kievora, ${name}`;
+
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) overlay.classList.remove('show');
+});
+
+window.finishOnboarding = async function(category, interests, jobTitle) {
+  if (!currentUser) return;
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('show');
+
+  const profTitle = jobTitle || category;
+
+  // 1. Save locally first — dashboard/find-jobs/KIE read this immediately
+  localStorage.setItem(userCatKey(currentUser.uid), JSON.stringify({ category, interests, ts: Date.now() }));
+  localStorage.setItem('kievora_active_uid', currentUser.uid);
+  localStorage.setItem(userProfKey(currentUser.uid), JSON.stringify({ title: profTitle, source: 'onboarding', ts: Date.now() }));
+  localStorage.setItem('rsmkr_jobs_prof', JSON.stringify({ title: profTitle, source: 'onboarding', ts: Date.now() }));
+
+  // 2. Try Firestore with a timeout — never let a slow/blocked write trap the user here
+  const writePromise = setDoc(doc(db,'users',currentUser.uid), {
+    category, interests, jobTitle: profTitle, onboardingDone: true, updatedAt: serverTimestamp()
+  }, { merge: true });
+
+  const timeout = new Promise(resolve => setTimeout(resolve, 4000));
+
+  try {
+    await Promise.race([writePromise, timeout]);
+  } catch(e) {
+    console.error('Firestore write failed (continuing anyway):', e);
+  }
+
+  // 3. Always continue to the dashboard
+  window.location.href = '/dashboard';
+};
+
+window.skipOnboarding = async function() {
+  if (!currentUser) { window.location.href = '/dashboard'; return; }
+  try {
+    const writePromise = setDoc(doc(db,'users',currentUser.uid), { onboardingDone: true }, { merge: true });
+    const timeout = new Promise(resolve => setTimeout(resolve, 3000));
+    await Promise.race([writePromise, timeout]);
+  } catch(e) {}
+  window.location.href = '/dashboard';
+};
+</script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon"><img src="/logo.jpg" alt="Kievora"/></div>
+    <span class="logo-name">Kie<span>vora</span></span>
+  </a>
+</nav>
+
+<!-- LOADING OVERLAY (shown until auth resolves) -->
+<div class="loading-overlay show" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <p>Getting your account ready…</p>
+    <span>Just a second</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+      Getting started
+    </div>
+    <h1 id="heroGreet">Welcome to Kievora</h1>
+    <p id="heroSub">Tell us a bit about you, and KIE — your AI career coach — will tailor articles, jobs and advice around it.</p>
+    <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+    <div class="progress-label" id="progLabel">Step 1 of 2 · Your field</div>
+  </div>
+</div>
+
+<!-- STEP 1 — CATEGORY -->
+<div class="step-wrap">
+<div class="step active" id="step1">
+  <div class="section-label"><span class="num">1</span> What best describes you?</div>
+  <div class="cat-grid" id="catGrid"><!-- populated by JS --></div>
+  <button class="cta-btn" id="step1Btn" onclick="goStep2()" disabled>
+    Continue
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+  <a class="skip-link" onclick="skipOnboarding()">Skip for now</a>
+</div>
+
+<!-- STEP 2 — INTERESTS + JOB TITLE -->
+<div class="step" id="step2">
+  <div class="section-label"><span class="num">2</span> What content do you want to see?</div>
+  <div class="int-wrap" id="intWrap"><!-- populated by JS --></div>
+  <p class="int-hint">Pick as many as you like — you can change these anytime in your profile.</p>
+
+  <div class="jt-field">
+    <label for="jobTitleInp">Your current or target job title <span class="opt">(optional)</span></label>
+    <div class="jt-wrap">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <input id="jobTitleInp" class="jt-inp" type="text" placeholder="e.g. Senior Software Engineer, Marketing Manager…" autocomplete="off"/>
+    </div>
+  </div>
+
+  <button class="cta-btn" id="step2Btn" onclick="submitOnboarding()">
+    Get started on Kievora
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+  <button class="cta-secondary" onclick="goStep1()">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back
+  </button>
+  <a class="skip-link" onclick="skipOnboarding()">Skip for now</a>
+</div>
+</div>
+
+<script>
+// ── Icon library (inline SVG paths, stroke-based, fintech-style line icons) ──
+const ICONS = {
+  code:        '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  barChart:    '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+  palette:     '<path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4c1.9 0 3.5-1.6 3.5-3.5C21 6.4 17 2 12 2Z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="11" cy="7.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/>',
+  megaphone:   '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  layers:      '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>',
+  landmark:    '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  heartPulse:  '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
+  trendingUp:  '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  sliders:     '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+  users:       '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  scale:       '<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+  graduation:  '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  ruler:       '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
+  penLine:     '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  sparkles:    '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>',
+  fileText:    '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  message:     '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  search:      '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  newspaper:   '<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/>',
+  cpu:         '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M9 2v2M15 20v2M9 20v2M20 15h2M20 9h2M2 15h2M2 9h2"/>',
+  dollar:      '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  award:       '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+  briefcase:   '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  share:       '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+  check:       '<polyline points="20 6 9 17 4 12"/>'
+};
+
+function svg(name, extra=''){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" ${extra}>${ICONS[name]||''}</svg>`;
+}
+
+// ── Category list (step 1) ──────────────────────────────────────────────
+const CATEGORIES = [
+  { id:'Software & Tech',        icon:'code',       color:'#7c3aed' },
+  { id:'Data & Analytics',       icon:'barChart',   color:'#2563eb' },
+  { id:'Design & Creative',      icon:'palette',    color:'#db2777' },
+  { id:'Marketing & Growth',     icon:'megaphone',  color:'#f59e0b' },
+  { id:'Product & Strategy',     icon:'layers',     color:'#0891b2' },
+  { id:'Finance & Banking',      icon:'landmark',   color:'#16a34a' },
+  { id:'Healthcare',             icon:'heartPulse', color:'#ef4444' },
+  { id:'Sales & Business Dev',   icon:'trendingUp', color:'#9333ea' },
+  { id:'Operations',             icon:'sliders',    color:'#0d9488' },
+  { id:'HR & People',            icon:'users',      color:'#d97706' },
+  { id:'Legal & Compliance',     icon:'scale',      color:'#475569' },
+  { id:'Education & Academia',   icon:'graduation', color:'#4f46e5' },
+  { id:'Engineering',            icon:'ruler',      color:'#0ea5e9' },
+  { id:'Writing & Content',      icon:'penLine',    color:'#be185d' },
+  { id:'Consulting',             icon:'sparkles',   color:'#7c3aed' },
+  { id:'Administration',         icon:'fileText',   color:'#64748b' }
+];
+
+// ── Interest pills (step 2) ─────────────────────────────────────────────
+const INTERESTS = [
+  { id:'Career Growth',       icon:'trendingUp' },
+  { id:'Resume Tips',         icon:'fileText' },
+  { id:'Interview Prep',      icon:'message' },
+  { id:'Job Search',          icon:'search' },
+  { id:'Salary Negotiation',  icon:'dollar' },
+  { id:'Industry News',       icon:'newspaper' },
+  { id:'Networking',          icon:'share' },
+  { id:'Skill Building',      icon:'graduation' },
+  { id:'Workplace Wellbeing', icon:'heartPulse' },
+  { id:'Leadership',          icon:'award' }
+];
+
+let selectedCategory  = null;
+let selectedInterests = new Set();
+
+// ── Render step 1 ────────────────────────────────────────────────────────
+function renderCatGrid(){
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = CATEGORIES.map(c => `
+    <div class="cat-card" data-id="${c.id}" onclick="selectCategory('${c.id.replace(/'/g,"\\'")}')">
+      <div class="cat-icon-tile" style="background:${c.color}1a;color:${c.color}">${svg(c.icon)}</div>
+      <div class="cat-name">${c.id}</div>
+      <div class="cat-check">${svg('check')}</div>
+    </div>
+  `).join('');
+}
+
+window.selectCategory = function(id){
+  selectedCategory = id;
+  document.querySelectorAll('#catGrid .cat-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.id === id);
+  });
+  document.getElementById('step1Btn').disabled = false;
+};
+
+// ── Render step 2 ────────────────────────────────────────────────────────
+function renderInterestPills(){
+  const wrap = document.getElementById('intWrap');
+  wrap.innerHTML = INTERESTS.map(i => `
+    <div class="int-pill" data-id="${i.id}" onclick="toggleInterest('${i.id.replace(/'/g,"\\'")}')">
+      ${svg(i.icon)}<span>${i.id}</span>
+    </div>
+  `).join('');
+}
+
+window.toggleInterest = function(id){
+  if (selectedInterests.has(id)) selectedInterests.delete(id);
+  else selectedInterests.add(id);
+  document.querySelectorAll('#intWrap .int-pill').forEach(pill => {
+    pill.classList.toggle('selected', selectedInterests.has(pill.dataset.id));
+  });
+};
+
+// ── Step navigation ──────────────────────────────────────────────────────
+window.goStep2 = function(){
+  if (!selectedCategory) return;
+  document.getElementById('step1').classList.remove('active');
+  document.getElementById('step2').classList.add('active');
+  document.getElementById('progFill').style.width = '100%';
+  document.getElementById('progLabel').textContent = 'Step 2 of 2 · Personalize your feed';
+  if (!document.getElementById('intWrap').children.length) renderInterestPills();
+};
+
+window.goStep1 = function(){
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('progFill').style.width = '50%';
+  document.getElementById('progLabel').textContent = 'Step 1 of 2 · Your field';
+};
+
+window.submitOnboarding = function(){
+  if (!selectedCategory) { goStep1(); return; }
+  const jobTitle = document.getElementById('jobTitleInp').value.trim();
+  window.finishOnboarding(selectedCategory, Array.from(selectedInterests), jobTitle);
+};
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderCatGrid();
+</script>
+
+</body>
+</html>

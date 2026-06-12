@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Find a Job · Kievora</title>
+<link rel="icon" href="logo.jpg" type="image/jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --p: #7c3aed; --ps: #6d28d9; --p2: #a855f7;
+    --g: linear-gradient(135deg, #7c3aed, #a855f7);
+    --txt: #111827; --sub: #6b7280;
+    --border: #e8e8f0; --bg: #f8f7ff;
+    --card: #ffffff;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--txt);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .hdr {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(124,58,237,.1);
+    height: 60px;
+    box-shadow: 0 1px 12px rgba(124,58,237,.06);
+  }
+  .hdr-inner {
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 20px; height: 100%;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; color: var(--sub);
+    background: none; border: 1.5px solid var(--border);
+    border-radius: 99px; padding: 6px 14px;
+    cursor: pointer; text-decoration: none;
+    transition: all .15s; font-family: inherit;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { border-color: var(--p); color: var(--p); }
+  .hdr-title {
+    font-size: 16px; font-weight: 900; color: var(--txt); flex: 1;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hdr-title span { color: var(--p); }
+
+  /* ── MAIN LAYOUT ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 80px 20px 60px; }
+
+  /* ── PROFESSION BAR ── */
+  .prof-bar {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap;
+  }
+  .prof-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    background: var(--g); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .prof-info { flex: 1; min-width: 0; }
+  .prof-label { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+  .prof-title { font-size: 15px; font-weight: 900; color: var(--txt); }
+  .prof-source { font-size: 11px; color: var(--p); font-weight: 600; margin-top: 2px; }
+  .prof-change {
+    font-size: 12px; font-weight: 700; color: var(--p);
+    border: 1.5px solid rgba(124,58,237,.25); border-radius: 99px;
+    padding: 6px 14px; cursor: pointer; background: rgba(124,58,237,.05);
+    transition: all .15s; flex-shrink: 0; font-family: inherit;
+  }
+  .prof-change:hover { background: rgba(124,58,237,.12); border-color: var(--p); }
+
+  /* ── NO PROFESSION STATE ── */
+  .no-prof {
+    background: #fff;
+    border: 2px dashed rgba(124,58,237,.3);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .no-prof-ico {
+    width: 56px; height: 56px;
+    background: var(--g); border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .no-prof h3 { font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+  .no-prof p { font-size: 13px; color: var(--sub); margin-bottom: 20px; max-width: 360px; margin-left: auto; margin-right: auto; }
+  .no-prof-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-pri {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--g); color: #fff;
+    border: none; border-radius: 99px;
+    padding: 10px 20px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 14px rgba(124,58,237,.3);
+    transition: all .2s; text-decoration: none;
+  }
+  .btn-pri:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,.4); }
+  .btn-sec {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #fff; color: var(--txt);
+    border: 1.5px solid var(--border); border-radius: 99px;
+    padding: 10px 20px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: all .2s; text-decoration: none;
+  }
+  .btn-sec:hover { border-color: var(--p); color: var(--p); }
+
+  /* ── SEARCH BAR ── */
+  .search-bar {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-bar:focus-within { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.08); }
+  .search-inp {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-size: 14px; color: var(--txt); font-family: inherit;
+    font-weight: 600;
+  }
+  .search-inp::placeholder { color: #b0b0c0; font-weight: 500; }
+  .search-btn {
+    background: var(--g); color: #fff; border: none;
+    border-radius: 12px; padding: 8px 16px;
+    font-size: 13px; font-weight: 700; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: all .15s; flex-shrink: 0;
+  }
+  .search-btn:hover { opacity: .88; }
+
+  /* ── FILTER CHIPS ── */
+  .filters {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .chip {
+    border: 1.5px solid var(--border); border-radius: 99px;
+    padding: 6px 14px; font-size: 12px; font-weight: 700;
+    color: var(--sub); cursor: pointer; background: #fff;
+    transition: all .15s; font-family: inherit;
+  }
+  .chip:hover { border-color: var(--p); color: var(--p); }
+  .chip.active { background: var(--p); color: #fff; border-color: var(--p); }
+
+  /* ── SECTION HEADER ── */
+  .sec-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .sec-title { font-size: 15px; font-weight: 900; color: var(--txt); }
+  .sec-count { font-size: 12px; color: var(--sub); font-weight: 600; }
+
+  /* ── JOB CARDS GRID ── */
+  .jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 480px) { .jobs-grid { grid-template-columns: 1fr; } }
+
+  .job-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    display: flex; flex-direction: column; gap: 12px;
+    cursor: pointer; transition: all .18s;
+    text-decoration: none; color: inherit;
+    position: relative; overflow: hidden;
+  }
+  .job-card:hover { border-color: var(--p); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,.13); }
+  .job-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--g); opacity: 0; transition: opacity .18s; border-radius: 18px 18px 0 0;
+  }
+  .job-card:hover::before { opacity: 1; }
+
+  .job-card-top { display: flex; align-items: flex-start; gap: 12px; }
+  .job-logo {
+    width: 46px; height: 46px; flex-shrink: 0;
+    border-radius: 12px; border: 1.5px solid var(--border);
+    background: #f9f9fc; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  .job-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .job-meta { flex: 1; min-width: 0; }
+  .job-company { font-size: 11px; color: var(--sub); font-weight: 700; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .04em; }
+  .job-title { font-size: 14.5px; font-weight: 800; color: var(--txt); line-height: 1.3; }
+
+  .job-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .job-tag {
+    font-size: 10.5px; font-weight: 700; padding: 3px 9px;
+    border-radius: 99px; white-space: nowrap;
+  }
+  .tag-remote { background: #ecfdf5; color: #059669; }
+  .tag-type   { background: #eff6ff; color: #2563eb; }
+  .tag-salary { background: #fffbeb; color: #d97706; }
+  .tag-source { background: #f3f0ff; color: #7c3aed; }
+
+  .job-location { font-size: 11.5px; color: var(--sub); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .job-snippet {
+    font-size: 12px; color: var(--sub); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .job-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .job-posted { font-size: 11px; color: #b0b0c0; font-weight: 600; }
+  .job-apply {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--g); color: #fff; border-radius: 99px;
+    padding: 7px 16px; font-size: 12px; font-weight: 700;
+    text-decoration: none; transition: all .15s;
+    border: none; cursor: pointer; font-family: inherit;
+    box-shadow: 0 2px 10px rgba(124,58,237,.3);
+    letter-spacing: .01em;
+  }
+  .job-apply:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(124,58,237,.42); }
+
+  /* ── SKELETON ── */
+  @keyframes shimmer {
+    0%   { background-position: -800px 0; }
+    100% { background-position:  800px 0; }
+  }
+  .skel {
+    border-radius: 18px; height: 190px;
+    background: linear-gradient(90deg, #f3f0fc 25%, #ebe6fa 50%, #f3f0fc 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  /* ── UPLOAD PANEL ── */
+  .upload-panel {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 22px 20px;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .upload-panel.visible { display: block; }
+  .upload-drop {
+    border: 2px dashed rgba(124,58,237,.3);
+    border-radius: 14px; padding: 28px 20px;
+    text-align: center; cursor: pointer;
+    transition: all .2s; background: rgba(124,58,237,.02);
+  }
+  .upload-drop:hover, .upload-drop.drag-over { border-color: var(--p); background: rgba(124,58,237,.05); }
+  .upload-drop p { font-size: 13px; color: var(--sub); font-weight: 600; margin-top: 8px; }
+  .upload-drop span { font-size: 11px; color: #b0b0c0; }
+  input[type=file] { display: none; }
+
+  /* ── LOAD MORE ── */
+  .load-more {
+    display: flex; justify-content: center; margin-top: 4px;
+  }
+  .load-more-btn {
+    border: 1.5px solid var(--border); background: #fff;
+    border-radius: 99px; padding: 11px 28px;
+    font-size: 13px; font-weight: 700; color: var(--sub);
+    cursor: pointer; transition: all .2s; font-family: inherit;
+  }
+  .load-more-btn:hover { border-color: var(--p); color: var(--p); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 60px 20px; }
+  .empty-state h3 { font-size: 17px; font-weight: 900; margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; color: var(--sub); max-width: 300px; margin: 0 auto 20px; }
+
+  /* ── PROFESSION EDIT MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    z-index: 999; display: flex; align-items: flex-end;
+    justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal-sheet {
+    background: #fff; border-radius: 22px 22px 0 0;
+    padding: 28px 24px 36px; width: 100%; max-width: 540px;
+    transform: translateY(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  .modal-overlay.open .modal-sheet { transform: translateY(0); }
+  .modal-title { font-size: 16px; font-weight: 900; margin-bottom: 16px; }
+  .modal-inp {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; font-size: 14px; font-family: inherit;
+    outline: none; color: var(--txt); font-weight: 600;
+    transition: border-color .2s;
+  }
+  .modal-inp:focus { border-color: var(--p); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-cancel { flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: 99px; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; color: var(--sub); }
+  .modal-save   { flex: 2; padding: 12px; background: var(--g); color: #fff; border: none; border-radius: 99px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+  /* ── TOAST ── */
+  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast-item { background: #1a1a2e; color: #fff; border-radius: 12px; padding: 11px 18px; font-size: 13px; font-weight: 600; white-space: nowrap; animation: toastIn .25s ease; }
+  .toast-item.err { background: #dc2626; }
+  @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+
+</style>
+</head>
+<body>
+
+<div id="mainContent">
+
+<!-- ── HEADER ── -->
+<header class="hdr">
+  <div class="hdr-inner">
+    <a href="dashboard.html" class="back-btn">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Dashboard
+    </a>
+    <div class="hdr-title">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Find a <span>Job</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main class="page">
+
+  <!-- No profession state -->
+  <div class="no-prof" id="noProfState">
+    <div class="no-prof-ico">
+      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+    </div>
+    <h3>What role are you targeting?</h3>
+    <p>Upload your resume and we'll detect your job title automatically — or just type it in and we'll find live job offers matched to you right now.</p>
+    <div class="no-prof-actions">
+      <button class="btn-pri" onclick="showUploadPanel()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        Upload Resume
+      </button>
+      <button class="btn-sec" onclick="openProfModal()">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Enter Job Title
+      </button>
+    </div>
+  </div>
+
+  <!-- Has profession state -->
+  <div id="hasProfState" style="display:none">
+
+    <!-- Profession bar -->
+    <div class="prof-bar" id="profBar">
+      <div class="prof-icon">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      </div>
+      <div class="prof-info">
+        <div class="prof-label">Finding jobs for</div>
+        <div class="prof-title" id="profTitle">—</div>
+        <div class="prof-source" id="profSource"></div>
+      </div>
+      <button class="prof-change" onclick="openProfModal()">Change</button>
+    </div>
+
+    <!-- Upload resume panel (optional even when profession exists) -->
+    <div class="upload-panel" id="uploadPanel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:800;color:var(--txt)">Upload Resume for Better Matches</div>
+        <button onclick="hideUploadPanel()" style="background:none;border:none;cursor:pointer;color:var(--sub);font-size:18px;line-height:1">×</button>
+      </div>
+      <div class="upload-drop" id="dropZone">
+        <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <p>Drop your resume here or <strong style="color:var(--p)">browse</strong></p>
+        <span>PDF or TXT · Max 5 MB</span>
+        <input type="file" id="resumeFileInput" accept=".pdf,.txt">
+      </div>
+      <div id="uploadStatus" style="margin-top:10px;font-size:12px;color:var(--sub);font-weight:600;display:none"></div>
+    </div>
+
+    <!-- Search bar -->
+    <div class="search-bar">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-inp" id="searchInp" type="text" placeholder="Search job title, skill, or keyword…">
+      <button class="search-btn" onclick="doSearch()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+        Search
+      </button>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="filters" id="filterChips">
+      <button class="chip active" data-filter="all" onclick="setFilter(this,'all')">All Jobs</button>
+      <button class="chip" data-filter="remote" onclick="setFilter(this,'remote')">Remote Only</button>
+      <button class="chip" data-filter="full" onclick="setFilter(this,'full')">Full-time</button>
+      <button class="chip" data-filter="part" onclick="setFilter(this,'part')">Part-time</button>
+      <button class="chip" data-filter="contract" onclick="setFilter(this,'contract')">Contract</button>
+      <button class="chip" onclick="showUploadPanel()" style="border-style:dashed;display:flex;align-items:center;gap:5px">
+        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        Upload Resume
+      </button>
+    </div>
+
+    <!-- Results header -->
+    <div class="sec-hdr">
+      <div class="sec-title">Recommended Jobs</div>
+      <div class="sec-count" id="jobCount"></div>
+    </div>
+
+    <!-- Jobs grid -->
+    <div class="jobs-grid" id="jobsGrid"></div>
+
+    <!-- Load more -->
+    <div class="load-more" id="loadMoreWrap" style="display:none">
+      <button class="load-more-btn" onclick="loadMore()">Load More Jobs</button>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="emptyState" style="display:none">
+      <svg width="44" height="44" fill="none" viewBox="0 0 24 24" stroke="#d1d5db" stroke-width="1.5" style="margin:0 auto 14px;display:block"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+      <h3>No jobs found</h3>
+      <p>Try a different job title or adjust your filters.</p>
+      <button class="btn-pri" onclick="openProfModal()">Change Profession</button>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ── PROFESSION MODAL ── -->
+<div class="modal-overlay" id="profModal">
+  <div class="modal-sheet">
+    <div class="modal-title">What's your job title / profession?</div>
+    <input class="modal-inp" id="profModalInp" type="text" placeholder="e.g. Software Engineer, UI Designer, Data Analyst…" autocomplete="off">
+    <div style="font-size:11.5px;color:var(--sub);font-weight:600;margin-top:8px">We'll search for live job offers matching this role</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeProfModal()">Cancel</button>
+      <button class="modal-save" onclick="saveProfModal()">Find Jobs</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST CONTAINER ── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+</div><!-- /mainContent -->
+
+<script type="module">
+// ── Firebase auth gate (same pattern as dashboard.html) ───────────────────────
+import { initializeApp }      from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAtL5I-BrnePMIeITDLsPqsvffdiPWcEb0",
+  authDomain: "resumaker-9ad7f.firebaseapp.com",
+  projectId: "resumaker-9ad7f",
+  storageBucket: "resumaker-9ad7f.firebasestorage.app",
+  messagingSenderId: "945024215083",
+  appId: "1:945024215083:web:57c682be4e26c92546a26e",
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  const tok = await user.getIdToken();
+  // Store so the page's api() calls can use it
+  localStorage.setItem('rsmkr_token', tok);
+  window.__fjUid = user.uid;
+  // Signal main script that auth is confirmed
+  if (typeof window.__onFindJobsAuthReady === 'function') {
+    window.__onFindJobsAuthReady();
+  } else {
+    window.__findJobsAuthDone = true;
+  }
+});
+</script>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+const PROF_KEY   = 'rsmkr_jobs_prof';
+const AUTH_KEY   = 'rsmkr_token';
+
+let currentFilter = 'all';
+let allJobs       = [];
+let page          = 1;
+const PAGE_SIZE   = 12;
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function g(id) { return document.getElementById(id); }
+
+function toast(msg, type) {
+  const wrap = g('toastWrap');
+  const el   = document.createElement('div');
+  el.className = 'toast-item' + (type === 'err' ? ' err' : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function getToken() {
+  return localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY) || '';
+}
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res  = await fetch(path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ── Profession ────────────────────────────────────────────────────────────────
+// Shared, uid-scoped keys — keep in sync with dashboard.html / profile.html / onboarding.html
+function getProfKey() { return `kievora_jobs_prof_${window.__fjUid || 'anon'}`; }
+function getCatKey()  { return `kievora_user_cat_${window.__fjUid || 'anon'}`; }
+
+const CATEGORY_TO_QUERY = {
+  'Software & Tech':       'Software Engineer',
+  'Data & Analytics':      'Data Analyst',
+  'Design & Creative':     'Product Designer',
+  'Marketing & Growth':    'Marketing Manager',
+  'Product & Strategy':    'Product Manager',
+  'Finance & Banking':     'Financial Analyst',
+  'Healthcare':            'Healthcare',
+  'Sales & Business Dev':  'Sales Representative',
+  'Operations':            'Operations Manager',
+  'HR & People':           'HR Manager',
+  'Legal & Compliance':    'Legal Counsel',
+  'Education & Academia':  'Teacher',
+  'Engineering':           'Engineer',
+  'Writing & Content':     'Content Writer',
+  'Consulting':            'Consultant',
+  'Administration':        'Administrative Assistant'
+};
+
+function getProfession() {
+  // 1) uid-scoped key (set by dashboard / profile / onboarding)
+  try {
+    const rec = JSON.parse(localStorage.getItem(getProfKey()));
+    if (rec?.title) return rec;
+  } catch {}
+  // 2) legacy shared key (older sessions)
+  try {
+    const rec = JSON.parse(localStorage.getItem(PROF_KEY));
+    if (rec?.title) return rec;
+  } catch {}
+  // 3) fallback to onboarding category
+  try {
+    const cat = JSON.parse(localStorage.getItem(getCatKey()))?.category;
+    if (cat) {
+      const seedTitle = CATEGORY_TO_QUERY[cat] || cat;
+      const rec = { title: seedTitle, source: 'category', ts: Date.now() };
+      setProfession(seedTitle, 'category');
+      return rec;
+    }
+  } catch {}
+  return null;
+}
+
+function setProfession(title, source) {
+  if (!title?.trim()) return;
+  const rec = { title: title.trim(), source, ts: Date.now() };
+  localStorage.setItem(getProfKey(), JSON.stringify(rec));
+  localStorage.setItem(PROF_KEY, JSON.stringify(rec)); // keep legacy key in sync too
+}
+
+const SOURCE_LABELS = {
+  builder:  '📄 From resume builder',
+  analyzer: '🔍 From resume analysis',
+  kie:      '🤖 From KIE AI coach',
+  manual:   '✏️ Entered manually',
+  upload:   '📎 From uploaded resume',
+  category: '✨ Based on your profile category',
+  profile:  '👤 From your profile'
+};
+
+function renderProfBar() {
+  const prof = getProfession();
+
+  if (!prof || !prof.title) {
+    g('noProfState').style.display = '';
+    g('hasProfState').style.display = 'none';
+    return false;
+  }
+
+  g('noProfState').style.display   = 'none';
+  g('hasProfState').style.display  = '';
+  g('profTitle').textContent  = prof.title;
+  g('profSource').textContent = SOURCE_LABELS[prof.source] || prof.source || '';
+  g('searchInp').value        = prof.title;
+  return true;
+}
+
+// ── Job fetching ──────────────────────────────────────────────────────────────
+async function fetchJobsRemotive(query, limit = 20) {
+  const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=${limit}`;
+  const res  = await fetch(url);
+  if (!res.ok) throw new Error('Fetch failed');
+  const data = await res.json();
+  return (data.jobs || []).map(j => ({
+    id:       j.id,
+    title:    j.title,
+    company:  j.company_name,
+    logo:     j.company_logo_url || j.company_logo || '',
+    location: j.candidate_required_location || 'Remote',
+    remote:   true,
+    salary:   j.salary || '',
+    type:     j.job_type || '',
+    url:      j.url,
+    source:   'Remotive',
+    posted:   j.publication_date || '',
+    snippet:  (j.description || '').replace(/<[^>]+>/g, '').slice(0, 200) + '…'
+  }));
+}
+
+async function fetchJobs(query) {
+  // Try server (JSearch) first
+  try {
+    const res = await api('POST', '/api/find-jobs', { query, limit: 20 });
+    if (res.jobs?.length) return res.jobs;
+  } catch (_) { /* fallback below */ }
+  // Free Remotive fallback
+  return fetchJobsRemotive(query, 20);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function timeSince(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const d = Math.floor(diff / 86400000);
+  if (d === 0) return 'Today';
+  if (d === 1) return 'Yesterday';
+  if (d < 7)  return `${d}d ago`;
+  if (d < 30) return `${Math.floor(d/7)}w ago`;
+  return `${Math.floor(d/30)}mo ago`;
+}
+
+function matchFilter(j) {
+  if (currentFilter === 'all') return true;
+  if (currentFilter === 'remote') return j.remote;
+  if (currentFilter === 'full')   return (j.type || '').toLowerCase().includes('full');
+  if (currentFilter === 'part')   return (j.type || '').toLowerCase().includes('part');
+  if (currentFilter === 'contract') return (j.type || '').toLowerCase().includes('contract');
+  return true;
+}
+
+function renderJobs() {
+  const grid     = g('jobsGrid');
+  const empty    = g('emptyState');
+  const countEl  = g('jobCount');
+  const loadWrap = g('loadMoreWrap');
+
+  const filtered = allJobs.filter(matchFilter);
+  const visible  = filtered.slice(0, page * PAGE_SIZE);
+
+  g('jobCount').textContent = filtered.length ? `${filtered.length} jobs found` : '';
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    if (empty) empty.style.display = '';
+    if (loadWrap) loadWrap.style.display = 'none';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  grid.innerHTML = visible.map(j => `
+    <a class="job-card" href="${j.url}" target="_blank" rel="noopener">
+      <div class="job-card-top">
+        <div class="job-logo">
+          ${j.logo
+            ? `<img src="${j.logo}" alt="${j.company}" onerror="this.style.display='none'">`
+            : `<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#d1d5db" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3"/></svg>`
+          }
+        </div>
+        <div class="job-meta">
+          <div class="job-company">${j.company}</div>
+          <div class="job-title">${j.title}</div>
+        </div>
+      </div>
+      <div class="job-tags">
+        ${j.remote   ? `<span class="job-tag tag-remote">🌐 Remote</span>` : ''}
+        ${j.type     ? `<span class="job-tag tag-type">${j.type}</span>` : ''}
+        ${j.salary   ? `<span class="job-tag tag-salary">${j.salary}</span>` : ''}
+        ${j.source   ? `<span class="job-tag tag-source">${j.source}</span>` : ''}
+      </div>
+      <div class="job-location">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        ${j.location}
+      </div>
+      ${j.snippet ? `<div class="job-snippet">${j.snippet}</div>` : ''}
+      <div class="job-footer">
+        <div class="job-posted">${timeSince(j.posted)}</div>
+        <span class="job-apply">
+          Apply Now
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </span>
+      </div>
+    </a>
+  `).join('');
+
+  if (loadWrap) loadWrap.style.display = visible.length < filtered.length ? '' : 'none';
+}
+
+function showSkeletons() {
+  const grid = g('jobsGrid');
+  if (!grid) return;
+  grid.innerHTML = Array(6).fill(0).map(() => `<div class="skel"></div>`).join('');
+  if (g('emptyState'))   g('emptyState').style.display   = 'none';
+  if (g('loadMoreWrap')) g('loadMoreWrap').style.display = 'none';
+}
+
+async function loadJobs(query) {
+  showSkeletons();
+  page = 1;
+  try {
+    allJobs = await fetchJobs(query);
+    renderJobs();
+    if (!allJobs.length) toast('No jobs found — try a different title', 'err');
+  } catch (err) {
+    g('jobsGrid').innerHTML = '';
+    toast('Could not load jobs — check your connection', 'err');
+  }
+}
+
+function loadMore() { page++; renderJobs(); }
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+function setFilter(el, filter) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = filter;
+  page = 1;
+  renderJobs();
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function doSearch() {
+  const q = g('searchInp')?.value?.trim();
+  if (!q) { toast('Enter a search term', 'err'); return; }
+  setProfession(q, 'manual');
+  renderProfBar();
+  loadJobs(q);
+}
+
+g('searchInp')?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+// ── Upload panel ──────────────────────────────────────────────────────────────
+function showUploadPanel() {
+  const panel = g('uploadPanel');
+  if (panel) { panel.classList.add('visible'); panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+function hideUploadPanel() {
+  const panel = g('uploadPanel');
+  if (panel) panel.classList.remove('visible');
+}
+
+// ── File upload & analysis ────────────────────────────────────────────────────
+async function extractPdfText(file) {
+  // Simple text extraction for txt files; for PDF we call the server's analyze endpoint
+  if (file.type === 'text/plain') return file.text();
+  // PDF: send to server analyze endpoint which extracts and parses
+  return '__PDF__'; // signal to use FormData approach
+}
+
+const dropZone = g('dropZone');
+const fileInput = g('resumeFileInput');
+
+if (dropZone) {
+  dropZone.addEventListener('click', () => fileInput?.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleResumeFile(file);
+  });
+}
+fileInput?.addEventListener('change', () => {
+  if (fileInput.files[0]) handleResumeFile(fileInput.files[0]);
+});
+
+async function handleResumeFile(file) {
+  const status = g('uploadStatus');
+  const ext    = file.name.split('.').pop().toLowerCase();
+  if (!['pdf','txt'].includes(ext)) { toast('Only PDF or TXT files supported', 'err'); return; }
+  if (file.size > 5 * 1024 * 1024)  { toast('File too large (max 5 MB)', 'err'); return; }
+
+  if (status) { status.style.display = ''; status.textContent = '⏳ Analyzing your resume…'; }
+  toast('Analyzing resume…');
+
+  try {
+    let resumeText = '';
+    if (ext === 'txt') {
+      resumeText = await file.text();
+    } else {
+      // For PDF: use FileReader → base64 not feasible client-side cleanly.
+      // Read as ArrayBuffer and try text extraction, then fallback
+      resumeText = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const arr  = new Uint8Array(e.target.result);
+          let str    = '';
+          for (let i = 0; i < arr.length; i++) str += String.fromCharCode(arr[i]);
+          // Extract readable text (PDF streams)
+          const match = str.match(/BT[\s\S]*?ET/g) || [];
+          const texts = match.map(m => {
+            const t = m.match(/\(([^)]+)\)/g) || [];
+            return t.map(s => s.slice(1,-1)).join(' ');
+          }).join('\n');
+          res(texts.length > 30 ? texts : str.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim());
+        };
+        reader.onerror = rej;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    if (resumeText.length < 30) throw new Error('Could not extract enough text from this file');
+
+    const result = await api('POST', '/api/analyze-resume', { resumeText });
+    if (result.jobTitle) {
+      setProfession(result.jobTitle, 'upload');
+      toast('✅ Resume analyzed — finding jobs for ' + result.jobTitle);
+      if (status) { status.textContent = '✅ Resume analyzed: ' + result.jobTitle; }
+      renderProfBar();
+      hideUploadPanel();
+      loadJobs(result.jobTitle);
+    } else {
+      throw new Error('Could not detect job title from resume');
+    }
+  } catch (err) {
+    toast(err.message || 'Analysis failed — try pasting text instead', 'err');
+    if (status) { status.textContent = '❌ ' + (err.message || 'Analysis failed'); }
+  }
+}
+
+// ── Profession modal ──────────────────────────────────────────────────────────
+function openProfModal() {
+  const prof = getProfession();
+  const inp  = g('profModalInp');
+  if (inp) inp.value = prof?.title || '';
+  g('profModal')?.classList.add('open');
+  setTimeout(() => inp?.focus(), 300);
+}
+function closeProfModal() { g('profModal')?.classList.remove('open'); }
+function saveProfModal() {
+  const val = g('profModalInp')?.value?.trim();
+  if (!val) { toast('Enter a job title', 'err'); return; }
+  closeProfModal();
+  setProfession(val, 'manual');
+  renderProfBar();
+  loadJobs(val);
+}
+g('profModalInp')?.addEventListener('keydown', e => { if (e.key === 'Enter') saveProfModal(); });
+g('profModal')?.addEventListener('click', e => { if (e.target === g('profModal')) closeProfModal(); });
+
+// ── Init (called by Firebase auth gate above) ─────────────────────────────────
+window.__onFindJobsAuthReady = function() {
+  const hasProfession = renderProfBar();
+  if (hasProfession) {
+    const prof = getProfession();
+    loadJobs(prof.title);
+  }
+};
+// In case Firebase fired before this script parsed (rare but safe):
+if (window.__findJobsAuthDone) window.__onFindJobsAuthReady();
+</script>
+</body>
+</html>
