@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>My Account — Kievora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --p:#7c3aed;--p2:#a855f7;--ps:#5b21b6;
+      --g:linear-gradient(135deg,#7c3aed,#a855f7);
+      --bg:#f8f7ff;--card:#fff;
+      --border:#ede9fe;--border2:#e8e0fb;
+      --txt:#0f0e17;--sub:#64748b;--mute:#94a3b8;
+      --rad:14px;--shadow:0 4px 20px rgba(124,58,237,.08);
+    }
+    html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5}
+
+    /* ── HEADER ── */
+    .hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:64px}
+    .hdr-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;text-decoration:none}
+    .brand-ico{width:36px;height:36px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .brand-ico img{width:100%;height:100%;object-fit:cover;border-radius:9px}
+    .brand-txt{font-size:18px;font-weight:900;color:var(--txt);letter-spacing:-.3px}
+    .brand-txt span{color:var(--p)}
+    .back-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--border2);color:var(--sub);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;text-decoration:none}
+    .back-btn:hover{border-color:var(--p);color:var(--p);background:#faf5ff}
+
+    /* ── PAGE ── */
+    .page{max-width:540px;margin:0 auto;padding:88px 20px 48px}
+
+    /* ── PROFILE CARD ── */
+    .profile-card{background:#fff;border-radius:24px;border:1.5px solid var(--border2);overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px}
+    .profile-banner{height:90px;background:linear-gradient(135deg,#5b21b6,#7c3aed 50%,#a855f7);position:relative}
+    .profile-banner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='28' fill='none' stroke='rgba(255,255,255,0.06)' stroke-width='1'/%3E%3C/svg%3E") repeat;opacity:.5}
+    .profile-av-wrap{position:relative;display:flex;justify-content:center;margin-top:-44px;margin-bottom:16px;z-index:1}
+    .profile-av{width:88px;height:88px;border-radius:50%;border:4px solid #fff;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 4px 20px rgba(124,58,237,.25);background-size:cover;background-position:center;overflow:hidden;position:relative}
+    .profile-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .profile-av-edit{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;cursor:pointer}
+    .profile-av:hover .profile-av-edit{opacity:1}
+    .profile-body{padding:0 24px 24px;text-align:center}
+    .profile-name{font-size:22px;font-weight:900;letter-spacing:-.3px;margin-bottom:4px}
+    .profile-email{font-size:13px;color:var(--sub);margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:5px}
+    .profile-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#ede9fe,#faf5ff);color:var(--p);border:1px solid var(--border);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:800;letter-spacing:.02em}
+    .profile-badge svg{flex-shrink:0}
+
+    /* ── STATS ROW ── */
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border2);border-top:1px solid var(--border2);margin-top:16px}
+    .stat-item{background:#fff;padding:16px 12px;text-align:center}
+    .stat-val{font-size:22px;font-weight:900;color:var(--p);line-height:1}
+    .stat-lbl{font-size:11px;color:var(--sub);font-weight:600;margin-top:4px}
+
+    /* ── SECTION CARDS ── */
+    .section{background:#fff;border-radius:18px;border:1.5px solid var(--border2);overflow:hidden;box-shadow:0 2px 10px rgba(124,58,237,.04);margin-bottom:14px}
+    .section-hdr{padding:16px 18px 14px;border-bottom:1px solid #faf5ff;display:flex;align-items:center;justify-content:space-between}
+    .section-title{font-size:13px;font-weight:800;color:var(--txt);display:flex;align-items:center;gap:7px}
+    .section-title svg{color:var(--p)}
+    .section-edit{font-size:12px;font-weight:700;color:var(--p);cursor:pointer;padding:4px 10px;border-radius:8px;border:1.5px solid var(--border);background:#fff;transition:all .15s}
+    .section-edit:hover{background:#faf5ff;border-color:var(--p2)}
+
+    /* ── INFO ROWS ── */
+    .info-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #faf9ff}
+    .info-row:last-child{border-bottom:none}
+    .info-lbl{font-size:12px;color:var(--sub);font-weight:600;display:flex;align-items:center;gap:7px}
+    .info-lbl svg{flex-shrink:0;color:var(--mute)}
+    .info-val{font-size:13px;font-weight:700;color:var(--txt);text-align:right;max-width:200px;word-break:break-all}
+    .info-val.muted{color:var(--mute);font-weight:500}
+
+    /* ── ACTION BUTTONS ── */
+    .actions{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+    .action-btn{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:700;color:var(--txt);cursor:pointer;transition:all .2s;text-decoration:none;width:100%}
+    .action-btn:hover{border-color:var(--p2);background:#faf5ff;color:var(--p)}
+    .action-btn.danger{color:#e11d48;border-color:#fecdd3}
+    .action-btn.danger:hover{background:#fff1f2;border-color:#fca5a5}
+    .action-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .action-arr{margin-left:auto;color:var(--mute);transition:transform .15s}
+    .action-btn:hover .action-arr{transform:translateX(3px)}
+
+    /* ── EDIT MODAL ── */
+    .modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(15,14,23,.55);align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+    .modal-bg.open{display:flex}
+    .modal{background:#fff;border-radius:22px 22px 0 0;max-width:540px;width:100%;padding:28px 24px 36px;box-shadow:0 -8px 40px rgba(124,58,237,.15);animation:slideUp .25s ease}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+    .modal-handle{width:36px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 20px}
+    .modal h3{font-size:18px;font-weight:900;margin-bottom:18px;letter-spacing:-.2px}
+    .f{margin-bottom:14px}
+    .f label{display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:4px}
+    .f input{width:100%;padding:11px 14px;border:1.5px solid var(--border2);border-radius:10px;font-size:14px;outline:none;color:var(--txt);font-family:inherit;transition:border-color .15s,box-shadow .15s;background:#fff}
+    .f input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+    .modal-btns{display:flex;gap:10px;margin-top:20px}
+    .mbtn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:800;border:none;cursor:pointer;transition:all .15s;font-family:inherit}
+    .mbtn-save{background:var(--g);color:#fff;box-shadow:0 2px 10px rgba(124,58,237,.3)}
+    .mbtn-save:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(124,58,237,.4)}
+    .mbtn-cancel{background:#f1f5f9;color:var(--sub)}
+    .mbtn-cancel:hover{background:#e2e8f0}
+
+    /* ── TOAST ── */
+    #toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#0f0e17;color:#fff;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:700;opacity:0;transition:opacity .3s;z-index:999;white-space:nowrap}
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <div class="hdr-inner">
+    <a class="brand" href="dashboard.html">
+      <div class="brand-ico">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAABECAYAAAA4E5OyAAAQxUlEQVR4nO2be6xlV13HP7+19t7nnHvvzPROO50+Zuh0mraUR0sfM7VECEIpUJCHCa82ATVqYvQfjH8YjX8a4yPGgCFiohEhSFFEjdJpSrDFUhAKfdFWapuRlr47zuvec8/Ze6/184+19t7nnHvvzHread5p3mneaAAAAABJRU5ErkJggg==" alt="Kievora" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#7c3aed,#a855f7)'"/>
+      </div>
+      <span class="brand-txt">Kie<span>vora</span></span>
+    </a>
+    <a class="back-btn" href="dashboard.html">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Dashboard
+    </a>
+  </div>
+</header>
+
+<!-- ══ PAGE ══ -->
+<div class="page">
+
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <div class="profile-banner"></div>
+    <div class="profile-av-wrap">
+      <div class="profile-av" id="profileAv">
+        <img id="profileAvImg" src="" alt="" style="display:none"/>
+        <span id="profileAvInit">?</span>
+        <div class="profile-av-edit" onclick="document.getElementById('photoInput').click()">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2"/></svg>
+        </div>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" style="display:none"/>
+    </div>
+    <div class="profile-body">
+      <div class="profile-name" id="profileName">Loading…</div>
+      <div class="profile-email">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span id="profileEmail">…</span>
+      </div>
+      <div class="profile-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5z"/></svg>
+        Free Plan
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-val" id="statResumes">0</div>
+        <div class="stat-lbl">Resumes</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" id="statDays">—</div>
+        <div class="stat-lbl">Days Active</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">∞</div>
+        <div class="stat-lbl">KIE Chats</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Info Section -->
+  <div class="section">
+    <div class="section-hdr">
+      <div class="section-title">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        Account Info
+      </div>
+      <button class="section-edit" onclick="openEditModal()">Edit</button>
+    </div>
+    <div class="info-row">
+      <div class="info-lbl">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Full Name
+      </div>
+      <div class="info-val" id="infoName">—</div>
+    </div>
+    <div class="info-row">
+      <div class="info-lbl">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Email
+      </div>
+      <div class="info-val" id="infoEmail">—</div>
+    </div>
+    <div class="info-row">
+      <div class="info-lbl">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg>
+        Member Since
+      </div>
+      <div class="info-val muted" id="infoJoined">—</div>
+    </div>
+    <div class="info-row">
+      <div class="info-lbl">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Account Status
+      </div>
+      <div class="info-val" style="color:#059669;font-weight:800">✓ Verified</div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="actions">
+    <button class="action-btn" onclick="window.location.href='dashboard.html'">
+      <div class="action-ico" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </div>
+      Dashboard
+      <svg class="action-arr" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <button class="action-btn" onclick="window.location.href='dashboard.html#allresumes'">
+      <div class="action-ico" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </div>
+      My Resumes
+      <svg class="action-arr" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <button class="action-btn danger" id="signOutBtn">
+      <div class="action-ico" style="background:#fff1f2">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#e11d48" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      </div>
+      Sign Out
+      <svg class="action-arr" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <p style="text-align:center;font-size:11px;color:var(--mute);font-weight:500">Kievora v1.0 · Built with ❤️</p>
+
+</div>
+
+<!-- ══ EDIT MODAL ══ -->
+<div id="editModal" class="modal-bg" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>Edit Profile</h3>
+    <div class="f">
+      <label>Full Name</label>
+      <input type="text" id="editName" placeholder="Your full name"/>
+    </div>
+    <div class="f">
+      <label>Username</label>
+      <div style="position:relative">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-weight:700;font-size:14px;pointer-events:none">@</span>
+        <input type="text" id="editUsername" placeholder="your_username" maxlength="20" autocomplete="off"
+          style="padding-left:26px;text-transform:lowercase;width:100%;border:1.5px solid var(--border2);border-radius:10px;padding-top:10px;padding-bottom:10px;padding-right:12px;font-size:14px;outline:none"
+          oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'');accountDebounceCheck(this.value)"/>
+      </div>
+      <div id="accountUsernameStatus" style="font-size:12px;margin-top:5px;font-weight:600;min-height:16px"></div>
+      <small style="color:#94a3b8;font-size:11px">3–20 chars · letters, numbers, underscores only</small>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="mbtn mbtn-save" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Firebase compat SDK (consistent with rest of app) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // ── Firebase config — same as your other pages ──
+  const firebaseConfig = {
+  apiKey: "AIzaSyAtL5I-BrnePMIeITDLsPqsvffdiPWcEb0",
+  authDomain: "resumaker-9ad7f.firebaseapp.com",
+  projectId: "resumaker-9ad7f",
+  storageBucket: "resumaker-9ad7f.firebasestorage.app",
+  messagingSenderId: "945024215083",
+  appId: "1:945024215083:web:57c682be4e26c92546a26e",
+  measurementId: "G-CZE0PBD2EP"
+};
+
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  let currentUser = null;
+  let _accountUsername = ''; // currently saved username
+
+  // ── Helpers ──
+  function toast(msg, type = 'ok') {
+    const t = document.getElementById('toast');
+    t.innerHTML = (type === 'err' ? '❌ ' : '✅ ') + msg;
+    t.style.background = type === 'err' ? '#be123c' : '#0f0e17';
+    t.style.opacity = '1';
+    clearTimeout(window._tt);
+    window._tt = setTimeout(() => t.style.opacity = '0', 3000);
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  // ── Load resume count via server (requires auth token) ──
+  async function loadResumeCount(token) {
+    try {
+      const res = await fetch('/api/resumes', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('statResumes').textContent = Array.isArray(data) ? data.length : 0;
+      }
+    } catch (e) {
+      document.getElementById('statResumes').textContent = '0';
+    }
+  }
+
+  // ── Auth state ──
+  auth.onAuthStateChanged(async u => {
+    if (!u) { window.location.href = '/'; return; }
+    currentUser = u;
+
+    // Avatar
+    const avImg  = document.getElementById('profileAvImg');
+    const avInit = document.getElementById('profileAvInit');
+    const init   = (u.displayName || u.email)[0].toUpperCase();
+
+    if (u.photoURL) {
+      avImg.src = u.photoURL;
+      avImg.style.display  = 'block';
+      avInit.style.display = 'none';
+    } else {
+      avInit.textContent = init;
+    }
+
+    // Text info
+    const name = u.displayName || u.email.split('@')[0];
+    document.getElementById('profileName').textContent  = name;
+    document.getElementById('profileEmail').textContent = u.email;
+    document.getElementById('infoName').textContent     = name;
+    document.getElementById('infoEmail').textContent    = u.email;
+
+    // Member since + days active
+    if (u.metadata && u.metadata.creationTime) {
+      document.getElementById('infoJoined').textContent = fmtDate(new Date(u.metadata.creationTime));
+      const days = Math.max(1, Math.floor((Date.now() - new Date(u.metadata.creationTime).getTime()) / 86400000));
+      document.getElementById('statDays').textContent = days;
+    }
+
+    // Resume count — get token first, then call server
+    const token = await u.getIdToken();
+    await loadResumeCount(token);
+
+    // Load Firestore profile for username + prefill edit form
+    try {
+      const snap = await db.collection('users').doc(u.uid).get();
+      if (snap.exists) {
+        _accountUsername = snap.data().username || '';
+      }
+    } catch(e) { console.warn('Could not load user doc:', e.message); }
+
+    // Prefill edit form
+    document.getElementById('editName').value     = u.displayName || '';
+    document.getElementById('editUsername').value = _accountUsername;
+  });
+
+  // ── Photo upload (local preview only) ──
+  document.getElementById('photoInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast('Image too large (max 2MB)', 'err'); return; }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const avImg = document.getElementById('profileAvImg');
+      document.getElementById('profileAvInit').style.display = 'none';
+      avImg.src = ev.target.result;
+      avImg.style.display = 'block';
+      toast('Photo updated (locally previewed)');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function openEditModal()  {
+    document.getElementById('editName').value     = currentUser?.displayName || '';
+    document.getElementById('editUsername').value = _accountUsername;
+    document.getElementById('accountUsernameStatus').textContent = '';
+    window._accountUsernameOk = true;
+    document.getElementById('editModal').classList.add('open');
+  }
+  function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+
+  // ── Username availability check (account.html) ──
+  let _acUnTimer = null;
+  window._accountUsernameOk = true;
+  window.accountDebounceCheck = function(val) {
+    const el = document.getElementById('accountUsernameStatus');
+    window._accountUsernameOk = false;
+    clearTimeout(_acUnTimer);
+    if (!val) { el.textContent = ''; window._accountUsernameOk = true; return; }
+    if (!/^[a-z0-9_]{3,20}$/.test(val)) {
+      el.style.color = '#e11d48'; el.textContent = '3–20 chars · letters, numbers, underscores only'; return;
+    }
+    if (val === _accountUsername) {
+      el.style.color = '#059669'; el.textContent = '✓ Your current username';
+      window._accountUsernameOk = true; return;
+    }
+    el.style.color = '#94a3b8'; el.textContent = 'Checking…';
+    _acUnTimer = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/check-username?username=${encodeURIComponent(val)}`);
+        const j = await r.json();
+        if (j.available) { el.style.color = '#059669'; el.textContent = '✓ Available'; window._accountUsernameOk = true; }
+        else { el.style.color = '#e11d48'; el.textContent = '✗ Already taken'; window._accountUsernameOk = false; }
+      } catch { el.style.color = '#e11d48'; el.textContent = 'Could not check — try saving'; window._accountUsernameOk = true; }
+    }, 500);
+  };
+
+  async function saveProfile() {
+    const name     = document.getElementById('editName').value.trim();
+    const newUsername = document.getElementById('editUsername').value.toLowerCase().trim();
+    if (!name) { toast('Enter your name', 'err'); return; }
+    if (newUsername && !/^[a-z0-9_]{3,20}$/.test(newUsername)) {
+      toast('Invalid username format', 'err'); return;
+    }
+    const usernameChanged = newUsername && newUsername !== _accountUsername;
+    if (usernameChanged && !window._accountUsernameOk) {
+      toast('That username is already taken', 'err'); return;
+    }
+    try {
+      // 1. Update Firebase Auth displayName
+      await currentUser.updateProfile({ displayName: name });
+
+      // 2. Reserve new username via server if changed
+      if (usernameChanged) {
+        const token = await currentUser.getIdToken();
+        const res = await fetch('/api/claim-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ newUsername, oldUsername: _accountUsername })
+        });
+        const json = await res.json();
+        if (!res.ok) { toast(json.error || 'Username could not be saved', 'err'); return; }
+      }
+
+      // 3. Sync name to Firestore so profile.html picks it up
+      const fsUpdate = { name, displayName: name, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      await db.collection('users').doc(currentUser.uid).set(fsUpdate, { merge: true });
+
+      // Update local state
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('infoName').textContent    = name;
+      document.getElementById('profileAvInit').textContent = name[0].toUpperCase();
+      if (newUsername) _accountUsername = newUsername;
+      closeEditModal();
+      toast('Profile updated!');
+    } catch (e) {
+      toast('Failed: ' + e.message, 'err');
+    }
+  }
+
+  // ── Sign out ──
+  document.getElementById('signOutBtn').onclick = async function() {
+    await auth.signOut();
+    window.location.href = '/';
+  };
+</script>
+
+</body>
+</html>
