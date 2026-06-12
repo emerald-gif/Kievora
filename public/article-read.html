@@ -510,14 +510,15 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/fireba
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, updateDoc, increment, onSnapshot, collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, writeBatch, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
-const fbApp = initializeApp({
-  apiKey:"AIzaSyAtL5I-BrnePMIeITDLsPqsvffdiPWcEb0",
-  authDomain:"resumaker-9ad7f.firebaseapp.com",
-  projectId:"resumaker-9ad7f",
-  storageBucket:"resumaker-9ad7f.firebasestorage.app",
-  messagingSenderId:"945024215083",
-  appId:"1:945024215083:web:57c682be4e26c92546a26e"
-});
+const firebaseConfig = {
+  apiKey: "AIzaSyA2s328tgIlxFnnvob5GK7G7C-QevPxnRs",
+  authDomain: "kievora.firebaseapp.com",
+  projectId: "kievora",
+  storageBucket: "kievora.firebasestorage.app",
+  messagingSenderId: "548806738102",
+  appId: "1:548806738102:web:bd84433ce38fbfb4e2e617",
+  measurementId: "G-X6VG3MVQ96"
+};
 const auth = getAuth(fbApp);
 const db   = getFirestore(fbApp, 'default');
 
