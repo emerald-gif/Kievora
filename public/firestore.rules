@@ -54,7 +54,7 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // ── SUBMISSIONS ── (FIXED: approved submissions are public)
+    // ── SUBMISSIONS ── (approved submissions are public)
     match /submissions/{submissionId} {
       allow read: if resource.data.status == 'approved'
                   || (request.auth != null && request.auth.uid == resource.data.userId)
@@ -71,6 +71,14 @@ service cloud.firestore {
       allow read: if true;
       allow create: if request.auth != null;
       allow delete: if request.auth != null && request.auth.uid == resource.data.followerId;
+    }
+
+    // ── USERNAMES (uniqueness registry) ──
+    // Reads are public so the live availability check works from the client.
+    // All writes go through /api/claim-username (Admin SDK) — never from the client.
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if false;
     }
 
     // ── SUPPORT REQUESTS ──
