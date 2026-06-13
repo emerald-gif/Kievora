@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── ADMIN CHECK HELPER ──
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── PUBLISHED ARTICLES (public feed) ──
+    match /articles/{articleId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── ADMINS LIST ──
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /articleLikes/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /articleRatings/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /userLikes/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /userSaves/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /userRatings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /submissions/{submissionId} {
+      allow read: if (request.auth != null && request.auth.uid == resource.data.userId) || isAdmin();
+      allow create: if request.auth != null;
+      allow update: if (request.auth != null && request.auth.uid == resource.data.userId
+                        && resource.data.status in ['pending','rejected'])
+                    || isAdmin();
+      allow delete: if (request.auth != null && request.auth.uid == resource.data.userId)
+                    || isAdmin();
+    }
+    match /follows/{followId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.followerId;
+    }
+
+    // ── SUPPORT REQUESTS ──
+    match /support_requests/{ticketId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── FAQ VOTES ──
+    match /faq_votes/{faqId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ── ARTICLE CLAPS ──
+    match /article_claps/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

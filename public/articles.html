@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Support — Kievora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <!-- Swiper -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.1.4/swiper-bundle.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.1.4/swiper-bundle.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --p:#5B21B6;
+      --p2:#7C3AED;
+      --p3:#9333ea;
+      --g:linear-gradient(135deg,#5B21B6,#7C3AED);
+      --g2:linear-gradient(135deg,#7C3AED,#9333ea);
+      --bg:#F4F3FA;
+      --card:#fff;
+      --border:#E8E4F5;
+      --border2:#DDD6FE;
+      --txt:#0D0B1E;
+      --sub:#6B6B8A;
+      --mute:#A0A0B8;
+      --green:#10B981;
+      --green-bg:#ECFDF5;
+      --rad:16px;
+      --shadow:0 2px 16px rgba(91,33,182,.07);
+      --shadow2:0 8px 32px rgba(91,33,182,.13);
+    }
+    html{scroll-behavior:smooth}
+    html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5}
+
+    /* ── HEADER ── */
+    .hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);height:60px}
+    .hdr-inner{max-width:900px;margin:0 auto;padding:0 20px;height:100%;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;cursor:pointer;user-select:none;text-decoration:none}
+    .brand-logo{height:36px;width:auto;object-fit:contain;display:block}
+    .hdr-tag{background:#EDE9FE;color:var(--p);font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px;letter-spacing:.2px}
+
+    /* ── PAGE ── */
+    .page{max-width:900px;margin:0 auto;padding:76px 20px 100px}
+
+    /* ── HERO ── */
+    .sup-hero{background:var(--g);border-radius:22px;padding:36px 28px;color:#fff;margin-bottom:32px;position:relative}
+    .sup-hero-bg{position:absolute;inset:0;border-radius:22px;overflow:hidden;pointer-events:none;z-index:0}
+    .sup-hero-bg::before{content:'';position:absolute;right:-100px;top:-100px;width:320px;height:320px;background:rgba(255,255,255,.05);border-radius:50%}
+    .sup-hero-bg::after{content:'';position:absolute;left:-50px;bottom:-60px;width:220px;height:220px;background:rgba(0,0,0,.06);border-radius:50%}
+    .sup-hero-inner{position:relative;z-index:1}
+    .sup-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;margin-bottom:14px}
+    .sup-title{font-family:'Inter',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;line-height:1.2}
+    .sup-sub{font-size:14px;opacity:.85;max-width:440px;line-height:1.65;margin-bottom:22px}
+    .sup-search{display:flex;align-items:center;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.28);border-radius:12px;overflow:hidden;width:100%}
+
+    /* ── SUGGESTIONS DROPDOWN ── */
+    .search-suggestions{position:fixed;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(91,33,182,.18);border:1.5px solid #EDE9FE;overflow:hidden;z-index:9999;display:none}
+    .search-suggestions.open{display:block;animation:fadeIn .15s ease}
+    .sug-item{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;transition:background .12s;border-bottom:1px solid #FAF8FF}
+    .sug-item:last-child{border-bottom:none}
+    .sug-item:hover{background:#FAF5FF}
+    .sug-ico{width:28px;height:28px;border-radius:8px;background:#EDE9FE;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sug-text{font-size:13px;font-weight:600;color:#0D0B1E;flex:1}
+    .sug-text mark{background:#EDE9FE;color:#5B21B6;border-radius:3px;padding:0 2px;font-weight:700}
+    .sug-type{font-size:10px;font-weight:700;color:#A0A0B8;background:#F5F5F8;padding:2px 7px;border-radius:99px;white-space:nowrap}
+    .sug-ask-kie{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:linear-gradient(135deg,#FAF5FF,#F0EBFF);transition:background .12s}
+    .sug-ask-kie:hover{background:#EDE9FE}
+    .sug-ask-kie-av{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#5B21B6,#7C3AED);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:800;color:#fff}
+    .sug-ask-kie-txt{font-size:13px;font-weight:700;color:#5B21B6;flex:1}
+    .sug-ask-kie-hint{font-size:11px;color:#9333ea;font-weight:600}
+
+    /* ── ANSWER PANEL ── */
+    .answer-panel{background:#fff;border-radius:20px;border:1.5px solid #EDE9FE;box-shadow:0 4px 24px rgba(91,33,182,.10);margin-bottom:28px;overflow:hidden;animation:fadeIn .25s ease}
+    .answer-inner{padding:0}
+    .answer-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,#FAF5FF,#F3EEFF);border-bottom:1px solid #EDE9FE}
+    .answer-hdr-left{display:flex;align-items:center;gap:8px}
+    .answer-kie-av{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0}
+    .answer-kie-av img{width:100%;height:100%;object-fit:cover}
+    .answer-label{font-size:12px;font-weight:800;color:#5B21B6}
+    .answer-query-badge{background:#EDE9FE;color:#5B21B6;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .answer-close{background:none;border:none;color:#A0A0B8;font-size:16px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s}
+    .answer-close:hover{color:#5B21B6}
+    .answer-body{padding:16px 18px;font-size:13px;color:#374151;line-height:1.75;min-height:60px}
+    .answer-body strong{color:#0D0B1E}
+    .answer-typing{display:flex;gap:4px;align-items:center;height:24px}
+    .answer-typing span{width:7px;height:7px;border-radius:50%;background:#C4B5FD;animation:typingDot 1.2s ease-in-out infinite}
+    .answer-typing span:nth-child(2){animation-delay:.2s}
+    .answer-typing span:nth-child(3){animation-delay:.4s}
+    @keyframes typingDot{0%,80%,100%{transform:scale(1);opacity:.5}40%{transform:scale(1.3);opacity:1}}
+    .answer-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid #FAF8FF;background:#FDFBFF}
+    .answer-footer span{font-size:12px;color:#A0A0B8;font-weight:500}
+    .answer-open-kie{background:none;border:none;color:#7C3AED;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;transition:color .15s}
+    .answer-open-kie:hover{color:#5B21B6}
+    .sup-search input{flex:1;min-width:0;background:transparent;border:none;outline:none;padding:11px 16px;font-size:13px;color:#fff;font-family:inherit;font-weight:500}
+    .sup-search input::placeholder{color:rgba(255,255,255,.55)}
+    .sup-search-btn{background:rgba(255,255,255,.18);border:none;color:#fff;padding:11px 18px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:background .2s;white-space:nowrap}
+    .sup-search-btn:hover{background:rgba(255,255,255,.28)}
+
+    /* ── SECTION TITLE ── */
+    .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .sec-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;letter-spacing:-.2px}
+    .sec-badge{background:var(--g);color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px}
+
+    /* ── ARTICLES ── */
+    .articles-section{margin-bottom:32px}
+    .articles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .article-card{background:#fff;border-radius:16px;border:1.5px solid var(--border);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:var(--shadow)}
+    .article-card:hover{border-color:var(--border2);box-shadow:var(--shadow2);transform:translateY(-2px)}
+    .article-img{height:120px;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);display:flex;align-items:center;justify-content:center;font-size:34px;position:relative;overflow:hidden} .article-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease} .article-card:hover .article-img img{transform:scale(1.06)} .article-img-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.32) 100%)}
+    .article-cat{position:absolute;top:10px;left:10px;background:var(--g);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;letter-spacing:.3px}
+    .article-body{padding:14px}
+    .article-title{font-size:13px;font-weight:800;color:var(--txt);line-height:1.4;margin-bottom:5px}
+    .article-brief{font-size:11px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .article-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--mute);font-weight:600}
+
+    /* ── GUIDE SECTION ── */
+    .guide-section{margin-bottom:32px}
+    .guide-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+    .guide-tab{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:8px 15px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;transition:all .15s;font-family:inherit}
+    .guide-tab.active{background:var(--g);color:#fff;border-color:transparent}
+    .guide-content{display:none}
+    .guide-content.active{display:block;animation:fadeIn .2s ease}
+    .guide-steps{display:flex;flex-direction:column;gap:0}
+    .step-item{display:flex;gap:16px;position:relative}
+    .step-item:not(:last-child) .step-line{position:absolute;left:19px;top:40px;bottom:-8px;width:2px;background:linear-gradient(180deg,var(--p2),transparent)}
+    .step-num{width:38px;height:38px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(124,58,237,.22);z-index:1}
+    .step-body{flex:1;padding-bottom:22px}
+    .step-title{font-size:14px;font-weight:800;color:var(--txt);margin-bottom:4px}
+    .step-desc{font-size:13px;color:var(--sub);line-height:1.65}
+    .step-tip{display:inline-flex;align-items:center;gap:5px;background:#F5F0FF;border:1px solid #EDE9FE;border-radius:8px;padding:6px 11px;margin-top:8px;font-size:11px;font-weight:600;color:var(--p)}
+
+    /* ── FAQ ── */
+    .faq-section{margin-bottom:32px}
+    .faq-list{display:flex;flex-direction:column;gap:6px}
+    .faq-item{background:#fff;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;box-shadow:var(--shadow)}
+    .faq-item.open{border-color:var(--border2)}
+    .faq-q{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;cursor:pointer;gap:12px;user-select:none}
+    .faq-q-txt{font-size:13px;font-weight:700;color:var(--txt);line-height:1.4}
+    .faq-arr{width:26px;height:26px;border-radius:8px;background:#F5F0FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .25s,background .2s}
+    .faq-item.open .faq-arr{transform:rotate(180deg);background:#EDE9FE}
+    .faq-arr svg{stroke:var(--p)}
+    .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease}
+    .faq-item.open .faq-a{max-height:400px}
+    .faq-a-inner{padding:0 18px 14px;font-size:13px;color:var(--sub);line-height:1.7;border-top:1px solid #FAF8FF}
+
+    /* ── SUBMIT REQUEST (Firebase) ── */
+    .request-section{margin-bottom:32px}
+    .request-card{background:#fff;border:1.5px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:var(--shadow)}
+    .request-hdr{background:linear-gradient(135deg,#1E1B4B,#3730a3);padding:20px 24px;display:flex;align-items:center;gap:14px}
+    .request-hdr-ico{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .request-hdr-info{}
+    .request-hdr-title{font-size:15px;font-weight:800;color:#fff;font-family:'Inter',sans-serif}
+    .request-hdr-sub{font-size:12px;color:rgba(255,255,255,.65);margin-top:2px}
+    .request-body{padding:22px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+    .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+    .form-group:last-child{margin-bottom:0}
+    .form-label{font-size:12px;font-weight:700;color:var(--txt);letter-spacing:.1px}
+    .form-input,.form-select,.form-textarea{background:#F9F8FF;border:1.5px solid var(--border);border-radius:11px;padding:11px 14px;font-size:13px;font-family:inherit;color:var(--txt);outline:none;transition:border-color .2s,background .2s;width:100%}
+    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--p2);background:#fff}
+    .form-input::placeholder,.form-textarea::placeholder{color:var(--mute)}
+    .form-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6B8A' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+    .form-textarea{resize:none;min-height:90px;line-height:1.6}
+    .submit-btn{width:100%;padding:13px;background:var(--g);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;letter-spacing:-.1px}
+    .submit-btn:hover{opacity:.9;transform:translateY(-1px)}
+    .submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .request-success{display:none;flex-direction:column;align-items:center;text-align:center;padding:36px 24px;gap:14px}
+    .request-success.show{display:flex}
+    .success-ico{width:56px;height:56px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .success-title{font-size:16px;font-weight:800;color:var(--txt)}
+    .success-sub{font-size:13px;color:var(--sub);line-height:1.65;max-width:280px}
+    .request-error{display:none;background:#FFF1F2;border:1.5px solid #FECDD3;border-radius:10px;padding:12px 14px;font-size:12px;color:#BE123C;font-weight:600;margin-top:12px}
+    .request-error.show{display:block}
+
+    /* ── CONTACT ── */
+    .contact-section{margin-bottom:32px}
+    .contact-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .contact-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+    .contact-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+    .contact-title{font-size:14px;font-weight:800;color:var(--txt)}
+    .contact-sub{font-size:12px;color:var(--sub);line-height:1.6}
+    .contact-btn{display:inline-flex;align-items:center;gap:6px;background:var(--g);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;width:fit-content}
+    .contact-btn:hover{opacity:.9;transform:translateY(-1px)}
+    .contact-btn-outline{background:#fff;color:var(--p);border:1.5px solid var(--border2)}
+    .contact-btn-outline:hover{border-color:var(--p);background:#FAF8FF}
+
+    /* ── SEARCH HIGHLIGHT ── */
+    .search-highlight{background:#FEF3C7;border-radius:3px;padding:0 2px}
+
+    /* ── ARTICLE MODAL ── */
+    .art-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+    .art-modal-backdrop.open{display:flex}
+    .art-modal{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:680px;max-height:88vh;overflow-y:auto;padding:26px 22px 40px;animation:slideUp .3s ease}
+    @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+    .art-modal::-webkit-scrollbar{width:3px}
+    .art-modal::-webkit-scrollbar-thumb{background:#DDD6FE;border-radius:99px}
+    .art-modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .art-modal-close{width:30px;height:30px;background:#F5F5F8;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
+    .art-modal-close:hover{background:#EDE9FE;color:var(--p)}
+    .art-modal-cat{background:var(--g);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:99px;letter-spacing:.3px}
+    .art-modal-title{font-size:19px;font-weight:800;color:var(--txt);margin-bottom:8px;line-height:1.3;letter-spacing:-.3px}
+    .art-modal-meta{font-size:12px;color:var(--mute);font-weight:500;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+    .art-modal-body{font-size:14px;color:#374151;line-height:1.8}
+    .art-modal-body h3{font-size:14px;font-weight:800;color:var(--txt);margin:18px 0 8px}
+    .art-modal-body p{margin-bottom:12px}
+    .art-modal-body ul{padding-left:18px;margin-bottom:12px}
+    .art-modal-body li{margin-bottom:6px}
+    .art-modal-body strong{color:var(--txt)}
+    .art-modal-body .tip-box{background:#FAF8FF;border:1.5px solid #EDE9FE;border-radius:12px;padding:13px 15px;margin:12px 0;font-size:13px;color:var(--p)}
+
+    /* ── KIE FLOATER ── */
+    .kie-floater{position:fixed;bottom:26px;right:22px;z-index:300;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+    .kie-float-row{display:flex;align-items:center;gap:10px}
+    .kie-float-label{background:#1E1B4B;color:#fff;font-size:12px;font-weight:700;padding:9px 15px;border-radius:22px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .15s;font-family:'Inter',sans-serif}
+    .kie-float-label:hover{background:#312e81}
+    .kie-float-label-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:dotPulse 2s ease-in-out infinite}
+    @keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .kie-float-btn{width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;padding:0;overflow:hidden;box-shadow:0 6px 24px rgba(91,33,182,.35);transition:transform .2s,box-shadow .2s;position:relative;background:var(--g);flex-shrink:0}
+    .kie-float-btn:hover{transform:scale(1.07);box-shadow:0 10px 32px rgba(91,33,182,.42)}
+    .kie-float-btn img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .kie-float-pulse{position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(124,58,237,.35);animation:kiePulse 2.2s ease-in-out infinite}
+    .kie-float-badge{background:var(--green);width:15px;height:15px;border-radius:50%;border:2.5px solid #fff;position:absolute;bottom:2px;right:2px}
+    @keyframes kiePulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.18);opacity:0}}
+    .kie-float-hint{background:#1E1B4B;color:#fff;font-size:12px;font-weight:600;padding:8px 14px;border-radius:12px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.18);animation:hintIn .3s ease;display:flex;align-items:center;gap:6px}
+    @keyframes hintIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .kie-float-hint-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+    /* ── KIE FULL SCREEN ── */
+    .kie-screen{position:fixed;inset:0;z-index:400;display:none;flex-direction:column;background:#fff}
+    .kie-screen.open{display:flex;animation:screenSlide .28s ease}
+    @keyframes screenSlide{from{transform:translateY(100%)}to{transform:none}}
+    .kie-screen-hdr{background:linear-gradient(135deg,#1E1B4B,#5B21B6);padding:16px 20px 18px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+    .kie-screen-av{width:48px;height:48px;border-radius:50%;overflow:hidden;border:2.5px solid rgba(255,255,255,.3);flex-shrink:0}
+    .kie-screen-av img{width:100%;height:100%;object-fit:cover}
+    .kie-screen-info{flex:1}
+    .kie-screen-name{font-size:15px;font-weight:800;color:#fff;font-family:'Inter',sans-serif}
+    .kie-screen-status{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;display:flex;align-items:center;gap:5px}
+    .kie-screen-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+    .kie-screen-close{width:36px;height:36px;background:rgba(255,255,255,.12);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;color:#fff}
+    .kie-screen-close:hover{background:rgba(255,255,255,.22)}
+    .kie-screen-intro{padding:16px 18px 8px;background:#F9F8FF;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;flex-shrink:0}
+    .kie-intro-ico{font-size:20px;flex-shrink:0;margin-top:2px}
+    .kie-intro-txt{font-size:12px;color:var(--sub);line-height:1.6}
+    .kie-intro-txt strong{color:var(--txt)}
+    .kie-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+    .kie-msgs::-webkit-scrollbar{width:3px}
+    .kie-msgs::-webkit-scrollbar-thumb{background:#DDD6FE;border-radius:99px}
+    .kie-msg{display:flex;gap:8px;align-items:flex-start}
+    .kie-msg.user{flex-direction:row-reverse}
+    .kie-msg-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;overflow:hidden;border:1.5px solid var(--border)}
+    .kie-msg-av img{width:100%;height:100%;object-fit:cover}
+    .kie-msg-av.user{background:var(--g);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;border:none}
+    .kie-bubble{padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.55;max-width:calc(100% - 44px)}
+    .kie-bubble.ai{background:#F5F3FF;color:var(--txt);border:1px solid #EDE9FE;border-bottom-left-radius:4px}
+    .kie-bubble.user{background:var(--g);color:#fff;border-bottom-right-radius:4px}
+    .kie-typing{display:none;align-items:center;gap:8px;padding:10px 13px;background:#F5F3FF;border:1px solid #EDE9FE;border-radius:14px;border-bottom-left-radius:4px;width:fit-content}
+    .kie-typing.show{display:flex}
+    .kie-dot-anim{display:flex;gap:3px}
+    .kie-dot-anim span{width:6px;height:6px;border-radius:50%;background:#A78BFA;display:inline-block;animation:typingBounce 1.4s infinite}
+    .kie-dot-anim span:nth-child(2){animation-delay:.2s}
+    .kie-dot-anim span:nth-child(3){animation-delay:.4s}
+    @keyframes typingBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+    .kie-sugs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px 6px;flex-shrink:0;border-top:1px solid var(--border)}
+    .kie-sug{background:#F5F3FF;border:1.5px solid #EDE9FE;border-radius:99px;padding:6px 13px;font-size:11px;font-weight:600;color:var(--p);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+    .kie-sug:hover{background:#EDE9FE;border-color:#C4B5FD}
+    .kie-input-row{display:flex;align-items:flex-end;gap:8px;padding:12px 14px 14px;border-top:1px solid var(--border);background:#fff;flex-shrink:0}
+    .kie-input{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13px;font-family:inherit;outline:none;resize:none;transition:border-color .2s;background:#F9F8FF;color:var(--txt);min-height:42px;max-height:100px}
+    .kie-input:focus{border-color:var(--p)}
+    .kie-send{width:40px;height:40px;background:var(--g);border:none;border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+    .kie-send:hover{opacity:.85;transform:scale(1.05)}
+    .kie-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+    @media(max-width:580px){
+      .contact-cards{grid-template-columns:1fr}
+      .articles-grid{grid-template-columns:1fr}
+      .form-row{grid-template-columns:1fr}
+      .sup-title{font-size:22px}
+    }
+
+    /* ── CUSTOM SELECT ── */
+    .custom-select{position:relative;user-select:none}
+    .csel-trigger{background:#F9F8FF;border:1.5px solid var(--border);border-radius:11px;padding:11px 14px;font-size:13px;font-family:inherit;color:var(--mute);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:border-color .2s,background .2s;width:100%}
+    .csel-trigger.has-val{color:var(--txt)}
+    .csel-trigger:hover,.custom-select.open .csel-trigger{border-color:var(--p2);background:#fff}
+    .csel-trigger-left{display:flex;align-items:center;gap:8px}
+    .csel-trigger-ico{font-size:15px;line-height:1;width:20px;text-align:center}
+    .csel-arrow{width:14px;height:14px;flex-shrink:0;transition:transform .2s;color:var(--sub)}
+    .custom-select.open .csel-arrow{transform:rotate(180deg)}
+    .csel-opts{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1.5px solid #EDE9FE;border-radius:13px;box-shadow:0 8px 32px rgba(91,33,182,.16);z-index:600;overflow:hidden;display:none}
+    .custom-select.open .csel-opts{display:block;animation:fadeIn .15s ease}
+    .csel-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:13px;color:var(--txt);transition:background .1s;font-weight:500;border-bottom:1px solid #FAF8FF}
+    .csel-opt:last-child{border-bottom:none}
+    .csel-opt:hover{background:#FAF5FF;color:var(--p)}
+    .csel-opt.sel{background:#F5F0FF;color:var(--p);font-weight:700}
+    .csel-opt-ico{width:28px;height:28px;border-radius:8px;background:#EDE9FE;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .csel-opt.sel .csel-opt-ico{background:#DDD6FE}
+
+    /* ── FAQ HELPFUL ── */
+    .faq-helpful{display:flex;align-items:center;gap:10px;padding:12px 0 0;margin-top:10px;border-top:1px solid #F5F3FF;flex-wrap:wrap}
+    .faq-helpful-lbl{font-size:11px;color:var(--mute);font-weight:600}
+    .faq-helpful-btns{display:flex;gap:6px}
+    .fhb{background:#F5F5F8;border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;color:var(--sub);transition:all .15s;display:flex;align-items:center;gap:5px}
+    .fhb.yes:hover,.fhb.yes.voted{border-color:#10B981;background:#ECFDF5;color:#059669}
+    .fhb.no:hover,.fhb.no.voted{border-color:#FCA5A5;background:#FFF1F2;color:#EF4444}
+    .fhb:disabled{cursor:default}
+    .faq-helpful-done{font-size:11px;color:var(--green);font-weight:600;animation:fadeIn .2s ease}
+
+    /* ── ARTICLE FULL-SCREEN READER ── */
+    .art-screen{position:fixed;inset:0;z-index:200;background:#fff;display:none;flex-direction:column;overflow:hidden}
+    .art-screen.open{display:flex;animation:screenSlide .3s ease}
+    .art-prog{position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,#5B21B6,#9333ea);width:0%;z-index:10;border-radius:0 3px 3px 0;transition:width .08s linear;pointer-events:none}
+    .art-screen-hdr{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;background:#fff;position:relative}
+    .art-back{width:34px;height:34px;border-radius:9px;background:#F5F5F8;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt);transition:background .15s;flex-shrink:0}
+    .art-back:hover{background:#EDE9FE;color:var(--p)}
+    .art-hdr-title{flex:1;font-size:13px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .art-hdr-time{font-size:11px;color:var(--mute);font-weight:600;flex-shrink:0;white-space:nowrap;background:#F5F5F8;padding:4px 10px;border-radius:99px}
+    .art-scroll{flex:1;overflow-y:auto;display:flex;justify-content:center}
+    .art-scroll::-webkit-scrollbar{width:4px}
+    .art-scroll::-webkit-scrollbar-thumb{background:#DDD6FE;border-radius:99px}
+    .art-inner{max-width:660px;width:100%;padding:36px 24px 140px}
+    .art-cat{display:inline-block;background:var(--g);color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:99px;letter-spacing:.4px;margin-bottom:14px}
+    .art-big-title{font-size:26px;font-weight:800;color:var(--txt);letter-spacing:-.6px;line-height:1.22;margin-bottom:12px}
+    .art-byline{display:flex;align-items:center;gap:12px;padding-bottom:22px;border-bottom:1.5px solid var(--border);margin-bottom:28px}
+    .art-byline-av{width:36px;height:36px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+    .art-byline-name{font-size:13px;font-weight:700;color:var(--txt)}
+    .art-byline-sub{font-size:11px;color:var(--mute);font-weight:500}
+    .art-txt{font-size:16px;color:#374151;line-height:1.88}
+    .art-txt h3{font-size:17px;font-weight:800;color:var(--txt);margin:28px 0 10px;letter-spacing:-.3px}
+    .art-txt p{margin-bottom:16px}
+    .art-txt ul{padding-left:22px;margin-bottom:16px}
+    .art-txt li{margin-bottom:9px;line-height:1.75}
+    .art-txt strong{color:var(--txt);font-weight:700}
+    .art-txt .tip-box{background:linear-gradient(135deg,#FAF5FF,#F0EAFF);border:1.5px solid #DDD6FE;border-radius:14px;padding:16px 18px;margin:20px 0;font-size:14px;color:var(--p);line-height:1.7}
+
+    /* Inline love button in byline */
+    .art-love-row{margin-left:auto;display:flex;align-items:center;gap:7px}
+    .art-love-btn{width:30px;height:30px;border-radius:50%;background:#FFF1F2;border:1.5px solid #FECDD3;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .18s;position:relative;flex-shrink:0;line-height:1}
+    .art-love-btn:hover{transform:scale(1.18);background:#FFE4E6;border-color:#FB7185}
+    .art-love-btn.loved{border-color:#FB7185;animation:lovePop .28s ease}
+    .art-love-count{font-size:13px;font-weight:700;color:var(--sub)}
+    .love-float{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:#FB7185;pointer-events:none;animation:clapFloat .55s ease forwards}
+    @keyframes lovePop{0%,100%{transform:scale(1)}45%{transform:scale(1.35)}}
+    @keyframes clapFloat{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-18px)}}
+    @media(max-width:600px){
+      .art-big-title{font-size:22px}
+      .art-txt{font-size:15px}
+    }
+    /* ── TICKET SUCCESS ── */
+    .ticket-id-box{background:linear-gradient(135deg,#FAF5FF,#F0EAFF);border:1.5px solid #DDD6FE;border-radius:12px;padding:14px 20px;display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+    .ticket-id-lbl{font-size:10px;font-weight:700;color:var(--p2);text-transform:uppercase;letter-spacing:.5px}
+    .ticket-id-val{font-size:18px;font-weight:800;color:var(--p);letter-spacing:1px;font-family:monospace}
+    .ticket-id-hint{font-size:11px;color:var(--mute);font-weight:500}
+    .ticket-copy-btn{background:none;border:none;cursor:pointer;color:var(--p2);font-size:12px;font-weight:700;font-family:inherit;padding:4px 8px;border-radius:6px;transition:background .15s}
+    .ticket-copy-btn:hover{background:#EDE9FE}
+
+    /* ── TICKET TRACKER SCREEN ── */
+    .ticket-screen{position:fixed;inset:0;z-index:200;background:#F9F8FF;display:none;flex-direction:column;overflow:hidden}
+    .ticket-screen.open{display:flex;animation:screenSlide .3s ease}
+    .ticket-screen-hdr{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;background:#fff}
+    .ticket-back{width:34px;height:34px;border-radius:9px;background:#F5F5F8;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt);transition:background .15s;flex-shrink:0}
+    .ticket-back:hover{background:#EDE9FE;color:var(--p)}
+    .ticket-screen-hdr-title{flex:1;font-size:14px;font-weight:800;color:var(--txt)}
+    .ticket-screen-body{flex:1;overflow-y:auto;padding:24px 16px 60px;display:flex;flex-direction:column;align-items:center;gap:20px}
+    .ticket-lookup-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:22px 20px;width:100%;max-width:480px}
+    .ticket-lookup-title{font-size:15px;font-weight:800;color:var(--txt);margin-bottom:6px}
+    .ticket-lookup-sub{font-size:13px;color:var(--sub);margin-bottom:16px;line-height:1.5}
+    .ticket-input-row{display:flex;gap:8px}
+    .ticket-input{flex:1;background:#F9F8FF;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:monospace;font-weight:700;color:var(--txt);outline:none;transition:border-color .2s;letter-spacing:.5px}
+    .ticket-input:focus{border-color:var(--p2)}
+    .ticket-check-btn{background:var(--g);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:opacity .2s}
+    .ticket-check-btn:hover{opacity:.88}
+    .ticket-check-btn:disabled{opacity:.5;cursor:default}
+    .ticket-result{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:22px 20px;width:100%;max-width:480px;display:none}
+    .ticket-result.show{display:block;animation:fadeIn .2s ease}
+    .ticket-result-id{font-size:11px;font-weight:700;color:var(--p2);letter-spacing:.5px;margin-bottom:4px}
+    .ticket-result-subject{font-size:16px;font-weight:800;color:var(--txt);margin-bottom:4px}
+    .ticket-result-meta{font-size:12px;color:var(--mute);font-weight:500;margin-bottom:20px}
+    .ticket-timeline{display:flex;flex-direction:column;gap:0}
+    .ticket-step{display:flex;gap:14px;position:relative}
+    .ticket-step:not(:last-child)::after{content:'';position:absolute;left:15px;top:32px;width:2px;height:calc(100% - 8px);background:var(--border)}
+    .ticket-step.done::after{background:var(--p2)}
+    .ticket-step-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;z-index:1}
+    .ticket-step.done .ticket-step-dot{border-color:var(--p);background:var(--p);color:#fff}
+    .ticket-step.active .ticket-step-dot{border-color:var(--p2);background:#EDE9FE;color:var(--p)}
+    .ticket-step-info{padding:6px 0 20px}
+    .ticket-step-name{font-size:13px;font-weight:700;color:var(--sub)}
+    .ticket-step.done .ticket-step-name,.ticket-step.active .ticket-step-name{color:var(--txt)}
+    .ticket-step-time{font-size:11px;color:var(--mute);font-weight:500;margin-top:2px}
+    .ticket-err{font-size:13px;color:#EF4444;font-weight:600;padding:10px 0;text-align:center;display:none}
+    .ticket-err.show{display:block}
+
+    /* ── READ MORE ARTICLES ── */
+    .more-articles{padding:36px 20px 48px;background:#fff;border-top:1px solid var(--border)}
+    .more-articles-hdr{max-width:1000px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between}
+    .more-articles-title{font-size:17px;font-weight:800;color:var(--txt)}
+    .more-articles-link{font-size:13px;font-weight:700;color:var(--p);text-decoration:none;display:flex;align-items:center;gap:4px;transition:gap .15s}
+    .more-articles-link:hover{gap:7px}
+    .more-articles-grid{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .marc{background:#fff;border-radius:16px;border:1.5px solid var(--border);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:0 2px 10px rgba(124,58,237,.06);display:flex;flex-direction:column;text-decoration:none;color:inherit}
+    .marc:hover{border-color:var(--p2);box-shadow:0 6px 24px rgba(124,58,237,.14);transform:translateY(-2px)}
+    .marc-img{height:120px;overflow:hidden;position:relative;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);flex-shrink:0}
+    .marc-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+    .marc:hover .marc-img img{transform:scale(1.06)}
+    .marc-cat{position:absolute;top:8px;left:8px;background:var(--g);color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:99px;letter-spacing:.3px;text-transform:uppercase}
+    .marc-body{padding:13px;flex:1;display:flex;flex-direction:column;gap:5px}
+    .marc-title{font-size:13px;font-weight:800;color:var(--txt);line-height:1.38;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .marc-sub{font-size:11px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+    .marc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #f5f3ff}
+    .marc-time{font-size:11px;color:var(--mute);font-weight:600}
+    .marc-arrow{font-size:14px;color:var(--p2)}
+    @media(max-width:700px){.more-articles-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:480px){.more-articles-grid{grid-template-columns:1fr}}
+
+    /* ── FOOTER ── */
+    footer{background:#0f0e17;border-top:none;padding:48px 24px 24px}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1000px;margin:0 auto 40px}
+    .footer-logo-img{height:36px;width:auto;object-fit:contain;display:block;margin-bottom:12px}
+    .footer-brand-text{font-size:13px;color:#9ca3af;line-height:1.75;max-width:220px}
+    .footer-col-h{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:14px}
+    .footer-links{list-style:none;display:flex;flex-direction:column;gap:10px}
+    .footer-links a{font-size:13px;color:#9ca3af;text-decoration:none;transition:color .18s}
+    .footer-links a:hover{color:#fff}
+    .footer-divider{max-width:1000px;margin:0 auto;border:none;border-top:1px solid #1f1f2e;margin-bottom:20px}
+    .footer-bottom{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .footer-copy{font-size:12px;color:#6b7280}
+    .footer-legal{display:flex;gap:18px}
+    .footer-legal a{font-size:12px;color:#6b7280;text-decoration:none;transition:color .18s}
+    .footer-legal a:hover{color:#fff}
+    @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>*:first-child{grid-column:span 2}}
+    @media(max-width:480px){.footer-grid{grid-template-columns:1fr}.footer-grid>*:first-child{grid-column:span 1}}
+    @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>*:first-child{grid-column:span 2}}
+    /* ── SUPPORT SCREEN TABS ── */
+    .support-screen{position:fixed;inset:0;z-index:200;background:#F9F8FF;display:none;flex-direction:column;overflow:hidden}
+    .support-screen.open{display:flex;animation:screenSlide .3s ease}
+    .support-screen-hdr{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;background:#fff}
+    .support-screen-title{flex:1;font-size:14px;font-weight:800;color:var(--txt)}
+    .stabs{display:flex;gap:0;border-bottom:1.5px solid var(--border);background:#fff;flex-shrink:0;padding:0 16px}
+    .stab{background:none;border:none;border-bottom:2.5px solid transparent;padding:13px 18px;font-size:13px;font-weight:600;color:var(--mute);cursor:pointer;font-family:inherit;margin-bottom:-1.5px;transition:color .15s,border-color .15s}
+    .stab.active{color:var(--p);border-bottom-color:var(--p);font-weight:800}
+    .stab-body{flex:1;overflow-y:auto;padding:20px 16px 60px}
+    .stab-pane{display:none}
+    .stab-pane.active{display:block;animation:fadeIn .18s ease}
+
+    /* ── REQUEST ENTRY CARD ── */
+    .req-entry{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .2s,box-shadow .2s;box-shadow:var(--shadow);margin-bottom:32px}
+    .req-entry:hover{border-color:var(--p2);box-shadow:var(--shadow2)}
+    .req-entry-ico{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#5B21B6,#7C3AED);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+    .req-entry-info{flex:1}
+    .req-entry-title{font-size:14px;font-weight:800;color:var(--txt);margin-bottom:3px}
+    .req-entry-sub{font-size:12px;color:var(--sub);line-height:1.5}
+    .req-entry-arrow{font-size:18px;color:var(--p2);flex-shrink:0}
+
+    /* ── FORM INSIDE SCREEN ── */
+    .screen-form-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}
+    .screen-form-body{padding:20px}
+
+    /* ── TYPEWRITER ── */
+    .tw-cursor{display:inline-block;width:2px;background:rgba(255,255,255,.85);margin-left:2px;animation:twBlink .7s step-end infinite;border-radius:1px}
+    @keyframes twBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* ── KIE BANNER ── */
+    .kie-banner{display:flex;align-items:center;gap:32px;background:#fff;border:1.5px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 8px 40px rgba(91,33,182,.10);margin-bottom:32px;padding:0}
+    .kie-banner-img-wrap{position:relative;flex-shrink:0;width:220px;min-height:240px;background:linear-gradient(160deg,#1E1B4B,#4C1D95);display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+    .kie-banner-img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+    .kie-banner-img-glow{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(124,58,237,.35) 100%)}
+    .kie-banner-body{flex:1;padding:32px 28px 32px 0}
+    .kie-banner-tag{display:inline-flex;align-items:center;gap:6px;background:#EDE9FE;color:var(--p);font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px;margin-bottom:14px;letter-spacing:.2px}
+    .kie-banner-title{font-size:22px;font-weight:900;color:var(--txt);line-height:1.25;letter-spacing:-.4px;margin-bottom:12px}
+    .kie-banner-title span{background:var(--g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .kie-banner-sub{font-size:13px;color:var(--sub);line-height:1.75;margin-bottom:22px;max-width:420px}
+    .kie-banner-btns{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .kie-banner-btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--g);color:#fff;border:none;border-radius:11px;padding:11px 20px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
+    .kie-banner-btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+    .kie-banner-btn-outline{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--p);border:1.5px solid var(--border2);border-radius:11px;padding:11px 20px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
+    .kie-banner-btn-outline:hover{border-color:var(--p);background:#FAF8FF;transform:translateY(-1px)}
+    @media(max-width:640px){
+      .kie-banner{flex-direction:column;gap:0}
+      .kie-banner-img-wrap{width:100%;min-height:180px}
+      .kie-banner-body{padding:22px 20px}
+      .kie-banner-title{font-size:18px}
+    }
+
+
+    /* ── KIE LEARN BUTTON ── */
+    .kie-banner-btn-learn{display:inline-flex;align-items:center;gap:7px;background:transparent;color:#7C3AED;border:1.5px solid #C4B5FD;border-radius:11px;padding:11px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
+    .kie-banner-btn-learn:hover{background:#F5F3FF;border-color:#7C3AED;transform:translateY(-1px)}
+
+    /* ── KIE GUIDE SCREEN ── */
+    .kgo-screen{position:fixed;inset:0;z-index:500;display:none;flex-direction:column;background:#fff;overflow:hidden}
+    .kgo-screen.open{display:flex;animation:kgoSlide .3s cubic-bezier(.32,.72,0,1)}
+    @keyframes kgoSlide{from{transform:translateY(100%);opacity:.6}to{transform:none;opacity:1}}
+
+    /* Header */
+    .kgo-hdr{background:linear-gradient(135deg,#1E0845 0%,#4C1D95 100%);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:14px}
+    .kgo-hdr-left{display:flex;align-items:center;gap:12px}
+    .kgo-hdr-logo{width:44px;height:44px;border-radius:12px;overflow:hidden;border:2px solid rgba(255,255,255,.2);flex-shrink:0}
+    .kgo-hdr-logo img{width:100%;height:100%;object-fit:cover}
+    .kgo-hdr-name{font-size:16px;font-weight:900;color:#fff;letter-spacing:-.3px}
+    .kgo-hdr-tag{font-size:11px;color:rgba(196,181,253,.8);font-weight:600;margin-top:2px}
+    .kgo-hdr-close{width:36px;height:36px;background:rgba(255,255,255,.12);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:background .15s;flex-shrink:0}
+    .kgo-hdr-close:hover{background:rgba(255,255,255,.22)}
+
+    /* Scrollable body */
+    .kgo-body{flex:1;overflow-y:auto;background:#F8F7FF}
+    .kgo-body::-webkit-scrollbar{width:3px}
+    .kgo-body::-webkit-scrollbar-thumb{background:#DDD6FE;border-radius:99px}
+
+    /* Hero white */
+    .kgo-hero-white{background:#fff;padding:32px 22px 28px;border-bottom:1px solid #EDE9FE;text-align:center}
+    .kgo-hw-badge{display:inline-flex;align-items:center;gap:6px;background:#EDE9FE;color:#5B21B6;font-size:11px;font-weight:800;padding:5px 13px;border-radius:99px;margin-bottom:16px;letter-spacing:.2px}
+    .kgo-hw-title{font-size:clamp(24px,6vw,36px);font-weight:900;color:#0F0E17;line-height:1.18;letter-spacing:-.5px;margin-bottom:12px}
+    .kgo-hw-title span{background:linear-gradient(90deg,#7C3AED,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .kgo-hw-sub{font-size:14px;color:#64748B;min-height:22px;margin-bottom:22px;font-weight:500}
+    .kgo-tw-cursor{display:inline-block;width:2px;background:#7C3AED;margin-left:1px;animation:kgoBlink .7s step-end infinite;border-radius:1px;vertical-align:text-bottom;height:1em}
+    @keyframes kgoBlink{0%,100%{opacity:1}50%{opacity:0}}
+    .kgo-hw-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .kgo-hw-pills span{display:inline-flex;align-items:center;gap:5px;background:#FAF8FF;color:#5B21B6;font-size:11px;font-weight:700;padding:6px 13px;border-radius:99px;border:1.5px solid #EDE9FE}
+
+    /* Swiper sections */
+    .kgo-swiper-section{padding:28px 22px;background:#fff;border-bottom:1px solid #EDE9FE}
+    .kgo-sw-dark{background:linear-gradient(160deg,#1E0845,#3B1A7A)}
+    .kgo-sw-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .kgo-sw-label{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#7C3AED;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}
+    .kgo-sw-label-light{color:#C4B5FD}
+    .kgo-sw-title{font-size:18px;font-weight:900;color:#0F0E17;letter-spacing:-.3px}
+    .kgo-sw-title-light{color:#fff}
+    .kgo-sw-nav{display:flex;gap:6px;flex-shrink:0;margin-top:4px}
+    .kgo-sw-prev,.kgo-sw-next{width:32px;height:32px;background:#F5F3FF;border:1.5px solid #EDE9FE;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#5B21B6;transition:all .15s}
+    .kgo-sw-prev:hover,.kgo-sw-next:hover{background:#EDE9FE;border-color:#C4B5FD}
+    .kgo-sw-btn-light{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff}
+    .kgo-sw-btn-light:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35)}
+
+    /* Role slides */
+    .kgo-swiper{overflow:hidden;padding-bottom:4px}
+    .kgo-role-slide,.kgo-feat-slide,.kgo-model-slide{background:#FAF8FF;border:1.5px solid #EDE9FE;border-radius:16px;padding:20px 16px;height:auto;display:flex;flex-direction:column;gap:8px}
+    .kgo-rs-ico{width:44px;height:44px;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#5B21B6;flex-shrink:0}
+    .kgo-rs-name{font-size:14px;font-weight:900;color:#0F0E17;letter-spacing:-.2px}
+    .kgo-rs-desc{font-size:12px;color:#64748B;line-height:1.6}
+
+    /* Feature slides */
+    .kgo-feat-slide{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
+    .kgo-fs-ico{width:40px;height:40px;background:rgba(255,255,255,.12);border-radius:11px;display:flex;align-items:center;justify-content:center;color:#DDD6FE;flex-shrink:0}
+    .kgo-fs-name{font-size:13px;font-weight:900;color:#fff;letter-spacing:-.2px}
+    .kgo-fs-desc{font-size:12px;color:rgba(196,181,253,.85);line-height:1.6}
+
+    /* Model slides */
+    .kgo-model-slide{padding:22px 18px}
+    .kgo-ms-flash{background:linear-gradient(160deg,#FFF7ED,#FEF3C7);border-color:#FDE68A}
+    .kgo-ms-swift{background:linear-gradient(160deg,#F0FFF4,#DCFCE7);border-color:#BBF7D0}
+    .kgo-ms-elite{background:linear-gradient(160deg,#FAF8FF,#EDE9FE);border-color:#C4B5FD}
+    .kgo-ms-ultra{background:linear-gradient(160deg,#1E0845,#2D1565);border-color:#4C1D95}
+    .kgo-ms-badge{font-size:14px;font-weight:900;display:inline-flex;align-items:center;gap:6px;margin-bottom:4px}
+    .kgo-ms-flash .kgo-ms-badge{color:#B45309}
+    .kgo-ms-swift .kgo-ms-badge{color:#065F46}
+    .kgo-ms-elite .kgo-ms-badge{color:#4C1D95}
+    .kgo-ms-ultra .kgo-ms-badge{color:#DDD6FE}
+    .kgo-ms-tagline{font-size:11px;font-weight:700;margin-bottom:10px}
+    .kgo-ms-flash .kgo-ms-tagline,.kgo-ms-swift .kgo-ms-tagline{color:#64748B}
+    .kgo-ms-elite .kgo-ms-tagline{color:#7C3AED}
+    .kgo-ms-ultra .kgo-ms-tagline{color:rgba(196,181,253,.8)}
+    .kgo-ms-desc{font-size:12px;line-height:1.65;margin-bottom:12px}
+    .kgo-ms-flash .kgo-ms-desc,.kgo-ms-swift .kgo-ms-desc{color:#475569}
+    .kgo-ms-elite .kgo-ms-desc{color:#475569}
+    .kgo-ms-ultra .kgo-ms-desc{color:rgba(196,181,253,.85)}
+    .kgo-ms-list{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:5px}
+    .kgo-ms-list li{font-size:11.5px;font-weight:600;padding-left:16px;position:relative}
+    .kgo-ms-flash .kgo-ms-list li,.kgo-ms-swift .kgo-ms-list li,.kgo-ms-elite .kgo-ms-list li{color:#334155}
+    .kgo-ms-ultra .kgo-ms-list li{color:#DDD6FE}
+    .kgo-ms-list li::before{content:"✓";position:absolute;left:0;font-weight:900}
+    .kgo-ms-flash .kgo-ms-list li::before{color:#D97706}
+    .kgo-ms-swift .kgo-ms-list li::before{color:#059669}
+    .kgo-ms-elite .kgo-ms-list li::before,.kgo-ms-ultra .kgo-ms-list li::before{color:#A855F7}
+    .kgo-ms-pill{display:inline-block;font-size:10px;font-weight:800;padding:3px 10px;border-radius:99px;background:#EDE9FE;color:#5B21B6}
+    .kgo-ms-pill-pop{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff}
+    .kgo-ms-pill-ultra{background:rgba(168,85,247,.3);color:#DDD6FE}
+
+    /* Journey */
+    .kgo-journey-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .kgo-jstep{background:#FAF8FF;border:1.5px solid #EDE9FE;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:60px;text-align:center}
+    .kgo-jstep-last{background:linear-gradient(135deg,#7C3AED,#A855F7);border-color:transparent}
+    .kgo-jstep-last .kgo-js-num{background:rgba(255,255,255,.2);color:#fff}
+    .kgo-jstep-last .kgo-js-lbl{color:#fff}
+    .kgo-js-num{width:24px;height:24px;background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0}
+    .kgo-js-lbl{font-size:10.5px;font-weight:800;color:#1E0845;white-space:nowrap}
+    .kgo-js-arrow{color:#C4B5FD;flex-shrink:0}
+
+    /* Swiper pagination */
+    .kgo-swiper{padding-bottom:28px !important}
+    .kgo-swiper .swiper-pagination-bullet{width:7px;height:7px;background:#C4B5FD;opacity:.6;transition:all .2s}
+    .kgo-swiper .swiper-pagination-bullet-active{background:#7C3AED;opacity:1;width:18px;border-radius:4px}
+    .kgo-sw-dark .kgo-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35)}
+    .kgo-sw-dark .kgo-swiper .swiper-pagination-bullet-active{background:#fff;opacity:1}
+
+    /* CTA white */
+    .kgo-cta-white{background:linear-gradient(160deg,#1E0845 0%,#3B1A7A 100%);padding:48px 24px;text-align:center}
+    .kgo-cta-img-wrap{position:relative;display:inline-block;margin-bottom:20px}
+    .kgo-cta-img-wrap img{width:72px;height:72px;border-radius:20px;object-fit:cover;border:2.5px solid rgba(255,255,255,.25);position:relative;z-index:1}
+    .kgo-cta-ring{position:absolute;inset:-8px;border-radius:28px;border:1.5px solid rgba(168,85,247,.4);animation:kgoPulse 2.5s ease-in-out infinite}
+    @keyframes kgoPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:.2;transform:scale(1.06)}}
+    .kgo-cta-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:10px;letter-spacing:-.3px}
+    .kgo-cta-sub{font-size:13px;color:rgba(196,181,253,.85);line-height:1.7;margin-bottom:28px}
+    .kgo-cta-btns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+
+    @media(max-width:500px){
+      .kgo-hero-white{padding:24px 16px 20px}
+      .kgo-swiper-section{padding:22px 14px}
+      .kgo-js-arrow{display:none}
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <div class="hdr-inner">
+    <a class="brand" href="index.html">
+      <img src="logo.jpg" alt="Kievora" class="brand-logo"/>
+      <span style="font-size:16px;font-weight:900;color:#0D0B1E;letter-spacing:-.3px;margin-left:8px">Kievora</span>
+    </a>
+    <div class="hdr-tag">Help Center</div>
+  </div>
+</header>
+
+<!-- ══ PAGE ══ -->
+<div class="page">
+
+  <!-- Hero -->
+  <div class="sup-hero">
+    <div class="sup-hero-bg"></div>
+    <div class="sup-hero-inner">
+      <div class="sup-tag">👋 We're here when you need us</div>
+      <div class="sup-title">Got a question? We've got you.</div>
+      <div class="sup-sub">
+        <span id="typewriterText"></span><span class="tw-cursor">|</span>
+      </div>
+      <div class="sup-search-wrap" style="position:relative;max-width:440px;width:100%">
+        <div class="sup-search">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,.6)" stroke-width="2.5" style="flex-shrink:0;margin-left:14px"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Ask anything about Kievora…" autocomplete="off"/>
+          <button class="sup-search-btn" id="searchBtn" onclick="doSearch()">Search</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KIE AI BANNER ── -->
+  <div class="kie-banner">
+    <div class="kie-banner-img-wrap">
+      <img src="kie.jpg" alt="KIE AI" class="kie-banner-img"/>
+      <div class="kie-banner-img-glow"></div>
+    </div>
+    <div class="kie-banner-body">
+      <div class="kie-banner-tag">✨ Powered by AI</div>
+      <div class="kie-banner-title">The future of career training &amp; job onboarding is here.</div>
+      <div class="kie-banner-sub">Meet KIE — your 24/7 AI career coach. From writing your first resume to landing your dream role, KIE guides every step. Smarter prep. Faster results. Zero guesswork.</div>
+      <div class="kie-banner-btns">
+        <button class="kie-banner-btn-primary" onclick="openKieScreen()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
+          Chat with KIE
+        </button>
+        <button class="kie-banner-btn-outline" onclick="window.location.href='/dashboard'">Try it Free →</button>
+        <button class="kie-banner-btn-learn" onclick="openKieGuide()">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Learn about KIE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AI ANSWER PANEL ── -->
+  <div id="answerPanel" class="answer-panel" style="display:none">
+    <div class="answer-inner">
+      <div class="answer-hdr">
+        <div class="answer-hdr-left">
+          <div class="answer-kie-av">
+            <img src="kie.jpg" alt="KIE" onerror="this.parentElement.style.cssText='width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#5B21B6,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff';this.parentElement.textContent='K'"/>
+          </div>
+          <span class="answer-label">KIE AI Answer</span>
+          <span class="answer-query-badge" id="answerQueryBadge"></span>
+        </div>
+        <button class="answer-close" onclick="closeAnswerPanel()">✕</button>
+      </div>
+      <div class="answer-body" id="answerBody">
+        <div class="answer-typing" id="answerTyping">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+      <div class="answer-footer">
+        <span>Want more detail?</span>
+        <button class="answer-open-kie" onclick="openKieScreen()">Open KIE Chat →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PLATFORM GUIDES ── -->
+  <div class="guide-section" id="guides">
+    <div class="sec-hdr">
+      <div class="sec-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Platform Guides
+      </div>
+    </div>
+    <div class="guide-tabs">
+      <button class="guide-tab active" onclick="showGuide('create', this)">Creating a Resume</button>
+      <button class="guide-tab" onclick="showGuide('templates', this)" id="tab-templates">Templates</button>
+      <button class="guide-tab" onclick="showGuide('kie-guide', this)">Using KIE AI</button>
+      <button class="guide-tab" onclick="showGuide('download', this)">Downloading PDF</button>
+      <button class="guide-tab" onclick="showGuide('account-guide', this)">Account</button>
+    </div>
+
+    <!-- Create -->
+    <div class="guide-content active" id="guide-create">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Choose a Template</div>
+            <div class="step-desc">From your dashboard, tap <strong>New Resume</strong>. Browse all 10 professional templates and pick the one that fits your industry. You can also use the <strong>Template Match Quiz</strong> to get a personalized recommendation.</div>
+            <div class="step-tip">💡 Tip: Use "Match Template" for instant AI-powered template recommendations</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Fill in Personal Info (Step 1)</div>
+            <div class="step-desc">Enter your full name, job title, email, phone, and location. Write a professional summary — or let KIE AI generate summary templates for you automatically when you fill in your job title.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Add Work Experience &amp; Education (Step 2)</div>
+            <div class="step-desc">Add your work history — position, company, dates, and a short description. Then add your education. KIE AI can also suggest bullet points for your job descriptions.</div>
+            <div class="step-tip">💡 Tip: Use strong action verbs and include measurable achievements ("increased sales by 30%")</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Add Skills &amp; Save (Step 3)</div>
+            <div class="step-desc">Type your skills one by one. KIE AI can suggest relevant skills based on your job title. Once you're happy, give your resume a name and hit <strong>Save Resume</strong>.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <div class="step-title">Download as PDF</div>
+            <div class="step-desc">From your dashboard or resume detail page, tap <strong>Download PDF</strong>. Make sure to allow pop-ups in your browser if the download doesn't start.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates -->
+    <div class="guide-content" id="guide-templates">
+      <div id="templates" style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🏛️ Classic — Best for: Finance, Law, Government</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Traditional layout with a clean two-column structure. Timeless and safe — instantly recognizable to conservative hiring managers. Blue color scheme.</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">⚡ Modern — Best for: Tech, Product, Startups</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Clean and contemporary. Teal accent colors with clear section hierarchy. Great for software engineers, product managers, and data professionals.</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">💼 Bold — Best for: Executives, Business, Senior roles</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Strong typography and dark accents. Commands attention. Perfect for senior professionals and managers who want to make a statement.</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">⬜ Minimal — Best for: Designers, Academics, Creatives</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Lots of white space. Simple and elegant. Lets your content speak for itself — ideal for design-forward or research-focused roles.</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🎨 Vivid / Coral / Ink — Best for: Creative, Media, Marketing</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Bold colors and standout layouts designed to be memorable — great for graphic designers, content creators, and anyone who needs to stand out.</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🌑 Slate — Best for: Senior Tech, Engineering, Data</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Dark left panel with a clean white content area. Sophisticated and sharp — great for senior engineers and data scientists.</div>
+        </div>
+        <div style="margin-top:4px;padding:13px 15px;background:#F5F0FF;border:1.5px solid #EDE9FE;border-radius:12px;font-size:12px;color:var(--p)">
+          ✨ Not sure which to pick? Use the <strong>Match Template Quiz</strong> on your dashboard for an AI-powered recommendation.
+        </div>
+      </div>
+    </div>
+
+    <!-- KIE Guide -->
+    <div class="guide-content" id="guide-kie-guide">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">What is KIE AI?</div>
+            <div class="step-desc">KIE is Kievora's AI career coach. KIE helps you write professional summaries, generate job description bullet points, suggest relevant skills, and answer career questions — all directly in the app.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">How to Open KIE</div>
+            <div class="step-desc">Tap the floating KIE button (bottom right) or the <strong>Ask KIE AI</strong> button from your dashboard. KIE opens in a full chat interface where you can have a real conversation.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">KIE Modes</div>
+            <div class="step-desc">KIE has different response modes: <strong>Default</strong> (balanced), <strong>Deep</strong> (detailed analysis), <strong>Quick</strong> (short answers), <strong>Creative</strong> (bold and original), and <strong>Web</strong> (with real-time data).</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Inline AI Help in the Builder</div>
+            <div class="step-desc">When building a resume, fill in your job title and KIE automatically suggests 3 summary templates. Click one to insert it instantly. There's also AI-powered skill suggestions and work bullet generation.</div>
+            <div class="step-tip">💡 Tip: Tell KIE your job title, industry, and years of experience for the best results</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download -->
+    <div class="guide-content" id="guide-download">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Download from the Dashboard</div>
+            <div class="step-desc">On your resume cards, tap the green <strong>↓ PDF</strong> button to instantly download that resume as a PDF file.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Download from the Detail View</div>
+            <div class="step-desc">Open any resume by tapping it, then use the <strong>Download PDF</strong> button in the detail view header. This also lets you preview before downloading.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Troubleshooting Downloads</div>
+            <div class="step-desc">PDF not downloading? Check your browser allows pop-ups for this site. Make sure you have a stable internet connection. Try a different browser (Chrome works best). Note: Drafts cannot be downloaded — save your resume first.</div>
+            <div class="step-tip">⚠️ Drafts (unsaved resumes) don't have a PDF download option — save first</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account -->
+    <div class="guide-content" id="guide-account-guide">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Creating an Account</div>
+            <div class="step-desc">Sign up using your email and a password, or via Google Sign-In for one-click access. Your resumes are tied to your account and synced securely in the cloud.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Managing Your Resumes</div>
+            <div class="step-desc">All your saved resumes appear on the dashboard. You can edit, preview, download, or delete them at any time. You can have multiple resumes for different job applications — no limit.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Account Settings</div>
+            <div class="step-desc">Access your account settings via the hamburger menu → <strong>My Account</strong>. Here you can update your name, profile picture, and other account details.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ARTICLES ── -->
+  <div class="articles-section" id="articles">
+    <div class="sec-hdr">
+      <div class="sec-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+        Career Articles
+        <span class="sec-badge">6 articles</span>
+      </div>
+      <a href="articles.html" style="font-size:13px;font-weight:700;color:var(--p);text-decoration:none;display:flex;align-items:center;gap:4px">
+        See all <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div class="articles-grid">
+      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
+        <div class="article-img"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&q=80&fit=crop&crop=top" alt="Resume Tips" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">RESUME TIPS</span></div>
+        <div class="article-body">
+          <div class="article-title">7 Resume Mistakes That Get You Rejected Instantly</div>
+          <div class="article-brief">These common errors cost candidates interviews every day. Here's what to avoid.</div>
+          <div class="article-meta"><span>4 min read</span><span>Resume Tips</span></div>
+        </div>
+      </a>
+      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
+        <div class="article-img"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=80&fit=crop&crop=faces" alt="ATS" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">ATS</span></div>
+        <div class="article-body">
+          <div class="article-title">How to Beat ATS and Get Your Resume to a Human</div>
+          <div class="article-brief">Most resumes never reach a human. Learn how ATS works and how to pass it.</div>
+          <div class="article-meta"><span>6 min read</span><span>Job Search</span></div>
+        </div>
+      </a>
+      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
+        <div class="article-img"><img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=600&q=80&fit=crop&crop=top" alt="Writing" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">WRITING</span></div>
+        <div class="article-body">
+          <div class="article-title">How to Write a Professional Summary That Gets You Hired</div>
+          <div class="article-brief">Your summary is the first thing recruiters read. Make it count.</div>
+          <div class="article-meta"><span>5 min read</span><span>Writing</span></div>
+        </div>
+      </a>
+      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
+        <div class="article-img"><img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80&fit=crop&crop=top" alt="Skills" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">SKILLS</span></div>
+        <div class="article-body">
+          <div class="article-title">Top Skills Employers Are Looking for in 2025</div>
+          <div class="article-brief">The job market has changed. These are the hard and soft skills that matter most right now.</div>
+          <div class="article-meta"><span>5 min read</span><span>Career</span></div>
+        </div>
+      </a>
+      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
+        <div class="article-img"><img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80&fit=crop&crop=top" alt="Templates" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">TEMPLATES</span></div>
+        <div class="article-body">
+          <div class="article-title">Choosing the Right Resume Template for Your Industry</div>
+          <div class="article-brief">Your template signals something before a recruiter reads a word. Here's how to match.</div>
+          <div class="article-meta"><span>4 min read</span><span>Templates</span></div>
+        </div>
+      </a>
+      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
+        <div class="article-img"><img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80&fit=crop&crop=top" alt="AI Resume" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">AI & CAREERS</span></div>
+        <div class="article-body">
+          <div class="article-title">How AI is Changing the Job Market in 2025</div>
+          <div class="article-brief">AI is reshaping hiring. Here's what job seekers need to know and how to adapt.</div>
+          <div class="article-meta"><span>7 min read</span><span>AI & Careers</span></div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── FAQ ── -->
+  <div class="faq-section" id="faq">
+    <div class="sec-hdr">
+      <div class="sec-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Frequently Asked Questions
+      </div>
+      <span class="sec-badge" id="faqBadge">10 questions</span>
+    </div>
+    <div class="faq-list" id="faqList"></div>
+  </div>
+
+  <!-- ── SUBMIT A REQUEST (entry only) ── -->
+  <div id="contact">
+    <div class="req-entry" onclick="openSupportScreen('submit')">
+      <div class="req-entry-ico">💬</div>
+      <div class="req-entry-info">
+        <div class="req-entry-title">Can't find what you're looking for?</div>
+        <div class="req-entry-sub">Submit a request — we respond within 24 hours</div>
+      </div>
+      <div class="req-entry-arrow">›</div>
+    </div>
+  </div>
+
+  <!-- Contact Cards -->
+  <div class="contact-section">
+    <div class="contact-cards">
+      <div class="contact-card">
+        <div class="contact-ico" style="background:#EDE9FE">📧</div>
+        <div class="contact-title">Email Support</div>
+        <div class="contact-sub">For account issues or anything that needs a personal touch — reach us directly.</div>
+        <button class="contact-btn" onclick="window.location.href='mailto:support@kievora.com'">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Send Email
+        </button>
+      </div>
+      <div class="contact-card">
+        <div class="contact-ico" style="background:#F0FDF4">💬</div>
+        <div class="contact-title">Ask KIE AI</div>
+        <div class="contact-sub">Open the full KIE AI chat from your dashboard for in-depth career advice and help.</div>
+        <button class="contact-btn contact-btn-outline" onclick="window.location.href='dashboard.html'">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
+          Open Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .page -->
+
+
+<!-- ══ ARTICLE FULL-SCREEN READER ══ -->
+<div class="art-screen" id="artScreen">
+  <div class="art-prog" id="artProg"></div>
+  <div class="art-screen-hdr">
+    <button class="art-back" onclick="closeArticle()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="art-hdr-title" id="artHdrTitle"></div>
+    <div class="art-hdr-time" id="artHdrTime"></div>
+  </div>
+  <div class="art-scroll" id="artScroll">
+    <div class="art-inner" id="artInner"></div>
+  </div>
+</div>
+
+
+<!-- ══ SUPPORT SCREEN (Submit + Track tabs) ══ -->
+<div class="support-screen" id="supportScreen">
+  <div class="support-screen-hdr">
+    <button class="ticket-back" onclick="closeSupportScreen()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="support-screen-title">Support</div>
+  </div>
+  <div class="stabs">
+    <button class="stab active" id="stab-submit" onclick="switchSupportTab('submit')">Submit Request</button>
+    <button class="stab" id="stab-track" onclick="switchSupportTab('track')">Track My Request</button>
+  </div>
+  <div class="stab-body">
+
+    <!-- ── Submit tab ── -->
+    <div class="stab-pane active" id="spane-submit">
+      <div class="screen-form-card">
+        <div class="screen-form-body" id="requestForm">
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="reqName" class="form-input" placeholder="Your name"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="reqEmail" class="form-input" placeholder="you@email.com"/>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label class="form-label">Category</label>
+            <input type="hidden" id="reqCategory" value=""/>
+            <div class="custom-select" id="catWrap">
+              <div class="csel-trigger" id="catTrigger">
+                <div class="csel-trigger-left">
+                  <span class="csel-trigger-ico" id="catTriggerIco"></span>
+                  <span id="catTriggerLabel">Select a category…</span>
+                </div>
+                <svg class="csel-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+              <div class="csel-opts" id="catOpts"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <input type="text" id="reqSubject" class="form-input" placeholder="What's this about?"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea id="reqMessage" class="form-textarea" placeholder="Tell us what's going on — the more detail, the faster we can help." rows="4"></textarea>
+          </div>
+          <div id="reqError" class="request-error"></div>
+          <button class="submit-btn" id="reqSubmitBtn" onclick="submitRequest()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            Send Request
+          </button>
+        </div>
+        <div class="request-success" id="requestSuccess">
+          <div class="success-ico">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#10B981" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div class="success-title">Request sent!</div>
+          <div class="success-sub">We've received your message and will get back to you within 24 hours.</div>
+          <div class="ticket-id-box">
+            <div class="ticket-id-lbl">Your Ticket ID</div>
+            <div class="ticket-id-val" id="successTicketId">—</div>
+            <div class="ticket-id-hint">Save this to track your request</div>
+            <button class="ticket-copy-btn" onclick="copyTicketId()">📋 Copy ID</button>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px">
+            <button onclick="switchSupportTab('track')" style="background:var(--g);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Track Request →</button>
+            <button onclick="resetForm()" style="background:#F5F5F8;color:var(--txt);border:1.5px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Send another</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Track tab ── -->
+    <div class="stab-pane" id="spane-track">
+      <div class="ticket-lookup-card" style="max-width:100%">
+        <div class="ticket-lookup-title">Track your request</div>
+        <div class="ticket-lookup-sub">Enter the ticket ID you received after submitting.</div>
+        <div class="ticket-input-row">
+          <input class="ticket-input" id="ticketInputField" placeholder="KVR-2026-XXXXX" maxlength="14" oninput="this.value=this.value.toUpperCase()"/>
+          <button class="ticket-check-btn" id="ticketCheckBtn" onclick="checkTicketStatus()">Check</button>
+        </div>
+        <div class="ticket-err" id="ticketErr"></div>
+      </div>
+      <div class="ticket-result" id="ticketResult" style="max-width:100%;margin-top:14px">
+        <div class="ticket-result-id" id="trId"></div>
+        <div class="ticket-result-subject" id="trSubject"></div>
+        <div class="ticket-result-meta" id="trMeta"></div>
+        <div class="ticket-timeline" id="trTimeline"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══ KIE GUIDE SCREEN ══ -->
+<div id="kieGuideOverlay" class="kgo-screen">
+
+  <!-- Header -->
+  <div class="kgo-hdr">
+    <div class="kgo-hdr-left">
+      <div class="kgo-hdr-logo">
+        <img src="kie.jpg" alt="KIE"/>
+      </div>
+      <div>
+        <div class="kgo-hdr-name">KIE AI</div>
+        <div class="kgo-hdr-tag">Career Operating System</div>
+      </div>
+    </div>
+    <button class="kgo-hdr-close" onclick="closeKieGuide()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="kgo-body">
+
+    <!-- ── HERO ── -->
+    <div class="kgo-hero-white">
+      <div class="kgo-hw-badge">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Version 1.0 · Now Live
+      </div>
+      <div class="kgo-hw-title">The World's Most<br/><span>Intelligent AI Career OS</span></div>
+      <div class="kgo-hw-sub">
+        <span id="kgoTypeText"></span><span class="kgo-tw-cursor">|</span>
+      </div>
+      <div class="kgo-hw-pills">
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Resume Builder</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> 24/7 AI Coach</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Interview Prep</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Salary Intel</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Career Growth</span>
+      </div>
+    </div>
+
+    <!-- ── SWIPER 1: What KIE Does ── -->
+    <div class="kgo-swiper-section">
+      <div class="kgo-sw-hdr">
+        <div>
+          <div class="kgo-sw-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            What KIE Does For You
+          </div>
+          <div class="kgo-sw-title">Your entire career, powered by AI</div>
+        </div>
+        <div class="kgo-sw-nav" id="nav1">
+          <button class="kgo-sw-prev" id="prev1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="kgo-sw-next" id="next1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+      <div class="swiper kgo-swiper" id="swiper1">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="kgo-rs-name">Resume Writer</div><div class="kgo-rs-desc">Crafts professional resumes tailored to any role or industry</div></div>
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="kgo-rs-name">Recruiter Insight</div><div class="kgo-rs-desc">Understands what recruiters look for and optimises accordingly</div></div>
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="kgo-rs-name">Career Coach</div><div class="kgo-rs-desc">Personalised 1-on-1 coaching available every hour of every day</div></div>
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kgo-rs-name">Salary Negotiator</div><div class="kgo-rs-desc">Knows your market value and tells you exactly how to negotiate</div></div>
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="kgo-rs-name">Hiring Manager Eye</div><div class="kgo-rs-desc">Evaluates your profile through the lens of a real hiring manager</div></div>
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="kgo-rs-name">Personal Brand</div><div class="kgo-rs-desc">Builds a compelling professional identity across all platforms</div></div>
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div><div class="kgo-rs-name">Career Strategist</div><div class="kgo-rs-desc">Maps out long-term career paths and promotion roadmaps</div></div>
+          <div class="swiper-slide kgo-role-slide"><div class="kgo-rs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div><div class="kgo-rs-name">Professional Mentor</div><div class="kgo-rs-desc">Guides you through every career decision like a trusted advisor</div></div>
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ── SWIPER 2: Features ── -->
+    <div class="kgo-swiper-section kgo-sw-dark">
+      <div class="kgo-sw-hdr">
+        <div>
+          <div class="kgo-sw-label kgo-sw-label-light">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Core Features
+          </div>
+          <div class="kgo-sw-title kgo-sw-title-light">Everything you need to get hired &amp; grow</div>
+        </div>
+        <div class="kgo-sw-nav" id="nav2">
+          <button class="kgo-sw-prev kgo-sw-btn-light" id="prev2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="kgo-sw-next kgo-sw-btn-light" id="next2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+      <div class="swiper kgo-swiper" id="swiper2">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="kgo-fs-name">Resume Intelligence</div><div class="kgo-fs-desc">Build, analyze, enhance and design resumes with AI. Upload a photo, image, or just type a prompt.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="kgo-fs-name">Interview Coaching</div><div class="kgo-fs-desc">Mock technical, behavioral, and leadership interviews with real-time AI feedback.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kgo-fs-name">Salary Intelligence</div><div class="kgo-fs-desc">Find your market value, get negotiation scripts, and forecast your future salary.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="kgo-fs-name">Career Roadmaps</div><div class="kgo-fs-desc">Personalised 30-day, 90-day, 1-year and 5-year plans with learning paths and goals.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div class="kgo-fs-name">Job Matching</div><div class="kgo-fs-desc">Upload your resume and get matched to jobs by skill fit with gap analysis included.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div class="kgo-fs-name">Cover Letters &amp; Messaging</div><div class="kgo-fs-desc">Auto-generate job-specific cover letters, recruiter messages and follow-up emails.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div><div class="kgo-fs-name">LinkedIn Optimizer</div><div class="kgo-fs-desc">Improve headline, about section and skills. Get a Recruiter Attraction Score.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="kgo-fs-name">ATS Intelligence</div><div class="kgo-fs-desc">Continuous ATS scoring, keyword gap analysis and recruiter readiness assessment.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><div class="kgo-fs-name">Career Health Score</div><div class="kgo-fs-desc">A proprietary 0–100 score combining resume quality, skills, readiness and LinkedIn.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="kgo-fs-name">Learning Coach</div><div class="kgo-fs-desc">AI-recommended courses, certifications and projects based on your goals and market trends.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="kgo-fs-name">Industry Intelligence</div><div class="kgo-fs-desc">Real-time hiring trends, in-demand skills and emerging technologies by industry.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="kgo-fs-name">Promotion Readiness</div><div class="kgo-fs-desc">Full leadership readiness score and a personalised promotion roadmap.</div></div>
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ── SWIPER 3: AI Models ── -->
+    <div class="kgo-swiper-section">
+      <div class="kgo-sw-hdr">
+        <div>
+          <div class="kgo-sw-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            AI Intelligence Tiers
+          </div>
+          <div class="kgo-sw-title">Choose your power level</div>
+        </div>
+        <div class="kgo-sw-nav" id="nav3">
+          <button class="kgo-sw-prev" id="prev3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="kgo-sw-next" id="next3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+      <div class="swiper kgo-swiper" id="swiper3">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide kgo-model-slide kgo-ms-flash">
+            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> KIE Flash</div>
+            <div class="kgo-ms-tagline">Lightning Fast</div>
+            <div class="kgo-ms-desc">Blazing speed for instant resume generation and rapid responses. Best when you need answers now.</div>
+            <ul class="kgo-ms-list"><li>Instant resume drafts</li><li>Quick suggestions</li><li>Fast feedback</li><li>Rapid Q&amp;A</li></ul>
+            <div class="kgo-ms-pill">Best for speed</div>
+          </div>
+          <div class="swiper-slide kgo-model-slide kgo-ms-swift">
+            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> KIE Swift</div>
+            <div class="kgo-ms-tagline">Smart &amp; Efficient</div>
+            <div class="kgo-ms-desc">Fast reasoning for career questions, professional responses and structured advice with depth.</div>
+            <ul class="kgo-ms-list"><li>Career Q&amp;A</li><li>Professional responses</li><li>Fast reasoning</li><li>Career planning</li></ul>
+            <div class="kgo-ms-pill">Everyday tasks</div>
+          </div>
+          <div class="swiper-slide kgo-model-slide kgo-ms-elite">
+            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> KIE Elite</div>
+            <div class="kgo-ms-tagline">Deep Intelligence</div>
+            <div class="kgo-ms-desc">Advanced AI for deep resume optimisation, strategic coaching, interview prep and professional writing.</div>
+            <ul class="kgo-ms-list"><li>Deep optimisation</li><li>Career coaching</li><li>Interview prep</li><li>Professional writing</li></ul>
+            <div class="kgo-ms-pill kgo-ms-pill-pop">Most Popular</div>
+          </div>
+          <div class="swiper-slide kgo-model-slide kgo-ms-ultra">
+            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg> KIE Ultra</div>
+            <div class="kgo-ms-tagline">Highest Intelligence</div>
+            <div class="kgo-ms-desc">The most powerful tier for executive resumes, strategic career planning and leadership coaching.</div>
+            <ul class="kgo-ms-list"><li>Executive resumes</li><li>Strategic planning</li><li>Leadership coaching</li><li>Complex analysis</li></ul>
+            <div class="kgo-ms-pill kgo-ms-pill-ultra">Premium</div>
+          </div>
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ── JOURNEY ── -->
+    <div class="kgo-swiper-section">
+      <div class="kgo-sw-label">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 16 14"/></svg>
+        Your Career Journey
+      </div>
+      <div class="kgo-sw-title" style="margin-bottom:20px">One platform. Every step.</div>
+      <div class="kgo-journey-row">
+        <div class="kgo-jstep"><div class="kgo-js-num">1</div><div class="kgo-js-lbl">Discover</div></div>
+        <div class="kgo-js-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="kgo-jstep"><div class="kgo-js-num">2</div><div class="kgo-js-lbl">Learn</div></div>
+        <div class="kgo-js-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="kgo-jstep"><div class="kgo-js-num">3</div><div class="kgo-js-lbl">Build</div></div>
+        <div class="kgo-js-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="kgo-jstep"><div class="kgo-js-num">4</div><div class="kgo-js-lbl">Apply</div></div>
+        <div class="kgo-js-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="kgo-jstep"><div class="kgo-js-num">5</div><div class="kgo-js-lbl">Interview</div></div>
+        <div class="kgo-js-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="kgo-jstep"><div class="kgo-js-num">6</div><div class="kgo-js-lbl">Negotiate</div></div>
+        <div class="kgo-js-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="kgo-jstep"><div class="kgo-js-num">7</div><div class="kgo-js-lbl">Get Hired</div></div>
+        <div class="kgo-js-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="kgo-jstep kgo-jstep-last"><div class="kgo-js-num">8</div><div class="kgo-js-lbl">Grow</div></div>
+      </div>
+    </div>
+
+    <!-- ── CTA ── -->
+    <div class="kgo-cta-white">
+      <div class="kgo-cta-img-wrap">
+        <img src="kie.jpg" alt="KIE"/>
+        <div class="kgo-cta-ring"></div>
+      </div>
+      <div class="kgo-cta-title">Ready to meet KIE?</div>
+      <div class="kgo-cta-sub">Your AI career coach is standing by, 24/7.<br/>No appointments. No waiting. Completely free.</div>
+      <div class="kgo-cta-btns">
+        <button class="kie-banner-btn-primary" onclick="closeKieGuide();openKieScreen()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Chat with KIE Now
+        </button>
+        <button class="kie-banner-btn-outline" onclick="window.location.href='/dashboard'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Go to Dashboard
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /kgo-body -->
+</div>
+
+<!-- ══ FOOTER ══ -->
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <a href="index.html" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;text-decoration:none">
+        <img src="logo.jpg" alt="Kievora" class="footer-logo-img" style="margin-bottom:0"/>
+        <span style="font-size:16px;font-weight:900;color:#fff;letter-spacing:-.3px">Kievora</span>
+      </a>
+      <p class="footer-brand-text">Professional resume builder with AI career coaching. Land your next role, faster. 100% free.</p>
+    </div>
+    <div>
+      <div class="footer-col-h">Product</div>
+      <ul class="footer-links">
+        <li><a href="index.html#features">Features</a></li>
+        <li><a href="index.html#templates">Templates</a></li>
+        <li><a href="index.html#kie">KIE AI</a></li>
+        <li><a href="articles.html">Career Reads</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-h">Account</div>
+      <ul class="footer-links">
+        <li><a href="/signup">Sign Up Free</a></li>
+        <li><a href="/login">Sign In</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-h">Support</div>
+      <ul class="footer-links">
+        <li><a href="/support">Help Center</a></li>
+        <li><a href="mailto:support@kievora.com">Contact Us</a></li>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <hr class="footer-divider"/>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2026 Kievora. All rights reserved.</p>
+    <div class="footer-legal">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="#">Cookies</a>
+    </div>
+  </div>
+</footer>
+<div class="kie-floater" id="kieFloater">
+  <div class="kie-float-hint" id="kieHint">
+    <span class="kie-float-hint-dot"></span>
+    Ask me anything about Kievora
+  </div>
+  <div class="kie-float-row" onclick="openKieScreen()" style="cursor:pointer">
+    <div class="kie-float-label">
+      <span class="kie-float-label-dot"></span>
+      Need help?
+    </div>
+    <img src="kie.jpg" alt="KIE" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)" onerror="this.style.display='none'"/>
+  </div>
+</div>
+
+
+<!-- ══ KIE FULL SCREEN ══ -->
+<div class="kie-screen" id="kieScreen">
+  <div class="kie-screen-hdr">
+    <div class="kie-screen-av">
+      <img src="kie.jpg" alt="KIE" onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:100%;background:linear-gradient(135deg,#5B21B6,#7C3AED);display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-weight:900;font-size:14px;color:#fff\'>KIE</div>'"/>
+    </div>
+    <div class="kie-screen-info">
+      <div class="kie-screen-name">KIE — Support Assistant</div>
+      <div class="kie-screen-status"><span class="kie-screen-dot"></span>Online · Kievora platform only</div>
+    </div>
+    <button class="kie-screen-close" onclick="closeKieScreen()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="kie-screen-intro">
+    <div class="kie-intro-ico">💬</div>
+    <div class="kie-intro-txt">
+      <strong>Ask me anything about the platform.</strong> I can help with creating resumes, templates, downloading PDFs, KIE AI features, account questions, and more — all things Kievora.
+    </div>
+  </div>
+
+  <div class="kie-msgs" id="kieMsgs">
+    <div class="kie-msg">
+      <div class="kie-msg-av">
+        <img src="kie.jpg" alt="KIE" onerror="this.parentElement.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#5B21B6,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0';this.parentElement.textContent='K'"/>
+      </div>
+      <div class="kie-bubble ai">Hey! 👋 I'm KIE — I live here on the support page to help you out. What's going on?</div>
+    </div>
+    <div class="kie-typing" id="kieTyping">
+      <div class="kie-dot-anim"><span></span><span></span><span></span></div>
+      <div style="font-size:11px;color:var(--sub);margin-left:4px">KIE is typing…</div>
+    </div>
+  </div>
+
+  <div class="kie-sugs" id="kieSugs">
+    <button class="kie-sug" onclick="sendKieQ('How do I create a resume?')">Create a resume</button>
+    <button class="kie-sug" onclick="sendKieQ('Why won\'t my PDF download?')">PDF won't download</button>
+    <button class="kie-sug" onclick="sendKieQ('How does KIE AI work?')">How KIE AI works</button>
+    <button class="kie-sug" onclick="sendKieQ('Which template should I use?')">Pick a template</button>
+  </div>
+
+  <div class="kie-input-row">
+    <textarea id="kieInput" class="kie-input" placeholder="Ask anything about Kievora…" rows="1"></textarea>
+    <button class="kie-send" id="kieSendBtn" onclick="sendKieMsg()" disabled>
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+    </button>
+  </div>
+</div>
+
+
+<script>
+  // ═══════════════════════════════════════
+  // FIREBASE CONFIG — same as your other pages
+  // ═══════════════════════════════════════
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2s328tgIlxFnnvob5GK7G7C-QevPxnRs",
+    authDomain: "kievora.firebaseapp.com",
+    projectId: "kievora",
+    storageBucket: "kievora.firebasestorage.app",
+    messagingSenderId: "548806738102",
+    appId: "1:548806738102:web:bd84433ce38fbfb4e2e617",
+    measurementId: "G-X6VG3MVQ96"
+  };
+
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db   = firebase.firestore();
+  const auth = firebase.auth();
+
+  // ── SUBMIT REQUEST ──
+  // ── SUBMIT REQUEST ──
+  function genTicketId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 5; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return `KVR-${new Date().getFullYear()}-${s}`;
+  }
+
+  let _lastTicketId = '';
+
+  async function submitRequest() {
+    const name     = document.getElementById('reqName').value.trim();
+    const email    = document.getElementById('reqEmail').value.trim();
+    const category = document.getElementById('reqCategory').value;
+    const subject  = document.getElementById('reqSubject').value.trim();
+    const message  = document.getElementById('reqMessage').value.trim();
+    const errEl    = document.getElementById('reqError');
+
+    errEl.classList.remove('show');
+
+    if (!name || !email || !category || !subject || !message) {
+      errEl.textContent = 'Please fill in all fields before submitting.';
+      errEl.classList.add('show');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('reqSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .8s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Sending…';
+
+    const ticketId = genTicketId();
+
+    try {
+      // Attempt anonymous auth so Firestore rules are satisfied; if disabled, proceed anyway
+      if (!auth.currentUser) {
+        try { await auth.signInAnonymously(); } catch(authErr) { /* anonymous auth disabled — attempt write regardless */ }
+      }
+      await db.collection('support_requests').doc(ticketId).set({
+        ticketId, name, email, category, subject, message,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'pending',
+        source: 'support_page'
+      });
+      _lastTicketId = ticketId;
+      document.getElementById('successTicketId').textContent = ticketId;
+      document.getElementById('requestForm').style.display = 'none';
+      document.getElementById('requestSuccess').classList.add('show');
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Request';
+      errEl.textContent = 'Something went wrong. Please try emailing support@kievora.com directly.';
+      errEl.classList.add('show');
+    }
+  }
+
+  function copyTicketId() {
+    const id = document.getElementById('successTicketId').textContent;
+    navigator.clipboard.writeText(id).then(() => {
+      const btn = document.querySelector('.ticket-copy-btn');
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => btn.textContent = '📋 Copy ID', 2000);
+    });
+  }
+
+  function resetForm() {
+    ['reqName','reqEmail','reqSubject','reqMessage'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('reqCategory').value = '';
+    // Reset custom dropdown visual
+    document.getElementById('catTriggerIco').textContent = '';
+    document.getElementById('catTriggerLabel').textContent = 'Select a category…';
+    document.getElementById('catTrigger').classList.remove('has-val');
+    document.querySelectorAll('.csel-opt').forEach(o => o.classList.remove('sel'));
+    document.getElementById('reqError').classList.remove('show');
+    document.getElementById('requestSuccess').classList.remove('show');
+    document.getElementById('requestForm').style.display = 'block';
+    document.getElementById('reqSubmitBtn').disabled = false;
+    document.getElementById('reqSubmitBtn').innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Request';
+  }
+
+  // ── SUPPORT SCREEN ──
+  function openSupportScreen(tab) {
+    document.getElementById('supportScreen').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    switchSupportTab(tab || 'submit');
+    if (tab === 'track' && _lastTicketId) {
+      document.getElementById('ticketInputField').value = _lastTicketId;
+      checkTicketStatus();
+    }
+  }
+
+  function closeSupportScreen() {
+    document.getElementById('supportScreen').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function switchSupportTab(tab) {
+    ['submit','track'].forEach(t => {
+      document.getElementById('stab-' + t).classList.toggle('active', t === tab);
+      document.getElementById('spane-' + t).classList.toggle('active', t === tab);
+    });
+    if (tab === 'track') {
+      setTimeout(() => document.getElementById('ticketInputField').focus(), 200);
+    }
+  }
+
+  // keep old names working
+  function openTicketScreen(prefill) { openSupportScreen('track'); }
+  function closeTicketScreen() { closeSupportScreen(); }
+
+  // Allow Enter key in ticket input
+  document.getElementById('ticketInputField').addEventListener('keydown', e => { if (e.key === 'Enter') checkTicketStatus(); });
+
+  const STATUS_STEPS = [
+    { key: 'pending',  label: 'Submitted', icon: '📨' },
+    { key: 'review',   label: 'In Review', icon: '🔍' },
+    { key: 'resolved', label: 'Resolved',  icon: '✅' },
+  ];
+
+  async function checkTicketStatus() {
+    const raw = document.getElementById('ticketInputField').value.trim().toUpperCase();
+    const errEl = document.getElementById('ticketErr');
+    const resultEl = document.getElementById('ticketResult');
+    const btn = document.getElementById('ticketCheckBtn');
+    errEl.classList.remove('show');
+    resultEl.classList.remove('show');
+
+    if (!raw) {
+      errEl.textContent = 'Please enter a ticket ID.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+
+    try {
+      const doc = await db.collection('support_requests').doc(raw).get();
+      if (!doc.exists) {
+        errEl.textContent = 'No ticket found with that ID. Please check and try again.';
+        errEl.classList.add('show');
+        btn.disabled = false; btn.textContent = 'Check';
+        return;
+      }
+      const d = doc.data();
+      const statusIdx = STATUS_STEPS.findIndex(s => s.key === (d.status || 'pending'));
+      const activeIdx = statusIdx < 0 ? 0 : statusIdx;
+      const submitted = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'}) : 'Recently';
+
+      document.getElementById('trId').textContent = raw;
+      document.getElementById('trSubject').textContent = d.subject || '—';
+      document.getElementById('trMeta').textContent = `${d.category ? d.category.charAt(0).toUpperCase()+d.category.slice(1) : 'General'} · Submitted ${submitted}`;
+      document.getElementById('trTimeline').innerHTML = STATUS_STEPS.map((s, i) => {
+        const cls = i < activeIdx ? 'done' : i === activeIdx ? 'active' : '';
+        const icon = i < activeIdx ? '✓' : s.icon;
+        const time = i === 0 ? submitted : i === activeIdx && i > 0 ? 'In progress' : i < activeIdx ? 'Done' : 'Pending';
+        return `<div class="ticket-step ${cls}">
+          <div class="ticket-step-dot">${icon}</div>
+          <div class="ticket-step-info">
+            <div class="ticket-step-name">${s.label}</div>
+            <div class="ticket-step-time">${time}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      resultEl.classList.add('show');
+    } catch(e) {
+      errEl.textContent = 'Could not fetch ticket. Please try again.';
+      errEl.classList.add('show');
+    }
+    btn.disabled = false; btn.textContent = 'Check';
+  }
+
+  // ── GUIDE TABS ──
+  function showGuide(id, tab) {
+    document.querySelectorAll('.guide-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.guide-tab').forEach(t => t.classList.remove('active'));
+    const el = document.getElementById('guide-' + id);
+    if (el) el.classList.add('active');
+    if (tab) tab.classList.add('active');
+  }
+
+  // ── FAQ ──
+  const FAQS = [
+    { q: 'Is Kievora free to use?', a: 'Yes — Kievora is completely free. You can create unlimited resumes, use all 10 templates, get AI-powered help from KIE, and download PDFs at no cost.' },
+    { q: 'How many resumes can I create?', a: 'There\'s no limit. You can create and save as many resumes as you need — useful if you\'re applying for jobs in different industries or tailoring your resume for specific roles.' },
+    { q: 'Are my resumes saved automatically?', a: 'While building, your progress is auto-saved as a draft locally. Once you hit "Save Resume," it\'s permanently saved to your account in the cloud, so you can access it from any device.' },
+    { q: 'What is a "Draft" resume?', a: 'A draft is a resume you\'ve started building but haven\'t saved to your account yet. Drafts are stored in your browser\'s local storage and show a "Draft" badge on the dashboard. Save your draft to keep it permanently and unlock PDF download.' },
+    { q: 'Why can\'t I download my resume as PDF?', a: 'You need to save your resume first — drafts can\'t be downloaded. If the download still doesn\'t work, check that your browser allows pop-ups for this site. Try Chrome (recommended). Make sure you have a stable internet connection.' },
+    { q: 'What is KIE AI and how does it work?', a: 'KIE is Kievora\'s AI career coach. It writes professional summaries, generates work experience bullet points, suggests skills, and answers career questions. When you fill in your job title in the builder, KIE automatically offers 3 summary templates. You can also open KIE as a full chat from the dashboard or the floating button on this page.' },
+    { q: 'How do I change the template for an existing resume?', a: 'Currently, templates are selected when creating a new resume. To use a different template, create a new resume and copy your information over. We\'re working on making template-switching available for existing resumes.' },
+    { q: 'Is my data safe?', a: 'Yes. Kievora uses Firebase/Firestore for secure cloud storage with industry-standard encryption. Your resume data is only accessible by your authenticated account. We never share or sell your personal information.' },
+    { q: 'I forgot my password. How do I reset it?', a: 'On the login page, tap "Forgot Password" and enter your email. You\'ll receive a reset link. Check your spam folder if it doesn\'t arrive within a few minutes.' },
+    { q: 'Can I use Kievora on mobile?', a: 'Yes — Kievora is fully responsive and designed to work on mobile browsers. The dashboard, resume builder, KIE AI, and PDF download all work on mobile. Chrome on Android or Safari on iOS works best.' },
+  ];
+
+  function buildFAQ(filter) {
+    const list = document.getElementById('faqList');
+    const items = filter ? FAQS.filter(f => f.q.toLowerCase().includes(filter) || f.a.toLowerCase().includes(filter)) : FAQS;
+    const badge = document.getElementById('faqBadge');
+    if (badge) badge.textContent = items.length + (items.length === 1 ? ' question' : ' questions');
+    if (!items.length) { list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--sub);font-size:14px">No results found.</div>'; return; }
+    list.innerHTML = items.map((f, i) => {
+      const gIdx = FAQS.indexOf(f);
+      return `
+      <div class="faq-item" id="faq-${i}">
+        <div class="faq-q" onclick="toggleFAQ(${i})">
+          <div class="faq-q-txt">${highlight(f.q, filter)}</div>
+          <div class="faq-arr"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">
+          ${highlight(f.a, filter)}
+          <div class="faq-helpful" id="helpful-${gIdx}">
+            <span class="faq-helpful-lbl">Was this helpful?</span>
+            <div class="faq-helpful-btns">
+              <button class="fhb yes" onclick="voteFAQ(${gIdx},true,event)">👍 Yes</button>
+              <button class="fhb no" onclick="voteFAQ(${gIdx},false,event)">👎 No</button>
+            </div>
+          </div>
+        </div></div>
+      </div>`;
+    }).join('');
+  }
+
+  function toggleFAQ(i) {
+    document.getElementById('faq-' + i).classList.toggle('open');
+  }
+
+  function highlight(text, term) {
+    if (!term) return text;
+    const re = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    return text.replace(re, '<mark class="search-highlight">$1</mark>');
+  }
+
+  buildFAQ();
+
+  // ── SEARCH ──
+  // ── SMART SEARCH — suggestions + inline AI answer ──
+
+  // All searchable items (FAQs + articles)
+  const SEARCH_INDEX = [
+    ...FAQS.map(f => ({ type:'faq',     icon:'❓', text: f.q, sub: f.a.slice(0,60)+'…', data: f })),
+    { type:'article', icon:'📋', text:'7 Resume Mistakes That Get You Rejected Instantly', sub:'Common errors that cost candidates interviews', id:'resume-mistakes' },
+    { type:'article', icon:'🤖', text:'How to Beat ATS and Get Your Resume to a Human',  sub:'Understand how ATS filters work',              id:'ats' },
+    { type:'article', icon:'✍️', text:'How to Write a Professional Summary That Gets You Hired', sub:'Hook recruiters in the first 3 sentences', id:'summary' },
+    { type:'article', icon:'🛠️', text:'Top Skills Employers Are Looking for in 2025',    sub:'Hard and soft skills that matter most now',    id:'skills' },
+    { type:'article', icon:'🎨', text:'Choosing the Right Resume Template for Your Industry', sub:'Match your template to your field',          id:'templates-guide' },
+    { type:'article', icon:'✨', text:'How to Use AI to Write a Better Resume',           sub:'AI as a co-writer, not a replacement',         id:'ai-resume' },
+  ];
+
+  let suggestDebounce = null;
+  let aiAnswerAbort   = null;
+
+  const searchInput   = document.getElementById('searchInput');
+  const suggestBox    = document.getElementById('searchSuggestions');
+  const answerPanel   = document.getElementById('answerPanel');
+  const answerBody    = document.getElementById('answerBody');
+  const answerTyping  = document.getElementById('answerTyping');
+  const answerBadge   = document.getElementById('answerQueryBadge');
+
+  // ── Highlight matched term ──
+  function hlMatch(text, term) {
+    if (!term) return text;
+    const re = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    return text.replace(re, '<mark>$1</mark>');
+  }
+
+  // ── Show / hide suggestions ──
+  function showSuggestions(q) {
+    if (!q || q.length < 2) { suggestBox.classList.remove('open'); return; }
+
+    const matches = SEARCH_INDEX.filter(item =>
+      item.text.toLowerCase().includes(q) || (item.data && item.data.a && item.data.a.toLowerCase().includes(q))
+    ).slice(0, 5);
+
+    let html = matches.map(item => `
+      <div class="sug-item" onclick="selectSuggestion(${JSON.stringify(item.text)}, ${JSON.stringify(item.type)}, ${JSON.stringify(item.id || '')})">
+        <div class="sug-ico">${item.icon}</div>
+        <div class="sug-text">${hlMatch(item.text, q)}</div>
+      </div>`).join('');
+
+    // Always add "Ask KIE" row at bottom
+    html += `
+      <div class="sug-ask-kie" onclick="askKieInline(${JSON.stringify(q)})">
+        <div class="sug-ask-kie-av">K</div>
+        <div class="sug-ask-kie-txt">Ask KIE: "${q}"</div>
+        <span class="sug-ask-kie-hint">AI answer →</span>
+      </div>`;
+
+    suggestBox.innerHTML = html;
+
+    // Position dropdown below the search input using fixed coords
+    const wrap = document.getElementById('searchInput').closest('.sup-search-wrap');
+    const rect = wrap.getBoundingClientRect();
+    suggestBox.style.top    = (rect.bottom + 6) + 'px';
+    suggestBox.style.left   = rect.left + 'px';
+    suggestBox.style.width  = rect.width + 'px';
+
+    suggestBox.classList.add('open');
+  }
+
+  function hideSuggestions() {
+    setTimeout(() => suggestBox.classList.remove('open'), 150);
+  }
+
+  // ── User picks a suggestion ──
+  function selectSuggestion(text, type, id) {
+    searchInput.value = text;
+    suggestBox.classList.remove('open');
+    if (type === 'article' && id) {
+      openArticle(id);
+    } else {
+      // FAQ — scroll to it and open
+      const q = text.toLowerCase();
+      buildFAQ(q);
+      document.getElementById('faq').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  }
+
+  // ── Ask KIE inline — show answer panel ──
+  async function askKieInline(q) {
+    suggestBox.classList.remove('open');
+    answerBadge.textContent = q.length > 40 ? q.slice(0,40)+'…' : q;
+    answerTyping.style.display = 'flex';
+    answerBody.innerHTML = '';
+    answerBody.appendChild(answerTyping);
+    answerPanel.style.display = 'block';
+    answerPanel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+    try {
+      const res = await fetch('/api/kie-support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role:'user', content: q }] })
+      });
+      const data = await res.json();
+      const reply = data.reply || "Sorry, I couldn't get an answer right now.";
+      answerTyping.style.display = 'none';
+      answerBody.innerHTML = reply
+        .replace(/\n/g,'<br>')
+        .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    } catch(e) {
+      answerTyping.style.display = 'none';
+      answerBody.innerHTML = "Couldn't reach KIE right now. Try the chat below.";
+    }
+  }
+
+  function closeAnswerPanel() {
+    answerPanel.style.display = 'none';
+    answerBody.innerHTML = '';
+    searchInput.value = '';
+  }
+
+  // ── Main search (Enter / button) ──
+  function doSearch() {
+    const q = searchInput.value.trim().toLowerCase();
+    suggestBox.classList.remove('open');
+    if (!q) {
+      closeAnswerPanel();
+      return;
+    }
+    askKieInline(q);
+  }
+
+  // ── Input events ──
+  searchInput.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    clearTimeout(suggestDebounce);
+    if (!q) { suggestBox.classList.remove('open'); return; }
+    suggestDebounce = setTimeout(() => showSuggestions(q), 160);
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+    if (e.key === 'Escape') { suggestBox.classList.remove('open'); closeAnswerPanel(); }
+  });
+
+  searchInput.addEventListener('blur', hideSuggestions);
+  searchInput.addEventListener('focus', function() {
+    if (this.value.trim().length >= 2) showSuggestions(this.value.trim().toLowerCase());
+  });
+
+  // ── ARTICLES ──
+  const ARTICLES = {
+    'resume-mistakes': {
+      cat:'RESUME TIPS', title:'7 Resume Mistakes That Get You Rejected Instantly', time:'4 min read',
+      body:`<p>Recruiters spend an average of 6–8 seconds scanning a resume before deciding whether to read further. Here are the 7 most common mistakes that send resumes straight to the bin.</p><h3>1. Using a Generic Objective Statement</h3><p>"Seeking a challenging position in a dynamic organization." Hiring managers have read this a million times. Replace it with a <strong>targeted professional summary</strong> highlighting your top 2–3 value propositions.</p><h3>2. No Quantifiable Achievements</h3><p>Don't just say what you did — say how well. "Managed social media" is weak. "Grew Instagram from 2,000 to 28,000 in 8 months through targeted content strategy" is strong.</p><h3>3. Typos and Grammar Errors</h3><p>A single typo signals carelessness. Proofread at least three times, then have someone else read it.</p><h3>4. Unprofessional Email Address</h3><p>coolkid99@gmail.com won't cut it. Use firstname.lastname@gmail.com or similar.</p><h3>5. One-Size-Fits-All Resume</h3><p>Tailor your resume for each application — especially the summary and skills sections. Mirror language from the job description.</p><h3>6. Poor Formatting</h3><p>Unreadable fonts, walls of text, inconsistent spacing — these signal poor attention to detail. Use a clean template and maintain consistent formatting.</p><h3>7. Missing Contact Information</h3><p>Always double-check your phone number and email are current before submitting.</p><div class="tip-box">✨ Use Kievora's AI scoring on your resume cards to see how complete your resume is — aim for 90%+</div>`
+    },
+    'ats': {
+      cat:'ATS', title:'How to Beat ATS and Get Your Resume to a Human', time:'6 min read',
+      body:`<p>Over 95% of Fortune 500 companies use an Applicant Tracking System (ATS) to filter resumes. Understanding how ATS works is one of the highest-leverage things you can do in your job search.</p><h3>What is an ATS?</h3><p>An ATS automatically scans and ranks resumes based on how well they match a job description. If your resume doesn't contain the right words, it won't be seen by a recruiter — no matter how qualified you are.</p><h3>How to Optimize for ATS</h3><p><strong>1. Use standard section headings.</strong> "Work Experience," "Education," "Skills" — not creative alternatives.</p><p><strong>2. Mirror the job description language.</strong> If the job says "project management," your resume should say the same thing.</p><p><strong>3. Include relevant keywords throughout.</strong> Spread them naturally across your summary, experience, and skills.</p><p><strong>4. Use clean formatting.</strong> ATS struggles with tables and graphics. Stick to clean layouts — which is exactly what Kievora's templates are optimized for.</p><p><strong>5. Submit as PDF.</strong> PDF maintains your formatting.</p><div class="tip-box">✨ Use KIE AI to match your resume's language to a specific job description. Paste the JD and ask KIE to identify key skills to include.</div>`
+    },
+    'summary': {
+      cat:'WRITING', title:'How to Write a Professional Summary That Gets You Hired', time:'5 min read',
+      body:`<p>Your professional summary is the first thing a recruiter reads. You have about 3 sentences to hook them. Here's how to write one that works.</p><h3>The Formula</h3><p><strong>[Job title] + [Years of experience] + [Key expertise] + [Top achievement or value]</strong></p><p><em>Example:</em> "Product Manager with 5+ years in Nigerian fintech, specializing in mobile payments and growth strategy. Led cross-functional teams to deliver 3 product launches with 40% user growth. Known for bridging technical and business teams to ship on time."</p><h3>Tips</h3><ul><li>Keep it 2–4 sentences maximum</li><li>Use first person but skip "I" — start with your title or an action word</li><li>Include at least one metric or achievement</li><li>Tailor it for every job application</li><li>Avoid clichés: "hardworking," "passionate," "team player"</li></ul><div class="tip-box">✨ Let KIE AI generate 3 summary templates for you — just fill in your job title in the resume builder</div>`
+    },
+    'skills': {
+      cat:'SKILLS', title:'Top Skills Employers Are Looking for in 2025', time:'5 min read',
+      body:`<p>The skills landscape shifts quickly. Here's what hiring managers are actively searching for in 2025.</p><h3>In-Demand Hard Skills</h3><p><strong>Tech & Data:</strong> Python, SQL, data analysis, machine learning basics, cloud platforms, API integration, prompt engineering, AI tools literacy</p><p><strong>Finance & Business:</strong> Financial modeling, Excel/Google Sheets mastery, project management (PMP/Agile), business analysis</p><p><strong>Creative & Marketing:</strong> Video editing, SEO/SEM, content strategy, social media analytics, Canva/Adobe Suite</p><h3>High-Value Soft Skills</h3><ul><li><strong>Communication</strong> — Written and verbal, especially remote</li><li><strong>Adaptability</strong> — Learning new tools quickly</li><li><strong>Critical thinking</strong> — Problem-solving with limited information</li><li><strong>Initiative</strong> — Taking ownership without being asked</li></ul><h3>How to Present Skills</h3><p>Don't just list skills — contextualize them. "Python" is weaker than "Python (3 years — built automated reporting pipeline saving 8hrs/week)."</p><div class="tip-box">✨ Ask KIE AI: "What skills should a [your job title] include on their resume in 2025?"</div>`
+    },
+    'templates-guide': {
+      cat:'TEMPLATES', title:'Choosing the Right Resume Template for Your Industry', time:'4 min read',
+      body:`<p>Your template signals something about you before a recruiter reads a word. Here's how to match your template to your industry.</p><h3>Conservative Industries: Law, Finance, Government</h3><p>Go with <strong>Classic</strong> or <strong>Elegant</strong>. Clean layouts with muted colors. Anything too creative may raise eyebrows.</p><h3>Tech, Product & Startups</h3><p><strong>Modern</strong>, <strong>Minimal</strong>, or <strong>Slate</strong>. Tech hiring managers appreciate clean design that doesn't distract.</p><h3>Creative Industries: Design, Media, Marketing</h3><p><strong>Vivid</strong>, <strong>Coral</strong>, or <strong>Ink</strong> let your personality come through. Your resume IS part of your portfolio.</p><h3>Senior & Executive Roles</h3><p><strong>Bold</strong> or <strong>Elegant</strong> project authority. Heavy typography, clear hierarchy.</p><h3>General Multi-Industry</h3><p><strong>Split</strong> offers a structured two-column layout that works across many fields.</p><div class="tip-box">✨ Use Kievora's Template Match Quiz for an instant AI recommendation based on your industry and style</div>`
+    },
+    'ai-resume': {
+      cat:'AI TOOLS', title:'How to Use AI to Write a Better Resume (Without Sounding Like a Robot)', time:'6 min read',
+      body:`<p>AI has changed resume writing — but most people are using it wrong. Here's the smart approach.</p><h3>The Wrong Way</h3><p>Asking AI to "write my resume" and pasting the output directly. Recruiters can tell. Phrases like "results-driven professional with a proven track record" are now red flags.</p><h3>The Right Way: AI as a Co-Writer</h3><p><strong>1. Use AI to generate options, not final copy.</strong> Ask for 3–5 versions of a bullet point, then rewrite your favourite in your own voice.</p><p><strong>2. Use AI to beat writer's block.</strong> Describe your role in plain language and let AI help you structure it professionally.</p><p><strong>3. Use AI for keyword optimization.</strong> Paste a job description and ask AI to identify key skills and phrases to include.</p><p><strong>4. Use AI to quantify your impact.</strong> Tell AI what you did ("I managed our social media") and let it help you frame it with measurable language.</p><h3>How KIE AI Helps</h3><p>KIE generates real summary templates when you fill in your job title, suggests relevant skills, and helps you turn vague job descriptions into punchy bullet points — all inside the app.</p><div class="tip-box">✨ After KIE generates a summary, rewrite it in your own words. AI structure + your voice = a resume that sounds human AND is optimized.</div>`
+    }
+  };
+
+  let clapDebounce = null;
+  let sessionClaps = 0;
+  let currentArtId = null;
+
+  function openArticle(id) {
+    const art = ARTICLES[id];
+    if (!art) return;
+    currentArtId = id;
+    sessionClaps = 0;
+
+    document.getElementById('artHdrTitle').textContent = art.title;
+    document.getElementById('artHdrTime').textContent = '📖 ' + art.time;
+    document.getElementById('artInner').innerHTML = `
+      <div class="art-cat">${art.cat}</div>
+      <div class="art-big-title">${art.title}</div>
+      <div class="art-byline">
+        <div class="art-byline-av">R</div>
+        <div>
+          <div class="art-byline-name">Kievora Career Hub</div>
+          <div class="art-byline-sub">${art.time} · Career Advice</div>
+        </div>
+        <div class="art-love-row">
+          <button class="art-love-btn" id="artLoveBtn" onclick="doClap()">🤍</button>
+          <span class="art-love-count" id="artLoveNum">…</span>
+        </div>
+      </div>
+      <div class="art-txt">${art.body}</div>`;
+
+    const screen = document.getElementById('artScreen');
+    const scroll = document.getElementById('artScroll');
+    const prog = document.getElementById('artProg');
+    screen.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    scroll.scrollTop = 0;
+    prog.style.width = '0%';
+
+    // Progress bar
+    scroll.onscroll = () => {
+      const max = scroll.scrollHeight - scroll.clientHeight;
+      const pct = max > 0 ? Math.min(100, (scroll.scrollTop / max) * 100) : 0;
+      prog.style.width = pct + '%';
+    };
+
+    // Load love count
+    loadClapCount(id);
+  }
+
+  function closeArticle() {
+    document.getElementById('artScreen').classList.remove('open');
+    document.body.style.overflow = '';
+    currentArtId = null;
+  }
+
+  // ── CLAP ──
+  async function loadClapCount(id) {
+    try {
+      const doc = await db.collection('article_claps').doc(id).get();
+      const count = doc.exists ? (doc.data().count || 0) : 0;
+      const el = document.getElementById('artLoveNum');
+      if (el) el.textContent = count;
+    } catch(e) {
+      const el = document.getElementById('artLoveNum');
+      if (el) el.textContent = '0';
+    }
+  }
+
+  function doClap() {
+    if (!currentArtId) return;
+    const btn = document.getElementById('artLoveBtn');
+    const numEl = document.getElementById('artLoveNum');
+    if (!btn || !numEl) return;
+    const current = parseInt(numEl.textContent) || 0;
+    numEl.textContent = current + 1;
+    sessionClaps++;
+    btn.textContent = '❤️';
+    btn.classList.remove('loved');
+    void btn.offsetWidth;
+    btn.classList.add('loved');
+    // floating +1
+    const f = document.createElement('div');
+    f.className = 'love-float';
+    f.textContent = '+1';
+    btn.appendChild(f);
+    setTimeout(() => f.remove(), 600);
+    // debounce Firestore write
+    clearTimeout(clapDebounce);
+    clapDebounce = setTimeout(async () => {
+      try {
+        await db.collection('article_claps').doc(currentArtId).set(
+          { count: firebase.firestore.FieldValue.increment(sessionClaps), title: ARTICLES[currentArtId]?.title || '' },
+          { merge: true }
+        );
+        sessionClaps = 0;
+      } catch(e) {}
+    }, 1200);
+  }
+
+  // ── CUSTOM CATEGORY SELECT ──
+  const CAT_OPTIONS = [
+    { value:'account',   ico:'👤', label:'Account Issues' },
+    { value:'pdf',       ico:'📄', label:'PDF Download Problem' },
+    { value:'building',  ico:'🛠️', label:'Resume Building' },
+    { value:'kie',       ico:'🤖', label:'KIE AI' },
+    { value:'templates', ico:'🎨', label:'Templates' },
+    { value:'billing',   ico:'💳', label:'Billing / Payment' },
+    { value:'other',     ico:'💬', label:'Something Else' },
+  ];
+
+  (function initCatSelect() {
+    const wrap    = document.getElementById('catWrap');
+    const trigger = document.getElementById('catTrigger');
+    const icoEl   = document.getElementById('catTriggerIco');
+    const lblEl   = document.getElementById('catTriggerLabel');
+    const optsEl  = document.getElementById('catOpts');
+    const hidden  = document.getElementById('reqCategory');
+
+    CAT_OPTIONS.forEach(opt => {
+      const el = document.createElement('div');
+      el.className = 'csel-opt';
+      el.dataset.value = opt.value;
+      el.innerHTML = `<div class="csel-opt-ico">${opt.ico}</div>${opt.label}`;
+      el.addEventListener('click', () => {
+        hidden.value = opt.value;
+        icoEl.textContent = opt.ico;
+        lblEl.textContent = opt.label;
+        trigger.classList.add('has-val');
+        optsEl.querySelectorAll('.csel-opt').forEach(o => o.classList.remove('sel'));
+        el.classList.add('sel');
+        wrap.classList.remove('open');
+      });
+      optsEl.appendChild(el);
+    });
+
+    trigger.addEventListener('click', e => { e.stopPropagation(); wrap.classList.toggle('open'); });
+    document.addEventListener('click', () => wrap.classList.remove('open'));
+  })();
+
+  // ── FAQ HELPFUL VOTE ──
+  const _voted = new Set();
+  async function voteFAQ(idx, isYes, e) {
+    e && e.stopPropagation();
+    if (_voted.has(idx)) return;
+    _voted.add(idx);
+    const el = document.getElementById('helpful-' + idx);
+    if (!el) return;
+    const btns = el.querySelectorAll('.fhb');
+    btns.forEach(b => { b.disabled = true; });
+    const chosen = el.querySelector('.fhb.' + (isYes ? 'yes' : 'no'));
+    if (chosen) chosen.classList.add('voted');
+    setTimeout(() => {
+      el.innerHTML = '<span class="faq-helpful-done">✅ Thanks for your feedback!</span>';
+    }, 400);
+    try {
+      const ref = db.collection('faq_votes').doc(String(idx));
+      await db.runTransaction(async t => {
+        const snap = await t.get(ref);
+        if (snap.exists) {
+          t.update(ref, { [isYes?'yes':'no']: firebase.firestore.FieldValue.increment(1) });
+        } else {
+          t.set(ref, { yes: isYes?1:0, no: isYes?0:1, question: FAQS[idx]?.q || '' });
+        }
+      });
+    } catch(err) { /* fails silently */ }
+  }
+
+  // ── KIE FLOATER ──
+  // Auto-hide hint after 4s
+  setTimeout(() => {
+    const hint = document.getElementById('kieHint');
+    if (hint) hint.style.cssText += 'opacity:0;transition:opacity .5s;pointer-events:none';
+    setTimeout(() => { if(hint) hint.style.display='none'; }, 500);
+  }, 4000);
+
+  function openKieScreen() {
+    document.getElementById('kieScreen').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('kieHint').style.display = 'none';
+  }
+
+  function closeKieScreen() {
+    document.getElementById('kieScreen').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ── KIE AI CHAT ──
+
+  let kieHist = [];
+  let kieTyping = false;
+
+  async function sendKieMsg() {
+    const inp = document.getElementById('kieInput');
+    const msg = inp.value.trim();
+    if (!msg || kieTyping) return;
+    inp.value = ''; inp.style.height = 'auto';
+    appendKieMsg('user', msg);
+    kieHist.push({ role:'user', content:msg });
+    document.getElementById('kieSugs').style.display = 'none';
+    setKieTyping(true);
+
+    try {
+      const res = await fetch('/api/kie-support', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ messages: kieHist })
+      });
+      const data = await res.json();
+      const reply = data.reply || "Sorry, I couldn't get a response right now. Try emailing support@kievora.com";
+      kieHist.push({ role:'assistant', content:reply });
+      setKieTyping(false);
+      appendKieMsg('ai', reply);
+    } catch(e) {
+      setKieTyping(false);
+      appendKieMsg('ai', "I'm having trouble connecting right now. Please try again, or email support@kievora.com for help.");
+    }
+  }
+
+  function sendKieQ(q) {
+    document.getElementById('kieInput').value = q;
+    sendKieMsg();
+  }
+
+  function appendKieMsg(role, text) {
+    const msgs = document.getElementById('kieMsgs');
+    const typing = document.getElementById('kieTyping');
+    const w = document.createElement('div');
+    w.className = 'kie-msg ' + role;
+    const formatted = text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    if (role === 'ai') {
+      w.innerHTML = `<div class="kie-msg-av"><img src="kie.jpg" alt="KIE" onerror="this.parentElement.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#5B21B6,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0';this.parentElement.textContent='K'"/></div><div class="kie-bubble ai">${formatted}</div>`;
+    } else {
+      w.innerHTML = `<div class="kie-msg-av user">U</div><div class="kie-bubble user">${formatted}</div>`;
+    }
+    msgs.insertBefore(w, typing);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function setKieTyping(show) {
+    kieTyping = show;
+    document.getElementById('kieTyping').classList.toggle('show', show);
+    document.getElementById('kieSendBtn').disabled = show;
+    const msgs = document.getElementById('kieMsgs');
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  const kieInp = document.getElementById('kieInput');
+  const kieSend = document.getElementById('kieSendBtn');
+  kieInp.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    kieSend.disabled = !this.value.trim() || kieTyping;
+  });
+  kieInp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendKieMsg(); }
+  });
+
+  // ── KIE GUIDE SCREEN ──
+  let kgoSwipers = [];
+  let kgoTwTimer = null;
+  let kgoTwActive = false;  // guard: only one loop at a time
+
+  function openKieGuide() {
+    const el = document.getElementById('kieGuideOverlay');
+    el.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    el.querySelector('.kgo-body').scrollTop = 0;
+    if (!kgoSwipers.length) initKgoSwipers();
+    // cancel any running loop, then start fresh
+    kgoTwActive = false;
+    if (kgoTwTimer) { clearTimeout(kgoTwTimer); kgoTwTimer = null; }
+    setTimeout(startKgoTypewriter, 0);
+  }
+
+  function closeKieGuide() {
+    document.getElementById('kieGuideOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    kgoTwActive = false;
+    if (kgoTwTimer) { clearTimeout(kgoTwTimer); kgoTwTimer = null; }
+  }
+
+  function initKgoSwipers() {
+    const configs = [
+      { id: 'swiper1', prev: 'prev1', next: 'next1', perView: 1.25 },
+      { id: 'swiper2', prev: 'prev2', next: 'next2', perView: 1.2  },
+      { id: 'swiper3', prev: 'prev3', next: 'next3', perView: 1.15 },
+    ];
+    configs.forEach(({ id, prev, next, perView }) => {
+      const sw = new Swiper('#' + id, {
+        slidesPerView: perView,
+        spaceBetween: 12,
+        grabCursor: true,
+        freeMode: true,
+        navigation: { prevEl: '#' + prev, nextEl: '#' + next },
+        pagination: { el: '#' + id + ' .swiper-pagination', clickable: true, dynamicBullets: true },
+        breakpoints: {
+          480: { slidesPerView: 2.1 },
+          700: { slidesPerView: 2.8 },
+          900: { slidesPerView: 3.2 },
+        }
+      });
+      kgoSwipers.push(sw);
+    });
+  }
+
+  function startKgoTypewriter() {
+    const phrases = [
+      'Build your perfect resume in minutes.',
+      'Get personalised interview coaching.',
+      'Discover your market salary value.',
+      'Generate a 5-year career roadmap.',
+      'Optimise your LinkedIn for recruiters.',
+      'Match to jobs that fit your skills.',
+      'Prepare for any interview with AI.',
+      'Know exactly when you\'re ready to grow.',
+    ];
+    const el = document.getElementById('kgoTypeText');
+    if (!el) return;
+    kgoTwActive = true;
+    let pi = 0, ci = 0, deleting = false;
+    function tick() {
+      if (!kgoTwActive) return;  // stale loop: bail out
+      const phrase = phrases[pi];
+      if (!deleting) {
+        el.textContent = phrase.slice(0, ++ci);
+        if (ci === phrase.length) { deleting = true; kgoTwTimer = setTimeout(tick, 2000); return; }
+        kgoTwTimer = setTimeout(tick, 40);
+      } else {
+        el.textContent = phrase.slice(0, --ci);
+        if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; kgoTwTimer = setTimeout(tick, 350); return; }
+        kgoTwTimer = setTimeout(tick, 20);
+      }
+    }
+    tick();
+  }
+
+  // ── TYPEWRITER ──
+  (function() {
+    const phrases = [
+      'Search our guides and get answers fast.',
+      'Ask KIE — your 24/7 AI career coach.',
+      'Browse career articles written for you.',
+      'Fix your resume in minutes with AI.',
+      'Land your dream job. We\'ve got your back.',
+      'Get help with templates, PDFs, and more.',
+    ];
+    const el = document.getElementById('typewriterText');
+    let pi = 0, ci = 0, deleting = false;
+    function tick() {
+      const phrase = phrases[pi];
+      if (!deleting) {
+        el.textContent = phrase.slice(0, ++ci);
+        if (ci === phrase.length) { deleting = true; setTimeout(tick, 2200); return; }
+        setTimeout(tick, 42);
+      } else {
+        el.textContent = phrase.slice(0, --ci);
+        if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(tick, 400); return; }
+        setTimeout(tick, 22);
+      }
+    }
+    tick();
+  })();
+
+  // Spin animation for submit button loader
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+</script>
+
+<!-- ══ SEARCH SUGGESTIONS (outside hero to avoid overflow clipping) ══ -->
+<div id="searchSuggestions" class="search-suggestions"></div>
+
+</body>
+</html>
