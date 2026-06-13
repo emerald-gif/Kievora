@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings · Resumaker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#7c3aed;--p2:#6d28d9;--g:linear-gradient(135deg,#7c3aed,#a855f7);
+  --txt:#0f0a1e;--sub:#6b7280;--mute:#9ca3af;
+  --bg:#f8f7ff;--card:#fff;--border:#e5e7eb;--border2:#f0eefc;
+  --red:#ef4444;--radius:16px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(248,247,255,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:0 16px;height:56px;
+  display:flex;align-items:center;justify-content:space-between}
+.btn-back{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);
+  background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt)}
+.btn-back svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.hdr-title{font-size:15px;font-weight:800;color:var(--txt);flex:1;text-align:center}
+.hdr-action{width:36px}
+
+/* ── SECTIONS ── */
+.section{padding:20px 16px 0}
+.section-title{font-size:12px;font-weight:800;color:var(--mute);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:10px;padding-left:4px}
+
+/* ── SETTINGS CARD / ROWS ── */
+.settings-card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;overflow:hidden}
+.settings-row{display:flex;align-items:center;gap:13px;padding:14px 16px;
+  text-decoration:none;color:inherit;border-bottom:1px solid var(--border2);
+  background:none;border-left:none;border-right:none;border-top:none;
+  width:100%;text-align:left;font-family:inherit;cursor:pointer;transition:background .15s}
+.settings-row:last-child{border-bottom:none}
+.settings-row.link:active,.settings-row.action:active{background:var(--border2)}
+.row-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0}
+.row-icon svg{width:17px;height:17px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.row-icon.email{background:#ede9fe;color:var(--p)}
+.row-icon.account{background:#dbeafe;color:#2563eb}
+.row-icon.privacy{background:#d1fae5;color:#059669}
+.row-icon.terms{background:#fef3c7;color:#d97706}
+.row-icon.support{background:#fce7f3;color:#db2777}
+.row-icon.logout{background:#fee2e2;color:var(--red)}
+.row-text{flex:1;min-width:0}
+.row-label{font-size:13.5px;font-weight:700;color:var(--txt)}
+.row-value{font-size:12px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-chevron{width:18px;height:18px;color:var(--mute);flex-shrink:0}
+.row-chevron svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* provider badge */
+.provider-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--mute)}
+.provider-badge svg{width:14px;height:14px}
+
+/* ── VERIFIED AUTHOR CARD ── */
+.verified-card{position:relative;overflow:hidden;border-radius:18px;padding:18px;
+  background:linear-gradient(135deg,#ede9fe,#fdf2f8);border:1.5px solid var(--border2);
+  display:flex;align-items:flex-start;gap:14px}
+.verified-deco{position:absolute;top:-20px;right:-16px;width:90px;height:90px;opacity:.10}
+.verified-deco svg{width:100%;height:100%;fill:none;stroke:var(--p);stroke-width:1.4}
+.verified-icon{width:42px;height:42px;border-radius:12px;background:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 4px 10px rgba(124,58,237,.12)}
+.verified-icon svg{width:20px;height:20px;fill:none;stroke:var(--p);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.verified-body{flex:1;position:relative;z-index:1}
+.verified-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.verified-title{font-size:14px;font-weight:900;color:var(--txt)}
+.soon-pill{font-size:10px;font-weight:800;color:var(--p);background:#fff;
+  border:1px solid #e9d5ff;padding:3px 9px;border-radius:99px;letter-spacing:.3px;text-transform:uppercase}
+.verified-sub{font-size:12.5px;color:var(--sub);line-height:1.5}
+
+/* ── LOGOUT ── */
+.btn-logout{width:100%;padding:14px;border-radius:14px;border:1.5px solid #fecaca;
+  background:#fff;color:var(--red);font-size:14px;font-weight:800;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.btn-logout svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── FOOTER ── */
+.app-footer{text-align:center;padding:28px 16px 36px;color:var(--mute);font-size:12px}
+.app-footer .brand{font-weight:800;color:var(--p);font-size:13px;display:block;margin-bottom:4px}
+
+/* ── SKELETON ── */
+.skel{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;height:12px;width:120px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
+  background:#0f0a1e;color:#fff;padding:12px 20px;border-radius:99px;font-size:14px;
+  font-weight:600;z-index:999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap}
+.toast.on{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <button class="btn-back" onclick="history.back()">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <span class="hdr-title">Settings &amp; Activity</span>
+  <div class="hdr-action"></div>
+</header>
+
+<!-- ACTIVITY -->
+<div class="section">
+  <div class="section-title">Activity</div>
+  <div class="settings-card">
+    <a class="settings-row link" href="/insights">
+      <div class="row-icon account">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+      </div>
+      <div class="row-text">
+        <div class="row-label">Profile Insights</div>
+        <div class="row-value">Views, followers &amp; growth</div>
+      </div>
+      <div class="row-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </a>
+    <button class="settings-row action" type="button" onclick="shareProfile()">
+      <div class="row-icon email">
+        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </div>
+      <div class="row-text">
+        <div class="row-label">Share Profile</div>
+        <div class="row-value">Copy your profile link</div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- ACCOUNT -->
+<div class="section">
+  <div class="section-title">Account</div>
+  <div class="settings-card">
+    <div class="settings-row">
+      <div class="row-icon email">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+      </div>
+      <div class="row-text">
+        <div class="row-label">Email</div>
+        <div class="row-value" id="userEmail"><div class="skel"></div></div>
+      </div>
+    </div>
+    <div class="settings-row">
+      <div class="row-icon account">
+        <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <div class="row-text">
+        <div class="row-label">Connected Account</div>
+        <div class="row-value" id="connectedAccount"><div class="skel" style="width:80px"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFIED AUTHOR -->
+<div class="section">
+  <div class="section-title">Author Status</div>
+  <div class="verified-card">
+    <div class="verified-deco">
+      <svg viewBox="0 0 24 24"><path d="M12 2l2.4 4.86 5.36.78-3.88 3.78.92 5.34L12 14.27 7.2 16.76l.92-5.34L4.24 7.64l5.36-.78z"/></svg>
+    </div>
+    <div class="verified-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+    </div>
+    <div class="verified-body">
+      <div class="verified-title-row">
+        <span class="verified-title">Become a Verified Author</span>
+        <span class="soon-pill">Coming Soon</span>
+      </div>
+      <div class="verified-sub">Earn a verified badge on your profile, get priority publishing, and stand out to readers.</div>
+    </div>
+  </div>
+</div>
+
+<!-- LEGAL & SUPPORT -->
+<div class="section">
+  <div class="section-title">Legal &amp; Support</div>
+  <div class="settings-card">
+    <a class="settings-row link" href="/privacy">
+      <div class="row-icon privacy">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <div class="row-text"><div class="row-label">Privacy Policy</div></div>
+      <div class="row-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </a>
+    <a class="settings-row link" href="/terms">
+      <div class="row-icon terms">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+      </div>
+      <div class="row-text"><div class="row-label">Terms of Service</div></div>
+      <div class="row-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </a>
+    <a class="settings-row link" href="/support">
+      <div class="row-icon support">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="row-text"><div class="row-label">Help &amp; Support</div></div>
+      <div class="row-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </a>
+  </div>
+</div>
+
+<!-- LOGOUT -->
+<div class="section">
+  <button class="btn-logout" onclick="doSignOut()">
+    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log Out
+  </button>
+</div>
+
+<div class="app-footer">
+  <span class="brand">Kievora</span>
+  Version 1.0.0
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+
+const fbApp = initializeApp({
+  apiKey:"AIzaSyA2s328tgIlxFnnvob5GK7G7C-QevPxnRs",
+  authDomain:"kievora.firebaseapp.com",
+  projectId:"kievora",
+  storageBucket:"kievora.firebasestorage.app",
+  messagingSenderId:"548806738102",
+  appId: "1:548806738102:web:bd84433ce38fbfb4e2e617",
+  measurementId: "G-X6VG3MVQ96"
+});
+const auth = getAuth(fbApp);
+const db   = getFirestore(fbApp);
+let currentUid = null;
+let currentName = '';
+let currentUsername = '';
+
+const GOOGLE_ICON = `<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 38c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>`;
+const EMAIL_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2"/><path d="m14.5 4.5 5 5"/><path d="M11.5 7.5 19 15l-1 5-5 1-7.5-7.5z"/></svg>`;
+
+onAuthStateChanged(auth, async user => {
+  if(!user){ window.location.href='/login'; return; }
+
+  currentUid  = user.uid;
+  currentName = user.displayName || '';
+  document.getElementById('userEmail').textContent = user.email || '—';
+
+  // Load username from Firestore so shareProfile() generates a clean @username URL
+  try{
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if(snap.exists()) currentUsername = snap.data().username || '';
+  }catch(e){ console.warn('Could not load username:', e.message); }
+
+  const provider = user.providerData?.[0]?.providerId || '';
+  const connectedEl = document.getElementById('connectedAccount');
+  if(provider === 'google.com'){
+    connectedEl.innerHTML = `<span class="provider-badge">${GOOGLE_ICON} Google</span>`;
+  } else {
+    connectedEl.innerHTML = `<span class="provider-badge" style="color:var(--p)">${EMAIL_ICON} Email &amp; Password</span>`;
+  }
+});
+
+window.doSignOut = async function(){
+  await signOut(auth);
+  window.location.href = '/login';
+};
+
+/* ── SHARE PROFILE ── */
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('on'), 2400);
+}
+window.shareProfile = async function(){
+  if(!currentUid) return;
+  const url = currentUsername
+    ? `${location.origin}/profile/@${encodeURIComponent(currentUsername)}`
+    : `${location.origin}/profile?uid=${currentUid}`;
+  const name = currentName || 'this profile';
+  const shareData = {
+    title: `${name} on Kievora`,
+    text: `Check out ${name}'s profile on Kievora`,
+    url
+  };
+  if(navigator.share){
+    try{ await navigator.share(shareData); }
+    catch(e){ /* user cancelled — no toast needed */ }
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    showToast('Profile link copied to clipboard');
+  }catch{
+    showToast('Could not copy link');
+  }
+};
+</script>
+</body>
+</html>
