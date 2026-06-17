@@ -1,0 +1,193 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── ADMIN CHECK HELPER ──
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── PUBLISHED ARTICLES (public feed) ──
+    match /articles/{articleId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── PLATFORM ARTICLES (Kievora official content) ──
+    match /platformArticles/{articleId} {
+      allow read: if true;
+      allow write: if false; // admin server only
+    }
+
+    // ── ADMINS LIST ──
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /articleLikes/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /articleSaves/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /articleShares/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /articleRatings/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /userLikes/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /userSaves/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── ARTICLE DOWNLOADS (count) ──
+    match /articleDownloads/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ── USER DOWNLOADS (per-user tracking) ──
+    match /userDownloads/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /userRatings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── SUBMISSIONS ──
+    match /submissions/{submissionId} {
+      allow read: if resource.data.status == 'approved'
+                  || (request.auth != null && request.auth.uid == resource.data.userId)
+                  || isAdmin();
+      allow create: if request.auth != null;
+      allow update: if (request.auth != null && request.auth.uid == resource.data.userId
+                        && resource.data.status in ['pending','rejected'])
+                    || isAdmin();
+      allow delete: if (request.auth != null && request.auth.uid == resource.data.userId)
+                    || isAdmin();
+    }
+
+    match /follows/{followId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.followerId;
+    }
+
+    // ── USERNAMES ──
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── SUPPORT REQUESTS ──
+    match /support_requests/{ticketId} {
+      allow create: if true; // visitors can submit without auth
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── FAQ VOTES ──
+    match /faq_votes/{faqId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ── ARTICLE CLAPS ──
+    match /article_claps/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ── NOTIFICATIONS ──
+    // Admin server writes with userId field; users read their own
+    match /notifications/{notifId} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.userId
+                      || request.auth.uid == resource.data.recipientUid);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+                    && (request.auth.uid == resource.data.userId
+                        || request.auth.uid == resource.data.recipientUid);
+      allow delete: if false;
+    }
+
+    // ── COMMENTS ──
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorUid;
+    }
+
+    // ── COMMENT LIKES ──
+    match /commentLikes/{commentId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── ARTICLE META (comment counts) ──
+    match /articleMeta/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ── RESUMES ──
+    match /resumes/{resumeId} {
+      allow read:   if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ── ANALYTICS EVENTS (written by frontend, read by admin server only) ──
+    match /analyticsEvents/{doc} {
+      allow read:  if false;         // admin server reads via SDK, not client
+      allow write: if request.auth != null;
+    }
+
+    // ── KIE CHAT LOGS (server-side only) ──
+    match /kieLogs/{userId}/{document=**} {
+      allow read, write: if false;   // main server writes, admin server reads via SDK
+    }
+
+    // ── SUPPORT CHAT LOGS (server-side only) ──
+    match /supportChats/{doc} {
+      allow read, write: if false;   // main server writes, admin server reads via SDK
+    }
+
+    // ── EMAIL LOGS (server-side only) ──
+    match /emailLogs/{doc} {
+      allow read, write: if false;   // main server writes, admin server reads via SDK
+    }
+
+    // ── ADMIN ACTION LOGS (server-side only) ──
+    match /adminLogs/{doc} {
+      allow read, write: if false;   // admin server writes only
+    }
+
+    // ── PLATFORM CONFIG (swiper, Kievora profile) ──
+    match /platform/{doc} {
+      allow read: if true;           // frontend reads swiper config
+      allow write: if false;         // admin server writes only
+    }
+
+    // ── DENY EVERYTHING ELSE ──
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
