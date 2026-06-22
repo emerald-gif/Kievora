@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KIE × Gmail — Your Inbox, Automated | Kievora</title>
+<link rel="icon" type="image/jpeg" href="logo.jpg"/>
+<link rel="apple-touch-icon" href="logo.jpg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+img{max-width:100%}
+:root{
+  --p:#7C3AED;--p2:#A78BFA;--p3:#EDE9FE;--p4:#F5F3FF;
+  --pink:#F056AA;--text:#0A0A0B;--sub:#6B7280;
+  --light:#F7F8FA;--border:#E8EAED;--white:#FFFFFF;
+  --max:1200px;
+  --p-deep:#4C1D95;--p-neon:#A855F7;--pink2:#FF3DAE;
+  --glow:rgba(124,58,237,.5);--gred:#EA4335;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:#fff;overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative}
+body::after{
+  content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.035;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:68px;display:flex;align-items:center;padding:0 48px;
+  justify-content:space-between;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  transition:box-shadow .25s;
+}
+nav.scrolled{box-shadow:0 1px 24px rgba(0,0,0,.07)}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.nav-logo img{height:28px;width:28px;display:block;object-fit:contain;flex-shrink:0}
+.nav-logo-text{font-family:'Sora',sans-serif;font-size:17px;font-weight:900;color:#0F0E2A;letter-spacing:-.3px}
+.nav-links{display:flex;align-items:center;gap:2px;list-style:none}
+.nav-links a{font-size:14px;font-weight:500;color:var(--sub);text-decoration:none;padding:7px 14px;border-radius:9px;transition:all .15s}
+.nav-links a:hover{color:var(--text);background:var(--light)}
+.nav-links a.active{color:var(--p);background:var(--p4);font-weight:700}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.nav-login{font-size:14px;font-weight:600;color:var(--sub);text-decoration:none;padding:8px 18px;border-radius:10px;transition:all .15s}
+.nav-login:hover{color:var(--text);background:var(--light)}
+.nav-cta{
+  font-size:14px;font-weight:700;color:#fff;text-decoration:none;
+  padding:9px 20px;background:linear-gradient(135deg,var(--p),var(--p-neon));border-radius:10px;
+  box-shadow:0 1px 3px rgba(108,71,255,.3),0 4px 14px rgba(108,71,255,.25);
+  transition:all .15s;
+}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(108,71,255,.35),0 8px 24px rgba(124,58,237,.38)}
+@media(max-width:768px){.nav-links{display:none}nav{padding:0 20px}}
+
+@keyframes shine{0%{left:-60%}55%,100%{left:130%}}
+@keyframes lpulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes kieBgDrift{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.8;transform:scale(1.06)}}
+@keyframes kieFrameGlow{0%,100%{box-shadow:0 0 0 1px rgba(234,67,53,.22),0 24px 80px rgba(0,0,0,.52)}50%{box-shadow:0 0 0 1px rgba(234,67,53,.45),0 24px 80px rgba(0,0,0,.52),0 0 60px rgba(234,67,53,.22)}}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* ─── SHARED SECTION ─── */
+.sec-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 14px;background:var(--p3);color:var(--p);
+  border-radius:99px;font-size:12px;font-weight:700;letter-spacing:.2px;margin-bottom:16px;
+  box-shadow:0 0 0 1px rgba(124,58,237,.05),0 4px 16px rgba(124,58,237,.12);
+}
+.sec-h2{
+  font-family:'Sora',sans-serif;
+  font-size:clamp(28px,4.2vw,50px);
+  font-weight:900;letter-spacing:-2px;line-height:1.07;color:var(--text);margin-bottom:14px;
+}
+.grad-h{
+  background:linear-gradient(120deg,var(--p) 0%,var(--pink2) 55%,var(--p-neon) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sec-p{font-size:16px;color:var(--sub);line-height:1.78;max-width:520px}
+.center{text-align:center}
+.center .sec-p{margin:0 auto}
+.btn-p{
+  position:relative;overflow:hidden;
+  display:inline-flex;align-items:center;gap:9px;
+  padding:16px 30px;background:linear-gradient(135deg,var(--p),var(--p-neon));color:#fff;
+  font-size:15.5px;font-weight:700;border-radius:13px;text-decoration:none;border:none;cursor:pointer;
+  box-shadow:0 1px 2px rgba(108,71,255,.3),0 8px 28px rgba(124,58,237,.4);transition:all .2s;
+}
+.btn-p::after{content:'';position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:shine 3.4s ease-in-out infinite}
+.btn-p:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 2px 5px rgba(108,71,255,.3),0 14px 38px rgba(124,58,237,.55)}
+.btn-g{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:16px 26px;background:#fff;color:var(--text);
+  font-size:15.5px;font-weight:600;border-radius:13px;text-decoration:none;
+  border:1.5px solid var(--border);cursor:pointer;transition:all .2s;
+}
+.btn-g:hover{border-color:var(--p);color:var(--p);background:var(--p4);transform:translateY(-2px)}
+
+/* ─── HERO (white, matches index/pricing/about) ─── */
+.gai-hero{
+  padding:130px 24px 80px;text-align:center;position:relative;
+  background:#fff;overflow:hidden;
+}
+@media(max-width:768px){.gai-hero{padding:100px 20px 60px}}
+.gai-hero-inner{position:relative;z-index:1;width:100%;max-width:920px;margin:0 auto}
+.gai-brand{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--p4);border:1px solid rgba(108,71,255,.14);
+  padding:6px 16px 6px 8px;border-radius:99px;margin-bottom:24px;
+  box-shadow:0 0 0 1px rgba(124,58,237,.04),0 4px 16px rgba(124,58,237,.1);
+}
+.gai-brand img{width:26px;height:20px;border-radius:4px;display:block;object-fit:contain}
+.gai-brand span{font-size:12.5px;font-weight:700;color:var(--p);letter-spacing:.1px}
+.gai-h1{
+  font-family:'Sora',sans-serif;
+  font-size:clamp(36px,7vw,82px);
+  font-weight:900;letter-spacing:-3.5px;line-height:1.04;
+  color:var(--text);margin-bottom:22px;
+}
+.gai-sub{
+  font-size:clamp(15px,2.1vw,19px);color:var(--sub);
+  max-width:540px;margin:0 auto 38px;line-height:1.72;
+}
+/* ─── KIE × GMAIL CONNECT VISUAL ─── */
+.gai-connect{
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 40px;position:relative;
+  width:300px;height:110px;
+}
+.gai-logo-wrap{
+  position:relative;z-index:2;flex-shrink:0;
+  width:80px;height:80px;border-radius:22px;
+  background:#fff;
+  box-shadow:0 4px 24px rgba(0,0,0,.11),0 1px 3px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.05);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.gai-logo-wrap img{width:54px;height:54px;object-fit:contain;display:block}
+.gai-path-wrap{
+  flex:1;height:110px;position:relative;overflow:visible;
+}
+.gai-path-wrap svg{width:100%;height:100%;overflow:visible}
+.gai-path-track{fill:none;stroke:url(#pathGrad);stroke-width:1.5;stroke-dasharray:4 5;opacity:.35}
+.gai-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:linear-gradient(135deg,var(--p),var(--pink2));
+  box-shadow:0 0 10px rgba(124,58,237,.7),0 0 22px rgba(124,58,237,.35);
+  position:absolute;top:50%;left:0;
+  transform:translate(-50%,-50%);
+  animation:dotTravel 2.2s cubic-bezier(.4,0,.6,1) infinite;
+}
+@keyframes dotTravel{
+  0%{left:0%;opacity:0;transform:translate(-50%,-50%) scale(.6)}
+  8%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  92%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{left:100%;opacity:0;transform:translate(-50%,-50%) scale(.6)}
+}
+.gai-connect-label{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;background:var(--p4);border:1px solid rgba(108,71,255,.14);
+  border-radius:99px;font-size:12px;font-weight:700;color:var(--p);
+  margin-bottom:28px;
+  box-shadow:0 0 0 1px rgba(124,58,237,.04),0 4px 12px rgba(124,58,237,.1);
+}
+.gai-connect-label-dot{width:6px;height:6px;border-radius:50%;background:var(--p-neon);animation:lpulse 2s infinite;flex-shrink:0}
+.gai-brand img{width:26px!important;height:20px!important;border-radius:4px;display:block;object-fit:contain;flex-shrink:0}
+.btn-p img,.btn-g img,.btn-white img{width:20px!important;height:20px!important;flex-shrink:0;object-fit:contain;display:block;border-radius:3px}
+.gai-actions{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+@media(max-width:480px){.gai-actions{flex-direction:column;align-items:stretch}.gai-actions .btn-p,.gai-actions .btn-g{justify-content:center}}
+.gai-note{font-size:12.5px;color:#9CA3AF;margin-bottom:52px}
+@media(max-width:768px){.gai-hero img{height:280px}}
+
+/* ─── SHOWCASE CAROUSEL ─── */
+.car-outer{position:relative;max-width:1000px;margin:0 auto}
+.car-viewport{position:relative;width:100%;height:380px;overflow:hidden}
+.car-track{position:relative;width:100%;height:100%}
+.car-item{
+  position:absolute;top:50%;left:50%;width:56%;max-width:540px;aspect-ratio:16/10;
+  border-radius:20px;overflow:hidden;background:#0A0A0B;cursor:pointer;
+  box-shadow:0 18px 50px rgba(0,0,0,.14);
+  transition:transform .55s cubic-bezier(.22,.61,.36,1),opacity .5s,box-shadow .35s;
+}
+.car-item img,.car-item video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.car-item.pos-center{transform:translate(-50%,-50%) scale(1);z-index:3;opacity:1;box-shadow:0 28px 70px rgba(0,0,0,.22);cursor:default}
+.car-item.pos-right{transform:translate(-50%,-50%) translateX(76%) scale(.72);z-index:2;opacity:.45}
+.car-item.pos-left{transform:translate(-50%,-50%) translateX(-76%) scale(.72);z-index:2;opacity:.45}
+.car-item.pos-hidden{transform:translate(-50%,-50%) scale(.4);z-index:1;opacity:0;pointer-events:none}
+.car-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:32px}
+.car-nav-btn{
+  flex-shrink:0;width:38px;height:38px;border-radius:50%;
+  background:#fff;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--p);transition:all .15s;
+}
+.car-nav-btn:hover{background:var(--p3);border-color:rgba(124,58,237,.3);transform:scale(1.1);box-shadow:0 4px 16px rgba(124,58,237,.22)}
+.car-pill{display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:6px 22px 6px 6px}
+.car-playpause{flex-shrink:0;width:30px;height:30px;border-radius:50%;border:none;background:var(--p3);color:var(--p);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.car-playpause:hover{background:rgba(124,58,237,.25)}
+.car-pag{display:flex;align-items:center;gap:8px}
+.pag-seg{width:42px;height:4px;border-radius:99px;background:var(--border);overflow:hidden;cursor:pointer}
+.pag-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--p),var(--pink2));border-radius:99px;box-shadow:0 0 8px rgba(124,58,237,.4)}
+@media(max-width:760px){
+  .car-viewport{height:240px}
+  .car-item{width:78%}
+  .car-item.pos-right{transform:translate(-50%,-50%) translateX(70%) scale(.001);opacity:0}
+  .car-item.pos-left{transform:translate(-50%,-50%) translateX(-70%) scale(.001);opacity:0}
+  .pag-seg{width:32px}
+}
+
+/* ─── HOW IT WORKS ─── */
+.gai-steps{padding:110px 24px;background:#fff}
+.gai-steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;max-width:var(--max);margin:56px auto 0}
+.gai-step{background:var(--light);border:1px solid var(--border);border-radius:18px;padding:28px 24px;position:relative;transition:all .25s}
+.gai-step:hover{transform:translateY(-5px);box-shadow:0 16px 40px rgba(124,58,237,.14);border-color:rgba(124,58,237,.3)}
+.gai-step-num{font-family:'Sora',sans-serif;font-size:13px;font-weight:800;color:var(--p);background:var(--p3);width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.gai-step-ic{width:40px;height:40px;border-radius:11px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.gai-step h3{font-size:16px;font-weight:800;margin-bottom:8px;letter-spacing:-.2px}
+.gai-step p{font-size:13.5px;color:var(--sub);line-height:1.65}
+.gai-step-arrow{position:absolute;top:50%;right:-20px;transform:translateY(-50%);color:#D1D5DB;z-index:2;display:flex}
+@media(max-width:900px){.gai-steps-grid{grid-template-columns:1fr 1fr;gap:16px}.gai-step-arrow{display:none}}
+@media(max-width:560px){.gai-steps-grid{grid-template-columns:1fr}}
+
+/* ─── TAILOR / COMPARE ─── */
+.gai-tailor{padding:110px 24px;background:linear-gradient(140deg,#080614 0%,#100C2A 55%,#180E38 100%);position:relative;overflow:hidden}
+.gai-tailor::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 12% 60%,rgba(124,58,237,.28),transparent 48%),
+             radial-gradient(circle at 90% 20%,rgba(234,67,53,.16),transparent 44%);
+  animation:kieBgDrift 14s ease-in-out infinite;
+}
+.gai-tailor-inner{max-width:var(--max);margin:0 auto;position:relative;z-index:1}
+.gai-tailor .sec-tag{background:rgba(108,71,255,.18);color:#C4B5FD;border:1px solid rgba(108,71,255,.22)}
+.gai-tailor h2{color:#fff}
+.gai-tailor .sec-p{color:rgba(255,255,255,.55);max-width:580px}
+.gai-compare{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:980px;margin:52px auto 0}
+.gai-cc{border-radius:18px;padding:24px;position:relative}
+.gai-cc-off{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.gai-cc-on{background:linear-gradient(155deg,rgba(124,58,237,.16),rgba(255,61,174,.08));border:1px solid rgba(168,85,247,.4);box-shadow:0 0 0 1px rgba(168,85,247,.15),0 0 60px rgba(124,58,237,.22)}
+.gai-cc-label{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;padding:5px 12px;border-radius:99px}
+.gai-cc-off .gai-cc-label{background:rgba(255,255,255,.08);color:rgba(255,255,255,.45)}
+.gai-cc-on .gai-cc-label{background:rgba(168,85,247,.25);color:#E9D5FF}
+.gai-cc-q{font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:12px;font-style:italic}
+.gai-cc-bubble{display:flex;align-items:flex-start;gap:10px}
+.gai-cc-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;flex-shrink:0;margin-top:1px}
+.gai-cc-off .gai-cc-av{background:rgba(255,255,255,.15)}
+.gai-cc-on .gai-cc-av{background:linear-gradient(135deg,var(--p),var(--pink2))}
+.gai-cc-text{font-size:13.5px;line-height:1.65}
+.gai-cc-off .gai-cc-text{color:rgba(255,255,255,.5)}
+.gai-cc-on .gai-cc-text{color:#F1EEFF}
+.gai-cc-on .gai-cc-text b{color:#E9D5FF}
+@media(max-width:760px){.gai-compare{grid-template-columns:1fr}}
+
+.gai-tailor-feats{display:flex;flex-direction:column;gap:22px;max-width:760px;margin:56px auto 0}
+.gai-tf{display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 20px}
+.gai-tf-ic{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:rgba(108,71,255,.18);border:1px solid rgba(108,71,255,.28);display:flex;align-items:center;justify-content:center}
+.gai-tf-title{font-size:14px;font-weight:700;color:#E2E8F0;margin-bottom:3px}
+.gai-tf-desc{font-size:13.5px;color:rgba(255,255,255,.42);line-height:1.6}
+
+/* ─── FEATURES BENTO ─── */
+.gai-features{padding:110px 24px;background:var(--light);position:relative;overflow:hidden}
+.gai-features::before{content:'';position:absolute;top:-220px;right:-160px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.14) 0%,transparent 70%);filter:blur(50px);pointer-events:none}
+.gai-fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:var(--max);margin:56px auto 0;position:relative;z-index:1}
+.gai-fc{background:#fff;border:1px solid var(--border);border-radius:18px;padding:26px;transition:all .25s}
+.gai-fc:hover{transform:translateY(-5px);box-shadow:0 18px 44px rgba(124,58,237,.16);border-color:rgba(124,58,237,.3)}
+.gai-fc-ic{width:38px;height:38px;border-radius:11px;background:rgba(234,67,53,.1);border:1px solid rgba(234,67,53,.22);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.gai-fc h3{font-size:15.5px;font-weight:800;margin-bottom:7px;letter-spacing:-.2px}
+.gai-fc p{font-size:13.5px;color:var(--sub);line-height:1.65}
+.gai-fc-dark{background:linear-gradient(150deg,#0F172A,#1E1B4B);border-color:transparent}
+.gai-fc-dark h3{color:#fff}
+.gai-fc-dark p{color:rgba(255,255,255,.5)}
+.gai-fc-dark .gai-fc-ic{background:rgba(108,71,255,.22);border:1px solid rgba(108,71,255,.3)}
+@media(max-width:860px){.gai-fgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.gai-fgrid{grid-template-columns:1fr}}
+
+/* ─── FAQ ─── */
+.gai-faq{padding:110px 24px;background:#fff}
+.gai-faq-wrap{max-width:760px;margin:48px auto 0}
+.accordion{border-top:1px solid var(--border)}
+.acc-item{border-bottom:1px solid var(--border);position:relative;transition:padding-left .25s}
+.acc-item::before{content:'';position:absolute;left:-16px;top:0;bottom:0;width:3px;border-radius:3px;background:linear-gradient(180deg,var(--p),var(--pink2));opacity:0;transform:scaleY(.4);transition:opacity .25s,transform .25s}
+.acc-item.open{padding-left:16px}
+.acc-item.open::before{opacity:1;transform:scaleY(1)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:20px 0;cursor:pointer;user-select:none}
+.acc-left{display:flex;align-items:center;gap:14px;font-size:15.5px;font-weight:700;color:var(--text)}
+.acc-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--p3)}
+.acc-ch{color:var(--sub);transition:transform .25s;font-size:18px;line-height:1}
+.acc-item.open .acc-ch{transform:rotate(180deg);color:var(--p)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .3s;font-size:14px;color:var(--sub);line-height:1.75;padding-left:46px}
+.acc-item.open .acc-body{max-height:220px;padding-top:0;padding-bottom:20px}
+
+/* ─── FINAL CTA ─── */
+.gai-cta{
+  padding:120px 24px;text-align:center;
+  background:linear-gradient(140deg,var(--p) 0%,#7C1FB0 35%,#4527CE 65%,#2E1065 100%);
+  background-size:220% 220%;animation:gradShift 7s ease infinite;
+  position:relative;overflow:hidden;
+}
+.gai-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 50%,rgba(255,255,255,.08),transparent 55%),radial-gradient(ellipse at 75% 50%,rgba(255,61,174,.18),transparent 55%);pointer-events:none}
+.gai-cta-inner{position:relative;z-index:1}
+.gai-cta h2{font-family:'Sora',sans-serif;font-size:clamp(30px,5vw,56px);font-weight:900;letter-spacing:-2.5px;color:#fff;margin-bottom:16px;line-height:1.05;text-shadow:0 0 50px rgba(255,255,255,.3)}
+.gai-cta-sub{font-size:16.5px;color:rgba(255,255,255,.65);margin-bottom:38px}
+
+/* ─── FOOTER ─── */
+footer{background:var(--light);border-top:1px solid var(--border);padding:64px 24px 32px;position:relative}
+footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),var(--pink2),var(--p-neon),transparent)}
+.footer-grid{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:48px;max-width:var(--max);margin:0 auto 48px}
+.footer-logo{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.footer-logo img{height:28px;width:28px;object-fit:contain;flex-shrink:0}
+.footer-logo-text{font-family:'Sora',sans-serif;font-size:17px;font-weight:900;color:#0F0E2A;letter-spacing:-.3px}
+.footer-desc{font-size:13.5px;color:var(--sub);line-height:1.75;max-width:230px}
+.footer-col-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#9CA3AF;margin-bottom:14px}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px}
+.footer-links a{font-size:13.5px;color:var(--sub);text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:var(--text)}
+.footer-bottom{max-width:var(--max);margin:0 auto;border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-copy{font-size:13px;color:#9CA3AF}
+.footer-socials{display:flex;align-items:center;gap:8px}
+.social-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--sub);background:#fff;border:1px solid var(--border);transition:all .15s;text-decoration:none}
+.social-icon:hover{color:var(--p);background:var(--p3);border-color:rgba(124,58,237,.2)}
+.footer-legal{display:flex;gap:20px}
+.footer-legal a{font-size:13px;color:#9CA3AF;text-decoration:none}
+.footer-legal a:hover{color:var(--text)}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>*:first-child{grid-column:span 2}}
+
+/* ─── REVEAL ─── */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
+.reveal.v{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+</style>
+</head>
+<body>
+
+<!-- ─── NAVIGATION ─── -->
+<nav id="main-nav">
+  <a href="index.html" class="nav-logo">
+    <img src="logo.jpg" alt="K"/>
+    <span class="nav-logo-text">kievora</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html#features">Features</a></li>
+    <li><a href="index.html#templates">Templates</a></li>
+    <li><a href="index.html#kie">KIE AI</a></li>
+    <li><a href="gmail-ai.html" class="active">Gmail AI</a></li>
+    <li><a href="index.html#community">Community</a></li>
+    <li><a href="/find-jobs">Find Jobs</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a href="/login" class="nav-login">Sign In</a>
+    <a href="/signup" class="nav-cta">Get Started Free</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="gai-hero">
+  <div class="gai-hero-inner">
+    <div class="gai-connect-label reveal">
+      <span class="gai-connect-label-dot"></span>
+      New Integration
+    </div>
+    <div class="gai-connect reveal d1">
+      <div class="gai-logo-wrap">
+        <img src="gmail.jpg" alt="Gmail" width="54" height="54"/>
+      </div>
+      <div class="gai-path-wrap">
+        <svg viewBox="0 0 140 110" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="pathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#EA4335" stop-opacity=".7"/>
+              <stop offset="50%" stop-color="#7C3AED" stop-opacity=".9"/>
+              <stop offset="100%" stop-color="#A855F7" stop-opacity=".7"/>
+            </linearGradient>
+          </defs>
+          <!-- top arc -->
+          <path class="gai-path-track" d="M0,55 C35,55 35,30 70,30 C105,30 105,55 140,55"/>
+          <!-- bottom arc -->
+          <path class="gai-path-track" d="M0,55 C35,55 35,80 70,80 C105,80 105,55 140,55"/>
+          <!-- straight centre -->
+          <path class="gai-path-track" d="M0,55 L140,55"/>
+        </svg>
+        <div class="gai-dot"></div>
+      </div>
+      <div class="gai-logo-wrap">
+        <img src="kie.jpg" alt="KIE" width="54" height="54"/>
+      </div>
+    </div>
+    <h1 class="gai-h1 reveal d2">
+      Stop checking your inbox.<br/>Let <span class="grad-h">KIE</span> run it for you.
+    </h1>
+    <p class="gai-sub reveal d3">Connect Gmail and KIE reads every job-search email the moment it lands — tracking applications, flagging interviews, and tailoring its advice to exactly what's in your inbox.</p>
+    <div class="gai-actions reveal d4">
+      <a href="/signup" class="btn-p">
+        <img src="gmail.jpg" alt="" width="18" height="18" style="border-radius:3px;object-fit:contain;flex-shrink:0"/>
+        Connect Gmail — it's free
+      </a>
+      <a href="#how-it-works" class="btn-g">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        See how it works
+      </a>
+    </div>
+    <div class="gai-note reveal d4">Read-only access to start. Disconnect anytime.</div>
+  </div>
+
+  <div class="car-outer reveal" style="margin-top:0;padding-bottom:56px">
+    <div class="car-viewport">
+      <div class="car-track" id="carTrack"></div>
+    </div>
+    <div class="car-controls">
+      <button class="car-nav-btn" id="carPrev" aria-label="Previous">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="car-pill">
+        <button class="car-playpause" id="carPlayPause" aria-label="Pause">
+          <svg id="iconPauseGlyph" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="4.5" height="18" rx="1"/><rect x="14.5" y="3" width="4.5" height="18" rx="1"/></svg>
+          <svg id="iconPlayGlyph" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="display:none"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+        <div class="car-pag" id="carPag"></div>
+      </div>
+      <button class="car-nav-btn" id="carNext" aria-label="Next">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section class="gai-steps" id="how-it-works">
+  <div style="max-width:var(--max);margin:0 auto;text-align:center" class="reveal">
+    <div class="sec-tag">✦ How It Works</div>
+    <h2 class="sec-h2 grad-h">From inbox to interview — automatically</h2>
+    <p class="sec-p center">Four steps, one connection. After that, KIE just works in the background.</p>
+  </div>
+  <div class="gai-steps-grid">
+    <div class="gai-step reveal">
+      <div class="gai-step-num">01</div>
+      <div class="gai-step-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17H7A5 5 0 017 7h2"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12" stroke-linecap="round"/></svg></div>
+      <h3>Connect Gmail</h3>
+      <p>One click, read-only access. Nothing leaves your inbox without your permission.</p>
+      <span class="gai-step-arrow"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6l6 6-6 6"/></svg></span>
+    </div>
+    <div class="gai-step reveal d1">
+      <div class="gai-step-num">02</div>
+      <div class="gai-step-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round"/></svg></div>
+      <h3>KIE scans your inbox</h3>
+      <p>It quietly looks for job-search emails — confirmations, recruiter replies, interview invites.</p>
+      <span class="gai-step-arrow"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6l6 6-6 6"/></svg></span>
+    </div>
+    <div class="gai-step reveal d2">
+      <div class="gai-step-num">03</div>
+      <div class="gai-step-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path stroke-linecap="round" d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></div>
+      <h3>Your dashboard updates itself</h3>
+      <p>Every detected email becomes a tracked application — automatically, no manual entry.</p>
+      <span class="gai-step-arrow"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6l6 6-6 6"/></svg></span>
+    </div>
+    <div class="gai-step reveal d3">
+      <div class="gai-step-num">04</div>
+      <div class="gai-step-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 13l.7 2.1L22 16l-2.3.9L19 19l-.7-2.1L16 16l2.3-.9L19 13z"/></svg></div>
+      <h3>KIE tailors its advice</h3>
+      <p>Using real context from your emails, KIE gives sharper, more specific coaching — not generic tips.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TAILOR / COMPARE ─── -->
+<section class="gai-tailor">
+  <div class="gai-tailor-inner">
+    <div style="max-width:700px;margin:0 auto;text-align:center" class="reveal">
+      <div class="sec-tag">✦ The Difference</div>
+      <h2 class="sec-h2">KIE doesn't guess. It reads the actual email.</h2>
+      <p class="sec-p center">Because KIE has the real company, role, and recruiter's tone, every answer it gives changes — from generic advice to advice built for your exact situation.</p>
+    </div>
+    <div class="gai-compare">
+      <div class="gai-cc gai-cc-off reveal">
+        <div class="gai-cc-label">Without Gmail connected</div>
+        <div class="gai-cc-q">"Help me prep for my interview"</div>
+        <div class="gai-cc-bubble">
+          <div class="gai-cc-av">K</div>
+          <div class="gai-cc-text">Sure! Tell me which company and role you're interviewing for, and I can help you prepare.</div>
+        </div>
+      </div>
+      <div class="gai-cc gai-cc-on reveal d1">
+        <div class="gai-cc-label">✦ With Gmail connected</div>
+        <div class="gai-cc-q">"Help me prep for my interview"</div>
+        <div class="gai-cc-bubble">
+          <div class="gai-cc-av">K</div>
+          <div class="gai-cc-text">I saw the interview invite from <b>Google</b> for <b>Senior Product Manager</b> — want me to prep you on their leadership-principles-style behavioral questions and pull the team's recent launches to reference?</div>
+        </div>
+      </div>
+    </div>
+    <div class="gai-tailor-feats">
+      <div class="gai-tf reveal">
+        <div class="gai-tf-ic"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#C4B5FD" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+        <div>
+          <div class="gai-tf-title">Interview prep, built for the real company</div>
+          <div class="gai-tf-desc">Not generic tips — questions and talking points shaped by the actual company and role from the invite.</div>
+        </div>
+      </div>
+      <div class="gai-tf reveal d1">
+        <div class="gai-tf-ic"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#C4B5FD" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M22 6l-10 7L2 6"/></svg></div>
+        <div>
+          <div class="gai-tf-title">Follow-ups that match the actual thread</div>
+          <div class="gai-tf-desc">KIE drafts replies in the same tone and context as the real conversation — never a generic template.</div>
+        </div>
+      </div>
+      <div class="gai-tf reveal d2">
+        <div class="gai-tf-ic"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#C4B5FD" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div>
+          <div class="gai-tf-title">Resume tweaks pulled from the real listing</div>
+          <div class="gai-tf-desc">When a job description lands in your inbox, KIE can line up your resume against the actual requirements.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES BENTO ─── -->
+<section class="gai-features" id="features-list">
+  <div style="max-width:var(--max);margin:0 auto;text-align:center;position:relative;z-index:1" class="reveal">
+    <div class="sec-tag">✦ Everything Included</div>
+    <h2 class="sec-h2 grad-h">The full Gmail AI feature set</h2>
+    <p class="sec-p center">All part of Kievora's free plan — no separate add-on, no hidden tier.</p>
+  </div>
+  <div class="gai-fgrid">
+    <div class="gai-fc reveal">
+      <div class="gai-fc-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--gred)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M22 6l-10 7L2 6"/></svg></div>
+      <h3>Auto-tracked applications</h3>
+      <p>Confirmation emails are detected the second they arrive and logged to your dashboard automatically.</p>
+    </div>
+    <div class="gai-fc reveal d1">
+      <div class="gai-fc-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--gred)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+      <h3>Instant interview alerts</h3>
+      <p>The moment a recruiter replies, you're notified with a tailored briefing on the company and role.</p>
+    </div>
+    <div class="gai-fc reveal d2">
+      <div class="gai-fc-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--gred)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3.5 2"/></svg></div>
+      <h3>Smart follow-up nudges</h3>
+      <p>No reply after 7 days? KIE drafts the follow-up email for you — just review and send.</p>
+    </div>
+    <div class="gai-fc reveal">
+      <div class="gai-fc-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--gred)" stroke-width="2"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 13l.7 2.1L22 16l-2.3.9L19 19l-.7-2.1L16 16l2.3-.9L19 13z"/></svg></div>
+      <h3>Tailored interview prep</h3>
+      <p>Briefings built from the real company and role, not generic interview advice.</p>
+    </div>
+    <div class="gai-fc reveal d1">
+      <div class="gai-fc-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--gred)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <h3>Context-aware cover letters</h3>
+      <p>When a job description lands in your inbox, KIE can draft a cover letter matched to it directly.</p>
+    </div>
+    <div class="gai-fc gai-fc-dark reveal d2">
+      <div class="gai-fc-ic"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#C4B5FD" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+      <h3>Private &amp; read-only</h3>
+      <p>KIE only reads job-search related emails. Disconnect anytime — your data clears within 24 hours.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FAQ ─── -->
+<section class="gai-faq">
+  <div style="max-width:760px;margin:0 auto;text-align:center" class="reveal">
+    <div class="sec-tag">✦ Questions</div>
+    <h2 class="sec-h2">Before you connect</h2>
+  </div>
+  <div class="gai-faq-wrap reveal">
+    <div class="accordion">
+      <div class="acc-item open" onclick="toggleAcc(this)">
+        <div class="acc-head">
+          <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg></div>Is my Gmail data safe?</div>
+          <span class="acc-ch">⌄</span>
+        </div>
+        <div class="acc-body">KIE only reads emails it classifies as job-search related — confirmations, recruiter replies, interview invites. Nothing is shared, sold, or used to train external models.</div>
+      </div>
+      <div class="acc-item" onclick="toggleAcc(this)">
+        <div class="acc-head">
+          <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>What does KIE actually read?</div>
+          <span class="acc-ch">⌄</span>
+        </div>
+        <div class="acc-body">Only emails KIE detects as job-search related. Personal, financial, and unrelated emails are ignored entirely and never processed.</div>
+      </div>
+      <div class="acc-item" onclick="toggleAcc(this)">
+        <div class="acc-head">
+          <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17H7A5 5 0 017 7h2"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>Can I disconnect anytime?</div>
+          <span class="acc-ch">⌄</span>
+        </div>
+        <div class="acc-body">Yes. One click in Settings revokes access immediately, and KIE clears its synced data within 24 hours.</div>
+      </div>
+      <div class="acc-item" onclick="toggleAcc(this)">
+        <div class="acc-head">
+          <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M22 6l-10 7L2 6"/></svg></div>Does KIE send emails for me?</div>
+          <span class="acc-ch">⌄</span>
+        </div>
+        <div class="acc-body">Not yet. Today KIE drafts everything — follow-ups, replies — for you to review and send yourself. Auto-send is on the roadmap.</div>
+      </div>
+      <div class="acc-item" onclick="toggleAcc(this)">
+        <div class="acc-head">
+          <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--p)" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>Is this free?</div>
+          <span class="acc-ch">⌄</span>
+        </div>
+        <div class="acc-body">Yes. Gmail integration is part of Kievora's free plan, like everything else core to your job search.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FINAL CTA ─── -->
+<section class="gai-cta">
+  <div class="gai-cta-inner">
+    <h2>Let KIE handle your inbox.</h2>
+    <p class="gai-cta-sub">One click. Read-only to start. Free, like everything else on Kievora.</p>
+    <a href="/signup" style="position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:11px;padding:17px 36px;background:#fff;color:var(--p);font-size:16px;font-weight:700;border-radius:14px;text-decoration:none;border:none;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,.25);transition:all .2s">
+      <img src="gmail.jpg" alt="" width="20" height="20" style="border-radius:4px;object-fit:contain;flex-shrink:0"/>
+      Connect Gmail — it's free
+    </a>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">
+        <img src="logo.jpg" alt="K"/>
+        <span class="footer-logo-text">kievora</span>
+      </div>
+      <p class="footer-desc">AI-powered career platform with resume builder, career coach, job discovery, and a community of ambitious professionals. 100% free.</p>
+    </div>
+    <div>
+      <div class="footer-col-h">Platform</div>
+      <ul class="footer-links">
+        <li><a href="index.html#features">Features</a></li>
+        <li><a href="index.html#templates">Templates</a></li>
+        <li><a href="index.html#kie">KIE AI</a></li>
+        <li><a href="gmail-ai.html">Gmail AI</a></li>
+        <li><a href="/pricing">Pricing</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-h">Account</div>
+      <ul class="footer-links">
+        <li><a href="/signup">Sign Up Free</a></li>
+        <li><a href="/login">Sign In</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-h">Company</div>
+      <ul class="footer-links">
+        <li><a href="/about">About Kievora</a></li>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/support">Support</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2026 Kievora. All rights reserved.</p>
+    <div class="footer-socials">
+      <a href="#" aria-label="X" class="social-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+      <a href="#" aria-label="Instagram" class="social-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+      <a href="#" aria-label="Facebook" class="social-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg></a>
+      <a href="#" aria-label="LinkedIn" class="social-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+    </div>
+    <div class="footer-legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
+  </div>
+</footer>
+
+<script>
+// ─── NAV SCROLL ───
+window.addEventListener('scroll',()=>{document.getElementById('main-nav').classList.toggle('scrolled',window.scrollY>10);},{passive:true});
+
+// ─── REVEAL ON SCROLL ───
+const revObs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('v');revObs.unobserve(e.target);}});},{threshold:.1,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+
+// ─── SHOWCASE CAROUSEL ───
+const SHOWCASE_ITEMS=[
+  {type:'image',src:'kie-gmail-inbox.jpg',alt:'KIE reads your inbox',imgDuration:6000},
+  {type:'image',src:'kie-gmail-tracker.jpg',alt:'Auto-tracked applications',imgDuration:6000},
+  {type:'image',src:'kie-gmail-prep.jpg',alt:'Tailored interview prep',imgDuration:6000}
+];
+
+(function(){
+  const track=document.getElementById('carTrack');
+  const pagWrap=document.getElementById('carPag');
+  const playPauseBtn=document.getElementById('carPlayPause');
+  const iconPause=document.getElementById('iconPauseGlyph');
+  const iconPlay=document.getElementById('iconPlayGlyph');
+  if(!track||!pagWrap)return;
+
+  let current=0,advanceTimer=null,isPaused=false;
+  const n=SHOWCASE_ITEMS.length;
+
+  SHOWCASE_ITEMS.forEach((item,i)=>{
+    const el=document.createElement('div');
+    el.className='car-item';
+    el.dataset.index=i;
+    el.innerHTML=item.type==='video'
+      ?`<video src="${item.src}" muted playsinline preload="metadata"></video>`
+      :`<img src="${item.src}" alt="${item.alt||''}" loading="lazy"/>`;
+    el.addEventListener('click',()=>{ if(Number(el.dataset.index)!==current) goTo(Number(el.dataset.index)); });
+    track.appendChild(el);
+    const seg=document.createElement('div');
+    seg.className='pag-seg';
+    seg.dataset.index=i;
+    seg.innerHTML='<div class="pag-fill"></div>';
+    seg.addEventListener('click',()=>goTo(i));
+    pagWrap.appendChild(seg);
+  });
+
+  const itemEls=()=>track.querySelectorAll('.car-item');
+  const fillEls=()=>pagWrap.querySelectorAll('.pag-fill');
+  const centerVideo=()=>track.querySelector(`.car-item[data-index="${current}"] video`);
+
+  function setPlayPauseIcon(){
+    iconPause.style.display=isPaused?'none':'block';
+    iconPlay.style.display=isPaused?'block':'none';
+    playPauseBtn.setAttribute('aria-label',isPaused?'Play':'Pause');
+  }
+  function clearAdvance(){
+    if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null;}
+    itemEls().forEach(el=>{const v=el.querySelector('video');if(v){v.onended=null;v.ontimeupdate=null;v.pause();v.currentTime=0;}});
+  }
+  function position(){
+    itemEls().forEach(el=>{
+      const i=Number(el.dataset.index);
+      const offset=((i-current)%n+n)%n;
+      el.classList.remove('pos-center','pos-right','pos-left','pos-hidden');
+      if(offset===0)el.classList.add('pos-center');
+      else if(offset===1)el.classList.add('pos-right');
+      else if(offset===n-1)el.classList.add('pos-left');
+      else el.classList.add('pos-hidden');
+    });
+  }
+  function playCenter(){
+    clearAdvance();isPaused=false;setPlayPauseIcon();
+    const fills=fillEls();
+    fills.forEach(f=>{f.style.transition='none';f.style.width='0%';});
+    const item=SHOWCASE_ITEMS[current];
+    const fill=fills[current];
+    if(item.type==='video'){
+      const v=centerVideo();v.currentTime=0;v.play().catch(()=>{});
+      v.ontimeupdate=()=>{if(v.duration){fill.style.transition='none';fill.style.width=(v.currentTime/v.duration*100)+'%';}};
+      v.onended=()=>goTo((current+1)%n);
+    } else {
+      requestAnimationFrame(()=>{fill.style.transition=`width ${item.imgDuration}ms linear`;fill.style.width='100%';});
+      advanceTimer=setTimeout(()=>goTo((current+1)%n),item.imgDuration);
+    }
+  }
+  function goTo(i){current=((i%n)+n)%n;position();playCenter();}
+  function pauseSwiper(){
+    isPaused=true;setPlayPauseIcon();
+    if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null;}
+    const fill=fillEls()[current];
+    if(fill){const fw=getComputedStyle(fill).width;fill.style.transition='none';fill.style.width=fw;}
+  }
+  function resumeSwiper(){
+    isPaused=false;setPlayPauseIcon();
+    const fill=fillEls()[current];
+    const item=SHOWCASE_ITEMS[current];
+    if(item.type==='video'){
+      const v=centerVideo();
+      if(v){v.ontimeupdate=()=>{if(v.duration){fill.style.transition='none';fill.style.width=(v.currentTime/v.duration*100)+'%';}};v.onended=()=>goTo((current+1)%n);if(v.paused)v.play().catch(()=>{});}
+    } else {
+      const progress=Math.min(parseFloat(fill.style.width)/((pagWrap.querySelector('.pag-seg')||{offsetWidth:1}).offsetWidth||1),1)||0;
+      const remaining=item.imgDuration*(1-progress);
+      requestAnimationFrame(()=>{fill.style.transition=`width ${remaining}ms linear`;fill.style.width='100%';});
+      advanceTimer=setTimeout(()=>goTo((current+1)%n),remaining);
+    }
+  }
+  playPauseBtn.addEventListener('click',()=>{ isPaused?resumeSwiper():pauseSwiper(); });
+  document.getElementById('carPrev').addEventListener('click',()=>goTo(current-1));
+  document.getElementById('carNext').addEventListener('click',()=>goTo(current+1));
+  goTo(0);
+})();
+
+// ─── FAQ ACCORDION ───
+function toggleAcc(item){const o=item.classList.contains('open');document.querySelectorAll('.acc-item').forEach(i=>i.classList.remove('open'));if(!o)item.classList.add('open');}
+</script>
+</body>
+</html>
