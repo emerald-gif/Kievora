@@ -1,191 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Seed Articles · Resumaker Admin</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Terms of Service — Kievora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --p:#7c3aed;--g:linear-gradient(135deg,#7c3aed,#a855f7);
-  --txt:#0f0a1e;--sub:#6b7280;--mute:#9ca3af;
-  --bg:#f8f7ff;--card:#fff;--border:#e5e7eb;
-  --green:#10b981;--red:#ef4444;
-}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:24px 16px 60px}
-.hdr{display:flex;align-items:center;gap:12px;margin-bottom:32px}
-.logo{width:36px;height:36px;border-radius:10px;object-fit:cover}
-h1{font-size:20px;font-weight:800}
-.subtitle{font-size:13px;color:var(--sub);margin-top:2px}
-.warn{background:#fef3c7;border:1.5px solid #fde68a;border-radius:14px;padding:16px;margin-bottom:24px;font-size:13px;line-height:1.6;color:#92400e}
-.warn strong{font-weight:700}
-.btn{width:100%;padding:15px;border-radius:99px;background:var(--g);border:none;color:#fff;
-  font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.35);
-  transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,.45)}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.progress{margin-top:24px;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px;display:none}
-.progress.show{display:block}
-.prog-bar-wrap{height:8px;background:#ede9fe;border-radius:99px;overflow:hidden;margin-bottom:12px}
-.prog-bar{height:100%;background:var(--g);border-radius:99px;width:0;transition:width .3s}
-.prog-log{font-size:12px;color:var(--sub);line-height:2;max-height:200px;overflow-y:auto}
-.prog-log .ok{color:var(--green)}
-.prog-log .skip{color:var(--mute)}
-.prog-log .err{color:var(--red)}
-.done-msg{margin-top:20px;background:#d1fae5;border:1.5px solid #6ee7b7;border-radius:14px;
-  padding:16px;font-size:14px;font-weight:700;color:#065f46;display:none;text-align:center}
-.done-msg.show{display:block}
-.login-wall{text-align:center;padding:60px 20px}
-.login-wall svg{width:48px;height:48px;color:#d1d5db;margin:0 auto 16px;display:block}
-.login-wall p{font-size:15px;color:var(--sub);margin-bottom:20px}
-.btn-login{display:inline-block;padding:12px 28px;border-radius:99px;background:var(--g);
-  color:#fff;font-weight:700;text-decoration:none;font-size:14px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);
-  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#7c3aed;--p2:#a855f7;--p4:#f5f3ff;--text:#111827;--sub:#6b7280;--border:#e5e7eb;--white:#fff;--light:#f9fafb}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--white);line-height:1.7}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);height:64px;display:flex;align-items:center;padding:0 40px;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;flex-shrink:0}
+.logo-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.logo-name{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.logo-name span{color:var(--p)}
+.nav-right{display:flex;gap:8px}
+.btn-outline{padding:8px 18px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--text);text-decoration:none;background:var(--white)}
+.btn-fill{padding:9px 20px;background:linear-gradient(135deg,var(--p),var(--p2));border-radius:8px;font-size:13px;font-weight:700;color:#fff;text-decoration:none}
+@media(max-width:640px){nav{padding:0 20px}.btn-outline{display:none}}
+
+/* PAGE */
+.page{max-width:780px;margin:0 auto;padding:56px 24px 80px}
+
+/* HEADER */
+.doc-header{margin-bottom:44px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+.doc-badge{display:inline-block;background:var(--p4);color:var(--p);font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;margin-bottom:14px;letter-spacing:.05em}
+.doc-header h1{font-size:clamp(26px,5vw,38px);font-weight:900;letter-spacing:-1px;margin-bottom:10px}
+.doc-meta{font-size:13px;color:var(--sub)}
+.doc-meta span{font-weight:600;color:var(--text)}
+
+/* SECTIONS */
+.section{margin-bottom:40px}
+.section h2{font-size:18px;font-weight:800;color:var(--text);margin-bottom:12px;padding-top:4px;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
+.section h2 .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-radius:8px;font-size:13px;font-weight:800;flex-shrink:0}
+.section p{font-size:15px;color:#374151;line-height:1.8;margin-bottom:12px}
+.section p:last-child{margin-bottom:0}
+.section ul{list-style:none;margin:10px 0 12px;display:flex;flex-direction:column;gap:8px}
+.section ul li{font-size:15px;color:#374151;padding-left:22px;position:relative;line-height:1.7}
+.section ul li::before{content:'';position:absolute;left:0;top:10px;width:7px;height:7px;border-radius:50%;background:var(--p);opacity:.6}
+
+/* HIGHLIGHT BOX */
+.highlight{background:var(--p4);border:1px solid #ddd6fe;border-radius:12px;padding:18px 20px;margin:16px 0;font-size:14px;color:#4c1d95;line-height:1.7}
+.highlight strong{font-weight:700}
+
+/* CONTACT BOX */
+.contact-box{background:var(--light);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-top:16px}
+.contact-box p{margin-bottom:6px;font-size:14px;color:var(--sub)}
+.contact-box a{color:var(--p);font-weight:600;text-decoration:none}
+.contact-box a:hover{text-decoration:underline}
+
+/* FOOTER */
+footer{background:var(--light);border-top:1px solid var(--border);padding:36px 24px}
+.footer-inner{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.footer-logo-icon{width:28px;height:28px;border-radius:7px;overflow:hidden}
+.footer-logo-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.footer-links-row{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links-row a{font-size:12px;color:var(--sub);text-decoration:none}
+.footer-links-row a:hover{color:var(--text)}
+.footer-copy{font-size:12px;color:#9ca3af;margin-top:4px}
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <img src="logo.jpg" class="logo" alt="Resumaker" onerror="this.style.display='none'">
-  <div>
-    <h1>Seed Editorial Articles</h1>
-    <div class="subtitle">One-time setup · Admin only</div>
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon"><img src="/logo.jpg" alt="Kievora"/></div>
+    <span class="logo-name">Kie<span>vora</span></span>
+  </a>
+  <div class="nav-right">
+    <a href="/login" class="btn-outline">Sign In</a>
+    <a href="/signup" class="btn-fill">Get Started Free</a>
   </div>
+</nav>
+
+<div class="page">
+
+  <div class="doc-header">
+    <div class="doc-badge">Legal</div>
+    <h1>Terms of Service</h1>
+    <p class="doc-meta">Effective date: <span>June 1, 2026</span> &nbsp;·&nbsp; Last updated: <span>June 1, 2026</span></p>
+  </div>
+
+  <div class="section">
+    <p>Welcome to Kievora. By accessing or using our platform at <strong>kievora.com</strong>, you agree to be bound by these Terms of Service. Please read them carefully before using our service.</p>
+    <div class="highlight"><strong>Summary:</strong> These terms govern your use of Kievora — our resume builder, AI career tools, and related services. Using Kievora means you accept these terms.</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">1</span> Acceptance of Terms</h2>
+    <p>By creating an account or using any part of the Kievora platform, you confirm that you are at least 16 years old, have read and understood these Terms, and agree to be legally bound by them.</p>
+    <p>If you are using Kievora on behalf of an organisation, you represent that you have authority to bind that organisation to these Terms.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> Description of Service</h2>
+    <p>Kievora provides an online platform that includes:</p>
+    <ul>
+      <li>A resume builder with professional templates</li>
+      <li>KIE — an AI-powered career coaching assistant</li>
+      <li>Resume analysis and ATS scoring tools</li>
+      <li>PDF export functionality</li>
+      <li>Career Reads — articles and career growth content</li>
+    </ul>
+    <p>We reserve the right to modify, suspend, or discontinue any part of the service at any time with reasonable notice.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> User Accounts</h2>
+    <p>To access certain features you must create an account. You are responsible for:</p>
+    <ul>
+      <li>Keeping your login credentials secure and confidential</li>
+      <li>All activity that occurs under your account</li>
+      <li>Notifying us immediately of any unauthorised use at support@kievora.com</li>
+    </ul>
+    <p>You may not create accounts using automated methods or create accounts on behalf of others without their permission.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> Acceptable Use</h2>
+    <p>You agree not to use Kievora to:</p>
+    <ul>
+      <li>Upload or share content that is illegal, harmful, or infringes on others' rights</li>
+      <li>Attempt to gain unauthorised access to our systems or other users' accounts</li>
+      <li>Use automated bots or scrapers to extract data from the platform</li>
+      <li>Impersonate any person or entity or misrepresent your affiliation</li>
+      <li>Transmit malware, viruses, or any malicious code</li>
+      <li>Use the AI features to generate fraudulent or deceptive content</li>
+    </ul>
+    <p>Violation of these rules may result in immediate account suspension or termination.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> Your Content</h2>
+    <p>You retain full ownership of the content you create on Kievora — including your resume data, personal information, and any documents you upload.</p>
+    <p>By using our service, you grant Kievora a limited, non-exclusive licence to store and process your content solely for the purpose of providing the service to you. We do not sell your content to third parties.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">6</span> AI-Generated Content</h2>
+    <p>Kievora uses AI tools, including KIE, to generate career suggestions, resume summaries, bullet points, and coaching advice. You acknowledge that:</p>
+    <ul>
+      <li>AI-generated content is provided as a starting point and may not always be accurate</li>
+      <li>You are responsible for reviewing and verifying all AI-generated content before use</li>
+      <li>Kievora does not guarantee employment outcomes from using our AI tools</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">7</span> Intellectual Property</h2>
+    <p>All elements of the Kievora platform — including the brand, design, templates, software, and content — are the property of Kievora and are protected by applicable intellectual property laws.</p>
+    <p>You may not copy, modify, distribute, or create derivative works from our platform without explicit written permission.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">8</span> Free Service &amp; Pricing</h2>
+    <p>Kievora is currently offered free of charge. We reserve the right to introduce paid plans or premium features in the future. If we do, we will notify existing users in advance and existing free features will remain accessible unless otherwise stated.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">9</span> Disclaimers &amp; Limitation of Liability</h2>
+    <p>Kievora is provided "as is" without warranties of any kind. We do not guarantee that the service will be uninterrupted, error-free, or that it will meet your specific requirements.</p>
+    <p>To the fullest extent permitted by law, Kievora shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the platform.</p>
+    <div class="highlight"><strong>Important:</strong> Using Kievora does not guarantee employment. Career outcomes depend on many factors beyond our control.</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">10</span> Termination</h2>
+    <p>You may delete your account at any time from your account settings. We may suspend or terminate your access if you violate these Terms, with or without notice depending on the severity of the violation.</p>
+    <p>Upon termination, your right to use the service ends immediately. We may retain certain data as required by law or as described in our Privacy Policy.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">11</span> Changes to These Terms</h2>
+    <p>We may update these Terms from time to time. When we make significant changes, we will notify you via email or a prominent notice on the platform. Continued use of Kievora after changes take effect constitutes your acceptance of the new Terms.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">12</span> Governing Law</h2>
+    <p>These Terms shall be governed by and construed in accordance with applicable laws. Any disputes shall be resolved through good-faith negotiation first, and if unresolved, through the appropriate legal channels.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">13</span> Contact Us</h2>
+    <p>If you have any questions about these Terms of Service, please reach out:</p>
+    <div class="contact-box">
+      <p>📧 Email: <a href="mailto:support@kievora.com">support@kievora.com</a></p>
+      <p>🌐 Website: <a href="https://kievora.com">kievora.com</a></p>
+      <p>📄 Privacy Policy: <a href="/privacy">View our Privacy Policy</a></p>
+    </div>
+  </div>
+
 </div>
 
-<div id="loginWall" class="login-wall" style="display:none">
-  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-    <path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-  </svg>
-  <p>You must be signed in as an admin to seed articles.</p>
-  <a href="login.html" class="btn-login">Sign In</a>
-</div>
-
-<div id="mainContent">
-  <div class="warn">
-    <strong>⚠️ Read before running:</strong><br>
-    This pushes all 13 Resumaker editorial articles into the <code>articles</code> Firestore collection with <code>status: "published"</code>. Articles that already exist in Firestore are <strong>skipped</strong> — this will never overwrite live data. Run this only once. After running, your articles feed is fully Firestore-driven and these hardcoded articles can be removed from the code.
+<footer>
+  <div class="footer-inner">
+    <div>
+      <a href="/" class="footer-logo">
+        <div class="footer-logo-icon"><img src="/logo.jpg" alt="Kievora"/></div>
+        <span class="logo-name" style="font-size:15px">Kie<span style="color:var(--p)">vora</span></span>
+      </a>
+      <p class="footer-copy">© 2026 Kievora. All rights reserved.</p>
+    </div>
+    <div class="footer-links-row">
+      <a href="/">Home</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/support">Support</a>
+    </div>
   </div>
+</footer>
 
-  <button class="btn" id="seedBtn" onclick="runSeed()">
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-    Seed 13 Articles to Firestore
-  </button>
-
-  <div class="progress" id="progress">
-    <div class="prog-bar-wrap"><div class="prog-bar" id="progBar"></div></div>
-    <div class="prog-log" id="progLog"></div>
-  </div>
-
-  <div class="done-msg" id="doneMsg">
-    ✅ All done! Your articles feed is now Firestore-driven. You can close this page.
-  </div>
-</div>
-
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-
-const fbApp = initializeApp({
-  apiKey:"AIzaSyA2s328tgIlxFnnvob5GK7G7C-QevPxnRs",
-  authDomain:"kievora.firebaseapp.com",
-  projectId:"kievora",
-  storageBucket:"kievora.firebasestorage.app",
-  messagingSenderId:"548806738102",
-  appId: "1:548806738102:web:bd84433ce38fbfb4e2e617",
-  measurementId: "G-X6VG3MVQ96"
-});
-const auth = getAuth(fbApp);
-const db   = getFirestore(fbApp, 'default');
-
-/* ── RESUMAKER EDITORIAL ARTICLES ── */
-const SEED = [
-  {id:'top-paying-jobs',cat:'CAREERS',title:'Top 10 Highest-Paying Jobs Globally Right Now',brief:'Discover the most lucrative career paths globally and how to write a resume that gets you in.',cover:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&q=80',readTime:'5 min read'},
-  {id:'ats-resume',cat:'RESUME TIPS',title:'How to Write a Resume That Beats ATS in 2025',brief:'The keyword formula, clean structure, and bullet style that gets past automated screening.',cover:'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=500&q=80',readTime:'6 min read'},
-  {id:'interview-prep',cat:'INTERVIEWS',title:'Ultimate Interview Prep: Questions, Answers & Body Language',brief:'STAR frameworks, tough Q&A, and the body language signals that build instant trust.',cover:'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=500&q=80',readTime:'10 min read'},
-  {id:'remote-jobs',cat:'REMOTE WORK',title:'How to Land a Remote Job That Pays in Dollars',brief:'The full playbook for getting hired by international companies from anywhere.',cover:'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=500&q=80',readTime:'8 min read'},
-  {id:'best-courses',cat:'LEARNING',title:'Best Free & Paid Courses to Boost Your Career in 2025',brief:'From Coursera to AWS — the certifications hiring managers actually care about.',cover:'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&q=80',readTime:'7 min read'},
-  {id:'ai-skills-2026',cat:'LEARNING',title:'The AI Skills Every Professional Needs in 2026',brief:"Prompt engineering, AI tool fluency, and data literacy are the new baseline. Here's what to learn.",cover:'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=500&q=80',readTime:'8 min read'},
-  {id:'salary-negotiation',cat:'CAREERS',title:'The Salary Negotiation Playbook: How to Get 15–30% More',brief:"Most people leave serious money on the table because they negotiate wrong. Here's the exact framework.",cover:'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80',readTime:'7 min read'},
-  {id:'linkedin-mastery',cat:'RESUME TIPS',title:'LinkedIn Profile Mastery: Go From Invisible to In-Demand',brief:'The complete guide to transforming your LinkedIn into a 24/7 recruiter magnet with real examples.',cover:'https://images.unsplash.com/photo-1611944212129-29977ae1398c?w=500&q=80',readTime:'9 min read'},
-  {id:'career-pivot',cat:'CAREERS',title:'How to Make a Career Pivot Without Starting From Zero',brief:"Changing industries feels impossible until you know which skills actually transfer. Here's the roadmap.",cover:'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&q=80',readTime:'6 min read'},
-  {id:'side-income',cat:'CAREERS',title:'7 Legitimate Side Income Streams for Professionals in 2026',brief:"From consulting to digital products — how to build income outside your 9-to-5 without burning out.",cover:'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=500&q=80',readTime:'8 min read'},
-  {id:'equity-startup',cat:'CAREERS',title:'Startup Equity Explained: What Your Options Are Actually Worth',brief:"Vesting, cliffs, dilution, 409A valuations — everything they didn't explain when you signed the offer.",cover:'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=500&q=80',readTime:'10 min read'},
-  {id:'cover-letter-2026',cat:'RESUME TIPS',title:'The Cover Letter That Actually Gets Read in 2026',brief:"Most cover letters are deleted in 3 seconds. Here's how to write one that makes recruiters stop.",cover:'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=500&q=80',readTime:'5 min read'},
-  {id:'personal-brand',cat:'CAREERS',title:'Building a Personal Brand That Opens Career Doors',brief:"Your online presence is now your second resume. Here's how to build one that actually gets you opportunities.",cover:'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500&q=80',readTime:'7 min read'},
-];
-
-let currentUser = null;
-
-onAuthStateChanged(auth, async user => {
-  currentUser = user;
-  if(!user){
-    document.getElementById('loginWall').style.display = 'block';
-    document.getElementById('mainContent').style.display = 'none';
-    return;
-  }
-  // Check admin
-  try{
-    const snap = await getDoc(doc(db,'admins',user.uid));
-    if(!snap.exists()){
-      document.getElementById('loginWall').style.display = 'block';
-      document.getElementById('mainContent').style.display = 'none';
-      document.querySelector('#loginWall p').textContent = 'Your account does not have admin access.';
-      document.querySelector('.btn-login').style.display = 'none';
-    }
-  }catch(e){ /* rules denied — not admin */ }
-});
-
-function log(msg, type=''){
-  const el = document.getElementById('progLog');
-  el.innerHTML += `<div class="${type}">${msg}</div>`;
-  el.scrollTop = el.scrollHeight;
-}
-function setBar(pct){ document.getElementById('progBar').style.width = pct+'%'; }
-
-window.runSeed = async function(){
-  if(!currentUser) return;
-  const btn = document.getElementById('seedBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner"></div> Seeding…';
-  document.getElementById('progress').classList.add('show');
-
-  let done = 0;
-  for(const a of SEED){
-    try{
-      const ref = doc(db,'articles',a.id);
-      const existing = await getDoc(ref);
-      if(existing.exists()){
-        log(`⏭ Skipped (already exists): ${a.title}`, 'skip');
-      } else {
-        await setDoc(ref, {
-          ...a,
-          status: 'published',
-          authorName: 'Kievora',
-          authorPhoto: 'logo.jpg',
-          authorCover: 'resumaker.jpg',
-          userId: 'resumaker',
-          isResumaker: true,
-          publishedAt: serverTimestamp(),
-          createdAt: serverTimestamp(),
-          likes: 0,
-          saves: 0
-        });
-        log(`✅ Seeded: ${a.title}`, 'ok');
-      }
-    }catch(e){
-      log(`❌ Error: ${a.title} — ${e.message}`, 'err');
-    }
-    done++;
-    setBar(Math.round((done/SEED.length)*100));
-  }
-
-  btn.innerHTML = '✅ Seeding Complete';
-  document.getElementById('doneMsg').classList.add('show');
-};
-</script>
 </body>
 </html>
