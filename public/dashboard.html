@@ -2325,6 +2325,8 @@
       await loadPlanGates();
       await loadResumes();
       showView('home');
+      // Check Gmail status on load — drives onboarding drawer + nudge visibility
+      ensureGmailFreshAndAlert().then(()=> maybeShowGmailOnboarding()).catch(()=>{});
     });
 
     // ── API ──────────────────────────────────────────────────────────────────
@@ -3719,7 +3721,37 @@
         + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
         + '.rf-mono{font-family:"Courier New",Courier,monospace}'
         + '@media print{@page{size:auto;margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
-        + '</head><body>' + html + '</body></html>';
+        + '</head><body>' + html + '
+  <!-- Gmail Onboarding Drawer (Point 1) — shown first time user lands on dashboard -->
+  <div id="gmailOnboardingDrawer" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(15,14,23,.5);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeGmailOnboarding()">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:28px 20px 40px;max-height:85vh;overflow-y:auto;animation:slideUp .35s cubic-bezier(.32,.72,0,1)">
+      <div style="width:40px;height:4px;background:#e2e8f0;border-radius:4px;margin:0 auto 24px"></div>
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="width:60px;height:60px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">⚡</div>
+        <div style="font-size:20px;font-weight:900;color:#0f0e17;margin-bottom:8px;letter-spacing:-.3px">Activate KIE's full intelligence</div>
+        <div style="font-size:14px;color:#64748b;line-height:1.55">Connect your Gmail and KIE will automatically track every application, interview invite, and offer — without you lifting a finger.</div>
+      </div>
+      <div style="background:#f8f7ff;border-radius:16px;padding:16px;margin-bottom:20px">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:32px;height:32px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">📧</div>
+          <div><div style="font-size:13px;font-weight:700;color:#0f0e17;margin-bottom:2px">Auto-tracks every application</div><div style="font-size:12px;color:#64748b">No manual logging. KIE reads your inbox and builds a live pipeline.</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:32px;height:32px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">🎯</div>
+          <div><div style="font-size:13px;font-weight:700;color:#0f0e17;margin-bottom:2px">KIE opens knowing your situation</div><div style="font-size:12px;color:#64748b">Interview tomorrow? Offer sitting unread? KIE surfaces it immediately.</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:32px;height:32px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">🔒</div>
+          <div><div style="font-size:13px;font-weight:700;color:#0f0e17;margin-bottom:2px">Read-only. Disconnect anytime.</div><div style="font-size:12px;color:#64748b">KIE never sends emails or touches your inbox. One tap removes all data.</div></div>
+        </div>
+      </div>
+      <button onclick="closeGmailOnboarding();openSidebarSettings();setTimeout(openGmailPanel,350);" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px">Connect Gmail →</button>
+      <button onclick="closeGmailOnboarding()" style="width:100%;background:none;border:none;color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:8px">Maybe later</button>
+    </div>
+  </div>
+  <style>@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}} @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+
+</body></html>';
 
       // PRIMARY: hidden iframe — bypasses Android popup blocker
       try {
@@ -4230,11 +4262,11 @@
     function openKie() {
       loadKieHistory();
       _kieReturnView = document.querySelector('.view.active')?.id?.replace('v-','') || 'home';
-      // Don't reset kieSelectedResume — preserve it if user navigated away and came back
       setupKiePicker();
       showView('kie');
       restoreKieUI();
       setTimeout(() => g('kieInp').focus(), 100);
+      ensureGmailFreshAndAlert().catch(()=>{});
     }
     function closeKie() { showView(_kieReturnView || 'home'); }
 
@@ -5177,6 +5209,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
             model:         kieModel,
             resumeContext: kieResumeContext,
             userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
+            convId:        (typeof _activeId !== 'undefined' ? _activeId : null),
           }),
           signal: _kieAbort?.signal,
         });
@@ -5967,6 +6000,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       appendKMsg('user', msg, true);
       kieHist.push({ role:'user', content: msg });
+      // Point 3 — in-conversation Gmail connect nudge (once per session)
+      if (typeof window._checkGmailConvTrigger === 'function') window._checkGmailConvTrigger(msg).catch(()=>{});
       inp.value = ''; inp.style.height = 'auto';
       inp.disabled = true;
       setKieSendMode('stop');
@@ -10344,6 +10379,70 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       </div>
     </div>
 
+    <!-- Integrations section -->
+    <div class="ksb-set-section">
+      <span class="ksb-set-section-label">Integrations</span>
+      <div class="ksb-set-card">
+        <button class="ksb-set-row" onclick="openGmailPanel()">
+          <div class="ksb-set-row-ico" style="background:rgba(234,67,53,.12)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" fill="#ea4335" opacity=".2"/><path d="M20 4H4L12 13l8-9z" fill="#ea4335"/><path d="M2 6l10 7 10-7" stroke="#ea4335" stroke-width="1.5" fill="none"/></svg>
+          </div>
+          <div class="ksb-set-row-txt">
+            <div class="ksb-set-row-title">Gmail Intelligence</div>
+            <div class="ksb-set-row-sub" id="gmailSettingsSub">Connect to track your job search</div>
+          </div>
+          <div id="gmailSettingsBadge" style="display:none;background:#22c55e;color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px">ON</div>
+          <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Gmail Slide-in Panel -->
+    <div id="gmailIntPanel" style="position:fixed;inset:0;z-index:400;background:#f8f7ff;transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;padding:16px 18px;background:#fff;border-bottom:1px solid #ede9fe;position:sticky;top:0;z-index:10">
+        <button onclick="closeGmailPanel()" style="width:36px;height:36px;border:none;background:rgba(124,58,237,.08);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div style="font-size:17px;font-weight:900;color:#0f0e17;position:absolute;left:50%;transform:translateX(-50%)">Gmail Intelligence</div>
+      </div>
+      <div style="padding:20px 16px;flex:1">
+        <div id="gmailDisconnectedPanel">
+          <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
+            <div style="width:52px;height:52px;background:rgba(234,67,53,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" fill="#ea4335" opacity=".2"/><path d="M20 4H4L12 13l8-9z" fill="#ea4335"/><path d="M2 6l10 7 10-7" stroke="#ea4335" stroke-width="1.5" fill="none"/></svg>
+            </div>
+            <div style="font-size:16px;font-weight:800;color:#0f0e17;margin-bottom:8px">Connect your Gmail</div>
+            <div style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:20px">KIE will automatically track your applications, interview invites, recruiter messages and offers — without you lifting a finger.</div>
+            <button onclick="connectGmail()" id="gmailConnectBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Connect Gmail →</button>
+          </div>
+          <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:14px;overflow:hidden">
+            <div style="padding:14px 16px;border-bottom:1px solid #faf5ff"><div style="font-size:12px;font-weight:800;color:#0f0e17;margin-bottom:3px">🔍 What KIE tracks</div><div style="font-size:12px;color:#64748b">Confirmations, interviews, recruiter outreach, rejections, offers</div></div>
+            <div style="padding:14px 16px;border-bottom:1px solid #faf5ff"><div style="font-size:12px;font-weight:800;color:#0f0e17;margin-bottom:3px">🔒 Read-only access</div><div style="font-size:12px;color:#64748b">KIE never sends emails, modifies your inbox or reads personal messages</div></div>
+            <div style="padding:14px 16px"><div style="font-size:12px;font-weight:800;color:#0f0e17;margin-bottom:3px">🗑️ Disconnect anytime</div><div style="font-size:12px;color:#64748b">One tap removes all stored email data from Kievora permanently</div></div>
+          </div>
+        </div>
+        <div id="gmailConnectedPanel" style="display:none">
+          <div style="background:#fff;border:1.5px solid #d1fae5;border-radius:16px;padding:16px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:8px;height:8px;background:#22c55e;border-radius:50%"></div>
+              <div style="font-size:13px;font-weight:800;color:#0f0e17">Gmail Connected</div>
+              <div style="margin-left:auto;font-size:11px;color:#64748b" id="gmailLastSynced">—</div>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-bottom:14px" id="gmailEmailLabel">—</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+              <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatEmails">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Emails</div></div>
+              <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatApps">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Companies</div></div>
+              <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatActions">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Actions</div></div>
+            </div>
+            <button onclick="syncGmailNow()" id="gmailSyncBtn" style="background:#f8f7ff;border:1.5px solid #ede9fe;color:#7c3aed;border-radius:10px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Sync Now</button>
+          </div>
+          <div id="gmailAppsList" style="margin-bottom:12px"></div>
+          <div id="gmailInsightsList" style="margin-bottom:16px"></div>
+          <button onclick="disconnectGmail()" style="background:none;border:1.5px solid #fecaca;color:#e11d48;border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Disconnect Gmail & Delete Data</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Account section -->
     <div class="ksb-set-section">
       <span class="ksb-set-section-label">Account</span>
@@ -10482,7 +10581,30 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
                onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<svg viewBox=&quot;0 0 80 80&quot; fill=&quot;none&quot; width=&quot;80&quot; height=&quot;80&quot;><defs><linearGradient id=&quot;kwG&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;80&quot; y2=&quot;80&quot; gradientUnits=&quot;userSpaceOnUse&quot;><stop stop-color=&quot;#7c3aed&quot;/><stop offset=&quot;1&quot; stop-color=&quot;#a855f7&quot;/></linearGradient></defs><circle cx=&quot;40&quot; cy=&quot;40&quot; r=&quot;40&quot; fill=&quot;url(%23kwG)&quot; opacity=&quot;0.15&quot;/><text x=&quot;40&quot; y=&quot;50&quot; text-anchor=&quot;middle&quot; font-family=&quot;Inter,sans-serif&quot; font-weight=&quot;900&quot; font-size=&quot;22&quot; fill=&quot;url(%23kwG)&quot; letter-spacing=&quot;-1&quot;>KIE</text></svg>')"/>
         </div>
         <div class="kie-welcome-title">Hi, I'm KIE <span class="kie-wave">👋</span></div>
-        <div class="kie-welcome-sub">Your AI career coach. Ask me anything — or pick a tool below to get started.</div>
+        <div class="kie-welcome-sub" id="kieWelcomeSub">Your AI career coach. Ask me anything — or pick a tool below to get started.</div>
+      </div>
+
+      <!-- Gmail alert card on welcome screen -->
+      <div id="kieGmailAlert" style="display:none;margin:12px 14px 0;background:linear-gradient(135deg,#faf5ff,#f3ecff);border:1.5px solid #ddd6fe;border-radius:14px;padding:14px 16px;cursor:pointer" onclick="kieGmailAlertTap()">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#fff"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:800;color:#7c3aed;margin-bottom:3px" id="kieAlertLabel">KIE spotted something</div>
+            <div style="font-size:13px;font-weight:600;color:#0f0e17;line-height:1.45" id="kieAlertMsg"></div>
+          </div>
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.5" style="flex-shrink:0;margin-top:2px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- Gmail connect nudge (welcome screen, Gmail not yet connected) -->
+      <div id="kieGmailNudge" style="display:none;margin:10px 14px 0">
+        <button onclick="openSidebarSettings();setTimeout(openGmailPanel,350);" style="width:100%;background:none;border:1.5px dashed #ddd6fe;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:inherit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" fill="#ea4335" opacity=".15"/><path d="M20 4H4L12 13l8-9z" fill="#ea4335"/></svg>
+          <span style="font-size:12px;font-weight:700;color:#7c3aed">Connect Gmail — let KIE track your job search automatically</span>
+          <svg style="margin-left:auto;flex-shrink:0" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
       </div>
 
       <!-- ── MORE TOOLS ── -->
@@ -10596,6 +10718,21 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
     </div>
 
     <!-- Input — sticky at bottom -->
+    <!-- Gmail floating alert bar — visible above input when chat is open -->
+    <div id="kieFloatAlert" style="display:none;padding:0 14px 8px;background:#fff">
+      <div style="background:linear-gradient(135deg,#faf5ff,#f3ecff);border:1.5px solid #ddd6fe;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="kieFloatAlertTap()">
+        <div style="width:26px;height:26px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#fff"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;font-weight:800;color:#7c3aed" id="kieFloatAlertLabel">KIE spotted something</div>
+          <div style="font-size:12px;font-weight:600;color:#0f0e17;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="kieFloatAlertMsg"></div>
+        </div>
+        <button onclick="event.stopPropagation();dismissFloatAlert()" style="width:20px;height:20px;border:none;background:rgba(124,58,237,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0">
+          <svg width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
     <div class="kie-input-wrap">
 
       <!-- Attachment staging preview (shows before send) -->
@@ -12348,10 +12485,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── NEW CHAT ──────────────────────────────────────────────────────────────
   window.startNewKieChat = function() {
     closeSidebar();
-    // Generate fresh conv id for the next session
     const newId = genId();
     saveActive(newId);
-    // Clear chat UI completely — fresh start, no resume context
     if (typeof window._kieInternalClear === 'function') {
       window._kieInternalClear();
     } else {
@@ -12362,6 +12497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     showPlusFab(false);
     if (typeof showView === 'function') showView('kie');
+    setTimeout(()=>ensureGmailFreshAndAlert().catch(()=>{}), 200);
   };
 
   // ── NEW CHAT BUTTON (header pencil icon) ────────────────────────────────
@@ -12454,6 +12590,286 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeSidebarSettings = function() {
     document.getElementById('ksbSettingsPanel').classList.remove('open');
   };
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // GMAIL INTELLIGENCE SYSTEM
+  // ════════════════════════════════════════════════════════════════════════════
+
+  let _gmailAlertAction = null;
+  let _gmailConnected   = false;
+
+  async function getAuthToken() {
+    return firebase.auth().currentUser?.getIdToken() || Promise.reject('no user');
+  }
+
+  // ── Gmail Panel (from Settings) ──────────────────────────────────────────
+  window.openGmailPanel = function() {
+    const p = document.getElementById('gmailIntPanel');
+    if (p) p.style.transform = 'translateX(0)';
+    loadGmailStatus();
+  };
+  window.closeGmailPanel = function() {
+    const p = document.getElementById('gmailIntPanel');
+    if (p) p.style.transform = 'translateX(100%)';
+  };
+
+  async function loadGmailStatus() {
+    try {
+      const tok  = await getAuthToken();
+      const data = await fetch('/api/gmail/status',{ headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json());
+      renderGmailSettingsPanel(data);
+      _gmailConnected = !!data.connected;
+    } catch(e) { console.warn('[gmail] status load:',e); }
+  }
+
+  function renderGmailSettingsPanel(data) {
+    const disc  = document.getElementById('gmailDisconnectedPanel');
+    const conn  = document.getElementById('gmailConnectedPanel');
+    const sub   = document.getElementById('gmailSettingsSub');
+    const badge = document.getElementById('gmailSettingsBadge');
+    if (!data.connected) {
+      if (disc)  disc.style.display  = 'block';
+      if (conn)  conn.style.display  = 'none';
+      if (sub)   sub.textContent     = 'Connect to track your job search';
+      if (badge) badge.style.display = 'none';
+      return;
+    }
+    if (disc)  disc.style.display  = 'none';
+    if (conn)  conn.style.display  = 'block';
+    if (sub)   sub.textContent     = data.gmailEmail || 'Connected';
+    if (badge) badge.style.display = 'block';
+    const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    setEl('gmailEmailLabel', '📧 ' + (data.gmailEmail||''));
+    setEl('gmailStatEmails',  data.emailsScanned||0);
+    setEl('gmailStatApps',   (data.applications||[]).length);
+    setEl('gmailStatActions',(data.insights||[]).length);
+    if (data.lastSynced) {
+      const ago = Math.round((Date.now()-new Date(data.lastSynced))/60000);
+      setEl('gmailLastSynced', ago<2?'Just synced':`${ago}m ago`);
+    }
+    const appsEl = document.getElementById('gmailAppsList');
+    const statusLabel = { offer:'🎉 Offer', interview_invite:'📅 Interview', assessment:'📝 Assessment', application_confirmation:'✅ Applied', recruiter_outreach:'📩 Recruiter', rejection:'❌ Rejected', post_offer:'🚀 Post-offer', general_update:'🔄 Update' };
+    if (appsEl && data.applications?.length) {
+      appsEl.innerHTML = `<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Tracked Applications</div><div style="background:#fff;border:1.5px solid #ede9fe;border-radius:14px;overflow:hidden">${data.applications.slice(0,6).map((a,i)=>`<div style="padding:11px 14px;${i<data.applications.length-1?'border-bottom:1px solid #faf5ff':''}"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-size:13px;font-weight:700;color:#0f0e17;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.company}${a.role?` <span style="font-weight:500;color:#64748b">· ${a.role}</span>`:''}</div><div style="font-size:10px;font-weight:700;color:#7c3aed;white-space:nowrap">${statusLabel[a.status]||a.status}</div></div></div>`).join('')}</div>`;
+    }
+    const insEl = document.getElementById('gmailInsightsList');
+    if (insEl && data.insights?.length) {
+      insEl.innerHTML = `<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px">KIE Actions</div><div style="display:flex;flex-direction:column;gap:8px">${data.insights.map(i=>`<div style="background:#fff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 14px;font-size:12px;color:#374151;line-height:1.5">${i}</div>`).join('')}</div>`;
+    }
+  }
+
+  window.connectGmail = async function() {
+    const btn = document.getElementById('gmailConnectBtn');
+    if (btn) { btn.textContent='Redirecting to Google...'; btn.disabled=true; }
+    try {
+      const tok = await getAuthToken();
+      const { url } = await fetch('/api/gmail/connect',{ method:'POST', headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json());
+      window.location.href = url;
+    } catch(e) {
+      if (btn) { btn.textContent='Connect Gmail →'; btn.disabled=false; }
+      alert('Failed to start Gmail connection. Please try again.');
+    }
+  };
+
+  window.syncGmailNow = async function() {
+    const btn = document.getElementById('gmailSyncBtn');
+    if (btn) { btn.textContent='Syncing...'; btn.disabled=true; }
+    try {
+      const tok = await getAuthToken();
+      await fetch('/api/gmail/sync',{ method:'POST', headers:{ Authorization:`Bearer ${tok}` } });
+      await loadGmailStatus();
+      await ensureGmailFreshAndAlert();
+    } catch(e) { console.error('[gmail] sync:',e); }
+    finally { if (btn) { btn.textContent='Sync Now'; btn.disabled=false; } }
+  };
+
+  window.disconnectGmail = async function() {
+    if (!confirm('Remove Gmail connection and delete all stored email data from Kievora?')) return;
+    try {
+      const tok = await getAuthToken();
+      await fetch('/api/gmail/disconnect',{ method:'DELETE', headers:{ Authorization:`Bearer ${tok}` } });
+      _gmailConnected = false;
+      renderGmailSettingsPanel({ connected:false });
+      const card    = document.getElementById('kieGmailAlert');
+      const floatBar= document.getElementById('kieFloatAlert');
+      const nudge   = document.getElementById('kieGmailNudge');
+      if (card)     card.style.display     = 'none';
+      if (floatBar) floatBar.style.display = 'none';
+      if (nudge)    nudge.style.display    = 'block';
+      _gmailAlertAction = null;
+    } catch(e) { alert('Failed to disconnect. Please try again.'); }
+  };
+
+  // ── Alert Data Builder ────────────────────────────────────────────────────
+  function buildAlertData(status) {
+    const apps             = status.applications || [];
+    const offers           = apps.filter(a=>a.status==='offer');
+    const interviews       = apps.filter(a=>a.status==='interview_invite');
+    const assessments      = apps.filter(a=>a.status==='assessment');
+    const recruiterPending = apps.filter(a=>{ const d=(Date.now()-new Date(a.lastActivityTs||0))/86400000; return a.status==='recruiter_outreach'&&d>5; });
+    const ghosted          = apps.filter(a=>{ const d=(Date.now()-new Date(a.lastActivityTs||0))/86400000; return a.status==='application_confirmation'&&d>14; });
+    if (offers.length) {
+      const co=offers[0].company;
+      return { label:'🎉 Offer received', msg:`${co} sent you an offer. Let\'s make sure you negotiate this right.`, chipMsg:`I have an offer from ${co}. Help me evaluate it and negotiate the best deal.` };
+    }
+    if (interviews.length) {
+      const co=interviews[0].company; const role=interviews[0].role?` (${interviews[0].role})`:'';
+      return { label:'⚡ Interview stage', msg:`You\'re at interview stage with ${co}${role}. Ready to prep?`, chipMsg:`I have an interview with ${co}${role}. Help me prepare thoroughly.` };
+    }
+    if (assessments.length) {
+      const co=assessments[0].company;
+      return { label:'📝 Assessment pending', msg:`${co} sent an assessment. Timing matters — complete it promptly.`, chipMsg:`${co} sent me an assessment. What\'s the best strategy to approach it?` };
+    }
+    if (recruiterPending.length) {
+      const co=recruiterPending[0].company;
+      return { label:'📩 Recruiter waiting', msg:`A recruiter from ${co} reached out. Want me to draft your reply?`, chipMsg:`A recruiter from ${co} contacted me. Write a strong, interested reply.` };
+    }
+    if (ghosted.length) {
+      const co=ghosted[0].company; const days=Math.floor((Date.now()-new Date(ghosted[0].lastActivityTs||0))/86400000);
+      return { label:'👻 No response yet', msg:`${co} hasn\'t responded in ${days} days. Want a follow-up email?`, chipMsg:`I applied to ${co} ${days} days ago with no response. Write a professional follow-up.` };
+    }
+    if (apps.length>0) {
+      return { label:'📊 Job search update', msg:`${apps.length} companies tracked. Ask me how your search is going.`, chipMsg:`Give me a full breakdown of my current job search and what I should prioritise.` };
+    }
+    return null;
+  }
+
+  // ── Render alert in right place — welcome card OR floating bar ────────────
+  function renderKieAlertCard(status) {
+    const alert    = buildAlertData(status);
+    const card     = document.getElementById('kieGmailAlert');
+    const floatBar = document.getElementById('kieFloatAlert');
+    const nudge    = document.getElementById('kieGmailNudge');
+    const kieMsgs  = document.getElementById('kieMsgs');
+    const chatOpen = kieMsgs && kieMsgs.style.display !== 'none' &&
+                     Array.from(kieMsgs.children).some(c=>!c.id||c.id!=='kieTyp');
+
+    // Show Gmail nudge if not connected
+    if (nudge) nudge.style.display = _gmailConnected ? 'none' : 'block';
+
+    if (!alert) {
+      if (card)     card.style.display     = 'none';
+      if (floatBar) floatBar.style.display = 'none';
+      _gmailAlertAction = null;
+      return;
+    }
+    _gmailAlertAction = alert.chipMsg;
+    if (chatOpen) {
+      if (card) card.style.display = 'none';
+      if (floatBar) {
+        const fl=document.getElementById('kieFloatAlertLabel');
+        const fm=document.getElementById('kieFloatAlertMsg');
+        if (fl) fl.textContent = alert.label;
+        if (fm) fm.textContent = alert.msg;
+        floatBar.style.display = 'block';
+      }
+    } else {
+      if (floatBar) floatBar.style.display = 'none';
+      if (card) {
+        const lbl=document.getElementById('kieAlertLabel');
+        const msg=document.getElementById('kieAlertMsg');
+        if (lbl) lbl.textContent = alert.label;
+        if (msg) msg.textContent = alert.msg;
+        card.style.display = 'block';
+      }
+    }
+  }
+
+  window.kieGmailAlertTap = function() {
+    if (!_gmailAlertAction) return;
+    const card=document.getElementById('kieGmailAlert');
+    const floatBar=document.getElementById('kieFloatAlert');
+    if (card) card.style.display='none';
+    if (floatBar) floatBar.style.display='none';
+    if (typeof sendChip==='function') sendChip(_gmailAlertAction);
+  };
+  window.kieFloatAlertTap  = window.kieGmailAlertTap;
+  window.dismissFloatAlert = function() {
+    const f=document.getElementById('kieFloatAlert');
+    if (f) f.style.display='none';
+    _gmailAlertAction=null;
+  };
+
+  // ── Main trigger — called on openKie, startNewKieChat, loadConversation ───
+  window.ensureGmailFreshAndAlert = async function() {
+    try {
+      const tok  = await getAuthToken();
+      const data = await fetch('/api/gmail/status',{ headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json());
+      _gmailConnected = !!data.connected;
+      if (!data.connected) {
+        const nudge=document.getElementById('kieGmailNudge');
+        if (nudge) nudge.style.display='block';
+        return;
+      }
+      // Silent re-sync if stale (>30 min)
+      if (data.lastSynced && (Date.now()-new Date(data.lastSynced))/60000 > 30) {
+        fetch('/api/gmail/sync',{ method:'POST', headers:{ Authorization:`Bearer ${tok}` } })
+          .then(()=>fetch('/api/gmail/status',{ headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json()))
+          .then(fresh=>renderKieAlertCard(fresh)).catch(()=>{});
+      }
+      renderKieAlertCard(data);
+    } catch(e) { console.warn('[gmail-alert]',e.message); }
+  };
+
+  // ── Point 3 — In-conversation trigger ────────────────────────────────────
+  // When user mentions job-related keywords and Gmail is not connected,
+  // KIE appends a gentle nudge after its response.
+  window._checkGmailConvTrigger = async function(userMessage) {
+    if (_gmailConnected) return;
+    const jobKeywords = /apply|applied|interview|offer|rejection|recruiter|job search|application|cv|resume|hiring|callback|ghosted|follow.?up|salary|role|position/i;
+    if (!jobKeywords.test(userMessage)) return;
+    const alreadyNudged = sessionStorage.getItem('kievora_gmail_conv_nudged');
+    if (alreadyNudged) return;
+    sessionStorage.setItem('kievora_gmail_conv_nudged','1');
+    // Wait for KIE response to finish, then append nudge
+    setTimeout(() => {
+      const msgs = document.getElementById('kieMsgs');
+      if (!msgs) return;
+      const nudgeDiv = document.createElement('div');
+      nudgeDiv.style.cssText = 'margin:8px 14px;background:linear-gradient(135deg,#faf5ff,#f3ecff);border:1.5px solid #ddd6fe;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;animation:fadeInUp .3s ease';
+      nudgeDiv.onclick = ()=>{ nudgeDiv.remove(); openSidebarSettings(); setTimeout(openGmailPanel,350); };
+      nudgeDiv.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" fill="#ea4335" opacity=".2"/><path d="M20 4H4L12 13l8-9z" fill="#ea4335"/></svg><div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:800;color:#7c3aed;margin-bottom:2px">Tip from KIE</div><div style="font-size:12px;color:#374151;line-height:1.45">Connect your Gmail and I can track all of this automatically — no manual updates needed.</div></div><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>`;
+      msgs.appendChild(nudgeDiv);
+    }, 2500);
+  };
+
+  // ── Onboarding Drawer (Point 1) ───────────────────────────────────────────
+  window.closeGmailOnboarding = function() {
+    const d = document.getElementById('gmailOnboardingDrawer');
+    if (d) d.style.display = 'none';
+    localStorage.setItem('kievora_gmail_onboard_seen','1');
+  };
+  function maybeShowGmailOnboarding() {
+    const seen = localStorage.getItem('kievora_gmail_onboard_seen');
+    if (seen || _gmailConnected) return;
+    // Show after 2 seconds on first dashboard load
+    setTimeout(()=>{
+      const d = document.getElementById('gmailOnboardingDrawer');
+      if (d) d.style.display = 'flex';
+    }, 2000);
+  }
+
+  // ── Auto-sync loop (every 2 hours while app is open) ─────────────────────
+  setInterval(async()=>{
+    if (!_gmailConnected) return;
+    try {
+      const tok=await getAuthToken();
+      await fetch('/api/gmail/sync',{ method:'POST', headers:{ Authorization:`Bearer ${tok}` } });
+    } catch(e) { console.warn('[gmail-autosync]',e.message); }
+  }, 2*60*60*1000);
+
+  // ── Handle OAuth callback redirect ───────────────────────────────────────
+  (function checkGmailCallback(){
+    const p = new URLSearchParams(window.location.search);
+    const st = p.get('gmail');
+    if (st==='connected') {
+      history.replaceState({},'','/dashboard');
+      localStorage.setItem('kievora_gmail_onboard_seen','1');
+      setTimeout(()=>{ openSidebarSettings(); setTimeout(openGmailPanel,300); },800);
+    } else if (st==='error'||st==='denied') {
+      history.replaceState({},'','/dashboard');
+    }
+  })();
 
   function populateSettingsProfile() {
     try {
@@ -12561,19 +12977,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof showView === 'function') showView('kie');
 
     setTimeout(() => {
-      // If there are stored messages, restore them
       if (hist && hist.length) {
-        // Use existing kieHist + replay into DOM
         if (typeof window._restoreKieMsgs === 'function') {
           window._restoreKieMsgs(hist);
         } else {
-          // Fallback: just clear and let user see welcome
-          if (typeof window._kieInternalClear === 'function') {
-            window._kieInternalClear();
-          }
+          if (typeof window._kieInternalClear === 'function') window._kieInternalClear();
         }
       }
       renderHistory();
+      setTimeout(()=>ensureGmailFreshAndAlert().catch(()=>{}), 150);
     }, 100);
   };
 
@@ -12723,6 +13135,17 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           showPlusFab(true);
           renderHistory();
+        }
+        // Fire conversation summarizer silently after every exchange
+        if (typeof kieHist !== 'undefined' && kieHist.length >= 2 && _activeId) {
+          firebase.auth().currentUser?.getIdToken().then(tok2=>{
+            if (!tok2) return;
+            fetch('/api/kie/summarize', {
+              method:'POST',
+              headers:{'Content-Type':'application/json', Authorization:`Bearer ${tok2}`},
+              body: JSON.stringify({ messages:kieHist.slice(-10), convId:_activeId })
+            }).catch(()=>{});
+          }).catch(()=>{});
         }
       }
     });
