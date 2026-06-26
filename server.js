@@ -700,6 +700,274 @@ db.collection(RESUMES).limit(1).get()
   .then(() => console.log('✅ Firestore connection OK'))
   .catch(e  => console.error('❌ Firestore connection FAILED:', e.message));
 
+// ─── Gmail Career Intelligence ─────────────────────────────────────────────────
+const CAREER_QUERY = 'subject:(application OR applied OR interview OR offer OR rejected OR "next steps" OR assessment OR screening OR "job opportunity" OR "your application" OR "thank you for applying" OR "we regret" OR "pleased to offer") OR from:(greenhouse.io OR lever.co OR workday.com OR careers@ OR recruitment@ OR hr@ OR talent@ OR noreply@linkedin.com)';
+
+async function classifyCareerEmail(subject, snippet) {
+  const s = (subject + ' ' + snippet).toLowerCase();
+  if (/thank you for apply|application received|we received your|successfully applied/.test(s)) return 'application_confirmation';
+  if (/pleased to offer|congratulations|offer letter|job offer|we.d like to offer/.test(s)) return 'offer';
+  if (/unfortunately|regret to inform|not moving forward|other candidates|position.*(has been )?filled/.test(s)) return 'rejection';
+  if (/interview|schedule|calendly|meet with|video call|phone screen|zoom link/.test(s)) return 'interview_invite';
+  if (/assessment|test|coding challenge|take-home|hackerrank/.test(s)) return 'assessment';
+  if (/opportunity|reaching out|your profile|your background|open role|we.re hiring/.test(s)) return 'recruiter_outreach';
+  if (/background check|reference|onboarding|start date|paperwork/.test(s)) return 'post_offer';
+  try {
+    const groqKey = (process.env.GROQ_API_KEY || '').split(',')[0].trim();
+    if (!groqKey) return 'general_update';
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+      body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 15, temperature: 0,
+        messages: [{ role: 'user', content: `Classify this career email into ONE: application_confirmation, interview_invite, assessment, recruiter_outreach, rejection, offer, post_offer, general_update\nSubject: ${subject}\nPreview: ${snippet}\nReply with ONLY the category.` }] })
+    });
+    const d = await r.json();
+    return (d.choices?.[0]?.message?.content || 'general_update').trim().toLowerCase();
+  } catch { return 'general_update'; }
+}
+
+async function extractEmailEntities(subject, snippet) {
+  try {
+    const groqKey = (process.env.GROQ_API_KEY || '').split(',')[0].trim();
+    if (!groqKey) return { company: null, role: null };
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+      body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 60, temperature: 0,
+        messages: [{ role: 'user', content: `Extract company and job title from this career email. Return ONLY valid JSON: {"company":"Name or null","role":"Title or null"}\nSubject: ${subject}\nPreview: ${snippet}` }] })
+    });
+    const d = await r.json();
+    const text = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
+    return JSON.parse(text);
+  } catch { return { company: null, role: null }; }
+}
+
+const STATUS_RANK = { post_offer:7, offer:6, rejection:5, interview_invite:4, assessment:3, application_confirmation:2, recruiter_outreach:1, general_update:0 };
+function normaliseStr(s) { return (s||'').toLowerCase().replace(/[^a-z0-9]/g,'').trim(); }
+function isSameApplication(a, b) {
+  const cA=normaliseStr(a.company), cB=normaliseStr(b.company);
+  if (!cA||!cB) return false;
+  const compMatch = cA.includes(cB)||cB.includes(cA)||cA===cB;
+  const rA=normaliseStr(a.role), rB=normaliseStr(b.role);
+  const roleMatch = !rA||!rB||rA.includes(rB)||rB.includes(rA);
+  return compMatch && roleMatch;
+}
+
+async function syncUserGmail(uid, tokens) {
+  const oauth2 = getOAuthClient(); oauth2.setCredentials(tokens);
+  const gmail  = google.gmail({ version: 'v1', auth: oauth2 });
+  const list   = await gmail.users.messages.list({ userId: 'me', q: CAREER_QUERY, maxResults: 60 });
+  const msgs   = list.data.messages || [];
+  if (!msgs.length) return [];
+  const details = await Promise.all(msgs.map(m => gmail.users.messages.get({ userId:'me', id:m.id, format:'metadata', metadataHeaders:['Subject','From','Date'] }).catch(()=>null)));
+  const parsed = [];
+  for (const msg of details) {
+    if (!msg) continue;
+    const hdrs    = msg.data.payload?.headers || [];
+    const getH    = n => hdrs.find(h=>h.name.toLowerCase()===n.toLowerCase())?.value||'';
+    const subject = getH('Subject'); const snippet = msg.data.snippet||'';
+    const ts      = new Date(msg.data.internalDate ? Number(msg.data.internalDate) : getH('Date'));
+    const emailType           = await classifyCareerEmail(subject, snippet);
+    const { company, role }   = await extractEmailEntities(subject, snippet);
+    parsed.push({ subject, snippet, threadId:msg.data.threadId, ts, emailType, company, role });
+  }
+  return parsed;
+}
+
+function buildApplicationList(emails) {
+  const apps = [];
+  for (const email of emails.sort((a,b)=>a.ts-b.ts)) {
+    const { company, role, emailType, ts, subject } = email;
+    if (!company) continue;
+    const existing = apps.find(a=>isSameApplication(a,{company,role}));
+    const event    = { date: ts.toISOString().split('T')[0], type:emailType, subject };
+    if (existing) {
+      if ((STATUS_RANK[emailType]||0) > (STATUS_RANK[existing.status]||0)) existing.status = emailType;
+      existing.lastActivityTs = Math.max(existing.lastActivityTs, ts.getTime());
+      existing.timeline.push(event);
+      if (role && !existing.role) existing.role = role;
+    } else {
+      apps.push({ company, role:role||null, status:emailType, firstSeenTs:ts.getTime(), lastActivityTs:ts.getTime(), timeline:[event] });
+    }
+  }
+  return apps.sort((a,b)=>b.lastActivityTs-a.lastActivityTs);
+}
+
+function generateInsights(apps) {
+  const ins = []; const now = Date.now();
+  for (const app of apps) {
+    const days  = Math.floor((now-app.lastActivityTs)/86400000);
+    const label = app.role ? `${app.company} (${app.role})` : app.company;
+    if (app.status==='interview_invite')  ins.push(`⚡ PRIORITY: Interview stage with ${label}`);
+    else if (app.status==='offer')        ins.push(`🎉 OFFER from ${label} — evaluate & negotiate`);
+    else if (app.status==='rejection')    ins.push(`${label} — rejected. Analyse gaps.`);
+    else if (app.status==='application_confirmation' && days>14) ins.push(`${label} — ${days}d no response. Follow up.`);
+    else if (app.status==='recruiter_outreach' && days>5)        ins.push(`Recruiter from ${label} waiting ${days}d`);
+    else if (app.status==='assessment')   ins.push(`${label} sent assessment — complete promptly`);
+  }
+  return ins.slice(0,6);
+}
+
+function buildKieBrainBlock(apps, insights, emailsScanned) {
+  if (!apps.length) return `GMAIL CAREER INTELLIGENCE: Gmail connected (${emailsScanned} emails scanned). No career emails found yet — will update as they arrive.`;
+  const active     = apps.filter(a=>a.status!=='rejection');
+  const rejected   = apps.filter(a=>a.status==='rejection');
+  const offers     = apps.filter(a=>a.status==='offer');
+  const interviews = apps.filter(a=>a.status==='interview_invite');
+  let b = `GMAIL CAREER INTELLIGENCE (${emailsScanned} emails scanned):\n`;
+  b += `Pipeline: ${apps.length} companies | Active: ${active.length} | Interviews: ${interviews.length} | Offers: ${offers.length} | Rejected: ${rejected.length}\n\n`;
+  if (offers.length)     b += `🔴 URGENT — OFFER: ${offers[0].company}${offers[0].role?' ('+offers[0].role+')':''} — user must respond\n`;
+  if (interviews.length) b += `⚡ ACTIVE — INTERVIEW: ${interviews[0].company}${interviews[0].role?' ('+interviews[0].role+')':''} — prep needed\n`;
+  b += `\nAPPLICATIONS:\n`;
+  for (const app of apps.slice(0,8)) {
+    const days = Math.floor((Date.now()-app.lastActivityTs)/86400000);
+    b += `• ${app.company}${app.role?' — '+app.role:''}: ${app.status.replace(/_/g,' ')} (${days}d ago)\n`;
+  }
+  if (insights.length) b += `\nACTIONS:\n${insights.map(i=>'• '+i).join('\n')}`;
+  b += `\n\nCOACHING RULES FOR THIS DATA:\n- Never say "I can see your Gmail" — just know it naturally\n- Reference companies by name like a coach who has been tracking this\n- If offer or interview detected — surface it even in unrelated conversations\n- If user seems stressed — acknowledge feelings before advice\n- Weave Gmail data and conversation context together; never treat them as separate`;
+  return b;
+}
+
+async function getGmailCareerBrainRaw(uid) {
+  try {
+    const snap = await db.collection('users').doc(uid).collection('gmailBrain').doc('summary').get();
+    return snap.exists ? snap.data() : null;
+  } catch { return null; }
+}
+async function getGmailCareerBrain(uid) {
+  try {
+    const snap = await db.collection('users').doc(uid).collection('gmailBrain').doc('summary').get();
+    return snap.exists ? snap.data().kieBlock||null : null;
+  } catch { return null; }
+}
+async function getValidTokens(uid, storedTokens) {
+  const oauth2 = getOAuthClient(); oauth2.setCredentials(storedTokens);
+  if (storedTokens.expiry_date && storedTokens.expiry_date > Date.now()+60000) return storedTokens;
+  const { credentials } = await oauth2.refreshAccessToken();
+  await db.collection('users').doc(uid).collection('gmailBrain').doc('tokens')
+    .set({ tokens:credentials, updatedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
+  return credentials;
+}
+async function syncGmailForUser(uid) {
+  const tokenDoc = await db.collection('users').doc(uid).collection('gmailBrain').doc('tokens').get();
+  if (!tokenDoc.exists) throw new Error('No Gmail tokens');
+  const tokens      = await getValidTokens(uid, tokenDoc.data().tokens);
+  const rawEmails   = await syncUserGmail(uid, tokens);
+  const apps        = buildApplicationList(rawEmails);
+  const insights    = generateInsights(apps);
+  const kieBlock    = buildKieBrainBlock(apps, insights, rawEmails.length);
+  await db.collection('users').doc(uid).collection('gmailBrain').doc('summary').set(
+    { applications:apps, insights, kieBlock, emailsScanned:rawEmails.length, lastSynced:admin.firestore.FieldValue.serverTimestamp() }
+  );
+  console.log(`[gmail] synced uid:${uid} — ${rawEmails.length} emails → ${apps.length} apps`);
+  return { apps, insights, emailsScanned:rawEmails.length };
+}
+
+// ─── Gmail Routes ────────────────────────────────────────────────────────────
+app.post('/api/gmail/connect', authenticate, async (req,res) => {
+  if (!GMAIL_CLIENT_ID||!GMAIL_CLIENT_SECRET) return res.status(503).json({ error:'Gmail not configured' });
+  const url = getOAuthClient().generateAuthUrl({ access_type:'offline', prompt:'consent',
+    scope:['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/userinfo.email'],
+    state: req.user.uid });
+  res.json({ url });
+});
+
+app.get('/api/gmail/callback', async (req,res) => {
+  const { code, state:uid, error } = req.query;
+  if (error||!code||!uid) return res.redirect('/dashboard?gmail=denied');
+  try {
+    const oauth2         = getOAuthClient();
+    const { tokens }     = await oauth2.getToken(code);
+    oauth2.setCredentials(tokens);
+    const oaApi          = google.oauth2({ version:'v2', auth:oauth2 });
+    const { data }       = await oaApi.userinfo.get();
+    const gmailEmail     = data.email||'';
+    await db.collection('users').doc(uid).collection('gmailBrain').doc('tokens')
+      .set({ tokens, gmailEmail, connectedAt:admin.firestore.FieldValue.serverTimestamp(), updatedAt:admin.firestore.FieldValue.serverTimestamp() });
+    await db.collection('users').doc(uid).set({ gmailConnected:true, gmailEmail, gmailConnectedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    syncGmailForUser(uid).catch(e=>console.error('[gmail] initial sync:',e.message));
+    res.redirect('/dashboard?gmail=connected');
+  } catch(e) { console.error('[gmail] callback:',e.message); res.redirect('/dashboard?gmail=error'); }
+});
+
+app.post('/api/gmail/sync', authenticate, async (req,res) => {
+  try { const result = await syncGmailForUser(req.user.uid); res.json({ success:true, ...result }); }
+  catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+app.get('/api/gmail/status', authenticate, async (req,res) => {
+  try {
+    const [uSnap, sSnap] = await Promise.all([
+      db.collection('users').doc(req.user.uid).get(),
+      db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get()
+    ]);
+    if (!uSnap.data()?.gmailConnected) return res.json({ connected:false });
+    const sum = sSnap.exists ? sSnap.data() : {};
+    res.json({ connected:true, gmailEmail:uSnap.data().gmailEmail||'', emailsScanned:sum.emailsScanned||0,
+      applications:(sum.applications||[]).slice(0,10), insights:sum.insights||[],
+      lastSynced:sum.lastSynced?.toDate?.()?.toISOString()||null });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+app.delete('/api/gmail/disconnect', authenticate, async (req,res) => {
+  try {
+    const tDoc = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('tokens').get();
+    if (tDoc.exists) { const o=getOAuthClient(); o.setCredentials(tDoc.data().tokens); await o.revokeCredentials().catch(()=>{}); }
+    const batch = db.batch();
+    batch.delete(db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('tokens'));
+    batch.delete(db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary'));
+    batch.update(db.collection('users').doc(req.user.uid), { gmailConnected:false, gmailEmail:admin.firestore.FieldValue.delete() });
+    await batch.commit();
+    res.json({ success:true });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+// ─── Conversation Intelligence ────────────────────────────────────────────────
+async function generateConvSummary(messages) {
+  try {
+    const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
+    if (!groqKey||messages.length<2) return null;
+    const recent = messages.slice(-10).map(m=>`${m.role==='user'?'User':'KIE'}: ${(typeof m.content==='string'?m.content:'').slice(0,400)}`).join('\n');
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
+      body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:200, temperature:0.1,
+        messages:[{ role:'user', content:`Summarize this career coaching conversation. Return ONLY valid JSON:\n{"topic":"one sentence what user is dealing with","userSituation":"their specific situation 1-2 sentences","emotionalState":"one word: frustrated/anxious/excited/confused/hopeful/determined/stressed/confident","keyFacts":["fact1","fact2"],"unresolved":"what they still need or null","urgency":"high/medium/low"}\n\nConversation:\n${recent}` }]
+      })
+    });
+    const d = await r.json();
+    const text = (d.choices?.[0]?.message?.content||'').trim().replace(/```json|```/g,'').trim();
+    return JSON.parse(text);
+  } catch { return null; }
+}
+async function saveConvSummary(uid,convId,summary) {
+  if (!uid||!convId||!summary) return;
+  try { await db.collection('users').doc(uid).collection('convSummaries').doc(convId)
+    .set({ ...summary, updatedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true }); }
+  catch(e) { console.error('[conv-summary] save:',e.message); }
+}
+async function getConvSummary(uid,convId) {
+  if (!uid||!convId) return null;
+  try { const snap=await db.collection('users').doc(uid).collection('convSummaries').doc(convId).get(); return snap.exists?snap.data():null; }
+  catch { return null; }
+}
+
+app.post('/api/kie/summarize', authenticate, async (req,res) => {
+  const { messages, convId } = req.body;
+  if (!Array.isArray(messages)||!convId) return res.status(400).json({ error:'messages and convId required' });
+  res.json({ accepted:true });
+  generateConvSummary(messages).then(sum=>saveConvSummary(req.user.uid,convId,sum)).catch(e=>console.error('[summarize]:',e.message));
+});
+
+// Background Gmail auto-sync every 2 hours
+setInterval(async()=>{
+  try {
+    const snap = await db.collection('users').where('gmailConnected','==',true).limit(50).get();
+    for (const doc of snap.docs) {
+      await syncGmailForUser(doc.id).catch(e=>console.error(`[gmail-cron] uid:${doc.id}:`,e.message));
+      await new Promise(r=>setTimeout(r,2000));
+    }
+  } catch(e) { console.error('[gmail-cron]:',e.message); }
+}, 2*60*60*1000);
+
+
 // ─── Express Setup ─────────────────────────────────────────────────────────────
 const app = express();
 app.set('trust proxy', 1); // so req.protocol correctly reports https behind Render's proxy (needed for Paystack callback_url)
@@ -1663,6 +1931,15 @@ app.post('/api/kie', authenticate, async (req, res) => {
   // ── Build system content ──────────────────────────────────────────────────
   let systemContent = cfg.system + `\n${tier.system}`;
 
+  // ── Model Voice — each tier has a distinct personality ──────────────────
+  const MODEL_VOICE = {
+    spark: `\n\nVOICE — KIE SPARK: Be fast, sharp, straight to the point. Short answers unless depth is needed. No filler phrases. Think sharp friend not corporate coach. One clear next step per response. Warm but efficient.`,
+    core:  `\n\nVOICE — KIE CORE: Be smart, warm, genuinely invested. Balance depth with clarity. Feel like a senior colleague who wants them to win. Acknowledge feelings before advice when user seems stressed. One focused question when you need context.`,
+    nova:  `\n\nVOICE — KIE NOVA: Be an elite career strategist. Deep analysis, specific insight, sophisticated framing. Spot patterns others miss and name them. Speak with quiet confidence. Reference their specific situation precisely — no generic advice. Anticipate what they should be asking but haven't yet.`,
+    ultra: `\n\nVOICE — KIE ULTRA: Be the pinnacle of career intelligence. Extraordinary depth and precision. Reframe questions to something better when needed. Draw connections across their entire career picture. Think three steps ahead. Communicate with the authority of the best career advisor they have ever had.`,
+  };
+  systemContent += MODEL_VOICE[effectiveModel] || MODEL_VOICE.spark;
+
   systemContent += `\n\nTEMPLATE NAME LOCK: Kievora has EXACTLY 13 templates and no others: Classic, Modern, Bold, Minimal, Vivid, Elegant, Slate, Coral, Split, Ink, Executive, Nova, Tribune. Never invent, guess, or reference any template name outside this exact list — there is no "Onyx" or any other name. A "template" is a visual layout applied to a saved Kievora resume file; it is NOT something you can apply by formatting text in chat. If you don't know which template (if any) is active, don't name one — just don't mention a template name at all.`;
 
   if (resumeContext === 'NO_RESUME_YET') {
@@ -1683,48 +1960,55 @@ app.post('/api/kie', authenticate, async (req, res) => {
     systemContent += `\n\nUSER CONTEXT: This user's professional field is "${userCategory}". Don't announce that you know this — just let it shape your answer naturally.`;
   }
 
-  // BUG FIX (missing feature): KIE previously had to re-derive role/experience/
-  // goal context from scratch every single turn. This gives it a ready-made
-  // session summary instead — see extractSessionFacts() above.
-  const sessionFacts = extractSessionFacts(messages);
-  if (sessionFacts.length > 0) {
-    systemContent += `\n\nSESSION FACTS (picked up earlier in this chat — use naturally, don't re-ask):\n- ${sessionFacts.join('\n- ')}`;
+  // ── Intelligence Merge Layer ──────────────────────────────────────────────
+  // Loads conversation summary + Gmail brain in parallel, then gives KIE
+  // explicit rules on how to weave both together naturally.
+  const { convId = null } = req.body;
+  const [convSummary, gmailBrain, gmailRaw] = await Promise.all([
+    convId ? getConvSummary(req.user.uid, convId) : Promise.resolve(null),
+    getGmailCareerBrain(req.user.uid),
+    getGmailCareerBrainRaw(req.user.uid),
+  ]);
+
+  // ── Conversation understanding ───────────────────────────────────────────
+  if (convSummary) {
+    let sb = `\n\nCONVERSATION CONTEXT — what this chat is really about:`;
+    sb += `\nTopic: ${convSummary.topic||'general career coaching'}`;
+    if (convSummary.userSituation)  sb += `\nSituation: ${convSummary.userSituation}`;
+    if (convSummary.emotionalState) sb += `\nEmotional state: ${convSummary.emotionalState}`;
+    if (convSummary.keyFacts?.length) sb += `\nKey facts: ${convSummary.keyFacts.join(', ')}`;
+    if (convSummary.unresolved) sb += `\nUnresolved: ${convSummary.unresolved}`;
+    systemContent += sb;
+  } else {
+    const sessionFacts = extractSessionFacts(messages);
+    if (sessionFacts.length > 0)
+      systemContent += `\n\nEARLY SESSION FACTS:\n- ${sessionFacts.join('\n- ')}`;
   }
 
-  // ── Format messages — handle image content for vision models ─────────────
-  const hasVision = m.provider === 'anthropic';
-
-  const formattedMessages = messages.map(msg => {
-    if (msg.imageBase64 && msg.imageType) {
-      if (hasVision) {
-        return {
-          role: msg.role,
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: msg.imageType, data: msg.imageBase64 } },
-            { type: 'text', text: msg.content || 'What do you see in this image? Give career coaching advice based on it.' },
-          ],
-        };
-      } else {
-        return {
-          role:    msg.role,
-          content: `[User sent an image: ${msg.imageName || 'image.jpg'}]\n${msg.content || 'Please describe what you see and give career coaching advice.'}`,
-        };
-      }
-    }
-    return { role: msg.role, content: msg.content || '' };
-  });
-
-  // ── Context window trimming — prevents exceeding model context limit ───────
-  const trimmedMessages = trimMessagesForContext(formattedMessages);
-  if (trimmedMessages.length < formattedMessages.length) {
-    console.log(`[kie] context trimmed: ${formattedMessages.length} → ${trimmedMessages.length} messages`);
-  }
-
-  // BUG FIX: pure sliding-window trimming could silently drop the message where
-  // the user first stated their role/situation. Re-anchor it into the system
-  // prompt instead of the message array — see getConversationAnchor() above.
+  // ── Conversation anchor (re-inject first message if trimmed) ─────────────
   const conversationAnchor = getConversationAnchor(formattedMessages, trimmedMessages);
   if (conversationAnchor) systemContent += conversationAnchor;
+
+  // ── Gmail + merge instructions ───────────────────────────────────────────
+  if (gmailBrain) {
+    systemContent += `\n\n${gmailBrain}`;
+    const apps       = gmailRaw?.applications || [];
+    const hasOffer   = apps.some(a=>a.status==='offer');
+    const hasIntv    = apps.some(a=>a.status==='interview_invite');
+    const hasCrit    = hasOffer || hasIntv;
+    const topic      = convSummary?.topic || '';
+    const emotion    = convSummary?.emotionalState || '';
+    const jobRelated = /job|career|resume|interview|salary|offer|application|role|work|hire|recruit|apply/i.test(topic);
+    const isStressed = ['stressed','anxious','frustrated','confused'].includes(emotion);
+
+    systemContent += `\n\nINTELLIGENCE MERGE — follow these silently, never announce them:`;
+    if (hasCrit) systemContent += `\nCRITICAL: ${hasOffer?'Job offer':'Interview invite'} detected. Surface this naturally in your response even if the question is unrelated. Don't ignore it.`;
+    if (jobRelated && gmailBrain) systemContent += `\nALIGNED: Conversation and Gmail both relate to job search. Weave them together naturally — reference specific companies and timelines from Gmail when relevant.`;
+    if (!jobRelated && !hasCrit) systemContent += `\nOFF-TOPIC: User is asking about something unrelated to their active job search. Answer their question fully first. Only bridge to Gmail if there is a clear genuine connection — never forced.`;
+    if (isStressed) systemContent += `\nEMOTION: User is ${emotion}. Lead with acknowledgement before advice. Gmail context supports the response, it does not replace the human moment.`;
+    systemContent += `\nCORE: You naturally know everything — conversation history, job search, Gmail situation. Never say "I can see from your Gmail" or "based on your data". Just know it like a coach who has been watching closely.`;
+  }
+
 
   console.log(`POST /api/kie [SSE] — model:${effectiveModel}(${m.model}) mode:${effectiveMode} msgs:${trimmedMessages.length} hasImage:${messages.some(msg => msg.imageBase64)}`);
 
