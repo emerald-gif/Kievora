@@ -1566,6 +1566,23 @@
     const auth  = getAuth(fbApp);
     const db    = getFirestore(fbApp, 'default');
 
+    // ── Bridge for code written against the old firebase.auth() compat API ───
+    // (this app uses the modular SDK — `auth` above is module-scoped, not a
+    // global `firebase` namespace — so anything outside this <script type="module">
+    // block needs to go through this instead of calling firebase.auth() directly)
+    window.__kieAuth = auth;
+    window.__kieGetIdToken = function() {
+      return new Promise((res, rej) => {
+        const u = auth.currentUser;
+        if (u) { u.getIdToken().then(res).catch(rej); return; }
+        const unsub = onAuthStateChanged(auth, usr => {
+          unsub();
+          if (usr) usr.getIdToken().then(res).catch(rej);
+          else rej('no user');
+        });
+      });
+    };
+
     // ── Admin analytics logger (fire-and-forget, never blocks UI) ────────────
     function logEvent(event, meta = {}) {
       try {
@@ -9312,7 +9329,7 @@ let _gmailConnected   = false;
 let _gmailAlertAction = null;
 
 async function _gmailTok() {
-  return new Promise((res,rej)=>{ firebase.auth().onAuthStateChanged(u=>{ if(u) u.getIdToken().then(res).catch(rej); else rej('no user'); }); });
+  return window.__kieGetIdToken();
 }
 
 // ── Gmail Panel ──────────────────────────────────────────────────
@@ -13031,7 +13048,7 @@ document.addEventListener('DOMContentLoaded', () => {
           renderHistory();
         }
         if (typeof kieHist!=='undefined' && kieHist.length>=2 && _activeId) {
-          firebase.auth().currentUser?.getIdToken().then(t2=>{
+          window.__kieAuth?.currentUser?.getIdToken().then(t2=>{
             if(!t2) return;
             fetch('/api/kie/summarize',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${t2}`},body:JSON.stringify({messages:kieHist.slice(-10),convId:_activeId})}).catch(()=>{});
           }).catch(()=>{});
