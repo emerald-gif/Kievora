@@ -3054,6 +3054,17 @@
       } else {
         // Brand-new resume → create a draft id
         currentDraftId = 'draft_' + Date.now();
+        // Prefill from Gmail Pipeline's "Tailor resume" hook, if the user arrived
+        // here via that button. One-time use — cleared immediately after reading.
+        try {
+          const gpipeTarget = sessionStorage.getItem('gpipeResumeTarget');
+          if (gpipeTarget) {
+            const { company, role } = JSON.parse(gpipeTarget);
+            if (role)    g('bTitle').value = role;
+            if (company) g('bRName').value = `Resume — ${company}`;
+            sessionStorage.removeItem('gpipeResumeTarget');
+          }
+        } catch(e) {}
       }
       builderStep = 1;
       renderStep();
@@ -9255,6 +9266,35 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
   <style>
     @keyframes sping{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   </style>
+  <!-- ── Gmail Pipeline Intelligence styles — namespaced "gpipe-", touches nothing else ── -->
+  <style>
+    .gpipe-funnel{display:flex;gap:8px;margin:12px 0 14px}
+    .gpipe-funnel-seg{flex:1;background:#fff;border:1.5px solid #ede9fe;border-radius:12px;padding:10px;text-align:center}
+    .gpipe-funnel-pct{font-size:16px;font-weight:900;color:#7c3aed;line-height:1.1}
+    .gpipe-funnel-lbl{font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+    .gpipe-funnel-bar{height:4px;background:#f1ecff;border-radius:3px;margin-top:6px;overflow:hidden}
+    .gpipe-funnel-bar i{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width .4s ease}
+    .gpipe-urgent{display:none;background:linear-gradient(135deg,#fef3c7,#fff7ed);border:1.5px solid #fde68a;border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;color:#92400e;line-height:1.5;font-weight:600}
+    .gpipe-section{margin-bottom:14px}
+    .gpipe-section-head{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .gpipe-section-count{background:#f1ecff;color:#7c3aed;border-radius:20px;padding:1px 7px;font-size:9.5px}
+    .gpipe-card{background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:12px 14px;margin-bottom:8px}
+    .gpipe-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .gpipe-card-co{font-size:13px;font-weight:700;color:#0f0e17;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .gpipe-card-role{font-weight:500;color:#64748b}
+    .gpipe-card-pill{font-size:10px;font-weight:700;border-radius:20px;padding:3px 9px;white-space:nowrap;flex-shrink:0}
+    .gpipe-card-meta{font-size:10.5px;color:#94a3b8;margin-top:5px}
+    .gpipe-card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+    .gpipe-btn{flex:1 1 28%;min-width:88px;border:none;border-radius:9px;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+    .gpipe-btn-draft{background:#f8f7ff;color:#7c3aed;border:1.5px solid #ede9fe}
+    .gpipe-btn-resume{background:#ecfeff;color:#0e7490;border:1.5px solid #cffafe}
+    .gpipe-btn-cal{background:#fff7ed;color:#c2410c;border:1.5px solid #fed7aa}
+    .gpipe-pattern{background:#fff;border:1.5px solid #fde68a;border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.5}
+    .gpipe-draft-box{display:none;margin-top:10px;background:#faf5ff;border:1.5px solid #ede9fe;border-radius:12px;padding:10px}
+    .gpipe-draft-box textarea{width:100%;border:1px solid #ede9fe;border-radius:8px;padding:8px;font-size:11.5px;font-family:inherit;color:#374151;background:#fff;resize:vertical;margin-top:6px}
+    .gpipe-draft-copy{margin-top:8px;width:100%;background:#7c3aed;color:#fff;border:none;border-radius:9px;padding:8px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}
+    .gpipe-empty{text-align:center;padding:18px;color:#94a3b8;font-size:12px}
+  </style>
 <body>
 
 
@@ -9267,7 +9307,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
   <div style="padding:20px 16px;flex:1">
     <div id="gmailDisconnectedPanel">
       <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
-        <div style="width:52px;height:52px;background:rgba(234,67,53,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" fill="#ea4335" opacity=".2"/><path d="M20 4H4L12 13l8-9z" fill="#ea4335"/><path d="M2 6l10 7 10-7" stroke="#ea4335" stroke-width="1.5" fill="none"/></svg></div>
+        <div style="width:52px;height:52px;background:rgba(234,67,53,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;overflow:hidden"><img src="gmail.jpg" alt="Gmail" style="width:28px;height:28px;object-fit:contain" onerror="this.outerHTML='&lt;svg width=&quot;26&quot; height=&quot;26&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;&gt;&lt;path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/&gt;&lt;path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/&gt;&lt;path d=&quot;M2 6l10 7 10-7&quot; stroke=&quot;#ea4335&quot; stroke-width=&quot;1.5&quot; fill=&quot;none&quot;/&gt;&lt;/svg&gt;'"/></div>
         <div style="font-size:16px;font-weight:800;color:#0f0e17;margin-bottom:8px">Connect your Gmail</div>
         <div style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:20px">KIE will automatically track your applications, interview invites, recruiter messages and offers — without you lifting a finger.</div>
         <button onclick="connectGmail()" id="gmailConnectBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Connect Gmail →</button>
@@ -9279,6 +9319,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       </div>
     </div>
     <div id="gmailConnectedPanel" style="display:none">
+      <div id="gpipeUrgentBanner" class="gpipe-urgent"></div>
       <div style="background:#fff;border:1.5px solid #d1fae5;border-radius:16px;padding:16px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:8px;height:8px;background:#22c55e;border-radius:50%"></div><div style="font-size:13px;font-weight:800;color:#0f0e17">Gmail Connected</div><div style="margin-left:auto;font-size:11px;color:#64748b" id="gmailLastSynced">—</div></div>
         <div style="font-size:12px;color:#64748b;margin-bottom:14px" id="gmailEmailLabel">—</div>
@@ -9287,8 +9328,10 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatApps">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Companies</div></div>
           <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatActions">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Actions</div></div>
         </div>
+        <div class="gpipe-funnel" id="gpipeFunnel"></div>
         <button onclick="syncGmailNow()" id="gmailSyncBtn" style="background:#f8f7ff;border:1.5px solid #ede9fe;color:#7c3aed;border-radius:10px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Sync Now</button>
       </div>
+      <div id="gpipePatterns"></div>
       <div id="gmailAppsList" style="margin-bottom:12px"></div>
       <div id="gmailInsightsList" style="margin-bottom:16px"></div>
       <button onclick="disconnectGmail()" style="background:none;border:1.5px solid #fecaca;color:#e11d48;border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Disconnect Gmail & Delete Data</button>
@@ -9374,12 +9417,170 @@ function _gmailRenderPanel(data) {
   setEl('gmailStatApps',  (data.applications||[]).length);
   setEl('gmailStatActions',(data.insights||[]).length);
   if(data.lastSynced){const ago=Math.round((Date.now()-new Date(data.lastSynced))/60000);setEl('gmailLastSynced',ago<2?'Just synced':`${ago}m ago`);}
-  const stMap={offer:'🎉 Offer',interview_invite:'📅 Interview',assessment:'📝 Assessment',application_confirmation:'✅ Applied',recruiter_outreach:'📩 Recruiter',rejection:'❌ Rejected',post_offer:'🚀 Post-offer',general_update:'🔄 Update'};
-  const aEl=document.getElementById('gmailAppsList');
-  if(aEl&&data.applications?.length){aEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Tracked Applications</div><div style="background:#fff;border:1.5px solid #ede9fe;border-radius:14px;overflow:hidden">${data.applications.slice(0,6).map((a,i)=>`<div style="padding:11px 14px;${i<data.applications.length-1?'border-bottom:1px solid #faf5ff':''}"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-size:13px;font-weight:700;color:#0f0e17;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.company}${a.role?` · <span style="font-weight:500;color:#64748b">${a.role}</span>`:''}</div><div style="font-size:10px;font-weight:700;color:#7c3aed;white-space:nowrap">${stMap[a.status]||a.status}</div></div></div>`).join('')}</div>`;}
+  _gpipeRenderUrgent(data.applications||[]);
+  _gpipeRenderFunnel(data.stats);
+  _gpipeRenderPatterns(data.patterns||[]);
+  _gpipeRenderApps(data.applications||[]);
   const iEl=document.getElementById('gmailInsightsList');
   if(iEl&&data.insights?.length){iEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px">KIE Actions</div><div style="display:flex;flex-direction:column;gap:8px">${data.insights.map(i=>`<div style="background:#fff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 14px;font-size:12px;color:#374151;line-height:1.5">${i}</div>`).join('')}</div>`;}
+  else if(iEl){iEl.innerHTML='';}
 }
+
+// ── Gmail Pipeline Intelligence (rendering + actions) — namespaced "gpipe", ──
+// ── extends the panel above only, never touches resume/cover-letter code   ──
+let _gpipeApps = [];
+
+function _gpipeEsc(s) {
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function _gpipeRenderFunnel(stats) {
+  const el = document.getElementById('gpipeFunnel');
+  if (!el) return;
+  if (!stats || !stats.total) { el.innerHTML=''; return; }
+  const segs = [
+    { lbl:'Interview Rate', pct: stats.interviewRate||0 },
+    { lbl:'Offer Rate',     pct: stats.offerRate||0 },
+  ];
+  el.innerHTML = segs.map(s=>`<div class="gpipe-funnel-seg"><div class="gpipe-funnel-pct">${s.pct}%</div><div class="gpipe-funnel-lbl">${s.lbl}</div><div class="gpipe-funnel-bar"><i style="width:${s.pct}%"></i></div></div>`).join('');
+}
+
+function _gpipeRenderUrgent(apps) {
+  const el = document.getElementById('gpipeUrgentBanner');
+  if (!el) return;
+  const offer     = apps.find(a=>a.status==='offer');
+  const interview = apps.find(a=>a.status==='interview_invite');
+  if (offer) {
+    el.style.display='block';
+    el.innerHTML = `🎉 <b>Offer from ${_gpipeEsc(offer.company)}</b>${offer.role?` (${_gpipeEsc(offer.role)})`:''} — time to evaluate &amp; respond.`;
+  } else if (interview) {
+    el.style.display='block';
+    el.innerHTML = `⚡ <b>Interview stage with ${_gpipeEsc(interview.company)}</b>${interview.role?` (${_gpipeEsc(interview.role)})`:''} — prep time.`;
+  } else {
+    el.style.display='none'; el.innerHTML='';
+  }
+}
+
+const GPIPE_GROUPS = [
+  { key:'offer',                    label:'🎉 Offers' },
+  { key:'interview_invite',         label:'⚡ Interviews' },
+  { key:'recruiter_outreach',       label:'📩 Recruiter Outreach' },
+  { key:'assessment',               label:'📝 Assessments' },
+  { key:'application_confirmation', label:'✅ Applied' },
+  { key:'post_offer',               label:'🚀 Post-Offer' },
+  { key:'general_update',           label:'🔄 Updates' },
+  { key:'rejection',                label:'Rejected' },
+];
+
+// Builds a Google Calendar "quick add" link — opens prefilled, user taps Save.
+// Deliberately NOT calling the Calendar API server-side: that would need a new
+// OAuth scope + extra Google verification on top of what Gmail already needs.
+// This needs zero extra scope and zero extra verification burden.
+function _gpipeGCalLink(a) {
+  if (!a.interviewAt) return null;
+  const start = new Date(a.interviewAt);
+  if (isNaN(start.getTime())) return null;
+  const end = new Date(start.getTime() + (a.interviewDurationMin||60)*60000);
+  const fmt = d => d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const text    = encodeURIComponent(`Interview — ${a.company}${a.role?' ('+a.role+')':''}`);
+  const details = encodeURIComponent(`Interview with ${a.company} for ${a.role||'a role'} — tracked automatically by Kievora's Gmail Intelligence.`);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${fmt(start)}/${fmt(end)}&details=${details}`;
+}
+
+function _gpipeFmtInterviewTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+}
+
+function _gpipeRenderPatterns(patterns) {
+  const el = document.getElementById('gpipePatterns');
+  if (!el) return;
+  if (!patterns || !patterns.length) { el.innerHTML=''; return; }
+  el.innerHTML = patterns.map(p =>
+    `<div class="gpipe-pattern">📊 You tend to go quiet ${p.label} — ${p.count} of your last ${p.total} applications that reached this stage went cold (${p.rate}%). Worth tightening follow-up here.</div>`
+  ).join('');
+}
+
+function _gpipeCard(a, idx) {
+  const days = a.daysSince!=null ? a.daysSince : Math.floor((Date.now()-a.lastActivityTs)/86400000);
+  const canFollowUp = !!a.stale && a.status!=='rejection' && a.status!=='offer';
+  const canTailor   = a.status!=='rejection';
+  const gcalLink    = a.status==='interview_invite' ? _gpipeGCalLink(a) : null;
+  const interviewLabel = a.status==='interview_invite' && a.interviewAt ? _gpipeFmtInterviewTime(a.interviewAt) : null;
+  return `<div class="gpipe-card">
+    <div class="gpipe-card-top">
+      <div class="gpipe-card-co">${_gpipeEsc(a.company)}${a.role?` · <span class="gpipe-card-role">${_gpipeEsc(a.role)}</span>`:''}</div>
+    </div>
+    <div class="gpipe-card-meta">${interviewLabel?`📅 ${interviewLabel}`:(days<=0?'today':days+'d ago')}${a.stale?' · <span style="color:#d97706;font-weight:700">needs a follow-up</span>':''}</div>
+    ${(canFollowUp||canTailor||gcalLink) ? `<div class="gpipe-card-actions">
+      ${canFollowUp?`<button class="gpipe-btn gpipe-btn-draft" onclick="gpipeDraftFollowup(${idx})">Draft follow-up</button>`:''}
+      ${canTailor?`<button class="gpipe-btn gpipe-btn-resume" onclick="gpipeTailorResume(${idx})">Tailor resume</button>`:''}
+      ${gcalLink?`<button class="gpipe-btn gpipe-btn-cal" onclick="window.open('${gcalLink}','_blank')">📅 Add to Calendar</button>`:''}
+    </div>` : ''}
+    <div class="gpipe-draft-box" id="gpipeDraft_${idx}"></div>
+  </div>`;
+}
+
+function _gpipeRenderApps(apps) {
+  _gpipeApps = apps;
+  const aEl = document.getElementById('gmailAppsList');
+  if (!aEl) return;
+  if (!apps.length) { aEl.innerHTML = '<div class="gpipe-empty">No career emails tracked yet — KIE will populate this as applications come in.</div>'; return; }
+  let html = '';
+  for (const g of GPIPE_GROUPS) {
+    const items = apps.filter(a=>a.status===g.key);
+    if (!items.length) continue;
+    html += `<div class="gpipe-section"><div class="gpipe-section-head">${g.label}<span class="gpipe-section-count">${items.length}</span></div>`;
+    html += items.map(a => _gpipeCard(a, apps.indexOf(a))).join('');
+    html += `</div>`;
+  }
+  aEl.innerHTML = html;
+}
+
+window.gpipeDraftFollowup = async function(idx) {
+  const a = _gpipeApps[idx]; if (!a) return;
+  const box = document.getElementById('gpipeDraft_'+idx);
+  if (!box) return;
+  box.style.display = 'block';
+  box.innerHTML = '<div style="font-size:11px;color:#94a3b8">Writing a draft…</div>';
+  try {
+    const tok = await _gmailTok();
+    const r = await fetch('/api/gmail/draft-followup', { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`}, body:JSON.stringify({company:a.company, role:a.role}) }).then(r=>r.json());
+    if (!r.success) throw new Error(r.error||'failed');
+    const { subject, body } = r.draft;
+    box.innerHTML = `<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">Subject</div>
+      <div style="font-size:12px;font-weight:700;color:#0f0e17;margin:3px 0 6px">${_gpipeEsc(subject)}</div>
+      <textarea rows="5" id="gpipeDraftBody_${idx}">${_gpipeEsc(body)}</textarea>
+      <button class="gpipe-draft-copy" onclick="gpipeCopyDraft(${idx})">Copy to clipboard</button>`;
+    box.dataset.subject = subject;
+  } catch(e) {
+    box.innerHTML = '<div style="font-size:11px;color:#e11d48">Couldn\'t generate a draft. Try again.</div>';
+  }
+};
+
+window.gpipeCopyDraft = function(idx) {
+  const box = document.getElementById('gpipeDraft_'+idx);
+  const ta  = document.getElementById('gpipeDraftBody_'+idx);
+  if (!ta || !box) return;
+  const text = `Subject: ${box.dataset.subject||''}\n\n${ta.value}`;
+  (navigator.clipboard?.writeText(text) || Promise.reject()).then(()=>{
+    const btn = box.querySelector('.gpipe-draft-copy');
+    if (btn) { const orig = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(()=>{btn.textContent=orig;}, 1800); }
+  }).catch(()=>{});
+};
+
+// Stashes context for the resume builder — doesn't touch resume code directly.
+// If the template-picker flow should auto-prefill from this later, the key to
+// read is sessionStorage 'gpipeResumeTarget': {company, role}.
+window.gpipeTailorResume = function(idx) {
+  const a = _gpipeApps[idx]; if (!a) return;
+  try { sessionStorage.setItem('gpipeResumeTarget', JSON.stringify({ company:a.company, role:a.role||'' })); } catch(e){}
+  closeGmailPanel();
+  if (typeof showView === 'function') showView('tpick');
+};
+
+
 
 window.connectGmail = async function() {
   const btn=document.getElementById('gmailConnectBtn');
