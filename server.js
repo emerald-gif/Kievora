@@ -753,6 +753,24 @@ async function extractEmailEntities(subject, snippet) {
   } catch { return { company: null, role: null }; }
 }
 
+// Only called for emails already classified as interview_invite — keeps this
+// extra AI call cheap and rare rather than running it on every single email.
+async function extractInterviewDateTime(subject, snippet, emailDate) {
+  try {
+    const groqKey = (process.env.GROQ_API_KEY || '').split(',')[0].trim();
+    if (!groqKey) return null;
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+      body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 60, temperature: 0,
+        messages: [{ role: 'user', content: `This email was received ${emailDate.toISOString()}. If it states a specific interview date and time, resolve relative phrases (e.g. "next Tuesday at 2pm") against the received date and return it as an absolute ISO 8601 datetime. If only a date is given with no time, or no specific date/time is mentioned at all, return null for "datetime" rather than guessing. Return ONLY valid JSON: {"datetime":"ISO string or null","durationMinutes":number or null}\nSubject: ${subject}\nPreview: ${snippet}` }] })
+    });
+    const d = await r.json();
+    const text   = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(text);
+    return parsed && parsed.datetime ? parsed : null;
+  } catch { return null; }
+}
+
 const STATUS_RANK = { post_offer:7, offer:6, rejection:5, interview_invite:4, assessment:3, application_confirmation:2, recruiter_outreach:1, general_update:0 };
 function normaliseStr(s) { return (s||'').toLowerCase().replace(/[^a-z0-9]/g,'').trim(); }
 function isSameApplication(a, b) {
@@ -780,7 +798,12 @@ async function syncUserGmail(uid, tokens) {
     const ts      = new Date(msg.data.internalDate ? Number(msg.data.internalDate) : getH('Date'));
     const emailType           = await classifyCareerEmail(subject, snippet);
     const { company, role }   = await extractEmailEntities(subject, snippet);
-    parsed.push({ subject, snippet, threadId:msg.data.threadId, ts, emailType, company, role });
+    let interviewAt = null, interviewDurationMin = null;
+    if (emailType === 'interview_invite') {
+      const idt = await extractInterviewDateTime(subject, snippet, ts);
+      if (idt) { interviewAt = idt.datetime; interviewDurationMin = idt.durationMinutes || 60; }
+    }
+    parsed.push({ subject, snippet, threadId:msg.data.threadId, ts, emailType, company, role, interviewAt, interviewDurationMin });
   }
   return parsed;
 }
@@ -788,7 +811,7 @@ async function syncUserGmail(uid, tokens) {
 function buildApplicationList(emails) {
   const apps = [];
   for (const email of emails.sort((a,b)=>a.ts-b.ts)) {
-    const { company, role, emailType, ts, subject } = email;
+    const { company, role, emailType, ts, subject, interviewAt, interviewDurationMin } = email;
     if (!company) continue;
     const existing = apps.find(a=>isSameApplication(a,{company,role}));
     const event    = { date: ts.toISOString().split('T')[0], type:emailType, subject };
@@ -797,8 +820,10 @@ function buildApplicationList(emails) {
       existing.lastActivityTs = Math.max(existing.lastActivityTs, ts.getTime());
       existing.timeline.push(event);
       if (role && !existing.role) existing.role = role;
+      if (interviewAt) { existing.interviewAt = interviewAt; existing.interviewDurationMin = interviewDurationMin || 60; }
     } else {
-      apps.push({ company, role:role||null, status:emailType, firstSeenTs:ts.getTime(), lastActivityTs:ts.getTime(), timeline:[event] });
+      apps.push({ company, role:role||null, status:emailType, firstSeenTs:ts.getTime(), lastActivityTs:ts.getTime(), timeline:[event],
+        ...(interviewAt ? { interviewAt, interviewDurationMin: interviewDurationMin || 60 } : {}) });
     }
   }
   return apps.sort((a,b)=>b.lastActivityTs-a.lastActivityTs);
@@ -817,6 +842,61 @@ function generateInsights(apps) {
     else if (app.status==='assessment')   ins.push(`${label} sent assessment — complete promptly`);
   }
   return ins.slice(0,6);
+}
+
+// ─── Gmail Pipeline Intelligence (stats + staleness) ───────────────────────────
+// Additive only — reads the same `apps` shape buildApplicationList() already
+// produces, doesn't change Firestore schema or touch any resume/cover-letter code.
+const GPIPE_STALE_DAYS = 14;
+const GPIPE_STALL_STATUSES = ['application_confirmation','recruiter_outreach','assessment'];
+
+function attachStaleFlags(apps) {
+  const now = Date.now();
+  return apps.map(a => {
+    const daysSince = Math.floor((now - a.lastActivityTs) / 86400000);
+    const stale = GPIPE_STALL_STATUSES.includes(a.status) && daysSince > GPIPE_STALE_DAYS;
+    return { ...a, daysSince, stale };
+  });
+}
+
+function computePipelineStats(apps) {
+  const counts = {};
+  for (const a of apps) counts[a.status] = (counts[a.status]||0) + 1;
+  const total      = apps.length;
+  const rejected   = counts.rejection || 0;
+  const interviews = (counts.interview_invite||0) + (counts.post_offer||0) + (counts.offer||0); // reached interview stage or beyond
+  const offers     = (counts.offer||0) + (counts.post_offer||0);
+  const pct = (n,d) => d ? Math.round((n/d)*100) : 0;
+  return {
+    total, rejected, active: total - rejected,
+    counts,
+    interviewRate: pct(interviews, total),
+    offerRate:     pct(offers, total),
+  };
+}
+
+// Cross-company pattern detection — looks across the user's whole history for
+// stages where they consistently go quiet, e.g. "you tend to get ghosted after
+// the assessment stage". Needs a minimum sample so it doesn't fire noise on a
+// handful of applications.
+const GPIPE_PATTERN_MIN_SAMPLE = 3;
+function detectGhostingPattern(apps) {
+  const reached  = (type) => apps.filter(a => a.timeline.some(t=>t.type===type));
+  const stuckAt  = (type) => reached(type).filter(a => a.status===type && a.stale);
+  const stages = [
+    { key:'assessment',         label:'after the assessment stage' },
+    { key:'interview_invite',   label:'after the interview stage' },
+    { key:'recruiter_outreach', label:'after recruiter outreach' },
+  ];
+  const patterns = [];
+  for (const s of stages) {
+    const total = reached(s.key).length;
+    if (total < GPIPE_PATTERN_MIN_SAMPLE) continue;
+    const stuck = stuckAt(s.key).length;
+    const rate  = Math.round((stuck/total)*100);
+    if (rate >= 50) patterns.push({ stage:s.key, label:s.label, count:stuck, total, rate });
+  }
+  return patterns;
 }
 
 function buildKieBrainBlock(apps, insights, emailsScanned) {
@@ -1050,10 +1130,35 @@ app.get('/api/gmail/status', authenticate, async (req,res) => {
       db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get()
     ]);
     if (!uSnap.data()?.gmailConnected) return res.json({ connected:false });
-    const sum = sSnap.exists ? sSnap.data() : {};
+    const sum  = sSnap.exists ? sSnap.data() : {};
+    const apps = attachStaleFlags(sum.applications || []);
     res.json({ connected:true, gmailEmail:uSnap.data().gmailEmail||'', emailsScanned:sum.emailsScanned||0,
-      applications:(sum.applications||[]).slice(0,10), insights:sum.insights||[],
+      applications: apps.slice(0,40), insights: sum.insights||[],
+      stats: computePipelineStats(apps),
+      patterns: detectGhostingPattern(apps),
       lastSynced:sum.lastSynced?.toDate?.()?.toISOString()||null });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+// One-tap AI follow-up draft — text only, the user copies & sends it themselves.
+// Kievora never sends mail on a user's behalf (matches the "read-only access" promise
+// already shown on the Gmail panel).
+app.post('/api/gmail/draft-followup', authenticate, async (req,res) => {
+  try {
+    const { company, role } = req.body || {};
+    if (!company) return res.status(400).json({ error:'company required' });
+    const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
+    if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
+      body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:260, temperature:0.6,
+        messages:[{ role:'user', content:`Write a short, warm, professional follow-up email a job applicant can send to check on the status of their application. Company: ${company}. Role: ${role||'the role they applied for'}. Keep it under 120 words, confident but not pushy, no generic filler, no placeholder brackets. Return ONLY valid JSON: {"subject":"...","body":"..."}` }]
+      })
+    });
+    const d = await r.json();
+    const text  = (d.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
+    const draft = JSON.parse(text);
+    res.json({ success:true, draft });
   } catch(e) { res.status(500).json({ error:e.message }); }
 });
 
