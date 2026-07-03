@@ -721,10 +721,12 @@
     .rec-loading-spin{width:48px;height:48px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-radius:16px;display:flex;align-items:center;justify-content:center;animation:sping 1.2s linear infinite}
 
     /* ── SETTINGS FULL SCREEN ── */
-    .ksb-settings-panel{position:fixed;inset:0;z-index:800;background:#f8f7ff;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto}
+    .ksb-settings-panel{position:fixed;inset:0;z-index:800;background:#0f0e17;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
     .ksb-settings-panel.open{transform:translateY(0)}
-    .ksb-set-hdr{display:flex;align-items:center;gap:12px;padding:16px 18px;background:#fff;border-bottom:1px solid #ede9fe;position:sticky;top:0;z-index:10}
-    .ksb-set-title{font-size:17px;font-weight:900;color:var(--txt)}
+    .ksb-set-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px 16px;background:#0f0e17;position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(124,58,237,.18)}
+    .ksb-set-back{width:36px;height:36px;background:rgba(255,255,255,.07);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#a78bfa;flex-shrink:0;transition:background .15s}
+    .ksb-set-back:hover{background:rgba(167,139,250,.15)}
+    .ksb-set-title{font-size:17px;font-weight:900;color:#fff;letter-spacing:-.3px}
 
     /* ── SIDEBAR LIGHT THEME ── */
     .kie-sidebar{position:fixed;top:0;left:-320px;width:300px;height:100vh;background:#fff;z-index:700;transition:left .28s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 40px rgba(0,0,0,.12);display:flex;flex-direction:column;border-right:1px solid #ede9fe}
@@ -759,25 +761,26 @@
     .ksb-footer{padding:6px 14px 10px;border-bottom:1px solid #f0ecfe;background:transparent;flex-shrink:0}
     .ksb-settings-btn{display:flex;align-items:center;gap:8px;background:none;border:none;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;padding:8px 10px;border-radius:10px;transition:all .12s;font-family:inherit;width:100%}
     .ksb-settings-btn:hover{background:#ede9fe;color:var(--p)}
-    .ksb-set-body{padding:16px}
-    .ksb-prof-card{background:linear-gradient(135deg,#faf5ff,#f3f0ff);border:1.5px solid #ede9fe;border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;margin-bottom:18px}
-    .ksb-prof-av{width:44px;height:44px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;background-size:cover;background-position:center}
-    .ksb-prof-name{font-size:15px;font-weight:800;color:var(--txt)}
-    .ksb-prof-email{font-size:11px;color:var(--sub);margin-top:2px}
-    .ksb-set-section{margin-bottom:16px}
-    .ksb-set-section-label{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px;padding:0 2px}
-    .ksb-set-card{background:#fff;border:1.5px solid #ede9fe;border-radius:14px;overflow:hidden}
-    .ksb-set-row{display:flex;align-items:center;gap:10px;padding:13px 14px;font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;transition:background .12s;background:none;border:none;width:100%;text-align:left;font-family:inherit;border-bottom:1px solid #faf5ff;text-decoration:none}
+    .ksb-set-body{padding:16px 16px 32px;flex:1}
+    .ksb-prof-card{background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(109,40,217,.08));border:1px solid rgba(124,58,237,.25);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:24px}
+    .ksb-prof-av{width:48px;height:48px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;background-size:cover;background-position:center;border:2px solid rgba(167,139,250,.4)}
+    .ksb-prof-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.2px}
+    .ksb-prof-email{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px;font-weight:500}
+    .ksb-set-section{margin-bottom:20px}
+    .ksb-set-section-label{font-size:9.5px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.2px;display:block;margin-bottom:8px;padding:0 2px}
+    .ksb-set-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
+    .ksb-set-row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;transition:background .12s;background:none;border:none;width:100%;text-align:left;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);text-decoration:none}
     .ksb-set-row:last-child{border-bottom:none}
-    .ksb-set-row:hover{background:#faf5ff}
-    .ksb-set-row.danger{color:#e11d48}
-    .ksb-set-row.danger:hover{background:#fff1f2}
-    .ksb-set-row-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .ksb-set-row:hover{background:rgba(255,255,255,.06)}
+    .ksb-set-row:active{background:rgba(124,58,237,.15)}
+    .ksb-set-row.danger{color:#f87171}
+    .ksb-set-row.danger:hover{background:rgba(239,68,68,.08)}
+    .ksb-set-row-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
     .ksb-set-row-txt{flex:1;min-width:0}
-    .ksb-set-row-title{font-size:13px;font-weight:700;color:var(--txt)}
-    .ksb-set-row.danger .ksb-set-row-title{color:#e11d48}
-    .ksb-set-row-sub{font-size:11px;color:#94a3b8;margin-top:1px}
-    .ksb-set-row-arr{color:#cbd5e1;flex-shrink:0}
+    .ksb-set-row-title{font-size:13.5px;font-weight:700;color:rgba(255,255,255,.9)}
+    .ksb-set-row.danger .ksb-set-row-title{color:#f87171}
+    .ksb-set-row-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;font-weight:500}
+    .ksb-set-row-arr{color:rgba(255,255,255,.2);flex-shrink:0}
 
     /* ── MODEL BADGE — SVG styled ── */
     .kmd-trigger{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:4px 2px;border-radius:8px;transition:background .15s;font-family:inherit}
@@ -7021,6 +7024,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       clearTimeout(window._tt);
       window._tt = setTimeout(() => t.style.opacity = '0', 3500);
     }
+    window.toast = toast; // bridge — other <script> blocks (e.g. Gmail panel) aren't module-scoped and can't see this otherwise
     function fmtDate(ts) {
       if (!ts) return '—';
       const d = ts._seconds ? new Date(ts._seconds * 1000) : new Date(ts);
@@ -9289,6 +9293,15 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
     .gpipe-btn-draft{background:#f8f7ff;color:#7c3aed;border:1.5px solid #ede9fe}
     .gpipe-btn-resume{background:#ecfeff;color:#0e7490;border:1.5px solid #cffafe}
     .gpipe-btn-cal{background:#fff7ed;color:#c2410c;border:1.5px solid #fed7aa}
+    .gpipe-btn-prep{background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0}
+    .gpipe-btn-reply{background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe}
+    .gpipe-trend{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 8px;margin-left:6px}
+    .gpipe-trend-up{background:#f0fdf4;color:#15803d}
+    .gpipe-trend-dn{background:#fef2f2;color:#b91c1c}
+    .gpipe-trend-flat{background:#f1f5f9;color:#64748b}
+    .gpipe-gap{background:#fff;border:1.5px solid #e0f2fe;border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:12px;color:#0c4a6e;line-height:1.5}
+    .gpipe-optout{font-size:11px;color:#94a3b8;text-align:center;padding:6px 0 2px}
+    .gpipe-optout button{background:none;border:none;color:#94a3b8;font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
     .gpipe-pattern{background:#fff;border:1.5px solid #fde68a;border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.5}
     .gpipe-draft-box{display:none;margin-top:10px;background:#faf5ff;border:1.5px solid #ede9fe;border-radius:12px;padding:10px}
     .gpipe-draft-box textarea{width:100%;border:1px solid #ede9fe;border-radius:8px;padding:8px;font-size:11.5px;font-family:inherit;color:#374151;background:#fff;resize:vertical;margin-top:6px}
@@ -9319,6 +9332,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       </div>
     </div>
     <div id="gmailConnectedPanel" style="display:none">
+      <div id="gpipeMismatchWarning" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:14px;padding:13px 15px;margin-bottom:12px;font-size:12.5px;color:#991b1b;line-height:1.5"></div>
       <div id="gpipeUrgentBanner" class="gpipe-urgent"></div>
       <div style="background:#fff;border:1.5px solid #d1fae5;border-radius:16px;padding:16px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:8px;height:8px;background:#22c55e;border-radius:50%"></div><div style="font-size:13px;font-weight:800;color:#0f0e17">Gmail Connected</div><div style="margin-left:auto;font-size:11px;color:#64748b" id="gmailLastSynced">—</div></div>
@@ -9329,12 +9343,15 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatActions">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Actions</div></div>
         </div>
         <div class="gpipe-funnel" id="gpipeFunnel"></div>
+        <div id="gpipeTrendBadge" style="margin-bottom:10px"></div>
         <button onclick="syncGmailNow()" id="gmailSyncBtn" style="background:#f8f7ff;border:1.5px solid #ede9fe;color:#7c3aed;border-radius:10px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Sync Now</button>
       </div>
+      <div id="gpipeResumeGap" style="margin-bottom:8px"></div>
       <div id="gpipePatterns"></div>
       <div id="gmailAppsList" style="margin-bottom:12px"></div>
       <div id="gmailInsightsList" style="margin-bottom:16px"></div>
       <button onclick="disconnectGmail()" style="background:none;border:1.5px solid #fecaca;color:#e11d48;border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Disconnect Gmail & Delete Data</button>
+      <div class="gpipe-optout" id="gpipeOptOut"></div>
     </div>
   </div>
 </div>
@@ -9384,6 +9401,7 @@ window.openGmailPanel = function() {
 window.closeGmailPanel = function() {
   const p = document.getElementById('gmailIntPanel');
   if (p) p.style.transform = 'translateX(100%)';
+  _gpipeGapLoaded = false; // reset so resume-gap re-checks next time panel opens
 };
 
 async function _gmailLoadStatus() {
@@ -9417,10 +9435,14 @@ function _gmailRenderPanel(data) {
   setEl('gmailStatApps',  (data.applications||[]).length);
   setEl('gmailStatActions',(data.insights||[]).length);
   if(data.lastSynced){const ago=Math.round((Date.now()-new Date(data.lastSynced))/60000);setEl('gmailLastSynced',ago<2?'Just synced':`${ago}m ago`);}
+  _gpipeRenderMismatch(data.nameMismatch, data.gmailName, data.gmailEmail);
   _gpipeRenderUrgent(data.applications||[]);
   _gpipeRenderFunnel(data.stats);
+  _gpipeRenderTrend(data.stats, data.trend);
   _gpipeRenderPatterns(data.patterns||[]);
   _gpipeRenderApps(data.applications||[]);
+  _gpipeRenderResumeGap();
+  _gpipeRenderOptOut(data.digestOptOut);
   const iEl=document.getElementById('gmailInsightsList');
   if(iEl&&data.insights?.length){iEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px">KIE Actions</div><div style="display:flex;flex-direction:column;gap:8px">${data.insights.map(i=>`<div style="background:#fff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 14px;font-size:12px;color:#374151;line-height:1.5">${i}</div>`).join('')}</div>`;}
   else if(iEl){iEl.innerHTML='';}
@@ -9443,6 +9465,122 @@ function _gpipeRenderFunnel(stats) {
     { lbl:'Offer Rate',     pct: stats.offerRate||0 },
   ];
   el.innerHTML = segs.map(s=>`<div class="gpipe-funnel-seg"><div class="gpipe-funnel-pct">${s.pct}%</div><div class="gpipe-funnel-lbl">${s.lbl}</div><div class="gpipe-funnel-bar"><i style="width:${s.pct}%"></i></div></div>`).join('');
+}
+
+// Trend badge — compares current interview/offer rate against the oldest
+// snapshot on file. Stays hidden until there's at least 2 weeks of history.
+function _gpipeRenderTrend(stats, trend) {
+  const el = document.getElementById('gpipeTrendBadge');
+  if (!el) return;
+  if (!trend || trend.sinceWeeks < 2) { el.innerHTML=''; return; }
+  const fmt = n => (n>0?'+':'')+n+'%';
+  const ir  = trend.interviewRateChange;
+  const or_ = trend.offerRateChange;
+  const badges = [];
+  if (ir !== 0) {
+    const cls = ir>0?'gpipe-trend-up':ir<0?'gpipe-trend-dn':'gpipe-trend-flat';
+    badges.push(`<span class="gpipe-trend ${cls}">${ir>0?'↑':'↓'} Interview rate ${fmt(ir)} vs ${trend.sinceWeeks}wk ago</span>`);
+  }
+  if (or_ !== 0) {
+    const cls = or_>0?'gpipe-trend-up':or_<0?'gpipe-trend-dn':'gpipe-trend-flat';
+    badges.push(`<span class="gpipe-trend ${cls}">${or_>0?'↑':'↓'} Offer rate ${fmt(or_)} vs ${trend.sinceWeeks}wk ago</span>`);
+  }
+  el.innerHTML = badges.join('');
+}
+
+// Resume gap — one-time fetch per panel open, keyed on whether the user has
+// actually advanced past applying anywhere. Stays empty and silent if there
+// isn't enough data rather than inventing a false positive.
+let _gpipeGapLoaded = false;
+async function _gpipeRenderResumeGap() {
+  const el = document.getElementById('gpipeResumeGap');
+  if (!el || _gpipeGapLoaded) return;
+  _gpipeGapLoaded = true;
+  el.innerHTML='';
+  try {
+    const tok = await _gmailTok();
+    const r   = await fetch('/api/gmail/resume-gap', { headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json());
+    if (!r.success) return;
+    if (r.needsResumeChoice && r.resumes?.length) {
+      el.innerHTML = `<div class="gpipe-gap">📄 <b>Check your resume against your pipeline?</b><br>You have ${r.resumes.length} resumes — which one should KIE compare?<br><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${r.resumes.map(rv=>`<button class="gpipe-btn gpipe-btn-prep" style="flex:none" onclick="gpipeLoadResumeGap('${rv.id}')">${_gpipeEsc(rv.resumeName)}</button>`).join('')}</div></div>`;
+      return;
+    }
+    if (r.gap && r.gap.skill) {
+      const cos = (r.gap.companies||[]).map(c=>`<b>${_gpipeEsc(c)}</b>`).join(', ');
+      el.innerHTML = `<div class="gpipe-gap">💡 <b>Worth checking:</b> ${cos} ${r.gap.companies.length===1?'mentions':'mention'} "<b>${_gpipeEsc(r.gap.skill)}</b>" — that keyword doesn't appear in your "${_gpipeEsc(r.resumeUsed||'resume')}" right now. Want to add it? <span style="font-size:10.5px;color:#0369a1">(This is a pattern, not a verdict — verify it yourself first)</span></div>`;
+    }
+  } catch(e) { /* non-critical — gap card just stays empty */ }
+}
+
+window.gpipeLoadResumeGap = async function(resumeId) {
+  const el = document.getElementById('gpipeResumeGap');
+  if (!el) return;
+  el.innerHTML = '<div class="gpipe-gap" style="color:#94a3b8">Comparing…</div>';
+  try {
+    const tok = await _gmailTok();
+    const r   = await fetch(`/api/gmail/resume-gap?resumeId=${encodeURIComponent(resumeId)}`, { headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json());
+    if (!r.success || !r.gap?.skill) { el.innerHTML=''; return; }
+    const cos = (r.gap.companies||[]).map(c=>`<b>${_gpipeEsc(c)}</b>`).join(', ');
+    el.innerHTML = `<div class="gpipe-gap">💡 <b>Worth checking:</b> ${cos} ${r.gap.companies.length===1?'mentions':'mention'} "<b>${_gpipeEsc(r.gap.skill)}</b>" — that keyword doesn't appear in your "${_gpipeEsc(r.resumeUsed||'resume')}" right now. <span style="font-size:10.5px;color:#0369a1">(Pattern, not a verdict — verify first)</span></div>`;
+  } catch(e) { el.innerHTML=''; }
+};
+
+// Digest opt-out toggle — on/off is persisted server-side and read back from
+// the status endpoint each time the panel opens, so it always reflects reality.
+let _gpipeCurrentOptOut = false;
+function _gpipeRenderOptOut(optOut) {
+  _gpipeCurrentOptOut = !!optOut;
+  const el = document.getElementById('gpipeOptOut');
+  if (!el) return;
+  el.innerHTML = `Weekly digest emails are <b>${optOut?'off':'on'}</b> · <button onclick="gpipeToggleDigest()">${optOut?'Turn on':'Turn off'}</button>`;
+}
+
+window.gpipeToggleDigest = async function() {
+  const newVal = !_gpipeCurrentOptOut;
+  try {
+    const tok = await _gmailTok();
+    await fetch('/api/gmail/digest-optout', { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`}, body:JSON.stringify({ optOut:newVal }) });
+    _gpipeRenderOptOut(newVal);
+  } catch(e) { if(typeof window.toast==='function') window.toast('Could not update setting. Try again.','err'); }
+};
+
+// Contextual reply handler — fetches full email body server-side and drafts
+// a reply that references what was actually said. Same copy-only pattern as
+// follow-up drafts — Kievora never sends.
+window.gpipeDraftReply = async function(idx) {
+  const a = _gpipeApps[idx]; if (!a) return;
+  const box = document.getElementById('gpipeDraft_'+idx);
+  if (!box) return;
+  box.style.display='block';
+  box.innerHTML='<div style="font-size:11px;color:#94a3b8">Reading email and drafting reply…</div>';
+  try {
+    const tok = await _gmailTok();
+    const r   = await fetch('/api/gmail/draft-reply', { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`}, body:JSON.stringify({ company:a.company }) }).then(r=>r.json());
+    if (!r.success) throw new Error(r.error||'failed');
+    const { subject, body } = r.draft;
+    box.innerHTML = `<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">Subject</div>
+      <div style="font-size:12px;font-weight:700;color:#0f0e17;margin:3px 0 6px">${_gpipeEsc(subject)}</div>
+      <textarea rows="5" id="gpipeDraftBody_${idx}">${_gpipeEsc(body)}</textarea>
+      <button class="gpipe-draft-copy" onclick="gpipeCopyDraft(${idx})">Copy to clipboard</button>`;
+    box.dataset.subject = subject;
+    box.dataset.company = a.company;
+  } catch(e) {
+    const msg = e.message.includes('try syncing') ? 'No email found for this yet — try a Sync first.' : "Couldn't generate a reply. Try again.";
+    box.innerHTML = `<div style="font-size:11px;color:#e11d48">${msg}</div>`;
+  }
+};
+
+// Flags when the connected Gmail's name doesn't match the Kievora profile name
+// — catches the "wrong Google account in the picker" mistake. Fuzzy-matched
+// server-side, so this only fires on genuinely zero name overlap, not minor
+// nickname/middle-name differences.
+function _gpipeRenderMismatch(mismatch, gmailName, gmailEmail) {
+  const el = document.getElementById('gpipeMismatchWarning');
+  if (!el) return;
+  if (!mismatch) { el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display = 'block';
+  el.innerHTML = `⚠️ <b>This Gmail's name doesn't match your Kievora profile.</b><br>Connected as ${_gpipeEsc(gmailName||gmailEmail)} — wrong account?
+    <button onclick="disconnectGmail()" style="margin-top:8px;display:block;width:100%;background:#fff;border:1.5px solid #fecaca;color:#dc2626;border-radius:9px;padding:7px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">Disconnect & reconnect with the right account</button>`;
 }
 
 function _gpipeRenderUrgent(apps) {
@@ -9504,21 +9642,36 @@ function _gpipeRenderPatterns(patterns) {
 
 function _gpipeCard(a, idx) {
   const days = a.daysSince!=null ? a.daysSince : Math.floor((Date.now()-a.lastActivityTs)/86400000);
-  const canFollowUp = !!a.stale && a.status!=='rejection' && a.status!=='offer';
-  const canTailor   = a.status!=='rejection';
-  const gcalLink    = a.status==='interview_invite' ? _gpipeGCalLink(a) : null;
-  const interviewLabel = a.status==='interview_invite' && a.interviewAt ? _gpipeFmtInterviewTime(a.interviewAt) : null;
+  const state = a.nextState || 'active';
+  const showFollowUpBtn = state==='needs_followup' || state==='needs_followup_again';
+  const showTailorBtn   = ['application_confirmation','recruiter_outreach','assessment'].includes(a.status) && !a.resumeTailored;
+  const showPrepBtn     = a.status==='interview_invite';
+  const showReplyBtn    = a.status==='recruiter_outreach';
+  const gcalLink        = state==='prep_interview' && !a.calendarAdded ? _gpipeGCalLink(a) : null;
+  const interviewLabel  = a.status==='interview_invite' && a.interviewAt ? _gpipeFmtInterviewTime(a.interviewAt) : null;
+
+  let metaLine = interviewLabel ? `📅 ${interviewLabel}` : (days<=0?'today':days+'d ago');
+  if (state==='needs_followup')            metaLine += ' · <span style="color:#d97706;font-weight:700">needs a follow-up</span>';
+  else if (state==='needs_followup_again') metaLine += ' · <span style="color:#dc2626;font-weight:700">2nd follow-up overdue</span>';
+  else if (state==='waiting')              metaLine += ` · <span style="color:#0e7490;font-weight:600">${a.nextAction}</span>`;
+  else if (state==='prep_interview' && a.calendarAdded) metaLine += ' · <span style="color:#15803d;font-weight:600">✓ added to calendar</span>';
+  if (a.resumeTailored) metaLine += ' · <span style="color:#0e7490;font-weight:600">✓ resume tailored</span>';
+
+  const hasActions = showPrepBtn||showReplyBtn||showFollowUpBtn||showTailorBtn||gcalLink;
   return `<div class="gpipe-card">
     <div class="gpipe-card-top">
       <div class="gpipe-card-co">${_gpipeEsc(a.company)}${a.role?` · <span class="gpipe-card-role">${_gpipeEsc(a.role)}</span>`:''}</div>
     </div>
-    <div class="gpipe-card-meta">${interviewLabel?`📅 ${interviewLabel}`:(days<=0?'today':days+'d ago')}${a.stale?' · <span style="color:#d97706;font-weight:700">needs a follow-up</span>':''}</div>
-    ${(canFollowUp||canTailor||gcalLink) ? `<div class="gpipe-card-actions">
-      ${canFollowUp?`<button class="gpipe-btn gpipe-btn-draft" onclick="gpipeDraftFollowup(${idx})">Draft follow-up</button>`:''}
-      ${canTailor?`<button class="gpipe-btn gpipe-btn-resume" onclick="gpipeTailorResume(${idx})">Tailor resume</button>`:''}
-      ${gcalLink?`<button class="gpipe-btn gpipe-btn-cal" onclick="window.open('${gcalLink}','_blank')">📅 Add to Calendar</button>`:''}
+    <div class="gpipe-card-meta">${metaLine}</div>
+    ${hasActions ? `<div class="gpipe-card-actions">
+      ${showPrepBtn  ? `<button class="gpipe-btn gpipe-btn-prep"  onclick="gpipeInterviewPrep(${idx})">🎯 Prep for interview</button>` : ''}
+      ${showReplyBtn ? `<button class="gpipe-btn gpipe-btn-reply" onclick="gpipeDraftReply(${idx})">💬 Draft reply</button>` : ''}
+      ${showFollowUpBtn ? `<button class="gpipe-btn gpipe-btn-draft" onclick="gpipeDraftFollowup(${idx})">${state==='needs_followup_again'?'Send another follow-up':'Draft follow-up'}</button>` : ''}
+      ${showTailorBtn ? `<button class="gpipe-btn gpipe-btn-resume" onclick="gpipeTailorResume(${idx})">Tailor resume</button>` : ''}
+      ${gcalLink ? `<button class="gpipe-btn gpipe-btn-cal" data-gcal="${_gpipeEsc(gcalLink)}" onclick="gpipeAddToCalendar(${idx},this.dataset.gcal)">📅 Add to Calendar</button>` : ''}
     </div>` : ''}
     <div class="gpipe-draft-box" id="gpipeDraft_${idx}"></div>
+    <div class="gpipe-draft-box" id="gpipePrep_${idx}"></div>
   </div>`;
 }
 
@@ -9538,6 +9691,37 @@ function _gpipeRenderApps(apps) {
   aEl.innerHTML = html;
 }
 
+// Tells the backend what the user actually did, so the same nudge doesn't
+// keep firing once it's been handled. Fire-and-forget — UI already updated
+// optimistically by the caller before this resolves.
+async function _gpipeMarkAction(company, action) {
+  try {
+    const tok = await _gmailTok();
+    await fetch('/api/gmail/pipeline/mark-action', { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`}, body:JSON.stringify({company, action}) });
+  } catch(e) { /* non-critical — worst case the nudge reappears next load */ }
+}
+
+window.gpipeInterviewPrep = async function(idx) {
+  const a = _gpipeApps[idx]; if (!a) return;
+  const box = document.getElementById('gpipePrep_'+idx);
+  if (!box) return;
+  box.style.display = 'block';
+  box.innerHTML = '<div style="font-size:11px;color:#94a3b8">Pulling this together…</div>';
+  try {
+    const tok = await _gmailTok();
+    const r = await fetch('/api/gmail/interview-prep', { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`}, body:JSON.stringify({company:a.company, role:a.role}) }).then(r=>r.json());
+    if (!r.success) throw new Error(r.error||'failed');
+    const { questions=[], talkingPoints=[] } = r.prep||{};
+    box.innerHTML = `
+      <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Likely questions</div>
+      <ol style="margin:0 0 10px;padding-left:18px;font-size:12px;color:#374151;line-height:1.6">${questions.map(q=>`<li>${_gpipeEsc(q)}</li>`).join('')}</ol>
+      <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Bring these up</div>
+      <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.6">${talkingPoints.map(p=>`<li>${_gpipeEsc(p)}</li>`).join('')}</ul>`;
+  } catch(e) {
+    box.innerHTML = '<div style="font-size:11px;color:#e11d48">Couldn\'t generate prep. Try again.</div>';
+  }
+};
+
 window.gpipeDraftFollowup = async function(idx) {
   const a = _gpipeApps[idx]; if (!a) return;
   const box = document.getElementById('gpipeDraft_'+idx);
@@ -9546,7 +9730,8 @@ window.gpipeDraftFollowup = async function(idx) {
   box.innerHTML = '<div style="font-size:11px;color:#94a3b8">Writing a draft…</div>';
   try {
     const tok = await _gmailTok();
-    const r = await fetch('/api/gmail/draft-followup', { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`}, body:JSON.stringify({company:a.company, role:a.role}) }).then(r=>r.json());
+    const isRepeat = a.nextState==='needs_followup_again';
+    const r = await fetch('/api/gmail/draft-followup', { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`}, body:JSON.stringify({company:a.company, role:a.role, isRepeat}) }).then(r=>r.json());
     if (!r.success) throw new Error(r.error||'failed');
     const { subject, body } = r.draft;
     box.innerHTML = `<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">Subject</div>
@@ -9554,6 +9739,7 @@ window.gpipeDraftFollowup = async function(idx) {
       <textarea rows="5" id="gpipeDraftBody_${idx}">${_gpipeEsc(body)}</textarea>
       <button class="gpipe-draft-copy" onclick="gpipeCopyDraft(${idx})">Copy to clipboard</button>`;
     box.dataset.subject = subject;
+    box.dataset.company = a.company;
   } catch(e) {
     box.innerHTML = '<div style="font-size:11px;color:#e11d48">Couldn\'t generate a draft. Try again.</div>';
   }
@@ -9566,16 +9752,29 @@ window.gpipeCopyDraft = function(idx) {
   const text = `Subject: ${box.dataset.subject||''}\n\n${ta.value}`;
   (navigator.clipboard?.writeText(text) || Promise.reject()).then(()=>{
     const btn = box.querySelector('.gpipe-draft-copy');
-    if (btn) { const orig = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(()=>{btn.textContent=orig;}, 1800); }
+    if (btn) { const orig = btn.textContent; btn.textContent = 'Copied ✓ — marked as followed up'; setTimeout(()=>{btn.textContent=orig;}, 2200); }
+    // Mark it handled so this card moves to "waiting" instead of nagging again next load.
+    _gpipeMarkAction(box.dataset.company, 'followup');
+    const a = _gpipeApps[idx];
+    if (a) { a.followUpCount = (a.followUpCount||0) + 1; a.nextState = 'waiting'; a.nextAction = 'Waiting on reply (followed up today)'; }
   }).catch(()=>{});
 };
 
+window.gpipeAddToCalendar = function(idx, link) {
+  window.open(link, '_blank');
+  const a = _gpipeApps[idx]; if (!a) return;
+  a.calendarAdded = true;
+  _gpipeMarkAction(a.company, 'calendar');
+  _gpipeRenderApps(_gpipeApps); // re-render so the button becomes a checkmark immediately
+};
+
 // Stashes context for the resume builder — doesn't touch resume code directly.
-// If the template-picker flow should auto-prefill from this later, the key to
-// read is sessionStorage 'gpipeResumeTarget': {company, role}.
+// openBuilder() reads sessionStorage 'gpipeResumeTarget': {company, role} once,
+// then clears it.
 window.gpipeTailorResume = function(idx) {
   const a = _gpipeApps[idx]; if (!a) return;
   try { sessionStorage.setItem('gpipeResumeTarget', JSON.stringify({ company:a.company, role:a.role||'' })); } catch(e){}
+  _gpipeMarkAction(a.company, 'resume');
   closeGmailPanel();
   if (typeof showView === 'function') showView('tpick');
 };
@@ -9617,18 +9816,31 @@ window.disconnectGmail = async function() {
 };
 
 // ── Alert system ─────────────────────────────────────────────────
+// IMPORTANT: this reads `nextState` straight off each app — the exact same
+// field the Gmail panel's cards use (computed once, server-side, in
+// computeNextAction()). Before, this function recomputed its own staleness
+// logic independently, which meant chat could ask "write a follow-up" for
+// something the panel already knew had been followed up on. Now both
+// surfaces can only ever agree, because they're reading the same fact.
 function _buildAlert(apps) {
-  const offers    = apps.filter(a=>a.status==='offer');
-  const interviews= apps.filter(a=>a.status==='interview_invite');
-  const assessments=apps.filter(a=>a.status==='assessment');
-  const recPending= apps.filter(a=>{ const d=(Date.now()-new Date(a.lastActivityTs||0))/86400000; return a.status==='recruiter_outreach'&&d>5; });
-  const ghosted   = apps.filter(a=>{ const d=(Date.now()-new Date(a.lastActivityTs||0))/86400000; return a.status==='application_confirmation'&&d>14; });
-  if(offers.length){const co=offers[0].company;return{label:'🎉 Offer received',msg:`${co} sent you an offer. Let's negotiate this right.`,chip:`I have an offer from ${co}. Help me evaluate and negotiate.`};}
-  if(interviews.length){const co=interviews[0].company,role=interviews[0].role?` (${interviews[0].role})`:'';return{label:'⚡ Interview stage',msg:`You're at interview stage with ${co}${role}. Ready to prep?`,chip:`I have an interview with ${co}${role}. Help me prepare.`};}
-  if(assessments.length){const co=assessments[0].company;return{label:'📝 Assessment pending',msg:`${co} sent an assessment. Complete it promptly.`,chip:`${co} sent me an assessment. Best strategy to approach it?`};}
-  if(recPending.length){const co=recPending[0].company;return{label:'📩 Recruiter waiting',msg:`Recruiter from ${co} reached out. Draft a reply?`,chip:`A recruiter from ${co} contacted me. Write a strong reply.`};}
-  if(ghosted.length){const co=ghosted[0].company,days=Math.floor((Date.now()-new Date(ghosted[0].lastActivityTs||0))/86400000);return{label:'👻 No response yet',msg:`${co} hasn't responded in ${days} days.`,chip:`I applied to ${co} ${days} days ago, no response. Write a follow-up.`};}
-  if(apps.length){return{label:'📊 Job search update',msg:`${apps.length} companies tracked. Ask me how your search is going.`,chip:`Give me a full breakdown of my current job search.`};}
+  const offer = apps.find(a=>a.status==='offer');
+  if (offer) { const co=offer.company; return {label:'🎉 Offer received', msg:`${co} sent you an offer. Let's negotiate this right.`, chip:`I have an offer from ${co}. Help me evaluate and negotiate.`}; }
+
+  const interview = apps.find(a=>a.status==='interview_invite');
+  if (interview) { const co=interview.company, role=interview.role?` (${interview.role})`:''; return {label:'⚡ Interview stage', msg:`You're at interview stage with ${co}${role}. Ready to prep?`, chip:`I have an interview with ${co}${role}. Help me prepare.`}; }
+
+  const assessment = apps.find(a=>a.status==='assessment' && a.nextState!=='waiting');
+  if (assessment) { const co=assessment.company; return {label:'📝 Assessment pending', msg:`${co} sent an assessment. Complete it promptly.`, chip:`${co} sent me an assessment. Best strategy to approach it?`}; }
+
+  const needsFollowUp = apps.find(a=>a.nextState==='needs_followup' || a.nextState==='needs_followup_again');
+  if (needsFollowUp) {
+    const co = needsFollowUp.company, isRepeat = needsFollowUp.nextState==='needs_followup_again', days = needsFollowUp.daysSince;
+    return isRepeat
+      ? { label:'👻 Still no response', msg:`${co} still hasn't responded since your last follow-up. Worth a second nudge.`, chip:`I already followed up with ${co} once but still no response. Help me write a second, brief follow-up.` }
+      : { label:'📩 Needs a follow-up', msg:`${co} hasn't responded in ${days}d.`, chip:`I applied to ${co} ${days} days ago, no response. Write a follow-up.` };
+  }
+
+  if (apps.length) return { label:'📊 Job search update', msg:`${apps.length} companies tracked. Ask me how your search is going.`, chip:`Give me a full breakdown of my current job search.` };
   return null;
 }
 
@@ -9703,8 +9915,21 @@ window.maybeShowGmailOnboarding = function() {
 
 // ── OAuth callback handler ────────────────────────────────────────
 (function(){
-  const p=new URLSearchParams(window.location.search),st=p.get('gmail');
-  if(st==='connected'){history.replaceState({},'','/dashboard');localStorage.setItem('kievora_gmail_onboard_seen','1');setTimeout(()=>{openSidebarSettings();setTimeout(openGmailPanel,300);},800);}
+  const p=new URLSearchParams(window.location.search),st=p.get('gmail'),mismatch=p.get('mismatch')==='1';
+  if(st==='connected'){
+    history.replaceState({},'','/dashboard');localStorage.setItem('kievora_gmail_onboard_seen','1');
+    setTimeout(()=>{
+      openSidebarSettings();
+      setTimeout(()=>{
+        openGmailPanel();
+        setTimeout(()=>{
+          if (typeof window.toast === 'function') {
+            window.toast(mismatch ? "Connected — but this Gmail's name doesn't match your profile. Check below." : 'Gmail connected — KIE will track job-search emails from this inbox.', mismatch ? 'err' : 'ok');
+          }
+        }, 400);
+      },300);
+    },800);
+  }
   else if(st==='error'||st==='denied'){history.replaceState({},'','/dashboard');}
 })();
 
@@ -10813,62 +11038,72 @@ setInterval(async()=>{
     <div class="ksb-set-title">Settings</div>
   </div>
   <div class="ksb-set-body">
+
     <!-- Profile card -->
     <div class="ksb-prof-card" id="ksbProfCard">
       <div class="ksb-prof-av" id="ksbProfAv"></div>
-      <div class="ksb-prof-info">
+      <div class="ksb-prof-info" style="flex:1;min-width:0">
         <div class="ksb-prof-name" id="ksbProfName">—</div>
         <div class="ksb-prof-email" id="ksbProfEmail">—</div>
       </div>
+      <div style="width:28px;height:28px;background:rgba(167,139,250,.12);border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
     </div>
 
-    <!-- Integrations section -->
+    <!-- Integrations -->
     <div class="ksb-set-section">
       <span class="ksb-set-section-label">Integrations</span>
       <div class="ksb-set-card">
         <button class="ksb-set-row" onclick="openGmailPanel()">
-          <div class="ksb-set-row-ico" style="background:rgba(234,67,53,.12)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" fill="#ea4335" opacity=".2"/><path d="M20 4H4L12 13l8-9z" fill="#ea4335"/><path d="M2 6l10 7 10-7" stroke="#ea4335" stroke-width="1.5" fill="none"/></svg>
+          <div class="ksb-set-row-ico" style="background:rgba(234,67,53,.15)">
+            <img src="gmail.jpg" alt="Gmail" style="width:18px;height:18px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.3&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"/>
           </div>
           <div class="ksb-set-row-txt">
             <div class="ksb-set-row-title">Gmail Intelligence</div>
             <div class="ksb-set-row-sub" id="gmailSettingsSub">Connect to track your job search</div>
           </div>
-          <div id="gmailSettingsBadge" style="display:none;background:#22c55e;color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px">ON</div>
+          <div id="gmailSettingsBadge" style="display:none;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3);font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">LIVE</div>
           <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Account section -->
+    <!-- Account -->
     <div class="ksb-set-section">
       <span class="ksb-set-section-label">Account</span>
       <div class="ksb-set-card">
         <button class="ksb-set-row danger" onclick="confirmClearAllHistory()">
-          <div class="ksb-set-row-ico" style="background:rgba(225,29,72,.15)">🗑️</div>
+          <div class="ksb-set-row-ico" style="background:rgba(239,68,68,.1)">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#f87171" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a1 1 0 011-1h2a1 1 0 011 1v2"/></svg>
+          </div>
           <div class="ksb-set-row-txt">
-            <div class="ksb-set-row-title">Clear All Chat History</div>
-            <div class="ksb-set-row-sub">Delete all conversations</div>
+            <div class="ksb-set-row-title">Clear Chat History</div>
+            <div class="ksb-set-row-sub">Delete all conversations permanently</div>
           </div>
           <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Resources section -->
+    <!-- Resources -->
     <div class="ksb-set-section">
       <span class="ksb-set-section-label">Resources</span>
       <div class="ksb-set-card">
         <a href="/articles" class="ksb-set-row" style="text-decoration:none">
-          <div class="ksb-set-row-ico" style="background:rgba(37,99,235,.15)">📰</div>
+          <div class="ksb-set-row-ico" style="background:rgba(37,99,235,.12)">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z"/><path stroke-linecap="round" d="M13 2v6h6M9 13h6M9 17h4"/></svg>
+          </div>
           <div class="ksb-set-row-txt">
             <div class="ksb-set-row-title">Articles & Guides</div>
-            <div class="ksb-set-row-sub">Career tips & insights</div>
+            <div class="ksb-set-row-sub">Career tips, playbooks & insights</div>
           </div>
           <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </a>
         <a href="/support" class="ksb-set-row" style="text-decoration:none">
-          <div class="ksb-set-row-ico" style="background:rgba(5,150,105,.15)">🆘</div>
+          <div class="ksb-set-row-ico" style="background:rgba(5,150,105,.12)">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+          </div>
           <div class="ksb-set-row-txt">
             <div class="ksb-set-row-title">Help Center</div>
             <div class="ksb-set-row-sub">FAQs & support</div>
@@ -10878,12 +11113,14 @@ setInterval(async()=>{
       </div>
     </div>
 
-    <!-- Legal section -->
+    <!-- Legal -->
     <div class="ksb-set-section">
       <span class="ksb-set-section-label">Legal</span>
       <div class="ksb-set-card">
         <a href="/privacy" class="ksb-set-row" style="text-decoration:none">
-          <div class="ksb-set-row-ico" style="background:rgba(124,58,237,.15)">🔒</div>
+          <div class="ksb-set-row-ico" style="background:rgba(124,58,237,.12)">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
           <div class="ksb-set-row-txt">
             <div class="ksb-set-row-title">Privacy Policy</div>
             <div class="ksb-set-row-sub">How we protect your data</div>
@@ -10891,7 +11128,9 @@ setInterval(async()=>{
           <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </a>
         <a href="/terms" class="ksb-set-row" style="text-decoration:none">
-          <div class="ksb-set-row-ico" style="background:rgba(217,119,6,.15)">📋</div>
+          <div class="ksb-set-row-ico" style="background:rgba(245,158,11,.1)">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
           <div class="ksb-set-row-txt">
             <div class="ksb-set-row-title">Terms of Service</div>
             <div class="ksb-set-row-sub">Usage & agreements</div>
@@ -10901,8 +11140,8 @@ setInterval(async()=>{
       </div>
     </div>
 
-    <div style="text-align:center;padding:8px 0 4px">
-      <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,.5);letter-spacing:.5px">KIE · AI Career Coach by Kievora</div>
+    <div style="text-align:center;padding:12px 0 4px">
+      <div style="font-size:10px;font-weight:700;color:rgba(167,139,250,.3);letter-spacing:.8px">KIE · AI Career Coach by Kievora</div>
     </div>
   </div>
 </div>
