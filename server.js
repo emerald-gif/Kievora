@@ -708,6 +708,45 @@ async function sendWelcomeEmail(email, name) {
 
 // Welcome emails are now sent directly via POST /api/register-user (server-side, reliable)
 
+// Sunday digest — only sent if there's actually something to report, and only
+// to users who haven't opted out (digestOptOut field, default false/on, since
+// connecting Gmail is itself an opt-in signal they want to be kept posted).
+async function sendWeeklyDigest(email, name, apps) {
+  const brevoKey = process.env.BREVO_API_KEY;
+  if (!brevoKey || !email || !apps || !apps.length) return;
+  try {
+    const newThisWeek = apps.filter(a => (Date.now()-a.firstSeenTs) < 7*86400000);
+    const interviews  = apps.filter(a=>a.status==='interview_invite');
+    const offers      = apps.filter(a=>a.status==='offer');
+    const goingStale  = apps.filter(a=>a.nextState==='needs_followup'||a.nextState==='needs_followup_again');
+    // Nothing new, nothing urgent, nothing stale — skip. A digest with literally
+    // zero news is exactly the kind of unwanted noise that makes people opt out.
+    if (!newThisWeek.length && !interviews.length && !offers.length && !goingStale.length) return;
+
+    const html = `<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:480px;margin:0 auto;color:#0f0e17;line-height:1.6">
+      <h2 style="color:#7c3aed;margin-bottom:4px">Your week on Kievora</h2>
+      <p style="color:#475569">Hey ${name||'there'}, here's what happened in your job search this week:</p>
+      <ul style="padding-left:18px;color:#0f0e17">
+        <li><b>${newThisWeek.length}</b> new application${newThisWeek.length===1?'':'s'} tracked</li>
+        <li><b>${interviews.length}</b> interview${interviews.length===1?'':'s'} active</li>
+        <li><b>${offers.length}</b> offer${offers.length===1?'':'s'} pending response</li>
+        <li><b>${goingStale.length}</b> going stale — could use a follow-up</li>
+      </ul>
+      <a href="https://kievora.onrender.com/dashboard" style="background:#7c3aed;color:#fff;padding:11px 20px;border-radius:9px;text-decoration:none;display:inline-block;margin-top:10px;font-weight:600">Open Kievora</a>
+      <p style="color:#94a3b8;font-size:12px;margin-top:20px">You're getting this because Gmail Intelligence is connected — manage it anytime from Settings.</p>
+    </div>`;
+    const subject = offers.length ? `🎉 You have an offer — plus your week on Kievora`
+      : interviews.length ? `⚡ ${interviews.length} interview${interviews.length===1?'':'s'} active — your week on Kievora`
+      : `Your job search this week: ${newThisWeek.length} new, ${goingStale.length} need follow-up`;
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method:'POST', headers:{'Content-Type':'application/json','api-key':brevoKey},
+      body: JSON.stringify({ sender:{email:'support@kievora.com',name:'Kievora'}, to:[{email,name:name||email}], subject, htmlContent:html })
+    });
+    if (res.ok) db.collection('emailLogs').add({ email, type:'gmail_weekly_digest', success:true, sentAt:admin.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+    else console.error('[digest] Brevo failed:', res.status, await res.text());
+  } catch(e) { console.error('[digest]', e.message); }
+}
+
 // Test Firestore connection on startup
 db.collection(RESUMES).limit(1).get()
   .then(() => console.log('✅ Firestore connection OK'))
@@ -811,10 +850,10 @@ async function syncUserGmail(uid, tokens) {
 function buildApplicationList(emails) {
   const apps = [];
   for (const email of emails.sort((a,b)=>a.ts-b.ts)) {
-    const { company, role, emailType, ts, subject, interviewAt, interviewDurationMin } = email;
+    const { company, role, emailType, ts, subject, interviewAt, interviewDurationMin, threadId } = email;
     if (!company) continue;
     const existing = apps.find(a=>isSameApplication(a,{company,role}));
-    const event    = { date: ts.toISOString().split('T')[0], type:emailType, subject };
+    const event    = { date: ts.toISOString().split('T')[0], type:emailType, subject, threadId: threadId||null };
     if (existing) {
       if ((STATUS_RANK[emailType]||0) > (STATUS_RANK[existing.status]||0)) existing.status = emailType;
       existing.lastActivityTs = Math.max(existing.lastActivityTs, ts.getTime());
@@ -844,18 +883,59 @@ function generateInsights(apps) {
   return ins.slice(0,6);
 }
 
-// ─── Gmail Pipeline Intelligence (stats + staleness) ───────────────────────────
+// ─── Gmail Pipeline Intelligence (stats + a real state machine) ───────────────
 // Additive only — reads the same `apps` shape buildApplicationList() already
 // produces, doesn't change Firestore schema or touch any resume/cover-letter code.
-const GPIPE_STALE_DAYS = 14;
-const GPIPE_STALL_STATUSES = ['application_confirmation','recruiter_outreach','assessment'];
+const GPIPE_STALE_DAYS      = 14; // no movement for this long → first nudge fires
+const GPIPE_FOLLOWUP_GRACE  = 7;  // after sending a follow-up, give it this long before nagging again
+const GPIPE_STALL_STATUSES  = ['application_confirmation','recruiter_outreach','assessment'];
 
-function attachStaleFlags(apps) {
+// Figures out what's actually next for one application, given its current
+// email-derived status AND whatever the user has already done about it
+// (tracked separately in Firestore — see mark-action route below). This is
+// the piece that stops the same nudge firing forever after it's been handled.
+function computeNextAction(a, action) {
+  const followUpCount  = action?.followUpCount  || 0;
+  const calendarAdded  = !!action?.calendarAdded;
+  const resumeTailored = !!action?.resumeTailored;
+  const lastFollowUpAt = action?.lastFollowUpAt?.toDate ? action.lastFollowUpAt.toDate()
+                        : (action?.lastFollowUpAt ? new Date(action.lastFollowUpAt) : null);
+  const base = { followUpCount, calendarAdded, resumeTailored };
+
+  if (a.status === 'offer')            return { ...base, state:'respond_offer',  label:'Respond to offer' };
+  if (a.status === 'interview_invite') return { ...base, state:'prep_interview', label: calendarAdded ? 'Added to calendar' : 'Prep for interview' };
+  if (a.status === 'rejection')        return { ...base, state:'closed',         label:null };
+  if (!GPIPE_STALL_STATUSES.includes(a.status)) return { ...base, state:'active', label:null };
+
+  // application_confirmation / recruiter_outreach / assessment — the group that can go stale
+  if (a.daysSince <= GPIPE_STALE_DAYS && followUpCount === 0)
+    return { ...base, state:'fresh', label:null };
+
+  if (followUpCount === 0)
+    return { ...base, state:'needs_followup', label:'Send a follow-up' };
+
+  const daysSinceFollowUp = lastFollowUpAt ? Math.floor((Date.now()-lastFollowUpAt.getTime())/86400000) : null;
+  if (daysSinceFollowUp !== null && daysSinceFollowUp < GPIPE_FOLLOWUP_GRACE)
+    return { ...base, state:'waiting', label:`Waiting on reply (followed up ${daysSinceFollowUp<=0?'today':daysSinceFollowUp+'d ago'})` };
+
+  return { ...base, state:'needs_followup_again', label:'Send another follow-up' };
+}
+
+async function attachStaleFlags(apps, uid) {
   const now = Date.now();
+  let actionMap = {};
+  try {
+    const snap = await db.collection('users').doc(uid).collection('gmailBrain').doc('actions').collection('apps').get();
+    snap.forEach(d => { actionMap[d.id] = d.data(); });
+  } catch(e) { /* no actions yet — fine, treat as fresh */ }
   return apps.map(a => {
     const daysSince = Math.floor((now - a.lastActivityTs) / 86400000);
-    const stale = GPIPE_STALL_STATUSES.includes(a.status) && daysSince > GPIPE_STALE_DAYS;
-    return { ...a, daysSince, stale };
+    const appId  = normaliseStr(a.company);
+    const next   = computeNextAction({ ...a, daysSince }, actionMap[appId]);
+    return { ...a, daysSince, appId,
+      stale: next.state==='needs_followup' || next.state==='needs_followup_again',
+      nextState: next.state, nextAction: next.label,
+      followUpCount: next.followUpCount, calendarAdded: next.calendarAdded, resumeTailored: next.resumeTailored };
   });
 }
 
@@ -873,6 +953,41 @@ function computePipelineStats(apps) {
     interviewRate: pct(interviews, total),
     offerRate:     pct(offers, total),
   };
+}
+
+// ─── Trend tracking ─────────────────────────────────────────────────────────
+// Stats are a live snapshot — "right now". To say anything like "your interview
+// rate is up this month" needs actual history, so every sync writes one row per
+// ISO week (overwritten if synced again same week, never duplicated).
+function getWeekKey(d = new Date()) {
+  const date = new Date(d.getTime());
+  date.setUTCHours(0,0,0,0);
+  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay()+6)%7)); // back up to Monday (UTC)
+  return date.toISOString().split('T')[0];
+}
+
+async function recordPipelineTrend(uid, stats) {
+  try {
+    await db.collection('users').doc(uid).collection('gmailBrain').doc('trends').collection('weeks').doc(getWeekKey())
+      .set({ interviewRate: stats.interviewRate, offerRate: stats.offerRate, total: stats.total, recordedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
+  } catch(e) { /* non-critical — trend just won't have this week's point */ }
+}
+
+// Compares current stats against the OLDEST snapshot on file (capped at the
+// last 12 weeks) — returns null until there's genuinely at least 2 weeks of
+// history, rather than reporting a misleading "trend" off a single data point.
+async function getTrendComparison(uid, currentStats) {
+  try {
+    const snap = await db.collection('users').doc(uid).collection('gmailBrain').doc('trends').collection('weeks').orderBy('recordedAt','asc').limitToLast(12).get();
+    const weeks = snap.docs.map(d=>d.data());
+    if (weeks.length < 2) return null;
+    const oldest = weeks[0];
+    return {
+      interviewRateChange: currentStats.interviewRate - (oldest.interviewRate||0),
+      offerRateChange:     currentStats.offerRate - (oldest.offerRate||0),
+      sinceWeeks: weeks.length,
+    };
+  } catch(e) { return null; }
 }
 
 // Cross-company pattern detection — looks across the user's whole history for
@@ -899,7 +1014,7 @@ function detectGhostingPattern(apps) {
   return patterns;
 }
 
-function buildKieBrainBlock(apps, insights, emailsScanned) {
+function buildKieBrainBlock(apps, insights, emailsScanned, patterns) {
   if (!apps.length) return `GMAIL CAREER INTELLIGENCE: Gmail connected (${emailsScanned} emails scanned). No career emails found yet — will update as they arrive.`;
   const active     = apps.filter(a=>a.status!=='rejection');
   const rejected   = apps.filter(a=>a.status==='rejection');
@@ -907,15 +1022,24 @@ function buildKieBrainBlock(apps, insights, emailsScanned) {
   const interviews = apps.filter(a=>a.status==='interview_invite');
   let b = `GMAIL CAREER INTELLIGENCE (${emailsScanned} emails scanned):\n`;
   b += `Pipeline: ${apps.length} companies | Active: ${active.length} | Interviews: ${interviews.length} | Offers: ${offers.length} | Rejected: ${rejected.length}\n\n`;
-  if (offers.length)     b += `🔴 URGENT — OFFER: ${offers[0].company}${offers[0].role?' ('+offers[0].role+')':''} — user must respond\n`;
-  if (interviews.length) b += `⚡ ACTIVE — INTERVIEW: ${interviews[0].company}${interviews[0].role?' ('+interviews[0].role+')':''} — prep needed\n`;
-  b += `\nAPPLICATIONS:\n`;
+  if (offers.length) b += `🔴 OFFER — ${offers[0].company}${offers[0].role?' ('+offers[0].role+')':''} — awaiting response\n`;
+  if (interviews.length) {
+    const i = interviews[0];
+    const when = i.interviewAt ? ` scheduled ${new Date(i.interviewAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}` : '';
+    b += `⚡ INTERVIEW — ${i.company}${i.role?' ('+i.role+')':''}${when} — prep needed\n`;
+  }
+  b += `\nAPPLICATIONS (current state — use this, don't suggest actions already done):\n`;
   for (const app of apps.slice(0,8)) {
-    const days = Math.floor((Date.now()-app.lastActivityTs)/86400000);
-    b += `• ${app.company}${app.role?' — '+app.role:''}: ${app.status.replace(/_/g,' ')} (${days}d ago)\n`;
+    let line = `• ${app.company}${app.role?' — '+app.role:''}: ${app.status.replace(/_/g,' ')} (${app.daysSince}d ago)`;
+    if (app.nextAction)            line += ` — NEXT: ${app.nextAction}`;
+    if (app.followUpCount)         line += ` [followed up ${app.followUpCount}x already]`;
+    if (app.calendarAdded)         line += ` [already on calendar]`;
+    if (app.resumeTailored)        line += ` [resume already tailored for this]`;
+    b += line + '\n';
   }
   if (insights.length) b += `\nACTIONS:\n${insights.map(i=>'• '+i).join('\n')}`;
-  b += `\n\nCOACHING RULES FOR THIS DATA:\n- Never say "I can see your Gmail" — just know it naturally\n- Reference companies by name like a coach who has been tracking this\n- If offer or interview detected — surface it even in unrelated conversations\n- If user seems stressed — acknowledge feelings before advice\n- Weave Gmail data and conversation context together; never treat them as separate`;
+  if (patterns?.length) b += `\nPATTERNS NOTICED ACROSS THEIR HISTORY:\n${patterns.map(p=>`• Tends to go quiet ${p.label} (${p.count} of ${p.total} that reached this stage, ${p.rate}%)`).join('\n')}`;
+  b += `\n\nCOACHING RULES FOR THIS DATA:\n- Never say "I can see your Gmail" — just know it naturally\n- Reference companies by name like a coach who has been tracking this\n- Check follow-up/calendar/resume state before suggesting an action — if they already followed up or already added it to calendar, don't suggest it again\n- If user seems stressed — acknowledge feelings before advice\n- Weave Gmail data and conversation context together; never treat them as separate\n- Don't repeat the same unprompted nudge every turn once it's been said — see INTELLIGENCE MERGE rules for exactly when to surface vs stay quiet`;
   return b;
 }
 
@@ -946,12 +1070,15 @@ async function syncGmailForUser(uid) {
   const rawEmails   = await syncUserGmail(uid, tokens);
   const apps        = buildApplicationList(rawEmails);
   const insights    = generateInsights(apps);
-  const kieBlock    = buildKieBrainBlock(apps, insights, rawEmails.length);
+  const enriched    = await attachStaleFlags(apps, uid);
+  const patterns    = detectGhostingPattern(enriched);
+  const kieBlock    = buildKieBrainBlock(enriched, insights, rawEmails.length, patterns);
+  await recordPipelineTrend(uid, computePipelineStats(enriched));
   await db.collection('users').doc(uid).collection('gmailBrain').doc('summary').set(
     { applications:apps, insights, kieBlock, emailsScanned:rawEmails.length, lastSynced:admin.firestore.FieldValue.serverTimestamp() }
   );
   console.log(`[gmail] synced uid:${uid} — ${rawEmails.length} emails → ${apps.length} apps`);
-  return { apps, insights, emailsScanned:rawEmails.length };
+  return { apps, enriched, insights, emailsScanned:rawEmails.length, stats: computePipelineStats(enriched) };
 }
 
 // ─── Conversation Intelligence ────────────────────────────────────────────────
@@ -983,12 +1110,19 @@ async function getConvSummary(uid,convId) {
   catch { return null; }
 }
 
-// Background Gmail auto-sync every 2 hours
+// Background Gmail auto-sync every 2 hours (also fires the Sunday digest)
 setInterval(async()=>{
   try {
     const snap = await db.collection('users').where('gmailConnected','==',true).limit(50).get();
+    const isDigestDay = new Date().getUTCDay() === 0; // Sunday, UTC
+    const weekKey = getWeekKey();
     for (const doc of snap.docs) {
-      await syncGmailForUser(doc.id).catch(e=>console.error(`[gmail-cron] uid:${doc.id}:`,e.message));
+      const u = doc.data();
+      const result = await syncGmailForUser(doc.id).catch(e=>{ console.error(`[gmail-cron] uid:${doc.id}:`,e.message); return null; });
+      if (isDigestDay && result && !u.gmailDigestOptOut && u.lastDigestWeek !== weekKey) {
+        await sendWeeklyDigest(u.email, u.name||u.displayName, result.enriched).catch(e=>console.error('[digest]',e.message));
+        await db.collection('users').doc(doc.id).set({ lastDigestWeek: weekKey }, { merge:true }).catch(()=>{});
+      }
       await new Promise(r=>setTimeout(r,2000));
     }
   } catch(e) { console.error('[gmail-cron]:',e.message); }
@@ -1095,10 +1229,21 @@ async function authenticate(req, res, next) {
 app.post('/api/gmail/connect', authenticate, async (req,res) => {
   if (!GMAIL_CLIENT_ID||!GMAIL_CLIENT_SECRET) return res.status(503).json({ error:'Gmail not configured' });
   const url = getOAuthClient().generateAuthUrl({ access_type:'offline', prompt:'consent',
-    scope:['https://www.googleapis.com/auth/gmail.modify','https://www.googleapis.com/auth/userinfo.email'],
+    scope:['https://www.googleapis.com/auth/gmail.modify','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
     state: req.user.uid });
   res.json({ url });
 });
+
+// Fuzzy on purpose — different middle names, nicknames, or one account having a
+// fuller name than the other shouldn't trigger a false "wrong account" warning.
+// Only flags a mismatch when there's truly zero meaningful word overlap.
+function namesLikelyMatch(nameA, nameB) {
+  if (!nameA || !nameB) return true; // can't compare — don't warn on insufficient data
+  const norm = s => s.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w.length>=3);
+  const wordsA = norm(nameA), wordsB = norm(nameB);
+  if (!wordsA.length || !wordsB.length) return true;
+  return wordsA.some(w => wordsB.includes(w));
+}
 
 app.get('/api/gmail/callback', async (req,res) => {
   const { code, state:uid, error } = req.query;
@@ -1110,11 +1255,15 @@ app.get('/api/gmail/callback', async (req,res) => {
     const oaApi          = google.oauth2({ version:'v2', auth:oauth2 });
     const { data }       = await oaApi.userinfo.get();
     const gmailEmail     = data.email||'';
+    const gmailName      = data.name||'';
+    const uSnap          = await db.collection('users').doc(uid).get();
+    const kievoraName    = uSnap.data()?.name || uSnap.data()?.displayName || '';
+    const nameMismatch   = !namesLikelyMatch(gmailName, kievoraName);
     await db.collection('users').doc(uid).collection('gmailBrain').doc('tokens')
-      .set({ tokens, gmailEmail, connectedAt:admin.firestore.FieldValue.serverTimestamp(), updatedAt:admin.firestore.FieldValue.serverTimestamp() });
-    await db.collection('users').doc(uid).set({ gmailConnected:true, gmailEmail, gmailConnectedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
+      .set({ tokens, gmailEmail, gmailName, connectedAt:admin.firestore.FieldValue.serverTimestamp(), updatedAt:admin.firestore.FieldValue.serverTimestamp() });
+    await db.collection('users').doc(uid).set({ gmailConnected:true, gmailEmail, gmailName, gmailNameMismatch:nameMismatch, gmailConnectedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
     syncGmailForUser(uid).catch(e=>console.error('[gmail] initial sync:',e.message));
-    res.redirect('/dashboard?gmail=connected');
+    res.redirect(`/dashboard?gmail=connected${nameMismatch?'&mismatch=1':''}`);
   } catch(e) { console.error('[gmail] callback:',e.message); res.redirect('/dashboard?gmail=error'); }
 });
 
@@ -1130,12 +1279,16 @@ app.get('/api/gmail/status', authenticate, async (req,res) => {
       db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get()
     ]);
     if (!uSnap.data()?.gmailConnected) return res.json({ connected:false });
-    const sum  = sSnap.exists ? sSnap.data() : {};
-    const apps = attachStaleFlags(sum.applications || []);
+    const sum   = sSnap.exists ? sSnap.data() : {};
+    const apps  = await attachStaleFlags(sum.applications || [], req.user.uid);
+    const stats = computePipelineStats(apps);
     res.json({ connected:true, gmailEmail:uSnap.data().gmailEmail||'', emailsScanned:sum.emailsScanned||0,
       applications: apps.slice(0,40), insights: sum.insights||[],
-      stats: computePipelineStats(apps),
+      stats,
+      trend: await getTrendComparison(req.user.uid, stats),
       patterns: detectGhostingPattern(apps),
+      nameMismatch: !!uSnap.data()?.gmailNameMismatch, gmailName: uSnap.data()?.gmailName||'',
+      digestOptOut: !!uSnap.data()?.gmailDigestOptOut,
       lastSynced:sum.lastSynced?.toDate?.()?.toISOString()||null });
   } catch(e) { res.status(500).json({ error:e.message }); }
 });
@@ -1145,14 +1298,17 @@ app.get('/api/gmail/status', authenticate, async (req,res) => {
 // already shown on the Gmail panel).
 app.post('/api/gmail/draft-followup', authenticate, async (req,res) => {
   try {
-    const { company, role } = req.body || {};
+    const { company, role, isRepeat } = req.body || {};
     if (!company) return res.status(400).json({ error:'company required' });
     const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
     if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+    const repeatNote = isRepeat
+      ? ' This is a SECOND follow-up — they already sent one follow-up that went unanswered. Acknowledge that lightly without sounding annoyed, and keep it even shorter than a first follow-up would be.'
+      : '';
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
       body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:260, temperature:0.6,
-        messages:[{ role:'user', content:`Write a short, warm, professional follow-up email a job applicant can send to check on the status of their application. Company: ${company}. Role: ${role||'the role they applied for'}. Keep it under 120 words, confident but not pushy, no generic filler, no placeholder brackets. Return ONLY valid JSON: {"subject":"...","body":"..."}` }]
+        messages:[{ role:'user', content:`Write a short, warm, professional follow-up email a job applicant can send to check on the status of their application. Company: ${company}. Role: ${role||'the role they applied for'}.${repeatNote} Keep it under 120 words, confident but not pushy, no generic filler, no placeholder brackets. Return ONLY valid JSON: {"subject":"...","body":"..."}` }]
       })
     });
     const d = await r.json();
@@ -1162,6 +1318,179 @@ app.post('/api/gmail/draft-followup', authenticate, async (req,res) => {
   } catch(e) { res.status(500).json({ error:e.message }); }
 });
 
+// Records what the user actually did about a nudge, so the same suggestion
+// doesn't fire forever. Keyed by a normalised company id, one doc per company,
+// merged back into the pipeline on every /api/gmail/status read.
+app.post('/api/gmail/digest-optout', authenticate, async (req,res) => {
+  try {
+    const optOut = !!(req.body || {}).optOut;
+    await db.collection('users').doc(req.user.uid).set({ gmailDigestOptOut: optOut }, { merge:true });
+    res.json({ success:true, optOut });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+app.post('/api/gmail/pipeline/mark-action', authenticate, async (req,res) => {
+  try {
+    const { company, action } = req.body || {};
+    if (!company || !['followup','calendar','resume'].includes(action))
+      return res.status(400).json({ error:'company and a valid action are required' });
+    const appId = normaliseStr(company);
+    const ref = db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('actions').collection('apps').doc(appId);
+    const updates = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+    if (action === 'followup') {
+      updates.followUpCount  = admin.firestore.FieldValue.increment(1);
+      updates.lastFollowUpAt = admin.firestore.FieldValue.serverTimestamp();
+    } else if (action === 'calendar') {
+      updates.calendarAdded = true;
+    } else if (action === 'resume') {
+      updates.resumeTailored = true;
+    }
+    await ref.set(updates, { merge:true });
+    res.json({ success:true });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+// Generates interview prep — read-only. Pulls the user's most recently updated
+// resume for context using the exact same Firestore read GET /api/resumes
+// already does; never writes to resumes, never imports resume route logic.
+// Works fine with no resume on file too — just keeps talking points generic.
+app.post('/api/gmail/interview-prep', authenticate, async (req,res) => {
+  try {
+    const { company, role } = req.body || {};
+    if (!company) return res.status(400).json({ error:'company required' });
+    const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
+    if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+
+    let resumeContext = '';
+    try {
+      const snap = await db.collection(RESUMES).where('userId','==',req.user.uid).get();
+      const docs = snap.docs.map(d=>d.data()).sort((a,b)=>(b.updatedAt?._seconds||0)-(a.updatedAt?._seconds||0));
+      const rd   = docs[0]?.resumeData;
+      if (rd) {
+        const skills = (rd.skills||[]).slice(0,12).join(', ');
+        const exp    = (rd.workExperience||[]).slice(0,3).map(w=>`${w.title||w.role||''} at ${w.company||''}`).filter(s=>s.trim()!=='at').join('; ');
+        resumeContext = ` Candidate background — current/target title: ${rd.jobTitle||'n/a'}. Skills: ${skills||'n/a'}. Recent experience: ${exp||'n/a'}. Summary: ${(rd.summary||'').slice(0,300)}`;
+      }
+    } catch(e) { /* no resume yet — prep proceeds without it */ }
+
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
+      body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:500, temperature:0.6,
+        messages:[{ role:'user', content:`Generate interview prep for a candidate interviewing at ${company}${role?' for the role of '+role:''}.${resumeContext||' No resume on file — keep talking points generic but still genuinely useful.'}
+Return ONLY valid JSON in this exact shape, nothing else:
+{"questions":["q1","q2","q3","q4","q5"],"talkingPoints":["p1","p2","p3"]}
+- questions: 5 likely interview questions specific to this company and role — mix behavioral with role-specific/technical or situational, no generic filler like "tell me about yourself"
+- talkingPoints: 3 short, specific things the candidate should be ready to bring up, grounded in their actual background when provided — not generic career advice` }]
+      })
+    });
+    const d = await r.json();
+    const text = (d.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
+    const prep = JSON.parse(text);
+    res.json({ success:true, prep });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+// Decodes a Gmail message payload into plain text, walking nested MIME parts.
+// Gmail base64url-encodes body data (- and _ instead of + and /).
+function extractPlainTextBody(payload) {
+  function decode(data) { return Buffer.from((data||'').replace(/-/g,'+').replace(/_/g,'/'), 'base64').toString('utf-8'); }
+  function walk(part) {
+    if (!part) return '';
+    if (part.mimeType === 'text/plain' && part.body?.data) return decode(part.body.data);
+    if (part.parts) { for (const p of part.parts) { const r = walk(p); if (r) return r; } }
+    return '';
+  }
+  let text = walk(payload);
+  if (!text && payload?.body?.data) text = decode(payload.body.data);
+  if (text.includes('<html') || /<div|<p>|<br/.test(text)) text = text.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+  return text;
+}
+
+// One-tap AI reply that actually references what the recruiter/employer said —
+// fetches the REAL full email body on-demand (the regular sync only ever stores
+// short snippets, kept that way to stay fast and cheap). Read-only: fetches the
+// thread, never sends, same "Kievora never sends mail for you" promise as the
+// follow-up drafts.
+app.post('/api/gmail/draft-reply', authenticate, async (req,res) => {
+  try {
+    const { company } = req.body || {};
+    if (!company) return res.status(400).json({ error:'company required' });
+    const sSnap = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get();
+    const apps  = sSnap.exists ? (sSnap.data().applications||[]) : [];
+    const a     = apps.find(a => normaliseStr(a.company) === normaliseStr(company));
+    if (!a) return res.status(404).json({ error:'application not found' });
+    const lastEvent = [...(a.timeline||[])].reverse().find(e=>e.threadId);
+    if (!lastEvent) return res.status(404).json({ error:'no email on file for this yet — try syncing first' });
+    const tokenDoc = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('tokens').get();
+    if (!tokenDoc.exists) return res.status(401).json({ error:'Gmail not connected' });
+    const tokens = await getValidTokens(req.user.uid, tokenDoc.data().tokens);
+    const oauth2 = getOAuthClient(); oauth2.setCredentials(tokens);
+    const gmail  = google.gmail({ version:'v1', auth:oauth2 });
+    const thread = await gmail.users.threads.get({ userId:'me', id:lastEvent.threadId, format:'full' });
+    const lastMsg = thread.data.messages?.[thread.data.messages.length-1];
+    const body   = extractPlainTextBody(lastMsg?.payload).slice(0,1500);
+    if (!body) return res.status(404).json({ error:"couldn't read that email's content" });
+    const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
+    if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+    const rr = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
+      body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:300, temperature:0.6,
+        messages:[{ role:'user', content:`Write a reply to this email from someone at ${company}. Reference what they actually said specifically — quote or paraphrase a real detail from it, don't write something generic that could apply to any email. Keep it under 130 words, warm, professional, confident.\n\nTheir email:\n${body}\n\nReturn ONLY valid JSON: {"subject":"Re: ...","body":"..."}` }]
+      })
+    });
+    const dd    = await rr.json();
+    const text  = (dd.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
+    const draft = JSON.parse(text);
+    res.json({ success:true, draft });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+// Cross-references Gmail signal with resume content — but talks like a
+// hypothesis, never a verdict. Names the actual companies so the user can
+// verify it themselves rather than just trusting the AI. If there's more than
+// one resume, asks which one instead of silently guessing.
+app.get('/api/gmail/resume-gap', authenticate, async (req,res) => {
+  try {
+    const resumesSnap = await db.collection(RESUMES).where('userId','==',req.user.uid).get();
+    const resumes = resumesSnap.docs.map(d=>({ id:d.id, ...d.data() }));
+    if (!resumes.length) return res.json({ success:true, gap:null, reason:'no_resume' });
+
+    if (resumes.length > 1 && !req.query.resumeId) {
+      return res.json({ success:true, needsResumeChoice:true, resumes: resumes.map(r=>({ id:r.id, resumeName:r.resumeName||'Untitled' })) });
+    }
+    const chosen = req.query.resumeId ? resumes.find(r=>r.id===req.query.resumeId) : resumes[0];
+    if (!chosen) return res.status(404).json({ error:'resume not found' });
+
+    const sSnap = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get();
+    if (!sSnap.exists) return res.json({ success:true, gap:null, reason:'no_gmail_data' });
+    const apps = sSnap.data().applications || [];
+    const advanced = apps.filter(a => ['interview_invite','assessment','offer','post_offer'].includes(a.status));
+    if (advanced.length < 2) return res.json({ success:true, gap:null, reason:'not_enough_data' });
+
+    const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
+    if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+    const skills = (chosen.resumeData?.skills||[]).join(', ') || 'none listed';
+    const emailContext = advanced.map(a => `${a.company}: ${(a.timeline||[]).map(t=>t.subject).join(' | ')}`).join('\n');
+
+    const r2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
+      body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:250, temperature:0.3,
+        messages:[{ role:'user', content:`Resume skills listed: ${skills}.
+Email subject lines from companies that advanced this candidate to interview/assessment/offer stage:
+${emailContext}
+
+Look for ONE specific skill or keyword that's clearly related to at least 2 of these companies' emails but is NOT in the resume skills list. Be conservative — only report something if there's a genuinely specific, real signal, not a vague guess. If nothing clear stands out, say so honestly rather than forcing a finding.
+Return ONLY valid JSON: {"found":true or false,"skill":"name or null","companies":["Company A","Company B"]}` }]
+      })
+    });
+    const d2 = await r2.json();
+    const text2 = (d2.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
+    const result = JSON.parse(text2);
+    res.json({ success:true, gap: result.found ? { skill:result.skill, companies:result.companies||[] } : null, resumeUsed: chosen.resumeName||'Untitled' });
+  } catch(e) { res.status(500).json({ error:e.message }); }
+});
+
+
 app.delete('/api/gmail/disconnect', authenticate, async (req,res) => {
   try {
     const tDoc = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('tokens').get();
@@ -1169,7 +1498,7 @@ app.delete('/api/gmail/disconnect', authenticate, async (req,res) => {
     const batch = db.batch();
     batch.delete(db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('tokens'));
     batch.delete(db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary'));
-    batch.update(db.collection('users').doc(req.user.uid), { gmailConnected:false, gmailEmail:admin.firestore.FieldValue.delete() });
+    batch.update(db.collection('users').doc(req.user.uid), { gmailConnected:false, gmailEmail:admin.firestore.FieldValue.delete(), gmailName:admin.firestore.FieldValue.delete(), gmailNameMismatch:admin.firestore.FieldValue.delete() });
     await batch.commit();
     res.json({ success:true });
   } catch(e) { res.status(500).json({ error:e.message }); }
@@ -2078,15 +2407,41 @@ app.post('/api/kie', authenticate, async (req, res) => {
     systemContent += `\n\nUSER CONTEXT: This user's professional field is "${userCategory}". Don't announce that you know this — just let it shape your answer naturally.`;
   }
 
+  // ── Format + trim messages ────────────────────────────────────────────────
+  // Build the multimodal message array for the AI API (handles image attachments),
+  // then trim it to the context budget. Both results are needed below.
+  const formattedMessages = messages.map(msg => {
+    if (msg.imageBase64 && msg.imageType) {
+      return {
+        role: msg.role,
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: msg.imageType, data: msg.imageBase64 } },
+          { type: 'text', text: msg.content || '' },
+        ],
+      };
+    }
+    return { role: msg.role, content: msg.content || '' };
+  });
+  const trimmedMessages = trimMessagesForContext(formattedMessages);
+
   // ── Intelligence Merge Layer ──────────────────────────────────────────────
   // Loads conversation summary + Gmail brain in parallel, then gives KIE
   // explicit rules on how to weave both together naturally.
   const { convId = null } = req.body;
-  const [convSummary, gmailBrain, gmailRaw] = await Promise.all([
+  const [convSummary, gmailRaw] = await Promise.all([
     convId ? getConvSummary(req.user.uid, convId) : Promise.resolve(null),
-    getGmailCareerBrain(req.user.uid),
     getGmailCareerBrainRaw(req.user.uid),
   ]);
+
+  // Build the SAME enriched intelligence the Gmail panel uses (follow-up state,
+  // calendar/resume flags, ghosting patterns) — so chat and the dedicated panel
+  // never know different things about the same pipeline.
+  let gmailBrain = null, gmailApps = [];
+  if (gmailRaw) {
+    gmailApps  = await attachStaleFlags(gmailRaw.applications || [], req.user.uid);
+    const gmailPatterns = detectGhostingPattern(gmailApps);
+    gmailBrain = buildKieBrainBlock(gmailApps, gmailRaw.insights || [], gmailRaw.emailsScanned || 0, gmailPatterns);
+  }
 
   // ── Conversation understanding ───────────────────────────────────────────
   if (convSummary) {
@@ -2110,21 +2465,33 @@ app.post('/api/kie', authenticate, async (req, res) => {
   // ── Gmail + merge instructions ───────────────────────────────────────────
   if (gmailBrain) {
     systemContent += `\n\n${gmailBrain}`;
-    const apps       = gmailRaw?.applications || [];
-    const hasOffer   = apps.some(a=>a.status==='offer');
-    const hasIntv    = apps.some(a=>a.status==='interview_invite');
-    const hasCrit    = hasOffer || hasIntv;
+    const offerApp   = gmailApps.find(a=>a.status==='offer');
+    const intvApp    = gmailApps.find(a=>a.status==='interview_invite');
+    const critApp    = offerApp || intvApp;
     const topic      = convSummary?.topic || '';
     const emotion    = convSummary?.emotionalState || '';
     const jobRelated = /job|career|resume|interview|salary|offer|application|role|work|hire|recruit|apply/i.test(topic);
     const isStressed = ['stressed','anxious','frustrated','confused'].includes(emotion);
 
+    // Has KIE already brought this specific thing up earlier in THIS conversation?
+    // If so, don't force it again — repeating an unprompted nudge every turn is
+    // exactly the "did I even ask you?" friction that makes people stop trusting
+    // an assistant. Surface important things once, then let it go unless asked.
+    const alreadyMentioned = critApp && trimmedMessages.some(m =>
+      m.role === 'assistant' && typeof m.content === 'string' &&
+      m.content.toLowerCase().includes(critApp.company.toLowerCase())
+    );
+
     systemContent += `\n\nINTELLIGENCE MERGE — follow these silently, never announce them:`;
-    if (hasCrit) systemContent += `\nCRITICAL: ${hasOffer?'Job offer':'Interview invite'} detected. Surface this naturally in your response even if the question is unrelated. Don't ignore it.`;
-    if (jobRelated && gmailBrain) systemContent += `\nALIGNED: Conversation and Gmail both relate to job search. Weave them together naturally — reference specific companies and timelines from Gmail when relevant.`;
-    if (!jobRelated && !hasCrit) systemContent += `\nOFF-TOPIC: User is asking about something unrelated to their active job search. Answer their question fully first. Only bridge to Gmail if there is a clear genuine connection — never forced.`;
-    if (isStressed) systemContent += `\nEMOTION: User is ${emotion}. Lead with acknowledgement before advice. Gmail context supports the response, it does not replace the human moment.`;
-    systemContent += `\nCORE: You naturally know everything — conversation history, job search, Gmail situation. Never say "I can see from your Gmail" or "based on your data". Just know it like a coach who has been watching closely.`;
+    if (critApp && !alreadyMentioned) {
+      systemContent += `\nWORTH MENTIONING ONCE: ${offerApp?'a job offer':'an interview'} from ${critApp.company} hasn't come up in this conversation yet. Work it in ONLY if there's a natural opening in your reply — never bolt it onto an unrelated answer just to surface it. It is completely fine to skip mentioning it this turn if there's no graceful way in.`;
+    } else if (critApp && alreadyMentioned) {
+      systemContent += `\nALREADY SURFACED: You've already brought up ${critApp.company} earlier in this chat. Do not repeat it again unless the user brings it up or asks directly — repeating it unprompted reads as nagging, not helpful.`;
+    }
+    if (jobRelated) systemContent += `\nALIGNED: Conversation relates to job search. Reference specific companies, statuses, and what's already been done (e.g. "since you followed up with X a few days ago...") — not just raw status.`;
+    if (!jobRelated && !critApp) systemContent += `\nOFF-TOPIC: Unrelated to job search. Answer the actual question fully first. Only bridge to Gmail if there's a clear, natural connection — never forced, and never as a way to show off that you know things.`;
+    if (isStressed) systemContent += `\nEMOTION: User is ${emotion}. Lead with acknowledgement before advice. Gmail context supports the response — it never replaces the human moment.`;
+    systemContent += `\nCORE RULE: Know this naturally, like a coach who's been paying attention — never say "I can see from your Gmail" or "based on your data". And just as important: don't volunteer Gmail information the user didn't ask for and that isn't genuinely relevant right now. Being technically correct but unprompted still feels intrusive. When in doubt, answer what was actually asked and stay quiet about the rest.`;
   }
 
 
