@@ -65,6 +65,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .plan-feat-list{list-style:none;display:flex;flex-direction:column;gap:7px}
 .plan-feat-list li{font-size:12.5px;color:var(--sub);display:flex;gap:8px;align-items:flex-start;line-height:1.4}
 .plan-feat-list li svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;stroke:var(--green);fill:none;stroke-width:2.5}
+.plan-integrations{margin-top:14px;padding-top:14px;border-top:1px solid var(--border2)}
+.plan-int-label{font-size:10.5px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.plan-int-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.plan-int-logo{width:28px;height:28px;border-radius:7px;object-fit:contain;border:1px solid var(--border);background:#fff;flex-shrink:0;margin-top:1px;padding:3px}
+.plan-int-name{font-size:12.5px;font-weight:800;color:var(--txt);display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.plan-int-badge{font-size:9.5px;font-weight:800;color:#7c3aed;background:#f3e8ff;border:1px solid #e9d5ff;padding:2px 7px;border-radius:99px;letter-spacing:.2px}
+.plan-int-desc{font-size:11.5px;color:var(--sub);line-height:1.5}
 .btn-upgrade{width:100%;margin-top:14px;padding:13px;border-radius:12px;border:none;
   background:var(--g);color:#fff;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;transition:.15s}
 .btn-upgrade:disabled{opacity:.5;cursor:default}
@@ -180,11 +187,14 @@ const PLAN_COPY = {
     name: 'Free', tagline: 'Get started — no credit card needed.',
     features: [
       '5 resume templates',
-      'Bullet point &amp; skills AI suggestions in builder',
+      'AI bullet points &amp; skills suggestions in the builder',
+      'ATS score on every resume you create',
       'Create a cover letter from scratch',
-      'See your ATS score',
       '50 KIE chat messages per month · KIE Spark',
       'Write, read, like, comment, share, save &amp; follow articles',
+      'Job Match Analyzer — paste any job description &amp; score your fit',
+      'Resignation Letter generator',
+      '50MB document storage',
     ],
   },
   paid7: {
@@ -193,24 +203,43 @@ const PLAN_COPY = {
       'Everything in Free',
       'All resume templates',
       'AI Image Analyzer + Upload &amp; Analyze',
-      '5 AI Tools: AI Resume, Health Score, Roadmap, LinkedIn AI, Pro Message',
-      'KIE Spark + Core · more messages per month',
-      'Full ATS score breakdown — why you scored what you scored',
+      'Full ATS score breakdown — exactly what to fix and why',
       'Auto-build cover letter from an existing resume',
-      'Open &amp; apply to jobs',
-      'Download articles',
+      '5 AI Career Tools: Health Score, Roadmap, LinkedIn AI, Pro Message, AI Resume Builder',
+      'KIE Spark + Core · more messages per month',
+      'Open &amp; apply to every job listing',
+      'Download articles as PDF',
       'Good priority support',
+      '5GB document storage',
     ],
   },
   paid15: {
     name: 'Premier', tagline: 'For serious career growth.',
     features: [
       'Everything in Pro',
-      'All 10 AI Tools incl. Salary Intel, Mock Interview, Promotion Ready',
+      'All 10 AI Tools incl. Salary Intel, Mock Interview, Promotion Ready, Personal Brand',
       'KIE Spark, Core &amp; Nova · highest message allocation',
       'Full Recruiter View report',
-      'Verified badge eligibility',
+      'Verified badge on the Community Feed',
       'Instant priority support',
+      'Unlimited document storage',
+    ],
+    integrations: [
+      {
+        logo: 'gmail.jpg',
+        name: 'Gmail Intelligence',
+        badge: 'Premier only',
+        features: [
+          'Auto-tracks every application, interview, offer &amp; rejection — no manual entry',
+          'Live pipeline: see exactly where every application stands',
+          'AI drafts follow-up emails for ghosted applications',
+          'Interview prep questions pulled from the actual recruiter email',
+          'Spots resume gaps — keywords companies mention that aren\'t in your resume',
+          'Adds interviews to your Google Calendar automatically',
+          'Pattern analysis: shows you which stage you consistently go cold',
+          'Weekly job search digest &amp; urgent alerts for offers',
+        ],
+      },
     ],
   },
 };
@@ -286,6 +315,18 @@ function renderPlans(currentPlan) {
     const isUp    = order.indexOf(key) > order.indexOf(currentPlan);
     const price   = key === 'free' ? '' : `<div class="plan-card-price">${priceFor(key)}<span> /mo</span></div>`;
     const feats   = copy.features.map(f => `<li>${CHECK}<span>${f}</span></li>`).join('');
+    const integBlock = copy.integrations?.length ? `
+      <div class="plan-integrations">
+        <div class="plan-int-label">Integrations</div>
+        ${copy.integrations.map(i => `
+        <div class="plan-int-row">
+          <img src="${i.logo}" alt="${i.name}" class="plan-int-logo">
+          <div>
+            <div class="plan-int-name">${i.name} <span class="plan-int-badge">Coming soon</span></div>
+            <div class="plan-int-desc">${i.desc}</div>
+          </div>
+        </div>`).join('')}
+      </div>` : '';
     const btn     = isCurr ? '' : isUp
       ? `<button class="btn-upgrade" onclick="startCheckout('${key}')">Upgrade to ${copy.name}</button>`
       : '';
@@ -293,7 +334,8 @@ function renderPlans(currentPlan) {
       ${isCurr?'<div class="current-pill">Current</div>':''}
       <div class="plan-card-top"><div class="plan-card-name">${copy.name}</div>${price}</div>
       <div class="plan-card-tagline">${copy.tagline}</div>
-      <ul class="plan-feat-list">${feats}</ul>${btn}
+      <ul class="plan-feat-list">${feats}</ul>
+      ${integBlock}${btn}
     </div>`;
   }).join('');
 
