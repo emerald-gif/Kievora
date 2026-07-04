@@ -3081,12 +3081,45 @@ ${resumeText.slice(0, 7000)}`;
 // Env vars: JSEARCH_API_KEY (rapidapi.com), ADZUNA_APP_ID, ADZUNA_APP_KEY (adzuna.com/developers)
 // Remotive is always on (free, no key needed)
 
-async function _fetchJSearch(query, limit) {
+// ─── Country → Adzuna country code map ───────────────────────────────────────
+// Adzuna supports a fixed set of country codes. For countries not in the list
+// we fall back to us+gb+za (global reach). Add more as Adzuna expands.
+const ADZUNA_COUNTRIES = {
+  us:'us', gb:'gb', uk:'gb', au:'au', ca:'ca', za:'za',
+  de:'de', fr:'fr', br:'br', in:'in', nl:'nl', sg:'sg',
+  nz:'nz', at:'at', be:'be', it:'it', mx:'mx', pl:'pl', ru:'ru',
+};
+const ADZUNA_FALLBACK = ['us','gb','za'];
+
+// Maps IP → {country, countryCode} via ip-api.com (free, no key, 45 req/min).
+// Returns null gracefully on any failure — job search still works, just without
+// the country personalisation.
+const _ipCountryCache = new Map(); // in-memory per server lifetime, avoids hammering ip-api
+async function detectCountryFromIp(ip) {
+  if (!ip || ip === '127.0.0.1' || ip === '::1') return null;
+  const clean = ip.replace(/^::ffff:/, '');
+  if (_ipCountryCache.has(clean)) return _ipCountryCache.get(clean);
+  try {
+    const r = await fetch(`http://ip-api.com/json/${clean}?fields=status,country,countryCode`, { signal: AbortSignal.timeout(2500) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d.status !== 'success') return null;
+    const result = { country: d.country, countryCode: d.countryCode?.toLowerCase() };
+    _ipCountryCache.set(clean, result);
+    return result;
+  } catch { return null; }
+}
+
+async function _fetchJSearch(query, limit, countryCode) {
   const KEY = process.env.JSEARCH_API_KEY;
   if (!KEY) return [];
+  // JSearch supports free-text country in the query — most natural approach
+  const q = countryCode && countryCode !== 'worldwide'
+    ? `${query} in ${countryCode}`
+    : query;
   try {
     const res = await fetch(
-      `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=1&date_posted=month`,
+      `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(q)}&page=1&num_pages=1&date_posted=month`,
       { headers: { 'X-RapidAPI-Key': KEY, 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com' } }
     );
     if (!res.ok) return [];
@@ -3097,23 +3130,33 @@ async function _fetchJSearch(query, limit) {
       company:  j.employer_name,
       logo:     j.employer_logo || '',
       location: j.job_city ? `${j.job_city}${j.job_state ? ', '+j.job_state : ''}` : (j.job_is_remote ? 'Remote' : j.job_country || ''),
+      country:  j.job_country || '',
       remote:   !!j.job_is_remote,
       salary:   j.job_min_salary && j.job_max_salary ? `$${Math.round(j.job_min_salary/1000)}k–$${Math.round(j.job_max_salary/1000)}k` : '',
       type:     j.job_employment_type || '',
       url:      j.job_apply_link,
       source:   'JSearch',
       posted:   j.job_posted_at_datetime_utc || '',
-      snippet:  (j.job_description || '').replace(/\n/g, ' ').replace(/<[^>]+>/g,'').slice(0,200) + '…'
+      snippet:  (j.job_description || '').replace(/\n/g, ' ').replace(/<[^>]+>/g,'').slice(0,200) + '…',
+      description: (j.job_description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
+      requirements: (j.job_required_skills || []).join(', ') || '',
     }));
   } catch { return []; }
 }
 
-async function _fetchAdzuna(query, limit) {
+async function _fetchAdzuna(query, limit, countryCode) {
   const APP_ID  = process.env.ADZUNA_APP_ID;
   const APP_KEY = process.env.ADZUNA_APP_KEY;
   if (!APP_ID || !APP_KEY) return [];
-  const perCountry = Math.ceil(limit / 3);
-  const countries  = ['us', 'gb', 'za']; // US, UK, South Africa (closest for NG)
+  // Resolve which Adzuna country codes to query
+  let countries;
+  if (!countryCode || countryCode === 'worldwide') {
+    countries = ADZUNA_FALLBACK;
+  } else {
+    const mapped = ADZUNA_COUNTRIES[countryCode];
+    countries = mapped ? [mapped] : ADZUNA_FALLBACK;
+  }
+  const perCountry = Math.ceil(limit / countries.length);
   const results    = [];
   await Promise.allSettled(countries.map(async country => {
     try {
@@ -3128,13 +3171,16 @@ async function _fetchAdzuna(query, limit) {
         company:  j.company?.display_name || '',
         logo:     '',
         location: j.location?.display_name || '',
+        country:  country.toUpperCase(),
         remote:   /remote/i.test(j.title + ' ' + (j.description||'')),
         salary:   j.salary_min && j.salary_max ? `$${Math.round(j.salary_min/1000)}k–$${Math.round(j.salary_max/1000)}k` : '',
         type:     j.contract_time || '',
         url:      j.redirect_url,
         source:   'Adzuna',
         posted:   j.created || '',
-        snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…'
+        snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
+        description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
+        requirements: '',
       }));
     } catch { /* skip this country */ }
   }));
@@ -3152,31 +3198,50 @@ async function _fetchRemotive(query, limit) {
       company:  j.company_name,
       logo:     j.company_logo_url || j.company_logo || '',
       location: j.candidate_required_location || 'Remote',
+      country:  '',
       remote:   true,
       salary:   j.salary || '',
       type:     j.job_type || '',
       url:      j.url,
       source:   'Remotive',
       posted:   j.publication_date || '',
-      snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…'
+      snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
+      description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
+      requirements: '',
     }));
   } catch { return []; }
 }
 
+// Detects the user's country from their IP and saves it to Firestore — called
+// once on first job search (or anytime the Firestore field is missing). Cached
+// in-memory so repeat requests don't hit ip-api.com.
+app.get('/api/user-country', authenticate, async (req, res) => {
+  try {
+    const uSnap = await db.collection('users').doc(req.user.uid).get();
+    const saved  = uSnap.data()?.detectedCountry;
+    if (saved) return res.json({ countryCode: saved.code, country: saved.name, cached: true });
+    const ip = (req.headers['x-forwarded-for']||'').split(',')[0].trim() || req.ip || '';
+    const geo = await detectCountryFromIp(ip);
+    if (geo) {
+      await db.collection('users').doc(req.user.uid).set({ detectedCountry:{ code:geo.countryCode, name:geo.country } }, { merge:true });
+      res.json({ countryCode: geo.countryCode, country: geo.country, cached: false });
+    } else {
+      res.json({ countryCode: 'worldwide', country: 'Worldwide', cached: false });
+    }
+  } catch(e) { res.json({ countryCode: 'worldwide', country: 'Worldwide' }); }
+});
+
 app.post('/api/find-jobs', authenticate, async (req, res) => {
   // Plan gate: free users can see the listing cards but can't open/apply to jobs.
-  // We still run the search and return the jobs — but free-user responses have
-  // url stripped and a gateLocked flag, so the frontend replaces the "Apply" CTA
-  // with an upgrade prompt. This way free users feel the value before hitting the wall.
   const planKey = await getUserPlanKey(req.user.uid);
   const canClick = getPlanConfig(planKey).findJobsClick;
 
-  const { query, limit = 20 } = req.body;
+  const { query, limit = 20, countryCode = 'worldwide' } = req.body;
   if (!query) return res.status(400).json({ error: 'query is required' });
 
   const [r1, r2, r3] = await Promise.allSettled([
-    _fetchJSearch(query, limit),
-    _fetchAdzuna(query, limit),
+    _fetchJSearch(query, limit, countryCode),
+    _fetchAdzuna(query, limit, countryCode),
     _fetchRemotive(query, 10),
   ]);
 
@@ -3196,13 +3261,13 @@ app.post('/api/find-jobs', authenticate, async (req, res) => {
 
   jobs = jobs.slice(0, limit);
 
-  console.log(`POST /api/find-jobs — "${query}" → ${jobs.length} jobs (jsearch:${r1.status==='fulfilled'?r1.value.length:'err'}, adzuna:${r2.status==='fulfilled'?r2.value.length:'err'}, remotive:${r3.status==='fulfilled'?r3.value.length:'err'})`);
+  console.log(`POST /api/find-jobs — "${query}" [${countryCode}] → ${jobs.length} jobs`);
+
   if (!canClick) {
-    // Free users: return listings but strip apply URLs and add upgrade gate
-    const gatedJobs = jobs.map(({ url, ...rest }) => rest); // eslint-disable-line no-unused-vars
+    const gatedJobs = jobs.map(({ url, description, ...rest }) => rest);
     return res.json({ jobs: gatedJobs, gateLocked: true, upgradeMessage: UPGRADE_MESSAGES.findJobs() });
   }
-  res.json({ jobs, source: 'merged' });
+  res.json({ jobs, source: 'merged', countryCode });
 });
 
 // ─── JSON parser helper for AI structured outputs ────────────────────────────
