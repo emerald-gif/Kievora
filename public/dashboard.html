@@ -468,13 +468,15 @@
     .art-dot{width:6px;height:6px;border-radius:99px;background:#ddd6fe;border:none;cursor:pointer;transition:all .25s;padding:0}
     .art-dot.active{width:18px;background:var(--p)}
     /* Quick actions — fintech 2026 banking style */
-    .qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:28px;background:linear-gradient(135deg,rgba(124,58,237,.05) 0%,rgba(168,85,247,.03) 100%);border:1px solid rgba(124,58,237,.08);border-radius:20px;padding:12px}
-    .qa-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:#fff;border:1px solid rgba(124,58,237,.1);border-radius:14px;padding:16px 4px 13px;font-size:11px;font-weight:700;color:#2d1065;cursor:pointer;transition:all .22s;box-shadow:0 1px 4px rgba(124,58,237,.05),0 0 0 0 rgba(124,58,237,.0);text-align:center;min-height:82px;letter-spacing:-.1px;position:relative;overflow:hidden;text-decoration:none}
-    .qa-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2.5px;background:var(--g);opacity:0;transition:opacity .22s;border-radius:0 0 14px 14px}
-    .qa-card:hover{border-color:rgba(124,58,237,.22);color:var(--p);transform:translateY(-2px);box-shadow:0 6px 22px rgba(124,58,237,.11),0 0 0 3px rgba(124,58,237,.06)}
-    .qa-card:hover::before{opacity:1}
-    .qa-card:active{transform:translateY(0)}
-    .qa-ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .qa-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+    .qa-card{display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid rgba(124,58,237,.1);border-radius:16px;padding:14px 16px;font-size:13.5px;font-weight:700;color:#0f0e17;cursor:pointer;transition:all .18s;text-align:left;text-decoration:none;width:100%;font-family:inherit;box-shadow:0 1px 4px rgba(124,58,237,.05);position:relative;overflow:hidden}
+    .qa-card:hover{border-color:rgba(124,58,237,.25);box-shadow:0 4px 16px rgba(124,58,237,.1);transform:translateY(-1px)}
+    .qa-card:active{transform:translateY(0);box-shadow:none}
+    .qa-ico{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .qa-card-txt{flex:1;min-width:0}
+    .qa-card-title{font-size:14px;font-weight:800;color:#0f0e17;letter-spacing:-.2px}
+    .qa-card-sub{font-size:11.5px;color:#94a3b8;font-weight:500;margin-top:2px}
+    .qa-card-arr{color:#c4b5fd;flex-shrink:0}
     /* ── RECENT RESUME CARD (replaces phone) ── */
     .last-rcard{background:#fff;border-radius:18px;border:1.5px solid var(--border2);overflow:hidden;cursor:pointer;transition:all .25s;position:relative;box-shadow:0 2px 12px rgba(124,58,237,.06);max-width:280px}
     .last-rcard:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(124,58,237,.14);border-color:var(--p2)}
@@ -721,12 +723,12 @@
     .rec-loading-spin{width:48px;height:48px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-radius:16px;display:flex;align-items:center;justify-content:center;animation:sping 1.2s linear infinite}
 
     /* ── SETTINGS FULL SCREEN ── */
-    .ksb-settings-panel{position:fixed;inset:0;z-index:800;background:#0f0e17;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
+    .ksb-settings-panel{position:fixed;inset:0;z-index:800;background:#f8f7ff;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
     .ksb-settings-panel.open{transform:translateY(0)}
-    .ksb-set-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px 16px;background:#0f0e17;position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(124,58,237,.18)}
-    .ksb-set-back{width:36px;height:36px;background:rgba(255,255,255,.07);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#a78bfa;flex-shrink:0;transition:background .15s}
-    .ksb-set-back:hover{background:rgba(167,139,250,.15)}
-    .ksb-set-title{font-size:17px;font-weight:900;color:#fff;letter-spacing:-.3px}
+    .ksb-set-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px;background:#fff;border-bottom:1.5px solid #ede9fe;position:sticky;top:0;z-index:10}
+    .ksb-set-back{width:36px;height:36px;background:#f5f3ff;border:1.5px solid #ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#7c3aed;flex-shrink:0;transition:background .15s}
+    .ksb-set-back:hover{background:#ede9fe}
+    .ksb-set-title{font-size:17px;font-weight:900;color:#0f0e17;letter-spacing:-.3px}
 
     /* ── SIDEBAR LIGHT THEME ── */
     .kie-sidebar{position:fixed;top:0;left:-320px;width:300px;height:100vh;background:#fff;z-index:700;transition:left .28s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 40px rgba(0,0,0,.12);display:flex;flex-direction:column;border-right:1px solid #ede9fe}
@@ -762,25 +764,25 @@
     .ksb-settings-btn{display:flex;align-items:center;gap:8px;background:none;border:none;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;padding:8px 10px;border-radius:10px;transition:all .12s;font-family:inherit;width:100%}
     .ksb-settings-btn:hover{background:#ede9fe;color:var(--p)}
     .ksb-set-body{padding:16px 16px 32px;flex:1}
-    .ksb-prof-card{background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(109,40,217,.08));border:1px solid rgba(124,58,237,.25);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:24px}
-    .ksb-prof-av{width:48px;height:48px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;background-size:cover;background-position:center;border:2px solid rgba(167,139,250,.4)}
-    .ksb-prof-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.2px}
-    .ksb-prof-email{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px;font-weight:500}
+    .ksb-prof-card{background:linear-gradient(135deg,#faf5ff,#f3f0ff);border:1.5px solid #ddd6fe;border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:24px}
+    .ksb-prof-av{width:48px;height:48px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;background-size:cover;background-position:center;border:2.5px solid #ede9fe}
+    .ksb-prof-name{font-size:15px;font-weight:800;color:#0f0e17;letter-spacing:-.2px}
+    .ksb-prof-email{font-size:11px;color:#94a3b8;margin-top:3px;font-weight:500}
     .ksb-set-section{margin-bottom:20px}
-    .ksb-set-section-label{font-size:9.5px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.2px;display:block;margin-bottom:8px;padding:0 2px}
-    .ksb-set-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
-    .ksb-set-row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;transition:background .12s;background:none;border:none;width:100%;text-align:left;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);text-decoration:none}
+    .ksb-set-section-label{font-size:9.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1.2px;display:block;margin-bottom:8px;padding:0 2px}
+    .ksb-set-card{background:#fff;border:1.5px solid #ede9fe;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(124,58,237,.04)}
+    .ksb-set-row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:13px;font-weight:600;color:#0f0e17;cursor:pointer;transition:background .12s;background:none;border:none;width:100%;text-align:left;font-family:inherit;border-bottom:1px solid #faf5ff;text-decoration:none}
     .ksb-set-row:last-child{border-bottom:none}
-    .ksb-set-row:hover{background:rgba(255,255,255,.06)}
-    .ksb-set-row:active{background:rgba(124,58,237,.15)}
-    .ksb-set-row.danger{color:#f87171}
-    .ksb-set-row.danger:hover{background:rgba(239,68,68,.08)}
-    .ksb-set-row-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .ksb-set-row:hover{background:#faf8ff}
+    .ksb-set-row:active{background:#f3f0ff}
+    .ksb-set-row.danger{color:#e11d48}
+    .ksb-set-row.danger:hover{background:#fff1f2}
+    .ksb-set-row-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .ksb-set-row-txt{flex:1;min-width:0}
-    .ksb-set-row-title{font-size:13.5px;font-weight:700;color:rgba(255,255,255,.9)}
-    .ksb-set-row.danger .ksb-set-row-title{color:#f87171}
-    .ksb-set-row-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;font-weight:500}
-    .ksb-set-row-arr{color:rgba(255,255,255,.2);flex-shrink:0}
+    .ksb-set-row-title{font-size:13.5px;font-weight:700;color:#0f0e17}
+    .ksb-set-row.danger .ksb-set-row-title{color:#e11d48}
+    .ksb-set-row-sub{font-size:11px;color:#94a3b8;margin-top:2px;font-weight:500}
+    .ksb-set-row-arr{color:#c4b5fd;flex-shrink:0}
 
     /* ── MODEL BADGE — SVG styled ── */
     .kmd-trigger{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:4px 2px;border-radius:8px;transition:background .15s;font-family:inherit}
@@ -6757,7 +6759,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
 
         if (!articleDocs.length) {
-          track.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No articles yet — <a href="/articles" style="color:#7c3aed;font-weight:700">browse the feed</a></div>`;
+          track.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No articles yet.</div>`;
           return;
         }
 
@@ -9272,87 +9274,178 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
   </style>
   <!-- ── Gmail Pipeline Intelligence styles — namespaced "gpipe-", touches nothing else ── -->
   <style>
-    .gpipe-funnel{display:flex;gap:8px;margin:12px 0 14px}
-    .gpipe-funnel-seg{flex:1;background:#fff;border:1.5px solid #ede9fe;border-radius:12px;padding:10px;text-align:center}
-    .gpipe-funnel-pct{font-size:16px;font-weight:900;color:#7c3aed;line-height:1.1}
-    .gpipe-funnel-lbl{font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
-    .gpipe-funnel-bar{height:4px;background:#f1ecff;border-radius:3px;margin-top:6px;overflow:hidden}
-    .gpipe-funnel-bar i{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width .4s ease}
-    .gpipe-urgent{display:none;background:linear-gradient(135deg,#fef3c7,#fff7ed);border:1.5px solid #fde68a;border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;color:#92400e;line-height:1.5;font-weight:600}
-    .gpipe-section{margin-bottom:14px}
-    .gpipe-section-head{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-    .gpipe-section-count{background:#f1ecff;color:#7c3aed;border-radius:20px;padding:1px 7px;font-size:9.5px}
-    .gpipe-card{background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:12px 14px;margin-bottom:8px}
-    .gpipe-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-    .gpipe-card-co{font-size:13px;font-weight:700;color:#0f0e17;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .gpipe-card-role{font-weight:500;color:#64748b}
-    .gpipe-card-pill{font-size:10px;font-weight:700;border-radius:20px;padding:3px 9px;white-space:nowrap;flex-shrink:0}
-    .gpipe-card-meta{font-size:10.5px;color:#94a3b8;margin-top:5px}
-    .gpipe-card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-    .gpipe-btn{flex:1 1 28%;min-width:88px;border:none;border-radius:9px;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
-    .gpipe-btn-draft{background:#f8f7ff;color:#7c3aed;border:1.5px solid #ede9fe}
-    .gpipe-btn-resume{background:#ecfeff;color:#0e7490;border:1.5px solid #cffafe}
+    /* Funnel stats */
+    .gpipe-funnel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+    .gpipe-funnel-seg{background:#faf8ff;border:1.5px solid #ede9fe;border-radius:14px;padding:14px 12px;text-align:center}
+    .gpipe-funnel-pct{font-size:24px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px}
+    .gpipe-funnel-lbl{font-size:10px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+    .gpipe-funnel-bar{height:4px;background:#ede9fe;border-radius:3px;margin-top:10px;overflow:hidden}
+    .gpipe-funnel-bar i{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+    /* Urgent banner */
+    .gpipe-urgent{display:none;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fde68a;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.55;font-weight:600}
+
+    /* Sections */
+    .gpipe-section{margin-bottom:18px}
+    .gpipe-section-head{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+    .gpipe-section-count{background:#ede9fe;color:#7c3aed;border-radius:20px;padding:2px 8px;font-size:9.5px;font-weight:800}
+
+    /* Application cards */
+    .gpipe-card{background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:14px 16px;margin-bottom:8px;transition:box-shadow .15s}
+    .gpipe-card:hover{box-shadow:0 2px 12px rgba(124,58,237,.08)}
+    .gpipe-card-co{font-size:14px;font-weight:800;color:#0f0e17;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
+    .gpipe-card-role{font-size:11.5px;font-weight:500;color:#64748b;margin-top:2px}
+    .gpipe-card-meta{font-size:11px;color:#94a3b8;margin-top:6px;line-height:1.4}
+
+    /* Action buttons */
+    .gpipe-card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+    .gpipe-btn{flex:1 1 28%;min-width:88px;border:none;border-radius:10px;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s}
+    .gpipe-btn:active{transform:scale(.97)}
+    .gpipe-btn-draft{background:#f5f3ff;color:#7c3aed;border:1.5px solid #ddd6fe}
+    .gpipe-btn-resume{background:#ecfeff;color:#0e7490;border:1.5px solid #a5f3fc}
     .gpipe-btn-cal{background:#fff7ed;color:#c2410c;border:1.5px solid #fed7aa}
     .gpipe-btn-prep{background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0}
     .gpipe-btn-reply{background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe}
-    .gpipe-trend{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 8px;margin-left:6px}
-    .gpipe-trend-up{background:#f0fdf4;color:#15803d}
-    .gpipe-trend-dn{background:#fef2f2;color:#b91c1c}
-    .gpipe-trend-flat{background:#f1f5f9;color:#64748b}
-    .gpipe-gap{background:#fff;border:1.5px solid #e0f2fe;border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:12px;color:#0c4a6e;line-height:1.5}
-    .gpipe-optout{font-size:11px;color:#94a3b8;text-align:center;padding:6px 0 2px}
+
+    /* Trend badges */
+    .gpipe-trend{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:20px;padding:3px 9px;margin-right:6px;margin-bottom:6px}
+    .gpipe-trend-up{background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0}
+    .gpipe-trend-dn{background:#fff1f2;color:#be123c;border:1.5px solid #fecdd3}
+    .gpipe-trend-flat{background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0}
+
+    /* Gap + pattern cards */
+    .gpipe-gap{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:14px;padding:13px 15px;margin-bottom:10px;font-size:12px;color:#0c4a6e;line-height:1.55}
+    .gpipe-pattern{background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:13px 15px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.55}
+
+    /* Draft box */
+    .gpipe-draft-box{display:none;margin-top:12px;background:#faf8ff;border:1.5px solid #ddd6fe;border-radius:14px;padding:12px}
+    .gpipe-draft-box textarea{width:100%;border:1.5px solid #e9e5ff;border-radius:10px;padding:10px;font-size:11.5px;font-family:inherit;color:#374151;background:#fff;resize:vertical;margin-top:8px;line-height:1.5;outline:none}
+    .gpipe-draft-box textarea:focus{border-color:#a78bfa}
+    .gpipe-draft-copy{margin-top:10px;width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
+    .gpipe-draft-copy:active{opacity:.85}
+
+    /* Opt-out + empty */
+    .gpipe-optout{font-size:11px;color:#94a3b8;text-align:center;padding:10px 0 4px}
     .gpipe-optout button{background:none;border:none;color:#94a3b8;font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
-    .gpipe-pattern{background:#fff;border:1.5px solid #fde68a;border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.5}
-    .gpipe-draft-box{display:none;margin-top:10px;background:#faf5ff;border:1.5px solid #ede9fe;border-radius:12px;padding:10px}
-    .gpipe-draft-box textarea{width:100%;border:1px solid #ede9fe;border-radius:8px;padding:8px;font-size:11.5px;font-family:inherit;color:#374151;background:#fff;resize:vertical;margin-top:6px}
-    .gpipe-draft-copy{margin-top:8px;width:100%;background:#7c3aed;color:#fff;border:none;border-radius:9px;padding:8px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}
-    .gpipe-empty{text-align:center;padding:18px;color:#94a3b8;font-size:12px}
+    .gpipe-empty{text-align:center;padding:28px 16px;color:#94a3b8;font-size:12.5px;line-height:1.6}
   </style>
 <body>
 
 
 <!-- ══ GMAIL INTELLIGENCE PANEL — body level so position:fixed works ══ -->
 <div id="gmailIntPanel" style="position:fixed;inset:0;z-index:900;background:#f8f7ff;transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column">
-  <div style="display:flex;align-items:center;padding:16px 18px;background:#fff;border-bottom:1px solid #ede9fe;position:sticky;top:0;z-index:10">
-    <button onclick="closeGmailPanel()" style="width:36px;height:36px;border:none;background:rgba(124,58,237,.08);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
-    <div style="font-size:17px;font-weight:900;color:#0f0e17;position:absolute;left:50%;transform:translateX(-50%)">Gmail Intelligence</div>
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;padding:18px 20px;background:#fff;border-bottom:1.5px solid #ede9fe;position:sticky;top:0;z-index:10;gap:14px">
+    <button onclick="closeGmailPanel()" style="width:36px;height:36px;border:1.5px solid #ede9fe;background:#f5f3ff;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#7c3aed">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:17px;font-weight:900;color:#0f0e17;letter-spacing:-.3px">Gmail Intelligence</div>
+      <div style="font-size:11px;color:#94a3b8;font-weight:500;margin-top:1px">Automatic job search tracking</div>
+    </div>
+    <div id="gmailHeaderBadge" style="display:none;background:#dcfce7;border:1.5px solid #bbf7d0;color:#16a34a;font-size:9.5px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:.4px;flex-shrink:0">● LIVE</div>
   </div>
-  <div style="padding:20px 16px;flex:1">
+
+  <div style="padding:18px 16px 32px;flex:1">
+
+    <!-- Disconnected state -->
     <div id="gmailDisconnectedPanel">
-      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
-        <div style="width:52px;height:52px;background:rgba(234,67,53,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;overflow:hidden"><img src="gmail.jpg" alt="Gmail" style="width:28px;height:28px;object-fit:contain" onerror="this.outerHTML='&lt;svg width=&quot;26&quot; height=&quot;26&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;&gt;&lt;path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/&gt;&lt;path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/&gt;&lt;path d=&quot;M2 6l10 7 10-7&quot; stroke=&quot;#ea4335&quot; stroke-width=&quot;1.5&quot; fill=&quot;none&quot;/&gt;&lt;/svg&gt;'"/></div>
-        <div style="font-size:16px;font-weight:800;color:#0f0e17;margin-bottom:8px">Connect your Gmail</div>
-        <div style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:20px">KIE will automatically track your applications, interview invites, recruiter messages and offers — without you lifting a finger.</div>
-        <button onclick="connectGmail()" id="gmailConnectBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Connect Gmail →</button>
+      <!-- Hero connect card -->
+      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:20px;padding:28px 20px;text-align:center;margin-bottom:14px;box-shadow:0 2px 12px rgba(124,58,237,.06)">
+        <div style="width:64px;height:64px;background:linear-gradient(135deg,#fef2f2,#fecaca);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;overflow:hidden">
+          <img src="gmail.jpg" alt="Gmail" style="width:32px;height:32px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;28&quot; height=&quot;28&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"/>
+        </div>
+        <div style="font-size:18px;font-weight:900;color:#0f0e17;margin-bottom:8px;letter-spacing:-.3px">Connect your Gmail</div>
+        <div style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:24px">KIE automatically tracks applications, interviews, recruiter messages and offers — no manual logging ever.</div>
+        <button onclick="connectGmail()" id="gmailConnectBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:14px;padding:15px 28px;font-size:14px;font-weight:800;cursor:pointer;width:100%;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3);transition:opacity .15s;letter-spacing:-.1px">Connect Gmail →</button>
       </div>
-      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:14px;overflow:hidden">
-        <div style="padding:14px 16px;border-bottom:1px solid #faf5ff"><div style="font-size:12px;font-weight:800;color:#0f0e17;margin-bottom:3px">🔍 What KIE tracks</div><div style="font-size:12px;color:#64748b">Confirmations, interviews, recruiter outreach, rejections, offers</div></div>
-        <div style="padding:14px 16px;border-bottom:1px solid #faf5ff"><div style="font-size:12px;font-weight:800;color:#0f0e17;margin-bottom:3px">🔒 Read-only access</div><div style="font-size:12px;color:#64748b">KIE never sends emails or reads personal messages</div></div>
-        <div style="padding:14px 16px"><div style="font-size:12px;font-weight:800;color:#0f0e17;margin-bottom:3px">🗑️ Disconnect anytime</div><div style="font-size:12px;color:#64748b">One tap removes all stored email data permanently</div></div>
+      <!-- Trust signals -->
+      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:16px;overflow:hidden">
+        <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #faf5ff">
+          <div style="width:32px;height:32px;background:#f0fdf4;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#15803d" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div><div style="font-size:12.5px;font-weight:700;color:#0f0e17">Auto-tracks everything</div><div style="font-size:11.5px;color:#64748b;margin-top:2px">Confirmations, interviews, recruiter messages, rejections, offers</div></div>
+        </div>
+        <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #faf5ff">
+          <div style="width:32px;height:32px;background:#faf5ff;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <div><div style="font-size:12.5px;font-weight:700;color:#0f0e17">Read-only access</div><div style="font-size:11.5px;color:#64748b;margin-top:2px">KIE never sends emails or reads personal messages</div></div>
+        </div>
+        <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px">
+          <div style="width:32px;height:32px;background:#fff7ed;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#c2410c" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div><div style="font-size:12.5px;font-weight:700;color:#0f0e17">Disconnect anytime</div><div style="font-size:11.5px;color:#64748b;margin-top:2px">One tap removes all stored email data permanently</div></div>
+        </div>
       </div>
     </div>
+
+    <!-- Connected state -->
     <div id="gmailConnectedPanel" style="display:none">
-      <div id="gpipeMismatchWarning" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:14px;padding:13px 15px;margin-bottom:12px;font-size:12.5px;color:#991b1b;line-height:1.5"></div>
+      <!-- Identity mismatch warning -->
+      <div id="gpipeMismatchWarning" style="display:none;background:#fff1f2;border:1.5px solid #fecdd3;border-radius:14px;padding:13px 15px;margin-bottom:14px;font-size:12.5px;color:#be123c;line-height:1.5"></div>
+
+      <!-- Urgent banner -->
       <div id="gpipeUrgentBanner" class="gpipe-urgent"></div>
-      <div style="background:#fff;border:1.5px solid #d1fae5;border-radius:16px;padding:16px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:8px;height:8px;background:#22c55e;border-radius:50%"></div><div style="font-size:13px;font-weight:800;color:#0f0e17">Gmail Connected</div><div style="margin-left:auto;font-size:11px;color:#64748b" id="gmailLastSynced">—</div></div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:14px" id="gmailEmailLabel">—</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-          <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatEmails">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Emails</div></div>
-          <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatApps">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Companies</div></div>
-          <div style="background:#f8f7ff;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#7c3aed" id="gmailStatActions">—</div><div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:2px">Actions</div></div>
+
+      <!-- Status + stats card -->
+      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(124,58,237,.05)">
+        <!-- Connection status row -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 0 3px rgba(34,197,94,.15)"></div>
+          <div style="font-size:13px;font-weight:800;color:#0f0e17;flex:1" id="gmailEmailLabel">Connected</div>
+          <div style="font-size:11px;color:#94a3b8;font-weight:500" id="gmailLastSynced">—</div>
         </div>
+        <!-- Stat pills -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:#faf8ff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 8px;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px" id="gmailStatEmails">—</div>
+            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.4px">Emails</div>
+          </div>
+          <div style="background:#faf8ff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 8px;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px" id="gmailStatApps">—</div>
+            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.4px">Companies</div>
+          </div>
+          <div style="background:#faf8ff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 8px;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px" id="gmailStatActions">—</div>
+            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.4px">Actions</div>
+          </div>
+        </div>
+        <!-- Funnel rates -->
         <div class="gpipe-funnel" id="gpipeFunnel"></div>
+        <!-- Trend badges -->
         <div id="gpipeTrendBadge" style="margin-bottom:10px"></div>
-        <button onclick="syncGmailNow()" id="gmailSyncBtn" style="background:#f8f7ff;border:1.5px solid #ede9fe;color:#7c3aed;border-radius:10px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Sync Now</button>
+        <!-- Sync button -->
+        <button onclick="syncGmailNow()" id="gmailSyncBtn" style="width:100%;background:#faf5ff;border:1.5px solid #ede9fe;color:#7c3aed;border-radius:12px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:7px">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Sync now
+        </button>
       </div>
+
+      <!-- Resume gap insight -->
       <div id="gpipeResumeGap" style="margin-bottom:8px"></div>
+
+      <!-- Ghosting patterns -->
       <div id="gpipePatterns"></div>
+
+      <!-- Pipeline sections -->
       <div id="gmailAppsList" style="margin-bottom:12px"></div>
+
+      <!-- KIE action insights -->
       <div id="gmailInsightsList" style="margin-bottom:16px"></div>
-      <button onclick="disconnectGmail()" style="background:none;border:1.5px solid #fecaca;color:#e11d48;border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Disconnect Gmail & Delete Data</button>
+
+      <!-- Disconnect -->
+      <button onclick="disconnectGmail()" style="width:100%;background:#fff;border:1.5px solid #fecdd3;color:#be123c;border-radius:14px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s">
+        Disconnect Gmail & delete all data
+      </button>
+
+      <!-- Digest opt-out -->
       <div class="gpipe-optout" id="gpipeOptOut"></div>
     </div>
+
   </div>
 </div>
 
@@ -9414,27 +9507,36 @@ async function _gmailLoadStatus() {
 }
 
 function _gmailRenderPanel(data) {
-  const disc  = document.getElementById('gmailDisconnectedPanel');
-  const conn  = document.getElementById('gmailConnectedPanel');
-  const sub   = document.getElementById('gmailSettingsSub');
-  const badge = document.getElementById('gmailSettingsBadge');
+  const disc        = document.getElementById('gmailDisconnectedPanel');
+  const conn        = document.getElementById('gmailConnectedPanel');
+  const sub         = document.getElementById('gmailSettingsSub');
+  const settingsBdg = document.getElementById('gmailSettingsBadge');
+  const headerBdg   = document.getElementById('gmailHeaderBadge');
   if (!data.connected) {
-    if(disc)  disc.style.display  = 'block';
-    if(conn)  conn.style.display  = 'none';
-    if(sub)   sub.textContent     = 'Connect to track your job search';
-    if(badge) badge.style.display = 'none';
+    if(disc)        disc.style.display        = 'block';
+    if(conn)        conn.style.display        = 'none';
+    if(sub)         sub.textContent           = 'Connect to track your job search';
+    if(settingsBdg) settingsBdg.style.display = 'none';
+    if(headerBdg)   headerBdg.style.display   = 'none';
     return;
   }
-  if(disc)  disc.style.display  = 'none';
-  if(conn)  conn.style.display  = 'block';
-  if(sub)   sub.textContent     = data.gmailEmail||'Connected';
-  if(badge) badge.style.display = 'block';
-  const setEl=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-  setEl('gmailEmailLabel','📧 '+(data.gmailEmail||''));
+  if(disc)        disc.style.display        = 'none';
+  if(conn)        conn.style.display        = 'block';
+  if(sub)         sub.textContent           = data.gmailEmail||'Connected';
+  if(settingsBdg) settingsBdg.style.display = 'block';
+  if(headerBdg)   headerBdg.style.display   = 'block';
+
+  const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setEl('gmailEmailLabel', data.gmailEmail||'Connected');
   setEl('gmailStatEmails', data.emailsScanned||0);
   setEl('gmailStatApps',  (data.applications||[]).length);
   setEl('gmailStatActions',(data.insights||[]).length);
-  if(data.lastSynced){const ago=Math.round((Date.now()-new Date(data.lastSynced))/60000);setEl('gmailLastSynced',ago<2?'Just synced':`${ago}m ago`);}
+
+  if (data.lastSynced) {
+    const ago = Math.round((Date.now()-new Date(data.lastSynced))/60000);
+    setEl('gmailLastSynced', ago<2?'Just synced':ago<60?`${ago}m ago`:Math.round(ago/60)+'h ago');
+  }
+
   _gpipeRenderMismatch(data.nameMismatch, data.gmailName, data.gmailEmail);
   _gpipeRenderUrgent(data.applications||[]);
   _gpipeRenderFunnel(data.stats);
@@ -9443,9 +9545,11 @@ function _gmailRenderPanel(data) {
   _gpipeRenderApps(data.applications||[]);
   _gpipeRenderResumeGap();
   _gpipeRenderOptOut(data.digestOptOut);
-  const iEl=document.getElementById('gmailInsightsList');
-  if(iEl&&data.insights?.length){iEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px">KIE Actions</div><div style="display:flex;flex-direction:column;gap:8px">${data.insights.map(i=>`<div style="background:#fff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 14px;font-size:12px;color:#374151;line-height:1.5">${i}</div>`).join('')}</div>`;}
-  else if(iEl){iEl.innerHTML='';}
+
+  const iEl = document.getElementById('gmailInsightsList');
+  if (iEl && data.insights?.length) {
+    iEl.innerHTML = `<div class="gpipe-section-head" style="margin-top:4px">KIE Actions<span class="gpipe-section-count">${data.insights.length}</span></div><div style="display:flex;flex-direction:column;gap:8px">${data.insights.map(i=>`<div style="background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:13px 15px;font-size:12px;color:#374151;line-height:1.55;font-weight:500">${i}</div>`).join('')}</div>`;
+  } else if(iEl) { iEl.innerHTML=''; }
 }
 
 // ── Gmail Pipeline Intelligence (rendering + actions) — namespaced "gpipe", ──
@@ -9782,37 +9886,45 @@ window.gpipeTailorResume = function(idx) {
 
 
 window.connectGmail = async function() {
-  const btn=document.getElementById('gmailConnectBtn');
-  if(btn){btn.textContent='Redirecting...';btn.disabled=true;}
+  const btn = document.getElementById('gmailConnectBtn');
+  if (btn) { btn.textContent='Redirecting to Google…'; btn.disabled=true; btn.style.opacity='.8'; }
   try {
-    const tok=await _gmailTok();
-    const {url}=await fetch('/api/gmail/connect',{method:'POST',headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json());
-    window.location.href=url;
-  } catch(e){ if(btn){btn.textContent='Connect Gmail →';btn.disabled=false;} alert('Connection failed. Try again.'); }
+    const tok  = await _gmailTok();
+    const {url} = await fetch('/api/gmail/connect',{method:'POST',headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json());
+    window.location.href = url;
+  } catch(e) {
+    if (btn) { btn.textContent='Connect Gmail →'; btn.disabled=false; btn.style.opacity='1'; }
+    if (typeof window.toast==='function') window.toast('Connection failed. Try again.','err');
+    else alert('Connection failed. Try again.');
+  }
 };
 
 window.syncGmailNow = async function() {
-  const btn=document.getElementById('gmailSyncBtn');
-  if(btn){btn.textContent='Syncing...';btn.disabled=true;}
+  const btn = document.getElementById('gmailSyncBtn');
+  if (btn) { btn.innerHTML=`<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="animation:sping 1s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Syncing…`; btn.disabled=true; }
   try {
-    const tok=await _gmailTok();
+    const tok = await _gmailTok();
     await fetch('/api/gmail/sync',{method:'POST',headers:{Authorization:`Bearer ${tok}`}});
     await _gmailLoadStatus();
     await ensureGmailFreshAndAlert();
-  } catch(e){console.error('[gmail]',e);}
-  finally{if(btn){btn.textContent='Sync Now';btn.disabled=false;}}
+    if (typeof window.toast==='function') window.toast('Synced successfully','ok');
+  } catch(e) { console.error('[gmail]',e); }
+  finally {
+    if (btn) { btn.innerHTML=`<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Sync now`; btn.disabled=false; }
+  }
 };
 
 window.disconnectGmail = async function() {
-  if(!confirm('Remove Gmail connection and delete all stored email data?')) return;
+  if (!confirm('Remove Gmail connection and delete all stored email data? This cannot be undone.')) return;
   try {
-    const tok=await _gmailTok();
+    const tok = await _gmailTok();
     await fetch('/api/gmail/disconnect',{method:'DELETE',headers:{Authorization:`Bearer ${tok}`}});
-    _gmailConnected=false;
+    _gmailConnected = false;
     _gmailRenderPanel({connected:false});
     ['kieGmailAlert','kieFloatAlert'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-    const n=document.getElementById('kieGmailNudge');if(n)n.style.display='block';
-  } catch(e){alert('Failed. Try again.');}
+    const n = document.getElementById('kieGmailNudge'); if(n) n.style.display='block';
+    if (typeof window.toast==='function') window.toast('Gmail disconnected','ok');
+  } catch(e) { if (typeof window.toast==='function') window.toast('Failed. Try again.','err'); else alert('Failed. Try again.'); }
 };
 
 // ── Alert system ─────────────────────────────────────────────────
@@ -10066,32 +10178,28 @@ setInterval(async()=>{
       </div>
     </div>
 
-    <!-- Quick Actions — fintech 2026 -->
+    <!-- Quick Actions -->
     <div class="qa-grid">
       <button class="qa-card" onclick="showView('coverletter')">
         <div class="qa-ico" style="background:linear-gradient(135deg,#0e7490,#06b6d4)">
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         </div>
-        Cover Letter
+        <div class="qa-card-txt">
+          <div class="qa-card-title">Cover Letter</div>
+          <div class="qa-card-sub">AI-written in seconds</div>
+        </div>
+        <svg class="qa-card-arr" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
       </button>
       <button class="qa-card" onclick="openUploadView()">
         <div class="qa-ico" style="background:linear-gradient(135deg,#059669,#10b981)">
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
         </div>
-        Upload &amp; Analyze
-      </button>
-      <button class="qa-card" onclick="showView('allresumes')">
-        <div class="qa-ico" style="background:linear-gradient(135deg,#d97706,#f59e0b)">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="qa-card-txt">
+          <div class="qa-card-title">Upload & Analyze</div>
+          <div class="qa-card-sub">Score your existing resume</div>
         </div>
-        My Resumes
+        <svg class="qa-card-arr" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
       </button>
-      <a class="qa-card" href="/articles">
-        <div class="qa-ico" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 4v6h-6"/></svg>
-        </div>
-        Community Feed
-      </a>
     </div>
 
     <!-- Recent Resumes — after Quick Actions -->
@@ -10141,23 +10249,6 @@ setInterval(async()=>{
         </div>
         <a href="/find-jobs" style="flex-shrink:0;background:var(--g);color:#fff;border-radius:99px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">Find Jobs</a>
       </div>
-    </div>
-
-    <!-- Articles Swiper -->
-    <div class="art-section">
-      <div class="sh" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-        <div class="sh-title">Community Feed</div>
-        <a href="/articles" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
-      </div>
-      <div class="art-swiper-wrap">
-        <div class="art-track" id="artTrack">
-          <div class="art-card" style="height:220px;background:#f3f0ff;animation:pulse 1.4s infinite"></div>
-          <div class="art-card" style="height:220px;background:#f3f0ff;animation:pulse 1.4s infinite"></div>
-          <div class="art-card" style="height:220px;background:#f3f0ff;animation:pulse 1.4s infinite"></div>
-        </div>
-      </div>
-      <div class="art-dots" id="artDots"></div>
-      <a href="/articles" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;padding:13px;background:#faf5ff;border:1.5px solid var(--border2);border-radius:14px;font-size:13px;font-weight:700;color:var(--p);text-decoration:none"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>Explore Community Feed<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
     </div>
 
     <!-- Expert CTA Banner (Image 5 style) -->
@@ -11046,7 +11137,7 @@ setInterval(async()=>{
         <div class="ksb-prof-name" id="ksbProfName">—</div>
         <div class="ksb-prof-email" id="ksbProfEmail">—</div>
       </div>
-      <div style="width:28px;height:28px;background:rgba(167,139,250,.12);border-radius:8px;display:flex;align-items:center;justify-content:center">
+      <div style="width:28px;height:28px;background:#f5f3ff;border:1.5px solid #ede9fe;border-radius:8px;display:flex;align-items:center;justify-content:center">
         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
       </div>
     </div>
@@ -11063,7 +11154,7 @@ setInterval(async()=>{
             <div class="ksb-set-row-title">Gmail Intelligence</div>
             <div class="ksb-set-row-sub" id="gmailSettingsSub">Connect to track your job search</div>
           </div>
-          <div id="gmailSettingsBadge" style="display:none;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3);font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">LIVE</div>
+          <div id="gmailSettingsBadge" style="display:none;background:#dcfce7;color:#16a34a;border:1.5px solid #bbf7d0;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">LIVE</div>
           <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
       </div>
@@ -11090,16 +11181,6 @@ setInterval(async()=>{
     <div class="ksb-set-section">
       <span class="ksb-set-section-label">Resources</span>
       <div class="ksb-set-card">
-        <a href="/articles" class="ksb-set-row" style="text-decoration:none">
-          <div class="ksb-set-row-ico" style="background:rgba(37,99,235,.12)">
-            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z"/><path stroke-linecap="round" d="M13 2v6h6M9 13h6M9 17h4"/></svg>
-          </div>
-          <div class="ksb-set-row-txt">
-            <div class="ksb-set-row-title">Articles & Guides</div>
-            <div class="ksb-set-row-sub">Career tips, playbooks & insights</div>
-          </div>
-          <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-        </a>
         <a href="/support" class="ksb-set-row" style="text-decoration:none">
           <div class="ksb-set-row-ico" style="background:rgba(5,150,105,.12)">
             <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
@@ -11141,7 +11222,7 @@ setInterval(async()=>{
     </div>
 
     <div style="text-align:center;padding:12px 0 4px">
-      <div style="font-size:10px;font-weight:700;color:rgba(167,139,250,.3);letter-spacing:.8px">KIE · AI Career Coach by Kievora</div>
+      <div style="font-size:10px;font-weight:700;color:#c4b5fd;letter-spacing:.8px">KIE · AI Career Coach by Kievora</div>
     </div>
   </div>
 </div>
@@ -12222,10 +12303,6 @@ setInterval(async()=>{
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
       </button>
-      <a href="/articles" class="ctool-articles-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Read Articles
-      </a>
       <a href="/find-jobs" class="ctool-jobs-btn">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         Find Jobs
@@ -12270,10 +12347,6 @@ setInterval(async()=>{
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
       </button>
-      <a href="/articles" class="ctool-articles-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Read Articles
-      </a>
       <a href="/find-jobs" class="ctool-jobs-btn">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         Find Jobs
@@ -12367,10 +12440,6 @@ setInterval(async()=>{
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
       </button>
-      <a href="/articles" class="ctool-articles-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Read Articles
-      </a>
     </div>
   </div>
 </div>
@@ -12404,10 +12473,6 @@ setInterval(async()=>{
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
       </button>
-      <a href="/articles" class="ctool-articles-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Read Articles
-      </a>
     </div>
   </div>
 </div>
@@ -12455,10 +12520,6 @@ setInterval(async()=>{
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
       </button>
-      <a href="/articles" class="ctool-articles-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Read Articles
-      </a>
     </div>
   </div>
 </div>
@@ -12496,10 +12557,6 @@ setInterval(async()=>{
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
       </button>
-      <a href="/articles" class="ctool-articles-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Read Articles
-      </a>
     </div>
   </div>
 </div>
@@ -12586,10 +12643,6 @@ setInterval(async()=>{
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
       </button>
-      <a href="/articles" class="ctool-articles-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Read Articles
-      </a>
     </div>
   </div>
 </div>
@@ -13646,10 +13699,6 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- Nav -->
   <nav class="msb-nav">
     <div class="msb-section-label">Explore</div>
-    <a href="/articles" class="msb-item" onclick="closeMsb()">
-      <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 4v6h-6M9 13h6M9 17h4"/></svg>
-      Community Feed
-    </a>
     <a href="/find-jobs" class="msb-item" onclick="closeMsb()">
       <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
       Find Jobs
