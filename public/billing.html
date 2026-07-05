@@ -67,18 +67,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .plan-feat-list li svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;stroke:var(--green);fill:none;stroke-width:2.5}
 
 /* Gmail Intelligence / Integrations block */
-.plan-integrations{margin-top:16px;padding-top:16px;border-top:1.5px solid var(--border2)}
-.plan-int-label{font-size:10.5px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.plan-int-card{background:linear-gradient(135deg,#faf5ff,#f3e8ff);border:1.5px solid #e9d5ff;border-radius:14px;padding:14px 14px 12px;overflow:hidden}
-.plan-int-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.plan-int-logo{width:30px;height:30px;border-radius:8px;object-fit:contain;background:#fff;padding:4px;border:1px solid #e9d5ff;flex-shrink:0}
+.plan-integrations{margin-top:14px;padding-top:14px;border-top:1.5px dashed #e9d5ff}
+.plan-int-label{font-size:10px;font-weight:800;color:#a78bfa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.plan-int-label::before{content:'';display:inline-block;width:14px;height:1.5px;background:#e9d5ff}
+.plan-int-label::after{content:'';flex:1;height:1.5px;background:#e9d5ff}
+.plan-int-card{background:rgba(124,58,237,.05);border:1.5px solid #ede9fe;border-radius:12px;padding:12px 13px 11px}
+.plan-int-header{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.plan-int-logo{width:26px;height:26px;border-radius:7px;object-fit:contain;background:#fff;padding:3px;border:1px solid #ede9fe;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .plan-int-name-wrap{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.plan-int-name{font-size:13.5px;font-weight:900;color:#0f0e17;letter-spacing:-.2px}
-.plan-int-badge{font-size:9.5px;font-weight:800;color:#7c3aed;background:rgba(124,58,237,.12);border:1px solid #e9d5ff;padding:2px 8px;border-radius:99px;letter-spacing:.2px;white-space:nowrap}
-.plan-int-feat-list{list-style:none;display:flex;flex-direction:column;gap:6px}
-.plan-int-feat-list li{font-size:12px;color:#4c1d95;display:flex;gap:7px;align-items:flex-start;line-height:1.4}
-.plan-int-feat-list li svg{stroke:#7c3aed}
-.plan-int-desc{font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:8px}
+.plan-int-name{font-size:13px;font-weight:900;color:#0f0e17;letter-spacing:-.2px}
+.plan-int-badge{font-size:9px;font-weight:800;color:#7c3aed;background:#ede9fe;padding:2px 7px;border-radius:99px;letter-spacing:.2px;white-space:nowrap}
+.plan-int-feat-list{list-style:none;display:flex;flex-direction:column;gap:5.5px}
+.plan-int-feat-list li{font-size:11.5px;color:#5b21b6;display:flex;gap:7px;align-items:flex-start;line-height:1.4}
+.plan-int-feat-list li svg{width:13px;height:13px;flex-shrink:0;margin-top:1px;stroke:#7c3aed;fill:none;stroke-width:2.5}
+.plan-int-desc{font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:6px}
 .btn-upgrade{width:100%;margin-top:14px;padding:13px;border-radius:12px;border:none;
   background:var(--g);color:#fff;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;transition:.15s}
 .btn-upgrade:disabled{opacity:.5;cursor:default}
@@ -324,7 +326,7 @@ function renderPlans(currentPlan) {
     const feats   = copy.features.map(f => `<li>${CHECK}<span>${f}</span></li>`).join('');
     const integBlock = copy.integrations?.length ? `
       <div class="plan-integrations">
-        <div class="plan-int-label">Integrations</div>
+        <div class="plan-int-label">+ Included Integration</div>
         ${copy.integrations.map(i => `
         <div class="plan-int-card">
           <div class="plan-int-header">
