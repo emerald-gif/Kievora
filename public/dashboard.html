@@ -6656,6 +6656,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (!title || title.trim().length < 2) return;
       const rec = { title: title.trim(), source, ts: Date.now() };
       localStorage.setItem(getProfKey(), JSON.stringify(rec));
+      // Clear the swiper cache so the new profession triggers a fresh fetch
+      try { sessionStorage.removeItem(JOBS_CACHE_KEY); } catch {}
+      _jobsSwiperRendered = false;
       // Refresh jobs swiper if home is visible
       if (document.getElementById('v-home')?.classList.contains('active')) {
         renderJobsSwiper();

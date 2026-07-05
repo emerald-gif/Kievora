@@ -655,6 +655,9 @@ const PAGE_SIZE    = 12;
 let _selectedCountry = 'worldwide';
 let _countryName     = 'Worldwide';
 
+const FJ_CACHE_KEY = 'kievora_fj_cache';
+const FJ_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function g(id) { return document.getElementById(id); }
 
@@ -827,13 +830,11 @@ function onCountryChange() {
   if (!sel) return;
   _selectedCountry = sel.value;
   const opt = sel.options[sel.selectedIndex];
-  // strip the flag emoji (first non-space word) to get just the country name
   _countryName = (opt?.text || '').replace(/^\S+\s*/, '');
   const badge = g('countryDetectedBadge');
   if (badge) badge.style.display = 'none';
-  // Re-run current search with new country
   const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
-  if (q) loadJobs(q);
+  if (q) loadJobs(q, true); // force=true — country changed, must re-fetch
 }
 
 function getCurrentProfQuery() {
@@ -960,11 +961,35 @@ function showSkeletons() {
   if (g('loadMoreWrap')) g('loadMoreWrap').style.display = 'none';
 }
 
-async function loadJobs(query) {
+function _saveFjCache(query, jobs, country) {
+  try { sessionStorage.setItem(FJ_CACHE_KEY, JSON.stringify({ query, jobs, country, ts: Date.now() })); } catch {}
+}
+function _loadFjCache(query, country) {
+  try {
+    const c = JSON.parse(sessionStorage.getItem(FJ_CACHE_KEY) || 'null');
+    if (!c?.jobs?.length) return null;
+    if (Date.now() - c.ts > FJ_CACHE_TTL) return null;
+    if (c.query !== query || c.country !== country) return null;
+    return c.jobs;
+  } catch { return null; }
+}
+
+async function loadJobs(query, force) {
+  // ── Cache hit — restore instantly, no fetch needed ───────────────────────────
+  if (!force) {
+    const cached = _loadFjCache(query, _selectedCountry);
+    if (cached) {
+      allJobs = cached;
+      window._fjJobs = cached;
+      renderJobs();
+      return;
+    }
+  }
   showSkeletons();
   page = 1;
   try {
     allJobs = await fetchJobs(query);
+    window._fjJobs = allJobs;
     const isLocal = _selectedCountry && _selectedCountry !== 'worldwide';
     if (!allJobs.length && isLocal) {
       const displayName = _countryName || _selectedCountry.toUpperCase();
@@ -979,6 +1004,7 @@ async function loadJobs(query) {
         </div>`;
       return;
     }
+    _saveFjCache(query, allJobs, _selectedCountry);
     if (!allJobs.length) toast('No jobs found — try a different title', 'err');
     renderJobs();
   } catch (err) {
@@ -1015,7 +1041,7 @@ function doSearch() {
   if (!q) { toast('Enter a search term', 'err'); return; }
   setProfession(q, 'manual');
   renderProfBar();
-  loadJobs(q);
+  loadJobs(q, true); // force=true — user typed a new query, always fresh fetch
 }
 
 g('searchInp')?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
