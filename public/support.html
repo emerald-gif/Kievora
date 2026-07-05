@@ -128,6 +128,17 @@
 
     /* ── FAQ ── */
     .faq-section{margin-bottom:32px}
+    .topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:32px}
+    .topic-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:16px 12px;text-align:left;cursor:pointer;transition:all .15s;box-shadow:var(--shadow);font-family:inherit}
+    .topic-card:hover{border-color:var(--border2);box-shadow:var(--shadow2);transform:translateY(-2px)}
+    .topic-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:9px}
+    .topic-name{font-size:12.5px;font-weight:800;color:var(--txt);margin-bottom:2px;line-height:1.3}
+    .topic-sub{font-size:10.5px;color:var(--mute);font-weight:600}
+    @media(max-width:480px){.topic-grid{grid-template-columns:repeat(2,1fr)}}
+    .faq-cat-chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+    .faq-cat-chip{background:#fff;border:1.5px solid var(--border);color:var(--sub);font-size:12px;font-weight:700;padding:7px 13px;border-radius:99px;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .faq-cat-chip:hover{border-color:var(--border2);color:var(--p)}
+    .faq-cat-chip.active{background:var(--g);border-color:transparent;color:#fff}
     .faq-list{display:flex;flex-direction:column;gap:6px}
     .faq-item{background:#fff;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;box-shadow:var(--shadow)}
     .faq-item.open{border-color:var(--border2)}
@@ -684,6 +695,40 @@
     </div>
   </div>
 
+  <!-- ── BROWSE BY TOPIC ── -->
+  <div class="topic-grid" id="topics">
+    <button class="topic-card" onclick="jumpToGuide('create')">
+      <div class="topic-ico" style="background:#EDE9FE">📝</div>
+      <div class="topic-name">Resume Builder</div>
+      <div class="topic-sub">Create, edit &amp; download</div>
+    </button>
+    <button class="topic-card" onclick="jumpToGuide('kie-guide')">
+      <div class="topic-ico" style="background:#DBEAFE">🤖</div>
+      <div class="topic-name">KIE AI</div>
+      <div class="topic-sub">Spark, Core &amp; Nova</div>
+    </button>
+    <button class="topic-card" onclick="jumpToGuide('tools')">
+      <div class="topic-ico" style="background:#FCE7F3">✨</div>
+      <div class="topic-name">AI Career Tools</div>
+      <div class="topic-sub">All 10, explained</div>
+    </button>
+    <button class="topic-card" onclick="jumpToGuide('gmail')">
+      <div class="topic-ico" style="background:#FEE2E2">📧</div>
+      <div class="topic-name">Gmail AI</div>
+      <div class="topic-sub">Inbox automation</div>
+    </button>
+    <button class="topic-card" onclick="jumpToGuide('jobs')">
+      <div class="topic-ico" style="background:#DCFCE7">🔎</div>
+      <div class="topic-name">Find Jobs</div>
+      <div class="topic-sub">Browse &amp; apply</div>
+    </button>
+    <button class="topic-card" onclick="jumpToGuide('billing')">
+      <div class="topic-ico" style="background:#FEF9C3">💳</div>
+      <div class="topic-name">Pricing &amp; Billing</div>
+      <div class="topic-sub">Plans, Paystack, top-ups</div>
+    </button>
+  </div>
+
   <!-- ── PLATFORM GUIDES ── -->
   <div class="guide-section" id="guides">
     <div class="sec-hdr">
@@ -696,7 +741,11 @@
       <button class="guide-tab active" onclick="showGuide('create', this)">Creating a Resume</button>
       <button class="guide-tab" onclick="showGuide('templates', this)" id="tab-templates">Templates</button>
       <button class="guide-tab" onclick="showGuide('kie-guide', this)">Using KIE AI</button>
+      <button class="guide-tab" onclick="showGuide('tools', this)">AI Career Tools</button>
+      <button class="guide-tab" onclick="showGuide('gmail', this)">Gmail AI</button>
+      <button class="guide-tab" onclick="showGuide('jobs', this)">Find Jobs</button>
       <button class="guide-tab" onclick="showGuide('download', this)">Downloading PDF</button>
+      <button class="guide-tab" onclick="showGuide('billing', this)">Pricing &amp; Billing</button>
       <button class="guide-tab" onclick="showGuide('account-guide', this)">Account</button>
     </div>
 
@@ -751,31 +800,31 @@
     <div class="guide-content" id="guide-templates">
       <div id="templates" style="display:flex;flex-direction:column;gap:10px">
         <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
-          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🏛️ Classic — Best for: Finance, Law, Government</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.65">Traditional layout with a clean two-column structure. Timeless and safe — instantly recognizable to conservative hiring managers. Blue color scheme.</div>
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🏛️ Classic &amp; Elegant — Best for: Finance, Law, Government</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Traditional layouts with clean structure and muted colors. Timeless and safe — instantly recognizable to conservative hiring managers.</div>
         </div>
         <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
-          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">⚡ Modern — Best for: Tech, Product, Startups</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.65">Clean and contemporary. Teal accent colors with clear section hierarchy. Great for software engineers, product managers, and data professionals.</div>
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">⚡ Modern, Minimal &amp; Slate — Best for: Tech, Product, Startups</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Clean, contemporary layouts with clear section hierarchy. Great for engineers, product managers, and data professionals.</div>
         </div>
         <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
-          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">💼 Bold — Best for: Executives, Business, Senior roles</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.65">Strong typography and dark accents. Commands attention. Perfect for senior professionals and managers who want to make a statement.</div>
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">💼 Bold &amp; Executive — Best for: Senior &amp; leadership roles</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Strong typography and confident spacing that command attention. Perfect for professionals and managers who want to make a statement.</div>
         </div>
         <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
-          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">⬜ Minimal — Best for: Designers, Academics, Creatives</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.65">Lots of white space. Simple and elegant. Lets your content speak for itself — ideal for design-forward or research-focused roles.</div>
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🎨 Vivid, Coral &amp; Ink — Best for: Creative, Media, Marketing</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Bold colors and standout layouts designed to be memorable — great for designers, content creators, and anyone who needs to stand out.</div>
         </div>
         <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
-          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🎨 Vivid / Coral / Ink — Best for: Creative, Media, Marketing</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.65">Bold colors and standout layouts designed to be memorable — great for graphic designers, content creators, and anyone who needs to stand out.</div>
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🖼️ Nova &amp; Tribune — With profile photo support</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">Photo-friendly layouts for roles where a headshot helps — sales, customer-facing, and personal-brand-forward positions.</div>
         </div>
         <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:15px 17px">
-          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">🌑 Slate — Best for: Senior Tech, Engineering, Data</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.65">Dark left panel with a clean white content area. Sophisticated and sharp — great for senior engineers and data scientists.</div>
+          <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:4px">📐 Split — Best for: Multi-industry, general use</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.65">A structured two-column layout that adapts well across many fields when you're not sure which style fits.</div>
         </div>
         <div style="margin-top:4px;padding:13px 15px;background:#F5F0FF;border:1.5px solid #EDE9FE;border-radius:12px;font-size:12px;color:var(--p)">
-          ✨ Not sure which to pick? Use the <strong>Match Template Quiz</strong> on your dashboard for an AI-powered recommendation.
+          ✨ 13 templates in total. Free plan gives you 5 of them — Pro and Premier unlock all 13. Not sure which to pick? Use the <strong>Match Template Quiz</strong> on your dashboard for an AI-powered recommendation.
         </div>
       </div>
     </div>
@@ -788,7 +837,7 @@
           <div class="step-line"></div>
           <div class="step-body">
             <div class="step-title">What is KIE AI?</div>
-            <div class="step-desc">KIE is Kievora's AI career coach. KIE helps you write professional summaries, generate job description bullet points, suggest relevant skills, and answer career questions — all directly in the app.</div>
+            <div class="step-desc">KIE is Kievora's AI career coach. KIE helps you write professional summaries, generate job description bullet points, suggest relevant skills, prep for interviews, and answer career questions — all directly in the app.</div>
           </div>
         </div>
         <div class="step-item">
@@ -803,16 +852,106 @@
           <div class="step-num">3</div>
           <div class="step-line"></div>
           <div class="step-body">
-            <div class="step-title">KIE Modes</div>
-            <div class="step-desc">KIE has different response modes: <strong>Default</strong> (balanced), <strong>Deep</strong> (detailed analysis), <strong>Quick</strong> (short answers), <strong>Creative</strong> (bold and original), and <strong>Web</strong> (with real-time data).</div>
+            <div class="step-title">Spark, Core &amp; Nova — pick your model</div>
+            <div class="step-desc"><strong>Spark</strong> (Free) handles everyday questions fast. <strong>Core</strong> (Pro, $7/mo) goes deeper for resume reviews, interview prep, and cover letters, and adds web search + creative mode. <strong>Nova</strong> (Premier, $15/mo) is the most capable model, built for complex career strategy and executive-level writing.</div>
+            <div class="step-tip">💡 Everyone gets 50 free Spark messages a month. Pro and Premier get 200 messages/month, with cheap top-ups if you run out.</div>
           </div>
         </div>
         <div class="step-item">
           <div class="step-num">4</div>
           <div class="step-body">
             <div class="step-title">Inline AI Help in the Builder</div>
-            <div class="step-desc">When building a resume, fill in your job title and KIE automatically suggests 3 summary templates. Click one to insert it instantly. There's also AI-powered skill suggestions and work bullet generation.</div>
+            <div class="step-desc">When building a resume, fill in your job title and KIE automatically suggests 3 summary templates. Click one to insert it instantly. There's also AI-powered skill suggestions and work bullet generation — available on every plan.</div>
             <div class="step-tip">💡 Tip: Tell KIE your job title, industry, and years of experience for the best results</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Career Tools -->
+    <div class="guide-content" id="guide-tools">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">10 AI Career Tools</div>
+            <div class="step-desc">Beyond chat, KIE powers a set of standalone tools from your dashboard's tool hub: <strong>AI Resume Builder</strong> (build from a prompt), <strong>Career Health Score</strong>, <strong>Career Roadmap</strong>, <strong>Salary Intel</strong>, <strong>Industry Intel</strong>, <strong>LinkedIn AI</strong>, <strong>Mock Interview</strong>, <strong>Personal Brand</strong>, <strong>Pro Message</strong> (recruiter/client replies), and <strong>Promotion Ready</strong>.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">What unlocks what</div>
+            <div class="step-desc">Pro unlocks 5 tools: AI Resume, Health Score, Roadmap, LinkedIn AI, and Pro Message. Premier unlocks all 10, including Salary Intel, Industry Intel, Mock Interview, Personal Brand, and Promotion Ready.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Recruiter View</div>
+            <div class="step-desc">Premier also unlocks <strong>Recruiter View</strong> — a full report showing your profile the way a recruiter would see it, plus eligibility for the verified badge.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gmail AI -->
+    <div class="guide-content" id="guide-gmail">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Connect your inbox</div>
+            <div class="step-desc">From the Gmail AI page, connect your Google account with read-only access. KIE starts scanning for job-search related emails only — nothing else in your inbox is touched.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">What it does automatically</div>
+            <div class="step-desc">Application confirmations are logged to your dashboard the moment they land. Recruiter replies trigger an instant interview alert with a briefing on the company and role. No reply after 7 days? KIE drafts a follow-up email for you to review and send.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Context-aware cover letters</div>
+            <div class="step-desc">When a job description lands in your inbox, ask KIE to draft a cover letter matched to it directly — no copy-pasting required.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Privacy &amp; disconnecting</div>
+            <div class="step-desc">Gmail AI is free on every plan. Access is read-only and scoped to job-search emails. You can disconnect anytime from Settings — your data clears within 24 hours of disconnecting.</div>
+            <div class="step-tip">🔒 KIE never reads personal, financial, or unrelated emails — only what's relevant to your job search.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Find Jobs -->
+    <div class="guide-content" id="guide-jobs">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Browsing jobs</div>
+            <div class="step-desc">Find Jobs pulls in live listings you can swipe through, updated regularly. Anyone can browse — no plan required.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Opening &amp; applying</div>
+            <div class="step-desc">Opening a listing and applying directly through Kievora is a Pro and Premier feature. Free users can browse and see full listing details, but need to upgrade to click through and apply from inside the app.</div>
+            <div class="step-tip">💡 Tip: Ask KIE to check a listing against your saved resume before you apply — it'll flag gaps worth addressing first.</div>
           </div>
         </div>
       </div>
@@ -848,6 +987,43 @@
       </div>
     </div>
 
+    <!-- Pricing & Billing -->
+    <div class="guide-content" id="guide-billing">
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">The three plans</div>
+            <div class="step-desc"><strong>Free</strong> ($0) — 5 templates, ATS score, 50 KIE Spark messages/month. <strong>Pro</strong> ($7/mo) — all 13 templates, 5 AI tools, KIE Core, full ATS breakdown, cover letter builder, apply to jobs. <strong>Premier</strong> ($15/mo) — all 10 AI tools, KIE Nova, Recruiter View, verified badge eligibility, instant priority support.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">How payment works</div>
+            <div class="step-desc">Payments are processed securely via <strong>Paystack</strong>. Prices are shown in USD but converted to your local currency (like NGN) at the live exchange rate at checkout — you don't need a foreign card.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-line"></div>
+          <div class="step-body">
+            <div class="step-title">Running out of KIE messages</div>
+            <div class="step-desc">If you hit your monthly message limit on Pro or Premier, you can top up instantly — 100 extra messages for a small one-time fee — instead of waiting for the next billing cycle. Free plan doesn't offer top-ups; upgrading is the way to get more.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Upgrading, downgrading &amp; cancelling</div>
+            <div class="step-desc">Manage your plan anytime from <strong>Billing</strong> in your account menu. Cancel anytime — no fees, no questions asked. You'll keep paid access until the end of your current billing period, then drop to Free automatically.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Account -->
     <div class="guide-content" id="guide-account-guide">
       <div class="guide-steps">
@@ -869,9 +1045,17 @@
         </div>
         <div class="step-item">
           <div class="step-num">3</div>
+          <div class="step-line"></div>
           <div class="step-body">
             <div class="step-title">Account Settings</div>
             <div class="step-desc">Access your account settings via the hamburger menu → <strong>My Account</strong>. Here you can update your name, profile picture, and other account details.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Billing &amp; Plan</div>
+            <div class="step-desc">Your current plan, next billing date, and upgrade options live under <strong>Billing</strong> in the account menu — separate from your profile settings.</div>
           </div>
         </div>
       </div>
@@ -885,7 +1069,18 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Frequently Asked Questions
       </div>
-      <span class="sec-badge" id="faqBadge">10 questions</span>
+      <span class="sec-badge" id="faqBadge">questions</span>
+    </div>
+    <div class="faq-cat-chips" id="faqCatChips">
+      <button class="faq-cat-chip active" data-cat="" onclick="filterFAQCat('', this)">All</button>
+      <button class="faq-cat-chip" data-cat="General" onclick="filterFAQCat('General', this)">Getting Started</button>
+      <button class="faq-cat-chip" data-cat="Resume Builder" onclick="filterFAQCat('Resume Builder', this)">Resume Builder</button>
+      <button class="faq-cat-chip" data-cat="KIE AI" onclick="filterFAQCat('KIE AI', this)">KIE AI</button>
+      <button class="faq-cat-chip" data-cat="AI Tools" onclick="filterFAQCat('AI Tools', this)">AI Tools</button>
+      <button class="faq-cat-chip" data-cat="Gmail AI" onclick="filterFAQCat('Gmail AI', this)">Gmail AI</button>
+      <button class="faq-cat-chip" data-cat="Find Jobs" onclick="filterFAQCat('Find Jobs', this)">Find Jobs</button>
+      <button class="faq-cat-chip" data-cat="Billing" onclick="filterFAQCat('Billing', this)">Billing</button>
+      <button class="faq-cat-chip" data-cat="Account" onclick="filterFAQCat('Account', this)">Account</button>
     </div>
     <div class="faq-list" id="faqList"></div>
   </div>
@@ -1126,7 +1321,7 @@
           <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div><div class="kgo-fs-name">LinkedIn Optimizer</div><div class="kgo-fs-desc">Improve headline, about section and skills. Get a Recruiter Attraction Score.</div></div>
           <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="kgo-fs-name">ATS Intelligence</div><div class="kgo-fs-desc">Continuous ATS scoring, keyword gap analysis and recruiter readiness assessment.</div></div>
           <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><div class="kgo-fs-name">Career Health Score</div><div class="kgo-fs-desc">A proprietary 0–100 score combining resume quality, skills, readiness and LinkedIn.</div></div>
-          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="kgo-fs-name">Learning Coach</div><div class="kgo-fs-desc">AI-recommended courses, certifications and projects based on your goals and market trends.</div></div>
+          <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M22 6l-10 7L2 6"/></svg></div><div class="kgo-fs-name">Gmail AI</div><div class="kgo-fs-desc">Connect your inbox and KIE auto-tracks applications, flags interview replies, and drafts follow-ups for you.</div></div>
           <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="kgo-fs-name">Industry Intelligence</div><div class="kgo-fs-desc">Real-time hiring trends, in-demand skills and emerging technologies by industry.</div></div>
           <div class="swiper-slide kgo-feat-slide"><div class="kgo-fs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="kgo-fs-name">Promotion Readiness</div><div class="kgo-fs-desc">Full leadership readiness score and a personalised promotion roadmap.</div></div>
         </div>
@@ -1140,9 +1335,9 @@
         <div>
           <div class="kgo-sw-label">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            AI Intelligence Tiers
+            KIE Chat Models
           </div>
-          <div class="kgo-sw-title">Choose your power level</div>
+          <div class="kgo-sw-title">Spark, Core &amp; Nova</div>
         </div>
         <div class="kgo-sw-nav" id="nav3">
           <button class="kgo-sw-prev" id="prev3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -1152,36 +1347,30 @@
       <div class="swiper kgo-swiper" id="swiper3">
         <div class="swiper-wrapper">
           <div class="swiper-slide kgo-model-slide kgo-ms-flash">
-            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> KIE Flash</div>
-            <div class="kgo-ms-tagline">Lightning Fast</div>
-            <div class="kgo-ms-desc">Blazing speed for instant resume generation and rapid responses. Best when you need answers now.</div>
-            <ul class="kgo-ms-list"><li>Instant resume drafts</li><li>Quick suggestions</li><li>Fast feedback</li><li>Rapid Q&amp;A</li></ul>
-            <div class="kgo-ms-pill">Best for speed</div>
+            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> KIE Spark</div>
+            <div class="kgo-ms-tagline">Free · Included for everyone</div>
+            <div class="kgo-ms-desc">Fast, everyday career help — resume tips, quick questions, and skill suggestions. 50 messages every month, no card required.</div>
+            <ul class="kgo-ms-list"><li>Resume tips &amp; feedback</li><li>Quick skill suggestions</li><li>50 messages / month</li><li>Always free</li></ul>
+            <div class="kgo-ms-pill">Free plan</div>
           </div>
           <div class="swiper-slide kgo-model-slide kgo-ms-swift">
-            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> KIE Swift</div>
-            <div class="kgo-ms-tagline">Smart &amp; Efficient</div>
-            <div class="kgo-ms-desc">Fast reasoning for career questions, professional responses and structured advice with depth.</div>
-            <ul class="kgo-ms-list"><li>Career Q&amp;A</li><li>Professional responses</li><li>Fast reasoning</li><li>Career planning</li></ul>
-            <div class="kgo-ms-pill">Everyday tasks</div>
-          </div>
-          <div class="swiper-slide kgo-model-slide kgo-ms-elite">
-            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> KIE Elite</div>
-            <div class="kgo-ms-tagline">Deep Intelligence</div>
-            <div class="kgo-ms-desc">Advanced AI for deep resume optimisation, strategic coaching, interview prep and professional writing.</div>
-            <ul class="kgo-ms-list"><li>Deep optimisation</li><li>Career coaching</li><li>Interview prep</li><li>Professional writing</li></ul>
+            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> KIE Core</div>
+            <div class="kgo-ms-tagline">Pro · $7/month</div>
+            <div class="kgo-ms-desc">Deeper reasoning for resume reviews, interview prep, and cover letters — plus live web search and creative mode. 200 messages a month.</div>
+            <ul class="kgo-ms-list"><li>Full resume reviews</li><li>Interview prep</li><li>Web search + creative mode</li><li>200 messages / month</li></ul>
             <div class="kgo-ms-pill kgo-ms-pill-pop">Most Popular</div>
           </div>
           <div class="swiper-slide kgo-model-slide kgo-ms-ultra">
-            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg> KIE Ultra</div>
-            <div class="kgo-ms-tagline">Highest Intelligence</div>
-            <div class="kgo-ms-desc">The most powerful tier for executive resumes, strategic career planning and leadership coaching.</div>
-            <ul class="kgo-ms-list"><li>Executive resumes</li><li>Strategic planning</li><li>Leadership coaching</li><li>Complex analysis</li></ul>
+            <div class="kgo-ms-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg> KIE Nova</div>
+            <div class="kgo-ms-tagline">Premier · $15/month</div>
+            <div class="kgo-ms-desc">Kievora's most capable model — for high-stakes applications, complex career strategy, and executive-level writing. 200 messages a month.</div>
+            <ul class="kgo-ms-list"><li>Complex career strategy</li><li>Executive-level writing</li><li>All 10 AI tools unlocked</li><li>200 messages / month</li></ul>
             <div class="kgo-ms-pill kgo-ms-pill-ultra">Premium</div>
           </div>
         </div>
         <div class="swiper-pagination"></div>
       </div>
+      <div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--sub)">Run low on messages? Top up anytime for a small one-time fee — no need to wait for next month.</div>
     </div>
 
     <!-- ── JOURNEY ── -->
@@ -1551,23 +1740,69 @@
     if (tab) tab.classList.add('active');
   }
 
+  function jumpToGuide(id) {
+    const tabs = document.querySelectorAll('.guide-tab');
+    const idx = ['create','templates','kie-guide','tools','gmail','jobs','download','billing','account-guide'].indexOf(id);
+    showGuide(id, idx >= 0 ? tabs[idx] : null);
+    document.getElementById('guides').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
   // ── FAQ ──
   const FAQS = [
-    { q: 'Is Kievora free to use?', a: 'Yes — Kievora is completely free. You can create unlimited resumes, use all 10 templates, get AI-powered help from KIE, and download PDFs at no cost.' },
-    { q: 'How many resumes can I create?', a: 'There\'s no limit. You can create and save as many resumes as you need — useful if you\'re applying for jobs in different industries or tailoring your resume for specific roles.' },
-    { q: 'Are my resumes saved automatically?', a: 'While building, your progress is auto-saved as a draft locally. Once you hit "Save Resume," it\'s permanently saved to your account in the cloud, so you can access it from any device.' },
-    { q: 'What is a "Draft" resume?', a: 'A draft is a resume you\'ve started building but haven\'t saved to your account yet. Drafts are stored in your browser\'s local storage and show a "Draft" badge on the dashboard. Save your draft to keep it permanently and unlock PDF download.' },
-    { q: 'Why can\'t I download my resume as PDF?', a: 'You need to save your resume first — drafts can\'t be downloaded. If the download still doesn\'t work, check that your browser allows pop-ups for this site. Try Chrome (recommended). Make sure you have a stable internet connection.' },
-    { q: 'What is KIE AI and how does it work?', a: 'KIE is Kievora\'s AI career coach. It writes professional summaries, generates work experience bullet points, suggests skills, and answers career questions. When you fill in your job title in the builder, KIE automatically offers 3 summary templates. You can also open KIE as a full chat from the dashboard or the floating button on this page.' },
-    { q: 'How do I change the template for an existing resume?', a: 'Currently, templates are selected when creating a new resume. To use a different template, create a new resume and copy your information over. We\'re working on making template-switching available for existing resumes.' },
-    { q: 'Is my data safe?', a: 'Yes. Kievora uses Firebase/Firestore for secure cloud storage with industry-standard encryption. Your resume data is only accessible by your authenticated account. We never share or sell your personal information.' },
-    { q: 'I forgot my password. How do I reset it?', a: 'On the login page, tap "Forgot Password" and enter your email. You\'ll receive a reset link. Check your spam folder if it doesn\'t arrive within a few minutes.' },
-    { q: 'Can I use Kievora on mobile?', a: 'Yes — Kievora is fully responsive and designed to work on mobile browsers. The dashboard, resume builder, KIE AI, and PDF download all work on mobile. Chrome on Android or Safari on iOS works best.' },
+    // Getting Started
+    { cat:'General', q: 'Is Kievora free to use?', a: 'Yes — the Free plan never expires and needs no credit card. You get 5 resume templates, ATS scoring, cover letter creation, and 50 KIE Spark messages a month. Pro ($7/mo) and Premier ($15/mo) unlock everything else.' },
+    { cat:'General', q: 'How many resumes can I create?', a: 'There\'s no limit on any plan. Create and save as many resumes as you need — useful if you\'re applying across different industries or tailoring for specific roles.' },
+    { cat:'General', q: 'Are my resumes saved automatically?', a: 'While building, your progress auto-saves as a draft in your browser. Once you tap "Save Resume," it\'s permanently stored to your account in the cloud, accessible from any device.' },
+    { cat:'General', q: 'What is a "Draft" resume?', a: 'A draft is a resume you\'ve started but haven\'t saved to your account yet. Drafts live in your browser\'s local storage and show a "Draft" badge on the dashboard. Save it to keep it permanently and unlock PDF download.' },
+    { cat:'General', q: 'I forgot my password. How do I reset it?', a: 'On the login page, tap "Forgot Password" and enter your email. You\'ll get a reset link — check your spam folder if it doesn\'t arrive within a few minutes.' },
+    { cat:'General', q: 'Can I use Kievora on mobile?', a: 'Yes — Kievora is fully responsive. The dashboard, resume builder, KIE AI, Gmail AI, and PDF download all work on mobile. Chrome on Android or Safari on iOS works best.' },
+    { cat:'General', q: 'Is my data safe?', a: 'Yes. Kievora uses Firebase/Firestore for secure cloud storage with industry-standard encryption. Your data is only accessible by your authenticated account — we never share or sell your personal information.' },
+
+    // Resume Builder
+    { cat:'Resume Builder', q: 'Why can\'t I download my resume as PDF?', a: 'You need to save your resume first — drafts can\'t be downloaded. If it still doesn\'t work, check that your browser allows pop-ups for this site, and try Chrome with a stable connection.' },
+    { cat:'Resume Builder', q: 'How do I change the template for an existing resume?', a: 'Templates are selected when creating a new resume. To switch, create a new resume with your existing information and pick a different template — full template-switching on saved resumes is on our roadmap.' },
+    { cat:'Resume Builder', q: 'How many templates does Kievora have?', a: 'There are 13 templates in total, covering conservative, modern, bold, minimal, creative, and photo-friendly styles. Free gives you 5; Pro and Premier unlock all 13.' },
+    { cat:'Resume Builder', q: 'What is ATS scoring?', a: 'Every resume gets an ATS (Applicant Tracking System) compatibility score on every plan. Free shows the score; Pro and Premier unlock the full breakdown — exactly why you scored what you scored and what to fix.' },
+
+    // KIE AI
+    { cat:'KIE AI', q: 'What is KIE AI and how does it work?', a: 'KIE is Kievora\'s AI career coach. It writes summaries, generates bullet points, suggests skills, preps you for interviews, and answers career questions. Open it from the floating button or "Ask KIE AI" on your dashboard.' },
+    { cat:'KIE AI', q: 'What\'s the difference between KIE Spark, Core, and Nova?', a: 'Spark (Free) is fast and handles everyday questions. Core (Pro) goes deeper for resume reviews, interview prep, and cover letters, and adds web search + creative mode. Nova (Premier) is the most capable model, built for complex career strategy and executive-level writing.' },
+    { cat:'KIE AI', q: 'How many messages do I get with KIE?', a: 'Free gives you 50 KIE Spark messages a month. Pro and Premier both give 200 messages a month on Core or Nova respectively. Run out early? You can top up instantly on any paid plan.' },
+    { cat:'KIE AI', q: 'What are KIE\'s web search and creative modes?', a: 'Web search lets KIE pull in real-time information (like current salary data) instead of relying only on its training. Creative mode is for bolder, more original writing. Both are Pro and Premier features.' },
+
+    // AI Career Tools
+    { cat:'AI Tools', q: 'What are the 10 AI Career Tools?', a: 'AI Resume Builder, Career Health Score, Career Roadmap, Salary Intel, Industry Intel, LinkedIn AI, Mock Interview, Personal Brand, Pro Message, and Promotion Ready — all accessible from your dashboard\'s tool hub.' },
+    { cat:'AI Tools', q: 'Which AI tools do I get on Pro vs Premier?', a: 'Pro unlocks 5 tools: AI Resume, Career Health Score, Career Roadmap, LinkedIn AI, and Pro Message. Premier unlocks all 10, adding Salary Intel, Industry Intel, Mock Interview, Personal Brand, and Promotion Ready — plus Recruiter View.' },
+    { cat:'AI Tools', q: 'What is Recruiter View?', a: 'A Premier-only report that shows your profile exactly the way a recruiter sees it, so you can spot what\'s working and what isn\'t before you apply. Premier members are also eligible for a verified badge.' },
+
+    // Gmail AI
+    { cat:'Gmail AI', q: 'What does Gmail AI actually do?', a: 'Once connected, KIE reads your job-search emails and auto-tracks applications, sends instant interview alerts when a recruiter replies, and drafts follow-up emails if you haven\'t heard back after 7 days.' },
+    { cat:'Gmail AI', q: 'Is Gmail AI free?', a: 'Yes — Gmail AI is included on every plan, including Free. No separate add-on or hidden tier.' },
+    { cat:'Gmail AI', q: 'Is it safe to connect my Gmail?', a: 'Access is read-only and limited to job-search related emails — KIE never touches personal or financial emails. You can disconnect anytime from Settings, and your data clears within 24 hours of disconnecting.' },
+    { cat:'Gmail AI', q: 'Can KIE draft a cover letter from an email?', a: 'Yes — when a job description lands in your connected inbox, ask KIE to draft a cover letter matched to it directly, no copy-pasting needed.' },
+
+    // Find Jobs
+    { cat:'Find Jobs', q: 'How does Find Jobs work?', a: 'Find Jobs shows live listings you can swipe through, updated regularly. Anyone can browse for free — opening a listing and applying directly through Kievora requires Pro or Premier.' },
+    { cat:'Find Jobs', q: 'Can KIE check if a job is a good fit before I apply?', a: 'Yes — ask KIE to compare a listing against your saved resume. It\'ll flag skill gaps or mismatches worth addressing before you apply.' },
+
+    // Pricing & Billing
+    { cat:'Billing', q: 'What are the three plans?', a: 'Free ($0/mo), Pro ($7/mo), and Premier ($15/mo). Free covers the basics — 5 templates, ATS score, 50 KIE messages. Pro adds all templates, 5 AI tools, and KIE Core. Premier adds all 10 AI tools, KIE Nova, and Recruiter View.' },
+    { cat:'Billing', q: 'How do I pay — do I need a foreign card?', a: 'No. Payments are processed securely through Paystack, and prices convert to your local currency (like NGN) at the live exchange rate at checkout.' },
+    { cat:'Billing', q: 'Can I cancel anytime?', a: 'Absolutely. Cancel anytime from Billing in your account menu — no cancellation fees, no questions asked. You\'ll keep Pro/Premier access until the end of your current billing period.' },
+    { cat:'Billing', q: 'What happens if I run out of KIE messages mid-month?', a: 'On Pro or Premier, you can top up instantly — 100 extra messages for a small one-time fee — instead of waiting for your limit to reset next month.' },
+
+    // Account & Privacy
+    { cat:'Account', q: 'How do I manage my billing and plan?', a: 'Go to Billing in your account menu (hamburger menu → My Account → Billing) to see your current plan, next billing date, and upgrade or cancel options.' },
+    { cat:'Account', q: 'Can I delete my account?', a: 'Yes — reach out via Email Support or Ask KIE and we\'ll process a full account and data deletion request.' },
   ];
+
+  let activeFAQCat = '';
 
   function buildFAQ(filter) {
     const list = document.getElementById('faqList');
-    const items = filter ? FAQS.filter(f => f.q.toLowerCase().includes(filter) || f.a.toLowerCase().includes(filter)) : FAQS;
+    let items = FAQS;
+    if (activeFAQCat) items = items.filter(f => f.cat === activeFAQCat);
+    if (filter) items = items.filter(f => f.q.toLowerCase().includes(filter) || f.a.toLowerCase().includes(filter));
     const badge = document.getElementById('faqBadge');
     if (badge) badge.textContent = items.length + (items.length === 1 ? ' question' : ' questions');
     if (!items.length) { list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--sub);font-size:14px">No results found.</div>'; return; }
@@ -1591,6 +1826,14 @@
         </div></div>
       </div>`;
     }).join('');
+  }
+
+  function filterFAQCat(cat, btn) {
+    activeFAQCat = cat;
+    document.querySelectorAll('.faq-cat-chip').forEach(c => c.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    buildFAQ();
+    document.getElementById('faq').scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
   function toggleFAQ(i) {
@@ -1747,6 +1990,8 @@
     { value:'pdf',       ico:'📄', label:'PDF Download Problem' },
     { value:'building',  ico:'🛠️', label:'Resume Building' },
     { value:'kie',       ico:'🤖', label:'KIE AI' },
+    { value:'gmail',     ico:'📧', label:'Gmail AI' },
+    { value:'jobs',      ico:'🔎', label:'Find Jobs' },
     { value:'templates', ico:'🎨', label:'Templates' },
     { value:'billing',   ico:'💳', label:'Billing / Payment' },
     { value:'other',     ico:'💬', label:'Something Else' },
@@ -1983,8 +2228,9 @@
     const phrases = [
       'Search our guides and get answers fast.',
       'Ask KIE — your 24/7 AI career coach.',
-      'Fix your resume in minutes with AI.',
-      'Land your dream job. We\'ve got your back.',
+      'Learn how Gmail AI tracks your applications.',
+      'Understand Spark, Core & Nova.',
+      'See what each plan actually unlocks.',
       'Get help with templates, PDFs, and more.',
     ];
     const el = document.getElementById('typewriterText');
