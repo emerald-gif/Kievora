@@ -110,18 +110,6 @@
     .sec-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;letter-spacing:-.2px}
     .sec-badge{background:var(--g);color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px}
 
-    /* ── ARTICLES ── */
-    .articles-section{margin-bottom:32px}
-    .articles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-    .article-card{background:#fff;border-radius:16px;border:1.5px solid var(--border);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:var(--shadow)}
-    .article-card:hover{border-color:var(--border2);box-shadow:var(--shadow2);transform:translateY(-2px)}
-    .article-img{height:120px;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);display:flex;align-items:center;justify-content:center;font-size:34px;position:relative;overflow:hidden} .article-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease} .article-card:hover .article-img img{transform:scale(1.06)} .article-img-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.32) 100%)}
-    .article-cat{position:absolute;top:10px;left:10px;background:var(--g);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;letter-spacing:.3px}
-    .article-body{padding:14px}
-    .article-title{font-size:13px;font-weight:800;color:var(--txt);line-height:1.4;margin-bottom:5px}
-    .article-brief{font-size:11px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .article-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--mute);font-weight:600}
-
     /* ── GUIDE SECTION ── */
     .guide-section{margin-bottom:32px}
     .guide-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
@@ -282,7 +270,6 @@
 
     @media(max-width:580px){
       .contact-cards{grid-template-columns:1fr}
-      .articles-grid{grid-template-columns:1fr}
       .form-row{grid-template-columns:1fr}
       .sup-title{font-size:22px}
     }
@@ -400,12 +387,7 @@
     .ticket-err.show{display:block}
 
     /* ── READ MORE ARTICLES ── */
-    .more-articles{padding:36px 20px 48px;background:#fff;border-top:1px solid var(--border)}
-    .more-articles-hdr{max-width:1000px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between}
-    .more-articles-title{font-size:17px;font-weight:800;color:var(--txt)}
-    .more-articles-link{font-size:13px;font-weight:700;color:var(--p);text-decoration:none;display:flex;align-items:center;gap:4px;transition:gap .15s}
-    .more-articles-link:hover{gap:7px}
-    .more-articles-grid{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
     .marc{background:#fff;border-radius:16px;border:1.5px solid var(--border);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:0 2px 10px rgba(124,58,237,.06);display:flex;flex-direction:column;text-decoration:none;color:inherit}
     .marc:hover{border-color:var(--p2);box-shadow:0 6px 24px rgba(124,58,237,.14);transform:translateY(-2px)}
     .marc-img{height:120px;overflow:hidden;position:relative;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);flex-shrink:0}
@@ -418,8 +400,7 @@
     .marc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #f5f3ff}
     .marc-time{font-size:11px;color:var(--mute);font-weight:600}
     .marc-arrow{font-size:14px;color:var(--p2)}
-    @media(max-width:700px){.more-articles-grid{grid-template-columns:1fr 1fr}}
-    @media(max-width:480px){.more-articles-grid{grid-template-columns:1fr}}
+
 
     /* ── FOOTER ── */
     footer{background:#0f0e17;border-top:none;padding:48px 24px 24px}
@@ -897,70 +878,6 @@
     </div>
   </div>
 
-  <!-- ── ARTICLES ── -->
-  <div class="articles-section" id="articles">
-    <div class="sec-hdr">
-      <div class="sec-title">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
-        Career Articles
-        <span class="sec-badge">6 articles</span>
-      </div>
-      <a href="articles.html" style="font-size:13px;font-weight:700;color:var(--p);text-decoration:none;display:flex;align-items:center;gap:4px">
-        See all <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </a>
-    </div>
-    <div class="articles-grid">
-      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
-        <div class="article-img"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&q=80&fit=crop&crop=top" alt="Resume Tips" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">RESUME TIPS</span></div>
-        <div class="article-body">
-          <div class="article-title">7 Resume Mistakes That Get You Rejected Instantly</div>
-          <div class="article-brief">These common errors cost candidates interviews every day. Here's what to avoid.</div>
-          <div class="article-meta"><span>4 min read</span><span>Resume Tips</span></div>
-        </div>
-      </a>
-      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
-        <div class="article-img"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=80&fit=crop&crop=faces" alt="ATS" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">ATS</span></div>
-        <div class="article-body">
-          <div class="article-title">How to Beat ATS and Get Your Resume to a Human</div>
-          <div class="article-brief">Most resumes never reach a human. Learn how ATS works and how to pass it.</div>
-          <div class="article-meta"><span>6 min read</span><span>Job Search</span></div>
-        </div>
-      </a>
-      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
-        <div class="article-img"><img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=600&q=80&fit=crop&crop=top" alt="Writing" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">WRITING</span></div>
-        <div class="article-body">
-          <div class="article-title">How to Write a Professional Summary That Gets You Hired</div>
-          <div class="article-brief">Your summary is the first thing recruiters read. Make it count.</div>
-          <div class="article-meta"><span>5 min read</span><span>Writing</span></div>
-        </div>
-      </a>
-      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
-        <div class="article-img"><img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80&fit=crop&crop=top" alt="Skills" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">SKILLS</span></div>
-        <div class="article-body">
-          <div class="article-title">Top Skills Employers Are Looking for in 2025</div>
-          <div class="article-brief">The job market has changed. These are the hard and soft skills that matter most right now.</div>
-          <div class="article-meta"><span>5 min read</span><span>Career</span></div>
-        </div>
-      </a>
-      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
-        <div class="article-img"><img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80&fit=crop&crop=top" alt="Templates" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">TEMPLATES</span></div>
-        <div class="article-body">
-          <div class="article-title">Choosing the Right Resume Template for Your Industry</div>
-          <div class="article-brief">Your template signals something before a recruiter reads a word. Here's how to match.</div>
-          <div class="article-meta"><span>4 min read</span><span>Templates</span></div>
-        </div>
-      </a>
-      <a class="article-card" href="articles.html" style="text-decoration:none;color:inherit">
-        <div class="article-img"><img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80&fit=crop&crop=top" alt="AI Resume" loading="lazy"/><div class="article-img-overlay"></div><span class="article-cat">AI & CAREERS</span></div>
-        <div class="article-body">
-          <div class="article-title">How AI is Changing the Job Market in 2025</div>
-          <div class="article-brief">AI is reshaping hiring. Here's what job seekers need to know and how to adapt.</div>
-          <div class="article-meta"><span>7 min read</span><span>AI & Careers</span></div>
-        </div>
-      </a>
-    </div>
-  </div>
-
   <!-- ── FAQ ── -->
   <div class="faq-section" id="faq">
     <div class="sec-hdr">
@@ -992,7 +909,7 @@
         <div class="contact-ico" style="background:#EDE9FE">📧</div>
         <div class="contact-title">Email Support</div>
         <div class="contact-sub">For account issues or anything that needs a personal touch — reach us directly.</div>
-        <button class="contact-btn" onclick="window.location.href='mailto:support@kievora.com'">
+        <button class="contact-btn" onclick="window.location.href='mailto:support@kievora.app'">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
           Send Email
         </button>
@@ -1011,21 +928,6 @@
 
 </div><!-- end .page -->
 
-
-<!-- ══ ARTICLE FULL-SCREEN READER ══ -->
-<div class="art-screen" id="artScreen">
-  <div class="art-prog" id="artProg"></div>
-  <div class="art-screen-hdr">
-    <button class="art-back" onclick="closeArticle()">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-    </button>
-    <div class="art-hdr-title" id="artHdrTitle"></div>
-    <div class="art-hdr-time" id="artHdrTime"></div>
-  </div>
-  <div class="art-scroll" id="artScroll">
-    <div class="art-inner" id="artInner"></div>
-  </div>
-</div>
 
 
 <!-- ══ SUPPORT SCREEN (Submit + Track tabs) ══ -->
@@ -1348,7 +1250,6 @@
         <li><a href="index.html#features">Features</a></li>
         <li><a href="index.html#templates">Templates</a></li>
         <li><a href="index.html#kie">KIE AI</a></li>
-        <li><a href="articles.html">Career Reads</a></li>
       </ul>
     </div>
     <div>
@@ -1363,7 +1264,7 @@
       <div class="footer-col-h">Support</div>
       <ul class="footer-links">
         <li><a href="/support">Help Center</a></li>
-        <li><a href="mailto:support@kievora.com">Contact Us</a></li>
+        <li><a href="mailto:support@kievora.app">Contact Us</a></li>
         <li><a href="/privacy">Privacy Policy</a></li>
         <li><a href="/terms">Terms of Service</a></li>
       </ul>
@@ -1519,7 +1420,7 @@
     } catch(e) {
       btn.disabled = false;
       btn.innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Request';
-      errEl.textContent = 'Something went wrong. Please try emailing support@kievora.com directly.';
+      errEl.textContent = 'Something went wrong. Please try emailing support@kievora.app directly.';
       errEl.classList.add('show');
     }
   }
@@ -1707,15 +1608,9 @@
   // ── SEARCH ──
   // ── SMART SEARCH — suggestions + inline AI answer ──
 
-  // All searchable items (FAQs + articles)
+  // All searchable items (FAQs)
   const SEARCH_INDEX = [
     ...FAQS.map(f => ({ type:'faq',     icon:'❓', text: f.q, sub: f.a.slice(0,60)+'…', data: f })),
-    { type:'article', icon:'📋', text:'7 Resume Mistakes That Get You Rejected Instantly', sub:'Common errors that cost candidates interviews', id:'resume-mistakes' },
-    { type:'article', icon:'🤖', text:'How to Beat ATS and Get Your Resume to a Human',  sub:'Understand how ATS filters work',              id:'ats' },
-    { type:'article', icon:'✍️', text:'How to Write a Professional Summary That Gets You Hired', sub:'Hook recruiters in the first 3 sentences', id:'summary' },
-    { type:'article', icon:'🛠️', text:'Top Skills Employers Are Looking for in 2025',    sub:'Hard and soft skills that matter most now',    id:'skills' },
-    { type:'article', icon:'🎨', text:'Choosing the Right Resume Template for Your Industry', sub:'Match your template to your field',          id:'templates-guide' },
-    { type:'article', icon:'✨', text:'How to Use AI to Write a Better Resume',           sub:'AI as a co-writer, not a replacement',         id:'ai-resume' },
   ];
 
   let suggestDebounce = null;
@@ -1777,14 +1672,10 @@
   function selectSuggestion(text, type, id) {
     searchInput.value = text;
     suggestBox.classList.remove('open');
-    if (type === 'article' && id) {
-      openArticle(id);
-    } else {
-      // FAQ — scroll to it and open
-      const q = text.toLowerCase();
-      buildFAQ(q);
-      document.getElementById('faq').scrollIntoView({ behavior:'smooth', block:'start' });
-    }
+    // FAQ — scroll to it and open
+    const q = text.toLowerCase();
+    buildFAQ(q);
+    document.getElementById('faq').scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
   // ── Ask KIE inline — show answer panel ──
@@ -1849,131 +1740,6 @@
   searchInput.addEventListener('focus', function() {
     if (this.value.trim().length >= 2) showSuggestions(this.value.trim().toLowerCase());
   });
-
-  // ── ARTICLES ──
-  const ARTICLES = {
-    'resume-mistakes': {
-      cat:'RESUME TIPS', title:'7 Resume Mistakes That Get You Rejected Instantly', time:'4 min read',
-      body:`<p>Recruiters spend an average of 6–8 seconds scanning a resume before deciding whether to read further. Here are the 7 most common mistakes that send resumes straight to the bin.</p><h3>1. Using a Generic Objective Statement</h3><p>"Seeking a challenging position in a dynamic organization." Hiring managers have read this a million times. Replace it with a <strong>targeted professional summary</strong> highlighting your top 2–3 value propositions.</p><h3>2. No Quantifiable Achievements</h3><p>Don't just say what you did — say how well. "Managed social media" is weak. "Grew Instagram from 2,000 to 28,000 in 8 months through targeted content strategy" is strong.</p><h3>3. Typos and Grammar Errors</h3><p>A single typo signals carelessness. Proofread at least three times, then have someone else read it.</p><h3>4. Unprofessional Email Address</h3><p>coolkid99@gmail.com won't cut it. Use firstname.lastname@gmail.com or similar.</p><h3>5. One-Size-Fits-All Resume</h3><p>Tailor your resume for each application — especially the summary and skills sections. Mirror language from the job description.</p><h3>6. Poor Formatting</h3><p>Unreadable fonts, walls of text, inconsistent spacing — these signal poor attention to detail. Use a clean template and maintain consistent formatting.</p><h3>7. Missing Contact Information</h3><p>Always double-check your phone number and email are current before submitting.</p><div class="tip-box">✨ Use Kievora's AI scoring on your resume cards to see how complete your resume is — aim for 90%+</div>`
-    },
-    'ats': {
-      cat:'ATS', title:'How to Beat ATS and Get Your Resume to a Human', time:'6 min read',
-      body:`<p>Over 95% of Fortune 500 companies use an Applicant Tracking System (ATS) to filter resumes. Understanding how ATS works is one of the highest-leverage things you can do in your job search.</p><h3>What is an ATS?</h3><p>An ATS automatically scans and ranks resumes based on how well they match a job description. If your resume doesn't contain the right words, it won't be seen by a recruiter — no matter how qualified you are.</p><h3>How to Optimize for ATS</h3><p><strong>1. Use standard section headings.</strong> "Work Experience," "Education," "Skills" — not creative alternatives.</p><p><strong>2. Mirror the job description language.</strong> If the job says "project management," your resume should say the same thing.</p><p><strong>3. Include relevant keywords throughout.</strong> Spread them naturally across your summary, experience, and skills.</p><p><strong>4. Use clean formatting.</strong> ATS struggles with tables and graphics. Stick to clean layouts — which is exactly what Kievora's templates are optimized for.</p><p><strong>5. Submit as PDF.</strong> PDF maintains your formatting.</p><div class="tip-box">✨ Use KIE AI to match your resume's language to a specific job description. Paste the JD and ask KIE to identify key skills to include.</div>`
-    },
-    'summary': {
-      cat:'WRITING', title:'How to Write a Professional Summary That Gets You Hired', time:'5 min read',
-      body:`<p>Your professional summary is the first thing a recruiter reads. You have about 3 sentences to hook them. Here's how to write one that works.</p><h3>The Formula</h3><p><strong>[Job title] + [Years of experience] + [Key expertise] + [Top achievement or value]</strong></p><p><em>Example:</em> "Product Manager with 5+ years in Nigerian fintech, specializing in mobile payments and growth strategy. Led cross-functional teams to deliver 3 product launches with 40% user growth. Known for bridging technical and business teams to ship on time."</p><h3>Tips</h3><ul><li>Keep it 2–4 sentences maximum</li><li>Use first person but skip "I" — start with your title or an action word</li><li>Include at least one metric or achievement</li><li>Tailor it for every job application</li><li>Avoid clichés: "hardworking," "passionate," "team player"</li></ul><div class="tip-box">✨ Let KIE AI generate 3 summary templates for you — just fill in your job title in the resume builder</div>`
-    },
-    'skills': {
-      cat:'SKILLS', title:'Top Skills Employers Are Looking for in 2025', time:'5 min read',
-      body:`<p>The skills landscape shifts quickly. Here's what hiring managers are actively searching for in 2025.</p><h3>In-Demand Hard Skills</h3><p><strong>Tech & Data:</strong> Python, SQL, data analysis, machine learning basics, cloud platforms, API integration, prompt engineering, AI tools literacy</p><p><strong>Finance & Business:</strong> Financial modeling, Excel/Google Sheets mastery, project management (PMP/Agile), business analysis</p><p><strong>Creative & Marketing:</strong> Video editing, SEO/SEM, content strategy, social media analytics, Canva/Adobe Suite</p><h3>High-Value Soft Skills</h3><ul><li><strong>Communication</strong> — Written and verbal, especially remote</li><li><strong>Adaptability</strong> — Learning new tools quickly</li><li><strong>Critical thinking</strong> — Problem-solving with limited information</li><li><strong>Initiative</strong> — Taking ownership without being asked</li></ul><h3>How to Present Skills</h3><p>Don't just list skills — contextualize them. "Python" is weaker than "Python (3 years — built automated reporting pipeline saving 8hrs/week)."</p><div class="tip-box">✨ Ask KIE AI: "What skills should a [your job title] include on their resume in 2025?"</div>`
-    },
-    'templates-guide': {
-      cat:'TEMPLATES', title:'Choosing the Right Resume Template for Your Industry', time:'4 min read',
-      body:`<p>Your template signals something about you before a recruiter reads a word. Here's how to match your template to your industry.</p><h3>Conservative Industries: Law, Finance, Government</h3><p>Go with <strong>Classic</strong> or <strong>Elegant</strong>. Clean layouts with muted colors. Anything too creative may raise eyebrows.</p><h3>Tech, Product & Startups</h3><p><strong>Modern</strong>, <strong>Minimal</strong>, or <strong>Slate</strong>. Tech hiring managers appreciate clean design that doesn't distract.</p><h3>Creative Industries: Design, Media, Marketing</h3><p><strong>Vivid</strong>, <strong>Coral</strong>, or <strong>Ink</strong> let your personality come through. Your resume IS part of your portfolio.</p><h3>Senior & Executive Roles</h3><p><strong>Bold</strong> or <strong>Elegant</strong> project authority. Heavy typography, clear hierarchy.</p><h3>General Multi-Industry</h3><p><strong>Split</strong> offers a structured two-column layout that works across many fields.</p><div class="tip-box">✨ Use Kievora's Template Match Quiz for an instant AI recommendation based on your industry and style</div>`
-    },
-    'ai-resume': {
-      cat:'AI TOOLS', title:'How to Use AI to Write a Better Resume (Without Sounding Like a Robot)', time:'6 min read',
-      body:`<p>AI has changed resume writing — but most people are using it wrong. Here's the smart approach.</p><h3>The Wrong Way</h3><p>Asking AI to "write my resume" and pasting the output directly. Recruiters can tell. Phrases like "results-driven professional with a proven track record" are now red flags.</p><h3>The Right Way: AI as a Co-Writer</h3><p><strong>1. Use AI to generate options, not final copy.</strong> Ask for 3–5 versions of a bullet point, then rewrite your favourite in your own voice.</p><p><strong>2. Use AI to beat writer's block.</strong> Describe your role in plain language and let AI help you structure it professionally.</p><p><strong>3. Use AI for keyword optimization.</strong> Paste a job description and ask AI to identify key skills and phrases to include.</p><p><strong>4. Use AI to quantify your impact.</strong> Tell AI what you did ("I managed our social media") and let it help you frame it with measurable language.</p><h3>How KIE AI Helps</h3><p>KIE generates real summary templates when you fill in your job title, suggests relevant skills, and helps you turn vague job descriptions into punchy bullet points — all inside the app.</p><div class="tip-box">✨ After KIE generates a summary, rewrite it in your own words. AI structure + your voice = a resume that sounds human AND is optimized.</div>`
-    }
-  };
-
-  let clapDebounce = null;
-  let sessionClaps = 0;
-  let currentArtId = null;
-
-  function openArticle(id) {
-    const art = ARTICLES[id];
-    if (!art) return;
-    currentArtId = id;
-    sessionClaps = 0;
-
-    document.getElementById('artHdrTitle').textContent = art.title;
-    document.getElementById('artHdrTime').textContent = '📖 ' + art.time;
-    document.getElementById('artInner').innerHTML = `
-      <div class="art-cat">${art.cat}</div>
-      <div class="art-big-title">${art.title}</div>
-      <div class="art-byline">
-        <div class="art-byline-av">R</div>
-        <div>
-          <div class="art-byline-name">Kievora Career Hub</div>
-          <div class="art-byline-sub">${art.time} · Career Advice</div>
-        </div>
-        <div class="art-love-row">
-          <button class="art-love-btn" id="artLoveBtn" onclick="doClap()">🤍</button>
-          <span class="art-love-count" id="artLoveNum">…</span>
-        </div>
-      </div>
-      <div class="art-txt">${art.body}</div>`;
-
-    const screen = document.getElementById('artScreen');
-    const scroll = document.getElementById('artScroll');
-    const prog = document.getElementById('artProg');
-    screen.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    scroll.scrollTop = 0;
-    prog.style.width = '0%';
-
-    // Progress bar
-    scroll.onscroll = () => {
-      const max = scroll.scrollHeight - scroll.clientHeight;
-      const pct = max > 0 ? Math.min(100, (scroll.scrollTop / max) * 100) : 0;
-      prog.style.width = pct + '%';
-    };
-
-    // Load love count
-    loadClapCount(id);
-  }
-
-  function closeArticle() {
-    document.getElementById('artScreen').classList.remove('open');
-    document.body.style.overflow = '';
-    currentArtId = null;
-  }
-
-  // ── CLAP ──
-  async function loadClapCount(id) {
-    try {
-      const doc = await db.collection('article_claps').doc(id).get();
-      const count = doc.exists ? (doc.data().count || 0) : 0;
-      const el = document.getElementById('artLoveNum');
-      if (el) el.textContent = count;
-    } catch(e) {
-      const el = document.getElementById('artLoveNum');
-      if (el) el.textContent = '0';
-    }
-  }
-
-  function doClap() {
-    if (!currentArtId) return;
-    const btn = document.getElementById('artLoveBtn');
-    const numEl = document.getElementById('artLoveNum');
-    if (!btn || !numEl) return;
-    const current = parseInt(numEl.textContent) || 0;
-    numEl.textContent = current + 1;
-    sessionClaps++;
-    btn.textContent = '❤️';
-    btn.classList.remove('loved');
-    void btn.offsetWidth;
-    btn.classList.add('loved');
-    // floating +1
-    const f = document.createElement('div');
-    f.className = 'love-float';
-    f.textContent = '+1';
-    btn.appendChild(f);
-    setTimeout(() => f.remove(), 600);
-    // debounce Firestore write
-    clearTimeout(clapDebounce);
-    clapDebounce = setTimeout(async () => {
-      try {
-        await db.collection('article_claps').doc(currentArtId).set(
-          { count: firebase.firestore.FieldValue.increment(sessionClaps), title: ARTICLES[currentArtId]?.title || '' },
-          { merge: true }
-        );
-        sessionClaps = 0;
-      } catch(e) {}
-    }, 1200);
-  }
 
   // ── CUSTOM CATEGORY SELECT ──
   const CAT_OPTIONS = [
@@ -2084,13 +1850,13 @@
         body: JSON.stringify({ messages: kieHist })
       });
       const data = await res.json();
-      const reply = data.reply || "Sorry, I couldn't get a response right now. Try emailing support@kievora.com";
+      const reply = data.reply || "Sorry, I couldn't get a response right now. Try emailing support@kievora.app";
       kieHist.push({ role:'assistant', content:reply });
       setKieTyping(false);
       appendKieMsg('ai', reply);
     } catch(e) {
       setKieTyping(false);
-      appendKieMsg('ai', "I'm having trouble connecting right now. Please try again, or email support@kievora.com for help.");
+      appendKieMsg('ai', "I'm having trouble connecting right now. Please try again, or email support@kievora.app for help.");
     }
   }
 
@@ -2217,7 +1983,6 @@
     const phrases = [
       'Search our guides and get answers fast.',
       'Ask KIE — your 24/7 AI career coach.',
-      'Browse career articles written for you.',
       'Fix your resume in minutes with AI.',
       'Land your dream job. We\'ve got your back.',
       'Get help with templates, PDFs, and more.',
