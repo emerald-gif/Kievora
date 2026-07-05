@@ -1821,6 +1821,7 @@
         openPremiumDrawer(feature);
       }
     }
+    window.lockTapped = lockTapped; // bridge — needed by job card onclicks generated outside this module scope
 
     // Re-renders every plan-aware surface currently in the DOM. Called once
     // after loadPlanGates() resolves, and again any time the plan might have
@@ -6697,22 +6698,28 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
     // ── Fetch jobs from Remotive (free, no key) ────────────────────────────────
     async function fetchJobsRemotive(query, limit = 8) {
-      const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=${limit}`;
-      const res  = await fetch(url);
-      if (!res.ok) throw new Error('Remotive fetch failed');
-      const data = await res.json();
-      return (data.jobs || []).map(j => ({
-        id:       j.id,
-        title:    j.title,
-        company:  j.company_name,
-        logo:     j.company_logo_url || j.company_logo || '',
-        location: j.candidate_required_location || 'Remote',
-        remote:   true,
-        salary:   j.salary || '',
-        type:     j.job_type || '',
-        url:      j.url,
-        source:   'Remotive'
-      }));
+      try {
+        const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=${limit}`;
+        const res  = await fetch(url);
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.jobs || []).map(j => ({
+          id:          j.id,
+          title:       j.title,
+          company:     j.company_name,
+          logo:        j.company_logo_url || j.company_logo || '',
+          location:    j.candidate_required_location || 'Remote',
+          remote:      true,
+          salary:      j.salary || '',
+          type:        j.job_type || '',
+          url:         j.url,
+          source:      'Remotive',
+          posted:      j.publication_date || '',
+          snippet:     (j.description||'').replace(/<[^>]+>/g,'').slice(0,200)+'…',
+          description: (j.description||'').replace(/<[^>]+>/g,'').slice(0,3000),
+          requirements: '',
+        }));
+      } catch { return []; }
     }
 
     // ── Country detection (IP-based, one-shot, cached in localStorage) ──────────
@@ -6865,13 +6872,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       try {
         const allJobs = await fetchJobs(prof.title, 8);
-        window._homeJobs = allJobs; // stored for the detail drawer
+        window._homeJobs = allJobs;
         if (!cards) return;
         if (!allJobs.length) {
           cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#7c3aed;font-weight:700">search manually</a></div>`;
           return;
         }
-        cards.innerHTML = jobs.map((j, i) => {
+        cards.innerHTML = allJobs.slice(0, 8).map((j, i) => {
           const tags = [
             j.remote ? `<span class="job-snap-tag remote">Remote</span>` : '',
             j.type   ? `<span class="job-snap-tag">${j.type}</span>` : '',
