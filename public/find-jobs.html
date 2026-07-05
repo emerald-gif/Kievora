@@ -151,7 +151,7 @@
 
   /* ── FILTER CHIPS ── */
   .filters {
-    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
   }
   .chip {
     border: 1.5px solid var(--border); border-radius: 99px;
@@ -161,6 +161,51 @@
   }
   .chip:hover { border-color: var(--p); color: var(--p); }
   .chip.active { background: var(--p); color: #fff; border-color: var(--p); }
+
+  /* ── COUNTRY SELECTOR ROW ── */
+  .country-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .country-select {
+    display: flex; align-items: center; gap: 6px;
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 7px 12px; font-size: 12px;
+    font-weight: 700; color: var(--txt); cursor: pointer;
+    font-family: inherit; transition: border-color .15s;
+  }
+  .country-select:focus-within { border-color: var(--p); }
+  .country-select select {
+    border: none; outline: none; background: transparent;
+    font-size: 12px; font-weight: 700; color: var(--txt);
+    font-family: inherit; cursor: pointer; padding-right: 4px;
+  }
+  .country-detected-badge {
+    font-size: 10.5px; font-weight: 700; color: #15803d;
+    background: #f0fdf4; border: 1.5px solid #bbf7d0;
+    border-radius: 20px; padding: 3px 9px;
+  }
+
+  /* ── JOB DETAIL DRAWER ── */
+  #fjJobDrawer { position: fixed; inset: 0; z-index: 950; pointer-events: none; }
+  #fjJobBackdrop { position: absolute; inset: 0; background: rgba(15,14,23,.5); backdrop-filter: blur(4px); opacity: 0; transition: opacity .28s; pointer-events: none; }
+  #fjJobSheet { position: absolute; bottom: 0; left: 0; right: 0; background: #fff; border-radius: 24px 24px 0 0; max-height: 91vh; overflow-y: auto; transform: translateY(100%); transition: transform .32s cubic-bezier(.32,.72,0,1); padding-bottom: env(safe-area-inset-bottom,16px); }
+  #fjJobDrawer.open { pointer-events: all; }
+  #fjJobDrawer.open #fjJobBackdrop { opacity: 1; pointer-events: all; }
+  #fjJobDrawer.open #fjJobSheet { transform: translateY(0); }
+  .fj-handle { width: 36px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 12px auto 18px; }
+  .fj-hdr { padding: 0 20px 16px; border-bottom: 1.5px solid #f1f5f9; }
+  .fj-logo { width: 50px; height: 50px; border-radius: 14px; border: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: #f8fafc; }
+  .fj-company { font-size: 11.5px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+  .fj-title { font-size: 18px; font-weight: 900; color: #0f0e17; margin-top: 4px; letter-spacing: -.3px; line-height: 1.25; }
+  .fj-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+  .fj-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; background: #f8f7ff; border: 1.5px solid #ede9fe; color: #7c3aed; border-radius: 20px; padding: 4px 10px; }
+  .fj-pill.green { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+  .fj-pill.amber { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+  .fj-pill.blue  { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .fj-sec-title { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .fj-desc { font-size: 13px; color: #374151; line-height: 1.7; white-space: pre-line; }
+  .fj-apply-btn { display: block; width: 100%; background: linear-gradient(135deg,#7c3aed,#6d28d9); color: #fff; border: none; border-radius: 14px; padding: 16px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: -.2px; box-shadow: 0 4px 16px rgba(124,58,237,.3); transition: opacity .15s; text-decoration: none; text-align: center; }
+  .fj-apply-btn:active { opacity: .85; }
+  .fj-apply-btn.locked { background: linear-gradient(135deg,#94a3b8,#64748b); box-shadow: none; cursor: default; }
+  .fj-src { text-align: center; font-size: 10.5px; color: #94a3b8; margin-top: 8px; }
 
   /* ── SECTION HEADER ── */
   .sec-hdr {
@@ -422,6 +467,33 @@
       </button>
     </div>
 
+    <!-- Country selector -->
+    <div class="country-row">
+      <div class="country-select">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        <select id="countrySelect" onchange="onCountryChange()">
+          <option value="worldwide">🌍 Worldwide</option>
+          <option value="ng">🇳🇬 Nigeria</option>
+          <option value="gh">🇬🇭 Ghana</option>
+          <option value="ke">🇰🇪 Kenya</option>
+          <option value="za">🇿🇦 South Africa</option>
+          <option value="eg">🇪🇬 Egypt</option>
+          <option value="us">🇺🇸 United States</option>
+          <option value="gb">🇬🇧 United Kingdom</option>
+          <option value="ca">🇨🇦 Canada</option>
+          <option value="au">🇦🇺 Australia</option>
+          <option value="de">🇩🇪 Germany</option>
+          <option value="fr">🇫🇷 France</option>
+          <option value="in">🇮🇳 India</option>
+          <option value="sg">🇸🇬 Singapore</option>
+          <option value="ae">🇦🇪 UAE</option>
+          <option value="br">🇧🇷 Brazil</option>
+          <option value="nl">🇳🇱 Netherlands</option>
+        </select>
+      </div>
+      <span class="country-detected-badge" id="countryDetectedBadge" style="display:none">📍 Auto-detected</span>
+    </div>
+
     <!-- Results header -->
     <div class="sec-hdr">
       <div class="sec-title">Recommended Jobs</div>
@@ -466,6 +538,36 @@
 
 </div><!-- /mainContent -->
 
+<!-- ── JOB DETAIL DRAWER ── -->
+<div id="fjJobDrawer">
+  <div id="fjJobBackdrop" onclick="closeJobDetail()"></div>
+  <div id="fjJobSheet">
+    <div class="fj-handle"></div>
+    <div class="fj-hdr">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="fj-logo" id="fjLogo"></div>
+        <div style="flex:1;min-width:0">
+          <div class="fj-company" id="fjCompany"></div>
+          <div class="fj-title" id="fjTitle"></div>
+        </div>
+      </div>
+      <div class="fj-meta" id="fjMeta"></div>
+    </div>
+    <div style="padding:18px 20px 4px">
+      <div class="fj-sec-title">About the role</div>
+      <div class="fj-desc" id="fjDesc"></div>
+    </div>
+    <div id="fjReqSection" style="padding:12px 20px 4px;display:none">
+      <div class="fj-sec-title">Requirements</div>
+      <div class="fj-desc" id="fjReqBody"></div>
+    </div>
+    <div style="padding:18px 20px 8px">
+      <a id="fjApplyBtn" class="fj-apply-btn" target="_blank" rel="noopener">Apply for this role →</a>
+      <div class="fj-src" id="fjSrc"></div>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 // ── Firebase auth gate (same pattern as dashboard.html) ───────────────────────
 import { initializeApp }      from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
@@ -503,11 +605,14 @@ onAuthStateChanged(auth, async user => {
 // ── State ──────────────────────────────────────────────────────────────────────
 const PROF_KEY   = 'rsmkr_jobs_prof';
 const AUTH_KEY   = 'rsmkr_token';
+const COUNTRY_KEY = `kievora_country_${window.__fjUid||'anon'}`;
 
-let currentFilter = 'all';
-let allJobs       = [];
-let page          = 1;
-const PAGE_SIZE   = 12;
+let currentFilter  = 'all';
+let allJobs        = [];
+let page           = 1;
+const PAGE_SIZE    = 12;
+let _selectedCountry = 'worldwide';
+let _countryName     = 'Worldwide';
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function g(id) { return document.getElementById(id); }
@@ -622,29 +727,86 @@ function renderProfBar() {
 // ── Job fetching ──────────────────────────────────────────────────────────────
 async function fetchJobsRemotive(query, limit = 20) {
   const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=${limit}`;
-  const res  = await fetch(url);
-  if (!res.ok) throw new Error('Fetch failed');
-  const data = await res.json();
-  return (data.jobs || []).map(j => ({
-    id:       j.id,
-    title:    j.title,
-    company:  j.company_name,
-    logo:     j.company_logo_url || j.company_logo || '',
-    location: j.candidate_required_location || 'Remote',
-    remote:   true,
-    salary:   j.salary || '',
-    type:     j.job_type || '',
-    url:      j.url,
-    source:   'Remotive',
-    posted:   j.publication_date || '',
-    snippet:  (j.description || '').replace(/<[^>]+>/g, '').slice(0, 200) + '…'
-  }));
+  try {
+    const res  = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.jobs || []).map(j => ({
+      id:       j.id,
+      title:    j.title,
+      company:  j.company_name,
+      logo:     j.company_logo_url || j.company_logo || '',
+      location: j.candidate_required_location || 'Remote',
+      remote:   true,
+      salary:   j.salary || '',
+      type:     j.job_type || '',
+      url:      j.url,
+      source:   'Remotive',
+      posted:   j.publication_date || '',
+      snippet:  (j.description || '').replace(/<[^>]+>/g, '').slice(0, 200) + '…',
+      description: (j.description || '').replace(/<[^>]+>/g, '').slice(0, 3000),
+      requirements: '',
+    }));
+  } catch { return []; }
+}
+
+// ── Country detection ─────────────────────────────────────────────────────────
+async function detectAndSetCountry() {
+  const lsKey = `kievora_country_${window.__fjUid||'anon'}`;
+  try {
+    const cached = JSON.parse(localStorage.getItem(lsKey) || 'null');
+    if (cached?.code) {
+      _selectedCountry = cached.code;
+      _countryName     = cached.name;
+      applyCountryToUI(cached.code, true);
+      return;
+    }
+    const r = await api('GET', '/api/user-country');
+    if (r?.countryCode && r.countryCode !== 'worldwide') {
+      _selectedCountry = r.countryCode;
+      _countryName     = r.country;
+      localStorage.setItem(lsKey, JSON.stringify({ code: r.countryCode, name: r.country }));
+      applyCountryToUI(r.countryCode, true);
+    }
+  } catch { /* keep worldwide */ }
+}
+
+function applyCountryToUI(code, detected) {
+  const sel = g('countrySelect');
+  if (sel) {
+    const opt = [...sel.options].find(o => o.value === (code||'').toLowerCase());
+    if (opt) sel.value = opt.value;
+  }
+  const badge = g('countryDetectedBadge');
+  if (badge) badge.style.display = detected && code && code !== 'worldwide' ? '' : 'none';
+}
+
+function onCountryChange() {
+  const sel = g('countrySelect');
+  if (!sel) return;
+  _selectedCountry = sel.value;
+  const opt = sel.options[sel.selectedIndex];
+  // strip the flag emoji (first non-space word) to get just the country name
+  _countryName = (opt?.text || '').replace(/^\S+\s*/, '');
+  const badge = g('countryDetectedBadge');
+  if (badge) badge.style.display = 'none';
+  // Re-run current search with new country
+  const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
+  if (q) loadJobs(q);
+}
+
+function getCurrentProfQuery() {
+  const uid   = window.__fjUid || 'anon';
+  const saved = localStorage.getItem(`kievora_jobs_prof_${uid}`);
+  if (saved) { try { return JSON.parse(saved).title || ''; } catch {} }
+  const cat = localStorage.getItem(`kievora_user_cat_${uid}`) || '';
+  return CATEGORY_TO_QUERY[cat] || '';
 }
 
 async function fetchJobs(query) {
-  // Try server (JSearch) first
+  // Try server (JSearch + Adzuna) first — passes country for localised results
   try {
-    const res = await api('POST', '/api/find-jobs', { query, limit: 20 });
+    const res = await api('POST', '/api/find-jobs', { query, limit: 20, countryCode: _selectedCountry });
     if (res.jobs?.length) return res.jobs;
   } catch (_) { /* fallback below */ }
   // Free Remotive fallback
@@ -702,14 +864,14 @@ function renderJobs() {
   }
   if (empty) empty.style.display = 'none';
 
-  grid.innerHTML = visible.map(j => {
-    const locked = !j.url;
-    const tag = locked ? 'div' : 'a';
-    const openAttrs = locked
+  grid.innerHTML = visible.map((j, i) => {
+    const locked    = !j.url;
+    const globalIdx = allJobs.indexOf(j);
+    const openAttr  = locked
       ? `onclick="lockTapped()" style="cursor:pointer"`
-      : `href="${j.url}" target="_blank" rel="noopener"`;
+      : `onclick="openJobDetail(${globalIdx})" style="cursor:pointer"`;
     return `
-    <${tag} class="job-card${locked?' job-card-locked':''}" ${openAttrs}>
+    <div class="job-card${locked?' job-card-locked':''}" ${openAttr}>
       ${locked ? '<div class="job-lock-badge">🔒 Premium</div>' : ''}
       <div class="job-card-top">
         <div class="job-logo">
@@ -737,13 +899,14 @@ function renderJobs() {
       <div class="job-footer">
         <div class="job-posted">${timeSince(j.posted)}</div>
         <span class="job-apply">
-          ${locked ? 'Upgrade to Apply' : 'Apply Now'}
-          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          ${locked ? 'Upgrade to view' : 'View details'}
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </span>
       </div>
-    </${tag}>
+    </div>
   `;
   }).join('');
+  window._fjJobs = allJobs; // store for the detail drawer
 
   if (loadWrap) loadWrap.style.display = visible.length < filtered.length ? '' : 'none';
 }
@@ -902,7 +1065,9 @@ g('profModalInp')?.addEventListener('keydown', e => { if (e.key === 'Enter') sav
 g('profModal')?.addEventListener('click', e => { if (e.target === g('profModal')) closeProfModal(); });
 
 // ── Init (called by Firebase auth gate above) ─────────────────────────────────
-window.__onFindJobsAuthReady = function() {
+window.__onFindJobsAuthReady = async function() {
+  // Detect country first, then load jobs so the first search is already localised
+  await detectAndSetCountry();
   const hasProfession = renderProfBar();
   if (hasProfession) {
     const prof = getProfession();
@@ -911,6 +1076,61 @@ window.__onFindJobsAuthReady = function() {
 };
 // In case Firebase fired before this script parsed (rare but safe):
 if (window.__findJobsAuthDone) window.__onFindJobsAuthReady();
+
+// ── Job Detail Drawer ──────────────────────────────────────────────────────────
+function fmtDate(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  catch { return ''; }
+}
+
+window.openJobDetail = function(idx) {
+  const j = (window._fjJobs || [])[idx]; if (!j) return;
+  // Logo
+  g('fjLogo').innerHTML = j.logo
+    ? `<img src="${j.logo}" alt="${j.company}" style="width:46px;height:46px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg width=&quot;22&quot; height=&quot;22&quot; fill=&quot;none&quot; viewBox=&quot;0 0 24 24&quot; stroke=&quot;#94a3b8&quot; stroke-width=&quot;1.5&quot;><rect x=&quot;2&quot; y=&quot;7&quot; width=&quot;20&quot; height=&quot;14&quot; rx=&quot;2&quot;/><path stroke-linecap=&quot;round&quot; d=&quot;M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2&quot;/></svg>'">`
+    : `<svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>`;
+  g('fjCompany').textContent = j.company || '';
+  g('fjTitle').textContent   = j.title   || '';
+  // Meta pills
+  const pills = [];
+  if (j.location) pills.push(`<span class="fj-pill blue"><svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>${j.location}</span>`);
+  if (j.remote)   pills.push(`<span class="fj-pill green">🌐 Remote</span>`);
+  if (j.type)     pills.push(`<span class="fj-pill">${j.type}</span>`);
+  if (j.salary)   pills.push(`<span class="fj-pill amber">💰 ${j.salary}</span>`);
+  if (j.posted)   pills.push(`<span class="fj-pill">📅 ${fmtDate(j.posted)}</span>`);
+  g('fjMeta').innerHTML = pills.join('');
+  // Description
+  g('fjDesc').textContent = j.description || j.snippet || 'No description available for this role.';
+  // Requirements
+  const reqSec = g('fjReqSection');
+  if (j.requirements) { reqSec.style.display=''; g('fjReqBody').textContent = j.requirements; }
+  else { reqSec.style.display='none'; }
+  // Apply button
+  const btn = g('fjApplyBtn');
+  if (j.url) {
+    btn.href = j.url; btn.className = 'fj-apply-btn';
+    btn.onclick = null; btn.textContent = 'Apply for this role →';
+  } else {
+    btn.removeAttribute('href'); btn.className = 'fj-apply-btn locked';
+    btn.onclick = () => lockTapped(); btn.textContent = '🔒 Upgrade to apply';
+  }
+  g('fjSrc').textContent = j.source ? `via ${j.source}` : '';
+  g('fjJobDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeJobDetail = function() {
+  g('fjJobDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+// Swipe down on the sheet to dismiss
+let _fjTouchY = 0;
+g('fjJobSheet')?.addEventListener('touchstart', e => { _fjTouchY = e.touches[0].clientY; }, { passive: true });
+g('fjJobSheet')?.addEventListener('touchend', e => {
+  if (e.changedTouches[0].clientY - _fjTouchY > 60) closeJobDetail();
+}, { passive: true });
 </script>
 </body>
 </html>
