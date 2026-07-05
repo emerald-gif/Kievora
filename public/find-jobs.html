@@ -183,29 +183,55 @@
     border-radius: 20px; padding: 3px 9px;
   }
 
-  /* ── JOB DETAIL DRAWER ── */
-  #fjJobDrawer { position: fixed; inset: 0; z-index: 950; pointer-events: none; }
-  #fjJobBackdrop { position: absolute; inset: 0; background: rgba(15,14,23,.5); backdrop-filter: blur(4px); opacity: 0; transition: opacity .28s; pointer-events: none; }
-  #fjJobSheet { position: absolute; bottom: 0; left: 0; right: 0; background: #fff; border-radius: 24px 24px 0 0; max-height: 91vh; overflow-y: auto; transform: translateY(100%); transition: transform .32s cubic-bezier(.32,.72,0,1); padding-bottom: env(safe-area-inset-bottom,16px); }
-  #fjJobDrawer.open { pointer-events: all; }
-  #fjJobDrawer.open #fjJobBackdrop { opacity: 1; pointer-events: all; }
-  #fjJobDrawer.open #fjJobSheet { transform: translateY(0); }
-  .fj-handle { width: 36px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 12px auto 18px; }
-  .fj-hdr { padding: 0 20px 16px; border-bottom: 1.5px solid #f1f5f9; }
-  .fj-logo { width: 50px; height: 50px; border-radius: 14px; border: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: #f8fafc; }
-  .fj-company { font-size: 11.5px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
-  .fj-title { font-size: 18px; font-weight: 900; color: #0f0e17; margin-top: 4px; letter-spacing: -.3px; line-height: 1.25; }
-  .fj-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
-  .fj-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; background: #f8f7ff; border: 1.5px solid #ede9fe; color: #7c3aed; border-radius: 20px; padding: 4px 10px; }
-  .fj-pill.green { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
-  .fj-pill.amber { background: #fffbeb; border-color: #fde68a; color: #92400e; }
-  .fj-pill.blue  { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
-  .fj-sec-title { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-  .fj-desc { font-size: 13px; color: #374151; line-height: 1.7; white-space: pre-line; }
-  .fj-apply-btn { display: block; width: 100%; background: linear-gradient(135deg,#7c3aed,#6d28d9); color: #fff; border: none; border-radius: 14px; padding: 16px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: -.2px; box-shadow: 0 4px 16px rgba(124,58,237,.3); transition: opacity .15s; text-decoration: none; text-align: center; }
-  .fj-apply-btn:active { opacity: .85; }
-  .fj-apply-btn.locked { background: linear-gradient(135deg,#94a3b8,#64748b); box-shadow: none; cursor: default; }
-  .fj-src { text-align: center; font-size: 10.5px; color: #94a3b8; margin-top: 8px; }
+  /* ── JOB DETAIL SCREEN (slides in from right, full page) ── */
+  #fjDetailScreen {
+    position: fixed; inset: 0; z-index: 200;
+    background: #f8f7ff;
+    transform: translateX(100%);
+    transition: transform .32s cubic-bezier(.32,.72,0,1);
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  #fjDetailScreen.open { transform: translateX(0); }
+  .fjd-hdr {
+    position: sticky; top: 0; z-index: 10;
+    background: #fff; border-bottom: 1.5px solid #ede9fe;
+    padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+  }
+  .fjd-back {
+    width: 36px; height: 36px; border: 1.5px solid #ede9fe;
+    background: #f5f3ff; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; color: #7c3aed;
+  }
+  .fjd-hdr-title { font-size: 15px; font-weight: 800; color: #0f0e17; letter-spacing: -.2px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fjd-body { padding: 20px 18px 40px; flex: 1; }
+  .fjd-hero { background: #fff; border: 1.5px solid #ede9fe; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(124,58,237,.05); }
+  .fjd-logo { width: 54px; height: 54px; border-radius: 15px; border: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc; flex-shrink: 0; }
+  .fjd-company-name { font-size: 11.5px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-top: 10px; }
+  .fjd-job-title { font-size: 20px; font-weight: 900; color: #0f0e17; letter-spacing: -.4px; line-height: 1.2; margin-top: 5px; }
+  .fjd-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+  .fjd-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; border-radius: 20px; padding: 5px 11px; }
+  .fjd-pill.purple { background: #f5f3ff; border: 1.5px solid #ddd6fe; color: #7c3aed; }
+  .fjd-pill.green  { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; }
+  .fjd-pill.amber  { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
+  .fjd-pill.blue   { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1d4ed8; }
+  .fjd-pill.grey   { background: #f8fafc; border: 1.5px solid #e2e8f0; color: #475569; }
+  .fjd-section { background: #fff; border: 1.5px solid #ede9fe; border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .fjd-section-title { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  /* Formatted description — handles HTML from providers */
+  .fjd-desc { font-size: 13.5px; color: #374151; line-height: 1.7; }
+  .fjd-desc p  { margin: 0 0 10px; }
+  .fjd-desc ul,.fjd-desc ol { padding-left: 18px; margin: 0 0 10px; }
+  .fjd-desc li { margin-bottom: 4px; }
+  .fjd-desc h1,.fjd-desc h2,.fjd-desc h3 { font-size: 14px; font-weight: 800; color: #0f0e17; margin: 14px 0 6px; }
+  .fjd-desc strong,.fjd-desc b { font-weight: 700; color: #0f0e17; }
+  .fjd-desc br { display: block; content: ''; margin-bottom: 5px; }
+  .fjd-apply { display: block; width: 100%; background: linear-gradient(135deg,#7c3aed,#6d28d9); color: #fff; border: none; border-radius: 14px; padding: 17px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: -.2px; box-shadow: 0 4px 16px rgba(124,58,237,.3); transition: opacity .15s; text-decoration: none; text-align: center; }
+  .fjd-apply:active { opacity: .85; }
+  .fjd-apply.locked { background: linear-gradient(135deg,#94a3b8,#64748b); box-shadow: none; cursor: default; }
+  .fjd-listed-via { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 12px; font-size: 11.5px; color: #94a3b8; font-weight: 600; }
+  .fjd-listed-badge { background: #f8f7ff; border: 1.5px solid #ede9fe; border-radius: 20px; padding: 3px 10px; font-size: 10.5px; font-weight: 800; color: #7c3aed; letter-spacing: .2px; }
 
   /* ── SECTION HEADER ── */
   .sec-hdr {
@@ -538,32 +564,47 @@
 
 </div><!-- /mainContent -->
 
-<!-- ── JOB DETAIL DRAWER ── -->
-<div id="fjJobDrawer">
-  <div id="fjJobBackdrop" onclick="closeJobDetail()"></div>
-  <div id="fjJobSheet">
-    <div class="fj-handle"></div>
-    <div class="fj-hdr">
-      <div style="display:flex;gap:14px;align-items:flex-start">
-        <div class="fj-logo" id="fjLogo"></div>
+<!-- ── JOB DETAIL SCREEN — slides in from right, full page ── -->
+<div id="fjDetailScreen">
+  <!-- Sticky header -->
+  <div class="fjd-hdr">
+    <button class="fjd-back" onclick="closeJobDetail()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="fjd-hdr-title" id="fjdHdrTitle">Job Details</div>
+  </div>
+
+  <div class="fjd-body">
+    <!-- Hero card: logo + title + pills -->
+    <div class="fjd-hero">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="fjd-logo" id="fjdLogo"></div>
         <div style="flex:1;min-width:0">
-          <div class="fj-company" id="fjCompany"></div>
-          <div class="fj-title" id="fjTitle"></div>
+          <div class="fjd-company-name" id="fjdCompany"></div>
         </div>
       </div>
-      <div class="fj-meta" id="fjMeta"></div>
+      <div class="fjd-job-title" id="fjdTitle"></div>
+      <div class="fjd-pills" id="fjdPills"></div>
     </div>
-    <div style="padding:18px 20px 4px">
-      <div class="fj-sec-title">About the role</div>
-      <div class="fj-desc" id="fjDesc"></div>
+
+    <!-- Description -->
+    <div class="fjd-section">
+      <div class="fjd-section-title">About the role</div>
+      <div class="fjd-desc" id="fjdDesc"></div>
     </div>
-    <div id="fjReqSection" style="padding:12px 20px 4px;display:none">
-      <div class="fj-sec-title">Requirements</div>
-      <div class="fj-desc" id="fjReqBody"></div>
+
+    <!-- Requirements (hidden if empty) -->
+    <div class="fjd-section" id="fjdReqSection" style="display:none">
+      <div class="fjd-section-title">Requirements</div>
+      <div class="fjd-desc" id="fjdReqBody"></div>
     </div>
-    <div style="padding:18px 20px 8px">
-      <a id="fjApplyBtn" class="fj-apply-btn" target="_blank" rel="noopener">Apply for this role →</a>
-      <div class="fj-src" id="fjSrc"></div>
+
+    <!-- Apply -->
+    <div style="margin-top:4px">
+      <a id="fjdApplyBtn" class="fjd-apply" target="_blank" rel="noopener">Apply for this role →</a>
+      <div class="fjd-listed-via">
+        Curated by Kievora · <span class="fjd-listed-badge" id="fjdBadge">Listed via —</span>
+      </div>
     </div>
   </div>
 </div>
@@ -924,12 +965,37 @@ async function loadJobs(query) {
   page = 1;
   try {
     allJobs = await fetchJobs(query);
-    renderJobs();
+    const isLocal = _selectedCountry && _selectedCountry !== 'worldwide';
+    if (!allJobs.length && isLocal) {
+      const displayName = _countryName || _selectedCountry.toUpperCase();
+      const grid = g('jobsGrid');
+      if (grid) grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:32px 20px;background:#fff;border:1.5px solid #ede9fe;border-radius:20px">
+          <div style="font-size:36px;margin-bottom:12px">🌍</div>
+          <div style="font-size:15px;font-weight:800;color:#0f0e17;margin-bottom:8px">No jobs found in ${displayName}</div>
+          <div style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">We don't have listings for this region yet, but there are thousands of remote and global opportunities available.</div>
+          <button onclick="switchToWorldwide()" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,.3)">Show worldwide jobs →</button>
+          <div style="margin-top:12px;font-size:11.5px;color:#94a3b8">Or check back later as we expand to more regions</div>
+        </div>`;
+      return;
+    }
     if (!allJobs.length) toast('No jobs found — try a different title', 'err');
+    renderJobs();
   } catch (err) {
     g('jobsGrid').innerHTML = '';
     toast('Could not load jobs — check your connection', 'err');
   }
+}
+
+function switchToWorldwide() {
+  _selectedCountry = 'worldwide';
+  _countryName = 'Worldwide';
+  const sel = g('countrySelect');
+  if (sel) sel.value = 'worldwide';
+  const badge = g('countryDetectedBadge');
+  if (badge) badge.style.display = 'none';
+  const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
+  if (q) loadJobs(q);
 }
 
 function loadMore() { page++; renderJobs(); }
@@ -1084,53 +1150,98 @@ function fmtDate(iso) {
   catch { return ''; }
 }
 
+// ── Sanitise and render job description ───────────────────────────────────────
+// Providers return a mix of HTML and plain text. We sanitise the HTML
+// (strip scripts/styles/dangerous attrs) and render it properly; plain text
+// gets its line breaks turned into paragraphs so it never shows as a wall of text.
+function renderJobDesc(el, rawDesc) {
+  if (!rawDesc) { el.innerHTML = '<p style="color:#94a3b8">No description available for this role.</p>'; return; }
+  const isHtml = /<\s*(p|ul|ol|li|br|h[1-6]|div|span|strong|em|b)\b/i.test(rawDesc);
+  if (isHtml) {
+    // Strip dangerous tags/attributes, keep structural HTML
+    const clean = rawDesc
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/on\w+="[^"]*"/gi, '')
+      .replace(/on\w+='[^']*'/gi, '')
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+      .replace(/style="[^"]*"/gi, '');
+    el.innerHTML = clean;
+  } else {
+    // Plain text — split on double newlines for paragraphs, single for <br>
+    const paras = rawDesc.split(/\n{2,}/).filter(Boolean);
+    el.innerHTML = paras.map(p =>
+      `<p>${p.replace(/\n/g, '<br>')}</p>`
+    ).join('');
+  }
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; }
+}
+
 window.openJobDetail = function(idx) {
   const j = (window._fjJobs || [])[idx]; if (!j) return;
+
+  // Header title
+  const hdrTitle = g('fjdHdrTitle');
+  if (hdrTitle) hdrTitle.textContent = j.company || 'Job Details';
+
   // Logo
-  g('fjLogo').innerHTML = j.logo
-    ? `<img src="${j.logo}" alt="${j.company}" style="width:46px;height:46px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg width=&quot;22&quot; height=&quot;22&quot; fill=&quot;none&quot; viewBox=&quot;0 0 24 24&quot; stroke=&quot;#94a3b8&quot; stroke-width=&quot;1.5&quot;><rect x=&quot;2&quot; y=&quot;7&quot; width=&quot;20&quot; height=&quot;14&quot; rx=&quot;2&quot;/><path stroke-linecap=&quot;round&quot; d=&quot;M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2&quot;/></svg>'">`
-    : `<svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>`;
-  g('fjCompany').textContent = j.company || '';
-  g('fjTitle').textContent   = j.title   || '';
-  // Meta pills
+  g('fjdLogo').innerHTML = j.logo
+    ? `<img src="${j.logo}" alt="${j.company}" style="width:50px;height:50px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg width=&quot;26&quot; height=&quot;26&quot; fill=&quot;none&quot; viewBox=&quot;0 0 24 24&quot; stroke=&quot;#94a3b8&quot; stroke-width=&quot;1.5&quot;><rect x=&quot;2&quot; y=&quot;7&quot; width=&quot;20&quot; height=&quot;14&quot; rx=&quot;2&quot;/><path stroke-linecap=&quot;round&quot; d=&quot;M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2&quot;/></svg>'">`
+    : `<svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>`;
+
+  g('fjdCompany').textContent = j.company || '';
+  g('fjdTitle').textContent   = j.title   || '';
+
+  // Pills
   const pills = [];
-  if (j.location) pills.push(`<span class="fj-pill blue"><svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>${j.location}</span>`);
-  if (j.remote)   pills.push(`<span class="fj-pill green">🌐 Remote</span>`);
-  if (j.type)     pills.push(`<span class="fj-pill">${j.type}</span>`);
-  if (j.salary)   pills.push(`<span class="fj-pill amber">💰 ${j.salary}</span>`);
-  if (j.posted)   pills.push(`<span class="fj-pill">📅 ${fmtDate(j.posted)}</span>`);
-  g('fjMeta').innerHTML = pills.join('');
-  // Description
-  g('fjDesc').textContent = j.description || j.snippet || 'No description available for this role.';
+  if (j.location) pills.push(`<span class="fjd-pill blue"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>${j.location}</span>`);
+  if (j.remote)   pills.push(`<span class="fjd-pill green">🌐 Remote</span>`);
+  if (j.type)     pills.push(`<span class="fjd-pill purple">${j.type}</span>`);
+  if (j.salary)   pills.push(`<span class="fjd-pill amber">💰 ${j.salary}</span>`);
+  if (j.posted)   pills.push(`<span class="fjd-pill grey">📅 ${fmtDate(j.posted)}</span>`);
+  g('fjdPills').innerHTML = pills.join('');
+
+  // Description — rendered properly, not plain text dump
+  renderJobDesc(g('fjdDesc'), j.description || j.snippet);
+
   // Requirements
-  const reqSec = g('fjReqSection');
-  if (j.requirements) { reqSec.style.display=''; g('fjReqBody').textContent = j.requirements; }
-  else { reqSec.style.display='none'; }
+  const reqSec = g('fjdReqSection');
+  if (j.requirements) {
+    reqSec.style.display = '';
+    renderJobDesc(g('fjdReqBody'), j.requirements);
+  } else {
+    reqSec.style.display = 'none';
+  }
+
   // Apply button
-  const btn = g('fjApplyBtn');
+  const btn = g('fjdApplyBtn');
   if (j.url) {
-    btn.href = j.url; btn.className = 'fj-apply-btn';
+    btn.href = j.url; btn.className = 'fjd-apply';
     btn.onclick = null; btn.textContent = 'Apply for this role →';
   } else {
-    btn.removeAttribute('href'); btn.className = 'fj-apply-btn locked';
-    btn.onclick = () => lockTapped(); btn.textContent = '🔒 Upgrade to apply';
+    btn.removeAttribute('href'); btn.className = 'fjd-apply locked';
+    btn.onclick = () => { if (typeof lockTapped === 'function') lockTapped('findJobs'); };
+    btn.textContent = '🔒 Upgrade to apply';
   }
-  g('fjSrc').textContent = j.source ? `via ${j.source}` : '';
-  g('fjJobDrawer').classList.add('open');
+
+  // "Listed via" badge
+  const badge = g('fjdBadge');
+  if (badge) badge.textContent = `Listed via ${j.source || 'Kievora'}`;
+
+  // Open the screen
+  g('fjDetailScreen').classList.add('open');
+  g('fjDetailScreen').scrollTop = 0;
   document.body.style.overflow = 'hidden';
 };
 
 window.closeJobDetail = function() {
-  g('fjJobDrawer').classList.remove('open');
+  g('fjDetailScreen').classList.remove('open');
   document.body.style.overflow = '';
 };
-
-// Swipe down on the sheet to dismiss
-let _fjTouchY = 0;
-g('fjJobSheet')?.addEventListener('touchstart', e => { _fjTouchY = e.touches[0].clientY; }, { passive: true });
-g('fjJobSheet')?.addEventListener('touchend', e => {
-  if (e.changedTouches[0].clientY - _fjTouchY > 60) closeJobDetail();
-}, { passive: true });
 </script>
 </body>
 </html>

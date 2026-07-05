@@ -6820,7 +6820,26 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     // ── Render jobs swiper on home ─────────────────────────────────────────────
-    async function renderJobsSwiper() {
+    const JOBS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+    const JOBS_CACHE_KEY = 'kievora_home_jobs_cache';
+    let _jobsSwiperRendered = false; // in-memory guard — cleared only on tab close
+
+    function _saveJobsCache(jobs, query) {
+      try {
+        sessionStorage.setItem(JOBS_CACHE_KEY, JSON.stringify({ jobs, query, ts: Date.now() }));
+      } catch {}
+    }
+    function _loadJobsCache(query) {
+      try {
+        const c = JSON.parse(sessionStorage.getItem(JOBS_CACHE_KEY) || 'null');
+        if (!c || !c.jobs?.length) return null;
+        if (Date.now() - c.ts > JOBS_CACHE_TTL) return null; // stale
+        if (c.query !== query) return null; // different search
+        return c.jobs;
+      } catch { return null; }
+    }
+
+    async function renderJobsSwiper(force) {
       let prof = getJobProfession();
 
       // Auto-seed from most recent resume if no profession saved yet
@@ -6843,10 +6862,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
       }
 
-      const cta      = document.getElementById('jobsHomeCta');
-      const section  = document.getElementById('jobsHomeSection');
-      const pill     = document.getElementById('jobsHomeProfPill');
-      const cards    = document.getElementById('jobsHomeCards');
+      const cta     = document.getElementById('jobsHomeCta');
+      const section = document.getElementById('jobsHomeSection');
+      const pill    = document.getElementById('jobsHomeProfPill');
+      const cards   = document.getElementById('jobsHomeCards');
 
       if (!prof || !prof.title) {
         if (cta)     cta.style.display     = '';
@@ -6856,64 +6875,84 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       if (cta)     cta.style.display     = 'none';
       if (section) section.style.display = '';
+
       if (pill) {
         const country = await getUserCountry();
         const countryLabel = country.code !== 'worldwide' ? ` · ${country.name}` : '';
-        const sourceLabel = { builder: 'resume', analyzer: 'analysis', kie: 'KIE AI', manual: 'you', category: 'your category', profile: 'profile' }[prof.source] || '';
+        const sourceLabel = { builder:'resume', analyzer:'analysis', kie:'KIE AI', manual:'you', category:'your category', profile:'profile' }[prof.source] || '';
         pill.textContent = prof.title + (sourceLabel ? ` · via ${sourceLabel}` : '') + countryLabel;
       }
 
-      // Show skeletons
+      // ── Cache check — skip fetch if data is still fresh ──────────────────────
+      // If we already rendered this session AND it's the same query, just restore
+      // from sessionStorage (survives find-jobs → back navigation) or skip entirely
+      if (!force) {
+        const cached = _loadJobsCache(prof.title);
+        if (cached) {
+          window._homeJobs = cached;
+          if (_jobsSwiperRendered) return; // DOM already has the cards — nothing to do
+          _renderHomeJobCards(cached, cards);
+          _jobsSwiperRendered = true;
+          return;
+        }
+      }
+
+      // Show skeletons only on real fetch
       if (cards) {
-        cards.innerHTML = Array(3).fill(0).map(() =>
-          `<div class="job-snap-skel"></div>`
-        ).join('');
+        cards.innerHTML = Array(3).fill(0).map(() => `<div class="job-snap-skel"></div>`).join('');
       }
 
       try {
         const allJobs = await fetchJobs(prof.title, 8);
         window._homeJobs = allJobs;
+        _saveJobsCache(allJobs, prof.title);
+        _jobsSwiperRendered = true;
         if (!cards) return;
         if (!allJobs.length) {
           cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#7c3aed;font-weight:700">search manually</a></div>`;
           return;
         }
-        cards.innerHTML = allJobs.slice(0, 8).map((j, i) => {
-          const tags = [
-            j.remote ? `<span class="job-snap-tag remote">Remote</span>` : '',
-            j.type   ? `<span class="job-snap-tag">${j.type}</span>` : '',
-            j.salary ? `<span class="job-snap-tag salary">${j.salary}</span>` : ''
-          ].filter(Boolean).join('');
-          const locked = !j.url;
-          return `
-          <div class="job-snap-card${locked?' job-snap-locked':''}" onclick="${locked?`lockTapped('findJobs')`:`openJobDetail(${i},'home')`}" style="cursor:pointer">
-            ${locked ? '<div class="premium-lock-corner">🔒 Premium</div>' : ''}
-            <div style="display:flex;align-items:center;gap:10px">
-              <div class="job-snap-logo">
-                ${j.logo
-                  ? `<img src="${j.logo}" alt="${j.company}" onerror="this.style.display='none'">`
-                  : `<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-10h2m4 0h2M9 7h2m4 0h2M9 11h2m4 0h2"/></svg>`
-                }
-              </div>
-              <div style="flex:1;min-width:0">
-                <div class="job-snap-company">${j.company}</div>
-              </div>
-            </div>
-            <div class="job-snap-title">${j.title}</div>
-            <div style="font-size:11px;color:#9ca3af;font-weight:500">${j.location}</div>
-            ${tags ? `<div class="job-snap-tags">${tags}</div>` : ''}
-            <div class="job-snap-apply">View details <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
-          </div>`;
-        }).join('') + `
-          <a class="job-snap-more" href="/find-jobs">
-            <div class="job-snap-more-circle">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </div>
-            <div class="job-snap-more-txt">See more<br>jobs</div>
-          </a>`;
+        _renderHomeJobCards(allJobs, cards);
       } catch (err) {
         if (cards) cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">Could not load jobs right now.</div>`;
       }
+    }
+
+    function _renderHomeJobCards(allJobs, cards) {
+      if (!cards) return;
+      cards.innerHTML = allJobs.slice(0, 8).map((j, i) => {
+        const tags = [
+          j.remote ? `<span class="job-snap-tag remote">Remote</span>` : '',
+          j.type   ? `<span class="job-snap-tag">${j.type}</span>` : '',
+          j.salary ? `<span class="job-snap-tag salary">${j.salary}</span>` : ''
+        ].filter(Boolean).join('');
+        const locked = !j.url;
+        return `
+        <div class="job-snap-card${locked?' job-snap-locked':''}" onclick="${locked?`lockTapped('findJobs')`:`openJobDetail(${i},'home')`}" style="cursor:pointer">
+          ${locked ? '<div class="premium-lock-corner">🔒 Premium</div>' : ''}
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="job-snap-logo">
+              ${j.logo
+                ? `<img src="${j.logo}" alt="${j.company}" onerror="this.style.display='none'">`
+                : `<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-10h2m4 0h2M9 7h2m4 0h2M9 11h2m4 0h2"/></svg>`
+              }
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="job-snap-company">${j.company}</div>
+            </div>
+          </div>
+          <div class="job-snap-title">${j.title}</div>
+          <div style="font-size:11px;color:#9ca3af;font-weight:500">${j.location}</div>
+          ${tags ? `<div class="job-snap-tags">${tags}</div>` : ''}
+          <div class="job-snap-apply">View details <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+        </div>`;
+      }).join('') + `
+        <a class="job-snap-more" href="/find-jobs">
+          <div class="job-snap-more-circle">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </div>
+          <div class="job-snap-more-txt">See more<br>jobs</div>
+        </a>`;
     }
 
     // ── Hook into builder save ─────────────────────────────────────────────────
@@ -11526,7 +11565,12 @@ setInterval(async()=>{
   .jd-pill.yellow{background:#fffbeb;border-color:#fde68a;color:#92400e}
   .jd-pill.blue{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
   .jd-section-title{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
-  .jd-desc{font-size:13px;color:#374151;line-height:1.65;white-space:pre-line}
+  .jd-desc{font-size:13px;color:#374151;line-height:1.7}
+  .jd-desc p{margin:0 0 10px}
+  .jd-desc ul,.jd-desc ol{padding-left:18px;margin:0 0 10px}
+  .jd-desc li{margin-bottom:4px}
+  .jd-desc h1,.jd-desc h2,.jd-desc h3{font-size:13.5px;font-weight:800;color:#0f0e17;margin:12px 0 6px}
+  .jd-desc strong,.jd-desc b{font-weight:700;color:#0f0e17}
   .jd-apply{display:block;width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:-.2px;box-shadow:0 4px 16px rgba(124,58,237,.3);transition:opacity .15s;text-decoration:none;text-align:center}
   .jd-apply:active{opacity:.85}
   .jd-apply.locked{background:linear-gradient(135deg,#94a3b8,#64748b);box-shadow:none;cursor:default}
@@ -11564,17 +11608,32 @@ setInterval(async()=>{
 
 <script>
 (function(){
-  let _jdPool = [];
-
   function fmtDate(iso) {
     if (!iso) return '';
-    try { const d = new Date(iso); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); } catch { return ''; }
+    try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}); } catch { return ''; }
+  }
+
+  // Same sanitise-and-render logic as find-jobs — handles both HTML and plain text from providers
+  function renderDesc(el, raw) {
+    if (!raw) { el.innerHTML = '<p style="color:#94a3b8;font-size:12px">No description available.</p>'; return; }
+    const isHtml = /<\s*(p|ul|ol|li|br|h[1-6]|div|strong|em|b)\b/i.test(raw);
+    if (isHtml) {
+      el.innerHTML = raw
+        .replace(/<script[\s\S]*?<\/script>/gi,'')
+        .replace(/<style[\s\S]*?<\/style>/gi,'')
+        .replace(/on\w+="[^"]*"/gi,'')
+        .replace(/on\w+='[^']*'/gi,'')
+        .replace(/<iframe[\s\S]*?<\/iframe>/gi,'')
+        .replace(/style="[^"]*"/gi,'');
+    } else {
+      el.innerHTML = raw.split(/\n{2,}/).filter(Boolean)
+        .map(p=>`<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+    }
   }
 
   window.openJobDetail = function(idx, pool) {
     const jobs = pool === 'home' ? (window._homeJobs || []) : (window._fjJobs || []);
     const j = jobs[idx]; if (!j) return;
-    _jdPool = jobs;
 
     // Logo
     const logo = document.getElementById('jdLogo');
@@ -11583,43 +11642,45 @@ setInterval(async()=>{
       : `<svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>`;
 
     document.getElementById('jdCompany').textContent = j.company || '';
-    document.getElementById('jdTitle').textContent   = j.title || '';
+    document.getElementById('jdTitle').textContent   = j.title   || '';
 
-    // Meta pills
+    // Pills
     const meta = [];
     if (j.location) meta.push(`<span class="jd-pill blue"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>${j.location}</span>`);
-    if (j.remote)   meta.push(`<span class="jd-pill green">Remote</span>`);
+    if (j.remote)   meta.push(`<span class="jd-pill green">🌐 Remote</span>`);
     if (j.type)     meta.push(`<span class="jd-pill">${j.type}</span>`);
     if (j.salary)   meta.push(`<span class="jd-pill yellow">💰 ${j.salary}</span>`);
     if (j.posted)   meta.push(`<span class="jd-pill">📅 ${fmtDate(j.posted)}</span>`);
     document.getElementById('jdMeta').innerHTML = meta.join('');
 
-    // Description
-    const desc = j.description || j.snippet || 'No description available.';
-    document.getElementById('jdDesc').textContent = desc;
+    // Description — rendered properly
+    renderDesc(document.getElementById('jdDesc'), j.description || j.snippet);
 
     // Requirements
     const reqEl   = document.getElementById('jdRequirements');
     const reqBody = document.getElementById('jdReqContent');
-    if (j.requirements) { reqEl.style.display=''; reqBody.textContent = j.requirements; }
+    if (j.requirements) { reqEl.style.display=''; renderDesc(reqBody, j.requirements); }
     else { reqEl.style.display='none'; }
 
     // Apply button
     const btn = document.getElementById('jdApplyBtn');
     if (j.url) {
-      btn.href = j.url;
-      btn.className = 'jd-apply';
-      btn.onclick = null;
-      btn.textContent = 'Apply for this role →';
+      btn.href = j.url; btn.className = 'jd-apply';
+      btn.onclick = null; btn.textContent = 'Apply for this role →';
     } else {
-      btn.removeAttribute('href');
-      btn.className = 'jd-apply locked';
-      btn.onclick = () => { if(typeof lockTapped==='function') lockTapped('findJobs'); };
+      btn.removeAttribute('href'); btn.className = 'jd-apply locked';
+      btn.onclick = () => { if(typeof window.lockTapped==='function') window.lockTapped('findJobs'); };
       btn.textContent = '🔒 Upgrade to apply';
     }
 
-    document.getElementById('jdSource').textContent = j.source ? `via ${j.source}` : '';
+    // "Listed via" — replaces the old generic source line
+    const srcEl = document.getElementById('jdSource');
+    if (srcEl) srcEl.innerHTML = j.source
+      ? `Curated by Kievora · <span style="background:#f5f3ff;border:1.5px solid #ddd6fe;color:#7c3aed;border-radius:20px;padding:2px 9px;font-size:9.5px;font-weight:800;letter-spacing:.2px">Listed via ${j.source}</span>`
+      : '';
+
     document.getElementById('jobDetailDrawer').classList.add('open');
+    document.getElementById('jobDetailSheet').scrollTop = 0;
     document.body.style.overflow = 'hidden';
   };
 
