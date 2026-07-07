@@ -495,18 +495,18 @@
     .tip-ico{font-size:28px;flex-shrink:0}
     .tip-title{font-size:14px;font-weight:800;color:var(--txt);margin-bottom:2px}
     .tip-sub{font-size:12px;color:var(--sub);line-height:1.5}
-    .rcard{background:#fff;border-radius:16px;border:1.5px solid var(--border2);overflow:hidden;cursor:pointer;transition:all .25s;position:relative;box-shadow:0 2px 12px rgba(124,58,237,.06);display:flex;align-items:stretch;min-height:132px;min-width:0}
+    .rcard{background:#fff;border-radius:16px;border:1.5px solid var(--border2);overflow:hidden;cursor:pointer;transition:all .25s;position:relative;box-shadow:0 2px 12px rgba(124,58,237,.06);min-height:112px;display:grid;grid-template-columns:64px 1fr}
     .rcard:hover{box-shadow:0 12px 32px rgba(124,58,237,.14);border-color:var(--p2)}
-    .rcard-thumb{width:92px;min-width:92px;flex-shrink:0;overflow:hidden;position:relative;background:linear-gradient(135deg,#f8f7ff,#ede9fe);border-right:1.5px solid var(--border2)}
-    .rcard-thumb-scaler{width:600px;transform:scale(.15333);transform-origin:top left;pointer-events:none}
+    .rcard-thumb{width:100%;height:100%;overflow:hidden;position:relative;background:linear-gradient(135deg,#f8f7ff,#ede9fe);border-right:1.5px solid var(--border2)}
+    .rcard-thumb-scaler{width:600px;transform:scale(.10667);transform-origin:top left;pointer-events:none}
     .rcard-overlay{position:absolute;inset:0;background:rgba(92,34,200,.75);display:flex;align-items:center;justify-content:center;gap:10px;opacity:0;transition:opacity .25s;backdrop-filter:blur(2px)}
     .rcard:hover .rcard-overlay{opacity:1}
-    .rcard-body{flex:1;min-width:0;overflow:hidden;padding:12px 14px 10px;display:flex;flex-direction:column}
-    .rcard-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
-    .rcard-role{font-size:12px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .rcard-date{font-size:10.5px;color:var(--mute);margin-top:3px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .rcard-foot{margin-top:auto;display:flex;gap:6px;padding-top:10px}
-    .rcbtn{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border-radius:8px;font-size:11.5px;font-weight:700;border:none;cursor:pointer;transition:all .15s;flex:1;justify-content:center;white-space:nowrap}
+    .rcard-body{min-width:0;overflow:hidden;padding:11px 12px 9px;display:flex;flex-direction:column}
+    .rcard-name{font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
+    .rcard-role{font-size:11.5px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rcard-date{font-size:10px;color:var(--mute);margin-top:2px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rcard-foot{margin-top:auto;display:flex;gap:5px;padding-top:9px}
+    .rcbtn{display:inline-flex;align-items:center;gap:4px;padding:7px 6px;border-radius:8px;font-size:10.5px;font-weight:700;border:none;cursor:pointer;transition:all .15s;flex:1;min-width:0;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .rcbtn-edit{background:#ede9fe;color:var(--p)}
     .rcbtn-edit:hover{background:#ddd6fe}
     .rcbtn-dl{background:#ecfdf5;color:#059669}
@@ -2952,10 +2952,11 @@
       document.querySelectorAll('#allGrid .rcard-thumb').forEach(thumb => {
         const scaler = thumb.querySelector('.rcard-thumb-scaler');
         if (!scaler) return;
-        const w = thumb.offsetWidth || 92;
+        const w = thumb.offsetWidth || 64;
         const scale = w / 600;
         scaler.style.transform = 'scale(' + scale + ')';
-        thumb.style.height = Math.round(scale * 720) + 'px';
+        // Height is handled by CSS grid stretch (.rcard-thumb{height:100%}) + overflow:hidden —
+        // the thumb naturally fills the row's height and crops the excess, no JS calc needed.
       });
     }
     window.renderAllResumes = renderAllResumes;
@@ -8133,7 +8134,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const naturalHeight = clone.scrollHeight || 840;
         document.body.removeChild(measureHost);
 
-        const PRINT_WIDTH  = 720; // ≈7.5in — leaves ~0.5in margin either side on Letter/A4
+        const PRINT_WIDTH  = 780; // ≈8.1in — leaves a slim ~0.2in margin either side on Letter/A4
         const scale        = PRINT_WIDTH / 600;
         const scaledHeight = Math.ceil(naturalHeight * scale);
 
@@ -13139,7 +13140,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <button id="_etClose" style="width:34px;height:34px;background:#f3f0ff;border:none;border-radius:10px;color:#7c3aed;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:12px;font-family:inherit;line-height:1">✕</button>
     </div>
-    <div id="_etGrid" style="overflow-y:auto;padding:4px 16px 12px;flex:1;min-height:0;display:flex;flex-direction:column;gap:16px;align-content:start"></div>
+    <div id="_etGrid" style="overflow-y:auto;padding:4px 16px 12px;flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start"></div>
     <div style="padding:12px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));background:#fff;border-top:1px solid #f0eeff;display:flex;gap:10px;flex-shrink:0">
       <button id="_etCancel" style="flex:1;background:#f3f0ff;color:#7c3aed;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>
       <button id="_etConfirm" style="flex:2;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3)">Use Template →</button>
