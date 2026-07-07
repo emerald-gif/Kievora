@@ -495,16 +495,16 @@
     .tip-ico{font-size:28px;flex-shrink:0}
     .tip-title{font-size:14px;font-weight:800;color:var(--txt);margin-bottom:2px}
     .tip-sub{font-size:12px;color:var(--sub);line-height:1.5}
-    .rcard{background:#fff;border-radius:16px;border:1.5px solid var(--border2);overflow:hidden;cursor:pointer;transition:all .25s;position:relative;box-shadow:0 2px 12px rgba(124,58,237,.06);display:flex;align-items:stretch;min-height:132px}
+    .rcard{background:#fff;border-radius:16px;border:1.5px solid var(--border2);overflow:hidden;cursor:pointer;transition:all .25s;position:relative;box-shadow:0 2px 12px rgba(124,58,237,.06);display:flex;align-items:stretch;min-height:132px;min-width:0}
     .rcard:hover{box-shadow:0 12px 32px rgba(124,58,237,.14);border-color:var(--p2)}
-    .rcard-thumb{width:92px;flex-shrink:0;overflow:hidden;position:relative;background:linear-gradient(135deg,#f8f7ff,#ede9fe);border-right:1.5px solid var(--border2)}
+    .rcard-thumb{width:92px;min-width:92px;flex-shrink:0;overflow:hidden;position:relative;background:linear-gradient(135deg,#f8f7ff,#ede9fe);border-right:1.5px solid var(--border2)}
     .rcard-thumb-scaler{width:600px;transform:scale(.15333);transform-origin:top left;pointer-events:none}
     .rcard-overlay{position:absolute;inset:0;background:rgba(92,34,200,.75);display:flex;align-items:center;justify-content:center;gap:10px;opacity:0;transition:opacity .25s;backdrop-filter:blur(2px)}
     .rcard:hover .rcard-overlay{opacity:1}
-    .rcard-body{flex:1;min-width:0;padding:12px 14px 10px;display:flex;flex-direction:column}
+    .rcard-body{flex:1;min-width:0;overflow:hidden;padding:12px 14px 10px;display:flex;flex-direction:column}
     .rcard-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
     .rcard-role{font-size:12px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .rcard-date{font-size:10.5px;color:var(--mute);margin-top:3px;font-weight:500}
+    .rcard-date{font-size:10.5px;color:var(--mute);margin-top:3px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .rcard-foot{margin-top:auto;display:flex;gap:6px;padding-top:10px}
     .rcbtn{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border-radius:8px;font-size:11.5px;font-weight:700;border:none;cursor:pointer;transition:all .15s;flex:1;justify-content:center;white-space:nowrap}
     .rcbtn-edit{background:#ede9fe;color:var(--p)}
@@ -2938,7 +2938,14 @@
             </button>
           </div>
         </div>`;
-      }).join('');
+      }).join('') + `
+        <div class="add-card" onclick="showView('tpick')">
+          <div class="add-card-ico">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          </div>
+          <p>Create another resume</p>
+          <span>Tailor a new version for your next application</span>
+        </div>`;
       requestAnimationFrame(scaleRcardThumbs);
     }
     function scaleRcardThumbs() {
@@ -8113,7 +8120,26 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           el.style.boxShadow = '';
           el.style.borderRadius = '';
         });
-        const html = '<div style="width:600px">' + clone.innerHTML + '</div>';
+
+        // The design is built for a 600px virtual canvas (same one the on-screen
+        // preview scales down to fit its card). Printing it at a raw 600px left
+        // a huge blank margin on the right and bottom of the page. Instead, scale
+        // it UP to fill a Letter/A4-width page properly, measuring the real
+        // content height first so nothing is guessed or cut off.
+        const measureHost = document.createElement('div');
+        measureHost.style.cssText = 'position:fixed;left:-9999px;top:0;width:600px';
+        measureHost.appendChild(clone);
+        document.body.appendChild(measureHost);
+        const naturalHeight = clone.scrollHeight || 840;
+        document.body.removeChild(measureHost);
+
+        const PRINT_WIDTH  = 720; // ≈7.5in — leaves ~0.5in margin either side on Letter/A4
+        const scale        = PRINT_WIDTH / 600;
+        const scaledHeight = Math.ceil(naturalHeight * scale);
+
+        const html = '<div style="width:' + PRINT_WIDTH + 'px;height:' + scaledHeight + 'px;margin:0 auto">'
+          + '<div style="width:600px;transform:scale(' + scale + ');transform-origin:top left">' + clone.innerHTML + '</div>'
+          + '</div>';
 
         const company = window._clCurrentCompany || '';
         const title = ('Cover Letter' + (company ? ' - ' + company : '')).replace(/[<>]/g, '');
