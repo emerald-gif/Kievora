@@ -22,6 +22,8 @@ nav{
   display:flex;align-items:center;padding:0 40px;justify-content:space-between;
 }
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-back{color:var(--sub);transition:color .2s;flex-shrink:0}
+.logo:hover .logo-back{color:var(--p)}
 .logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;flex-shrink:0}
 .logo-icon img{width:100%;height:100%;object-fit:cover;display:block}
 .logo-name{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px}
@@ -282,6 +284,7 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
 <!-- NAV -->
 <nav>
   <a href="/" class="logo">
+    <svg class="logo-back" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m0 0l6 6m-6-6l6-6"/></svg>
     <div class="logo-icon"><img src="/logo.jpg" alt="Kievora"/></div>
     <span class="logo-name">Kie<span>vora</span></span>
   </a>
@@ -307,7 +310,7 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
       <ul class="features">
         <li>
           <div class="feat-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
-          10 professional, ATS-friendly templates
+          13 professional, ATS-friendly templates
         </li>
         <li>
           <div class="feat-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
