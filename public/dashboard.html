@@ -3744,6 +3744,33 @@
 
 
     // ── DOWNLOAD — browser print-to-PDF (WYSIWYG, free-tier safe) ───────────
+    // Shared by resume/cover-letter print functions: measures how tall a piece
+    // of HTML naturally renders at standard Letter width, and returns a CSS
+    // @page size string. If it's short enough to fit one page, returns a page
+    // size that exactly matches the content — kills the blank space you'd
+    // otherwise get below short content. If it's genuinely longer than one page
+    // (e.g. someone with a lot of experience on their resume), returns 'auto'
+    // so it paginates normally across full pages instead of squishing or
+    // clipping content to force it onto one page.
+    function _kvComputePageSize(html, marginIn) {
+      marginIn = marginIn == null ? 0 : marginIn;
+      const PAGE_WIDTH_IN  = 8.5;
+      const PAGE_HEIGHT_IN = 11;
+      const REF_WIDTH_PX   = Math.round(PAGE_WIDTH_IN * 96); // 816px
+      const host = document.createElement('div');
+      host.style.cssText = 'position:fixed;left:-9999px;top:0;width:' + REF_WIDTH_PX + 'px';
+      host.innerHTML = html;
+      document.body.appendChild(host);
+      const naturalHeightPx = host.scrollHeight || Math.round(PAGE_HEIGHT_IN * 96);
+      document.body.removeChild(host);
+      const naturalHeightIn    = naturalHeightPx / 96;
+      const maxContentHeightIn = PAGE_HEIGHT_IN - marginIn * 2;
+      if (naturalHeightIn <= maxContentHeightIn) {
+        return PAGE_WIDTH_IN + 'in ' + (naturalHeightIn + marginIn * 2).toFixed(2) + 'in';
+      }
+      return 'auto'; // longer than one page — paginate normally, don't clip
+    }
+
     function dlResume(id) {
       const r = getMergedResumes().find(x => x.id === id);
       if (!r) return;
@@ -3752,6 +3779,7 @@
       const tplObj = TPLS.find(t => t.id === tpl) || TPLS[0];
       const html   = buildPrevHTML(d, tpl, tplObj.bg, 'rf-sans');
       const title  = (r.resumeName || 'Resume').replace(/[<>]/g, '');
+      const pageSizeCSS = _kvComputePageSize(html);
       const fullDoc = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
         + '<link rel="preconnect" href="https://fonts.googleapis.com">'
         + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
@@ -3761,7 +3789,7 @@
         + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
         + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
         + '.rf-mono{font-family:"Courier New",Courier,monospace}'
-        + '@media print{@page{size:auto;margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
+        + '@media print{@page{size:' + pageSizeCSS + ';margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
         + '</head><body>' + html + '</body></html>';
 
       // PRIMARY: hidden iframe — bypasses Android popup blocker
@@ -5625,6 +5653,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // reach it, even across script-scope boundaries on some mobile browsers.
     window.kieOpenResumePrint = function kieOpenResumePrint(html, name) {
       const title = (name || 'Resume').replace(/[<>]/g, '');
+      const pageSizeCSS = _kvComputePageSize(html);
       const fullHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
         + '<link rel="preconnect" href="https://fonts.googleapis.com">'
         + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
@@ -5634,7 +5663,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
         + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
         + '.rf-mono{font-family:"Courier New",Courier,monospace}'
-        + '@media print{@page{size:auto;margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
+        + '@media print{@page{size:' + pageSizeCSS + ';margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
         + '</head><body>' + html + '</body></html>';
 
       // PRIMARY: hidden iframe — bypasses Android Chrome popup blocker entirely
@@ -8123,22 +8152,45 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         });
 
         // The design is built for a 600px virtual canvas (same one the on-screen
-        // preview scales down to fit its card). Printing it at a raw 600px left
-        // a huge blank margin on the right and bottom of the page. Instead, scale
-        // it UP to fill a Letter/A4-width page properly, measuring the real
-        // content height first so nothing is guessed or cut off.
+        // preview scales down to fit its card). Rather than always scaling up by
+        // the same fixed amount (which is what caused a slightly longer letter to
+        // spill onto an unwanted near-empty 2nd page), we compute the LARGEST
+        // scale that still guarantees the whole letter fits on one page — short
+        // letters get scaled up more to fill the page nicely, longer letters get
+        // scaled up less so they still comfortably fit. Never shrunk below native
+        // size; a letter would only ever fall back to normal pagination if it's
+        // genuinely too long even at full native size, which shouldn't happen
+        // for a real cover letter.
         const measureHost = document.createElement('div');
         measureHost.style.cssText = 'position:fixed;left:-9999px;top:0;width:600px';
         measureHost.appendChild(clone);
         document.body.appendChild(measureHost);
-        const naturalHeight = clone.scrollHeight || 840;
+        const naturalHeight = clone.scrollHeight || 840; // at 600px reference width
         document.body.removeChild(measureHost);
 
-        const PRINT_WIDTH  = 780; // ≈8.1in — leaves a slim ~0.2in margin either side on Letter/A4
-        const scale        = PRINT_WIDTH / 600;
-        const scaledHeight = Math.ceil(naturalHeight * scale);
+        const TARGET_WIDTH_PX    = 780;  // ideal max content width ≈8.1in, for short letters
+        const MARGIN_IN          = 0.2;  // slim, even margin on every side
+        const STD_PAGE_HEIGHT_IN = 11;   // US Letter height — our one-page ceiling
+        const MIN_SCALE          = 1.0;  // never shrink below the design's native size
 
-        const html = '<div style="width:' + PRINT_WIDTH + 'px;height:' + scaledHeight + 'px;margin:0 auto">'
+        const widthScale  = TARGET_WIDTH_PX / 600;
+        const maxHeightPx = (STD_PAGE_HEIGHT_IN - MARGIN_IN * 2) * 96;
+        const heightScale = maxHeightPx / naturalHeight;
+
+        let scale = Math.min(widthScale, heightScale);
+        const fitsOnePage = scale >= MIN_SCALE;
+        if (!fitsOnePage) scale = MIN_SCALE;
+
+        const scaledWidthPx  = Math.round(600 * scale);
+        const scaledHeightPx = Math.ceil(naturalHeight * scale);
+        const scaledWidthIn  = scaledWidthPx / 96;
+        const scaledHeightIn = scaledHeightPx / 96;
+
+        const pageSizeCSS = fitsOnePage
+          ? (scaledWidthIn + MARGIN_IN * 2).toFixed(2) + 'in ' + (scaledHeightIn + MARGIN_IN * 2).toFixed(2) + 'in'
+          : 'auto';
+
+        const html = '<div style="width:' + scaledWidthPx + 'px;height:' + scaledHeightPx + 'px;margin:0 auto">'
           + '<div style="width:600px;transform:scale(' + scale + ');transform-origin:top left">' + clone.innerHTML + '</div>'
           + '</div>';
 
@@ -8152,7 +8204,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0;width:100%}'
           + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
           + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
-          + '@media print{@page{size:auto;margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
+          + '@media print{@page{size:' + pageSizeCSS + ';margin:' + MARGIN_IN + 'in}html,body{margin:0;padding:0;width:100%}}</style>'
           + '</head><body>' + html + '</body></html>';
 
         // PRIMARY: hidden iframe
