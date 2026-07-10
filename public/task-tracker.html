@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Flow — Task Tracker</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  body { overscroll-behavior-y: none; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  // localStorage-backed shim matching the window.storage.get/set async interface
+  window.storage = {
+    get: async function (key) {
+      try {
+        var value = window.localStorage.getItem(key);
+        return value !== null ? { key: key, value: value } : null;
+      } catch (e) {
+        return null;
+      }
+    },
+    set: async function (key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+        return { key: key, value: value };
+      } catch (e) {
+        return null;
+      }
+    },
+  };
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ---------- Minimal icon set (replaces lucide-react) ---------- */
+function Icon({ paths, size = 16, color = "currentColor", fill = "none", strokeWidth = 2, style, viewBox = "0 0 24 24" }) {
+  return (
+    <svg width={size} height={size} viewBox={viewBox} fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
+      {paths}
+    </svg>
+  );
+}
+
+const Plus = (p) => <Icon {...p} paths={<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>} />;
+const Check = (p) => <Icon {...p} paths={<polyline points="20 6 9 17 4 12" />} />;
+const X = (p) => <Icon {...p} paths={<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>} />;
+const ChevronRight = (p) => <Icon {...p} paths={<polyline points="9 18 15 12 9 6" />} />;
+const ChevronLeft = (p) => <Icon {...p} paths={<polyline points="15 18 9 12 15 6" />} />;
+const ChevronDown = (p) => <Icon {...p} paths={<polyline points="6 9 12 15 18 9" />} />;
+const Clock = (p) => <Icon {...p} paths={<><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></>} />;
+const Bell = (p) => <Icon {...p} paths={<><path d="M6 8a6 6 0 0 1 12 0c0 6 2.5 8 2.5 8h-17S6 14 6 8Z" /><path d="M10.3 21a2 2 0 0 0 3.4 0" /></>} />;
+const Trash2 = (p) => <Icon {...p} paths={<><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>} />;
+const Flame = (p) => <Icon {...p} paths={<path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.5-1.5-2-1.5-3.5 0 0 3 1.5 3 5A5 5 0 0 1 4 16c0-4.5 4-6 4-10 0 0 .5 3 2 4 1 .7 1.5 1.5 1.5 2.5" />} />;
+const Trophy = (p) => <Icon {...p} paths={<><path d="M8 4h8v6a4 4 0 0 1-8 0V4Z" /><path d="M8 5H4v2a4 4 0 0 0 4 3.5" /><path d="M16 5h4v2a4 4 0 0 1-4 3.5" /><path d="M12 14v3" /><path d="M9 21h6" /><path d="M9.5 17h5l.5 4h-6l.5-4Z" /></>} />;
+const Star = (p) => <Icon {...p} paths={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26" fill={p.fill || "none"} />} />;
+const BarChart3 = (p) => <Icon {...p} paths={<><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></>} />;
+const Folder = (p) => <Icon {...p} paths={<path d="M4 5a2 2 0 0 1 2-2h3.5a2 2 0 0 1 1.6.8L12 5.5H18a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />} />;
+const AlarmClock = (p) => <Icon {...p} paths={<><circle cx="12" cy="13" r="8" /><polyline points="12 9 12 13 14 15" /><path d="M5 3 2 6" /><path d="M22 6l-3-3" /><path d="M6.4 18.7 4 21" /><path d="M17.6 18.7 20 21" /></>} />;
+const Moon = (p) => <Icon {...p} paths={<path d="M12 3a6.5 6.5 0 0 0 9 9 9 9 0 1 1-9-9Z" />} />;
+const ZapIcon = (p) => <Icon {...p} paths={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />} />;
+const Repeat = (p) => <Icon {...p} paths={<><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></>} />;
+const TagIcon = (p) => <Icon {...p} paths={<><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z" /><circle cx="7" cy="7" r="1" fill={p.color || "currentColor"} /></>} />;
+const ListChecks = (p) => <Icon {...p} paths={<><polyline points="3.5 5.5 5 7 8 4" /><line x1="11" y1="6" x2="21" y2="6" /><polyline points="3.5 11.5 5 13 8 10" /><line x1="11" y1="12" x2="21" y2="12" /><polyline points="3.5 17.5 5 19 8 16" /><line x1="11" y1="18" x2="21" y2="18" /></>} />;
+const FileText = (p) => <Icon {...p} paths={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></>} />;
+const SettingsIcon = (p) => <Icon {...p} paths={<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></>} />;
+const Users = (p) => <Icon {...p} paths={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.9" /><path d="M16 3.1a4 4 0 0 1 0 7.8" /></>} />;
+const UserPlus = (p) => <Icon {...p} paths={<><circle cx="8.5" cy="7" r="4" /><path d="M2 21v-2a4 4 0 0 1 4-4h5a4 4 0 0 1 4 4v2" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></>} />;
+const Mail = (p) => <Icon {...p} paths={<><rect x="2" y="4" width="20" height="16" rx="2" /><polyline points="22 6 12 13 2 6" /></>} />;
+const CalendarDays = (p) => <Icon {...p} paths={<><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>} />;
+const Eye = (p) => <Icon {...p} paths={<><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" /></>} />;
+const Building2 = (p) => <Icon {...p} paths={<><path d="M4 21V7a2 2 0 0 1 2-2h5v16" /><path d="M15 21V11h5a2 2 0 0 1 2 2v8" /><line x1="9" y1="9" x2="9" y2="9.01" /><line x1="9" y1="13" x2="9" y2="13.01" /><line x1="9" y1="17" x2="9" y2="17.01" /><line x1="18" y1="15" x2="18" y2="15.01" /><line x1="18" y1="19" x2="18" y2="19.01" /></>} />;
+const Globe2 = (p) => <Icon {...p} paths={<><circle cx="12" cy="12" r="9" /><line x1="3" y1="12" x2="21" y2="12" /><path d="M12 3a13.5 13.5 0 0 1 0 18 13.5 13.5 0 0 1 0-18Z" /></>} />;
+const Shield = (p) => <Icon {...p} paths={<path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6Z" />} />;
+const User = (p) => <Icon {...p} paths={<><circle cx="12" cy="8" r="4" /><path d="M6 21v-1a6 6 0 0 1 12 0v1" /></>} />;
+
+const PRIORITIES = {
+  urgent: { label: "Urgent", color: "#e11d48", xp: 20, icon: AlarmClock },
+  important: { label: "Important", color: "#d97706", xp: 10, icon: ZapIcon },
+  someday: { label: "Someday", color: "#71717a", xp: 5, icon: Moon },
+};
+
+const migratePriority = (p) => ({ high: "urgent", medium: "important", low: "someday" }[p] || p);
+
+const ACHIEVEMENTS = [
+  { id: "first_task", label: "First Blood", desc: "Complete your first task", check: (s) => s.totalDone >= 1 },
+  { id: "streak_3", label: "Warming Up", desc: "3-day streak", check: (s) => s.streak >= 3 },
+  { id: "streak_7", label: "On Fire", desc: "7-day streak", check: (s) => s.streak >= 7 },
+  { id: "done_10", label: "Getting Serious", desc: "Complete 10 tasks", check: (s) => s.totalDone >= 10 },
+  { id: "done_25", label: "Task Master", desc: "Complete 25 tasks", check: (s) => s.totalDone >= 25 },
+  { id: "done_50", label: "Unstoppable", desc: "Complete 50 tasks", check: (s) => s.totalDone >= 50 },
+  { id: "five_in_day", label: "Perfectionist", desc: "5 tasks in one day", check: (s) => s.maxInDay >= 5 },
+  { id: "night_owl", label: "Night Owl", desc: "Complete a task after 10pm", check: (s) => s.nightOwl },
+  { id: "level_5", label: "Leveling Up", desc: "Reach level 5", check: (s) => s.level >= 5 },
+  { id: "on_time", label: "Punctual", desc: "Complete a task before its alarm rings", check: (s) => s.onTime },
+  { id: "organizer", label: "Organizer", desc: "Break a task into subtasks", check: (s) => s.usedSubtasks },
+];
+
+const dayKey = (ts) => new Date(ts).toISOString().slice(0, 10);
+const uid = (p = "") => p + Date.now().toString() + Math.random().toString(36).slice(2, 6);
+
+const AVATAR_COLORS = ["#7c3aed", "#e11d48", "#d97706", "#059669", "#2563eb", "#db2777"];
+const avatarColor = (seed) => {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = seed.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+};
+const initials = (name) => (name || "?").trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+function defaultWorkspaces() {
+  return [{ id: "personal", name: "Personal", type: "personal", members: [{ id: "me", name: "You", email: "", role: "admin", status: "active" }] }];
+}
+
+function computeStats(tasks, xp) {
+  const done = tasks.filter((t) => t.done && t.completedAt);
+  const totalDone = done.length;
+  const level = Math.floor(xp / 100) + 1;
+
+  const byDay = {};
+  done.forEach((t) => {
+    const k = dayKey(t.completedAt);
+    byDay[k] = (byDay[k] || 0) + 1;
+  });
+  const maxInDay = Object.values(byDay).length ? Math.max(...Object.values(byDay)) : 0;
+  const nightOwl = done.some((t) => new Date(t.completedAt).getHours() >= 22);
+  const onTime = done.some((t) => t.alarmTime && t.completedAt < t.alarmTime);
+  const usedSubtasks = tasks.some((t) => (t.subtasks || []).length > 0);
+
+  let streak = 0;
+  let cursor = new Date();
+  const todayKey = dayKey(cursor.getTime());
+  if (!byDay[todayKey]) cursor.setDate(cursor.getDate() - 1);
+  while (byDay[dayKey(cursor.getTime())]) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return { totalDone, level, maxInDay, nightOwl, onTime, usedSubtasks, streak, byDay };
+}
+
+function formatAlarm(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  const isTomorrow = d.toDateString() === tomorrow.toDateString();
+  const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  if (isToday) return time;
+  if (isTomorrow) return `Tmrw ${time}`;
+  return `${d.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
+}
+
+function nextOccurrence(ts, repeat) {
+  const d = new Date(ts);
+  if (repeat === "daily") d.setDate(d.getDate() + 1);
+  if (repeat === "weekly") d.setDate(d.getDate() + 7);
+  return d.getTime();
+}
+
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.22, 0.44].forEach((delay) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.2);
+    });
+  } catch (e) {}
+}
+
+/* ---------- Logo ---------- */
+function Logo({ size = 40, animated = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <rect x="3" y="3" width="42" height="42" rx="10" stroke="#18181b" strokeWidth="2.2"
+        style={animated ? { strokeDasharray: 160, strokeDashoffset: 160, animation: "draw-box 1s ease forwards" } : undefined} />
+      <path d="M13 27C16 21 19 24 22 20C25 16 28 22 35 15" stroke="#7c3aed" strokeWidth="2.6" strokeLinecap="round" fill="none"
+        style={animated ? { strokeDasharray: 40, strokeDashoffset: 40, animation: "draw-check 0.6s ease forwards 0.9s" } : undefined} />
+    </svg>
+  );
+}
+
+/* ---------- Splash ---------- */
+function Splash({ onEnter }) {
+  useEffect(() => {
+    const t = setTimeout(onEnter, 2200);
+    return () => clearTimeout(t);
+  }, [onEnter]);
+  return (
+    <div onClick={onEnter} style={{ minHeight: "100vh", background: "#ffffff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+      <div style={{ marginBottom: 16, animation: "splash-pop 0.5s ease" }}>
+        <Logo size={56} animated />
+      </div>
+      <h1 style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "#18181b", opacity: 0, animation: "fade-up 0.5s ease forwards 0.3s" }}>
+        Flow
+      </h1>
+      <p style={{ margin: "4px 0 0", fontSize: 12, letterSpacing: "0.08em", color: "#a1a1aa", fontFamily: "monospace", opacity: 0, animation: "fade-up 0.5s ease forwards 0.45s" }}>
+        BY KIEVORA
+      </p>
+      <style>{`
+        @keyframes draw-box { to { stroke-dashoffset: 0; } }
+        @keyframes draw-check { to { stroke-dashoffset: 0; } }
+        @keyframes splash-pop { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes fade-up { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </div>
+  );
+}
+
+/* ---------- Confetti ---------- */
+function Confetti({ trigger }) {
+  if (!trigger) return null;
+  const pieces = Array.from({ length: 16 });
+  const colors = ["#7c3aed", "#e11d48", "#d97706", "#18181b"];
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 50, overflow: "hidden" }}>
+      {pieces.map((_, i) => {
+        const left = 10 + Math.random() * 80;
+        const delay = Math.random() * 0.15;
+        const dur = 0.7 + Math.random() * 0.5;
+        const color = colors[i % colors.length];
+        return <span key={`${trigger}-${i}`} style={{ position: "absolute", top: "38%", left: `${left}%`, width: 6, height: 6, background: color, borderRadius: i % 2 ? "50%" : 0, animation: `confetti-fall ${dur}s ease-out ${delay}s forwards` }} />;
+      })}
+    </div>
+  );
+}
+
+/* ---------- Heatmap ---------- */
+function Heatmap({ byDay }) {
+  const weeks = 12;
+  const cells = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(today);
+  start.setDate(start.getDate() - (weeks * 7 - 1));
+  start.setDate(start.getDate() - start.getDay());
+  for (let w = 0; w < weeks; w++) {
+    const col = [];
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + w * 7 + d);
+      const k = dayKey(date.getTime());
+      col.push({ k, count: byDay[k] || 0, future: date > today });
+    }
+    cells.push(col);
+  }
+  const shade = (count) => (count === 0 ? "#f4f4f5" : count === 1 ? "#c4b5fd" : count <= 3 ? "#a78bfa" : count <= 5 ? "#8b5cf6" : "#6d28d9");
+  return (
+    <div style={{ display: "flex", gap: 3, overflowX: "auto", paddingBottom: 4 }}>
+      {cells.map((col, i) => (
+        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {col.map((c, j) => (
+            <div key={j} title={`${c.k}: ${c.count} done`} style={{ width: 9, height: 9, background: c.future ? "transparent" : shade(c.count), border: c.future ? "1px solid #f4f4f5" : "none" }} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Insights Drawer ---------- */
+function InsightsDrawer({ open, onClose, stats, xp, unlocked, teamStats }) {
+  const levelProgress = xp % 100;
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(24,24,27,0.35)", zIndex: 70, opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none", transition: "opacity 0.3s ease" }} />
+      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(360px, 88vw)", background: "#ffffff", zIndex: 71, transform: open ? "translateX(0)" : "translateX(100%)", transition: "transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)", boxShadow: "-8px 0 30px rgba(0,0,0,0.08)", overflowY: "auto", padding: "24px 20px 40px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Insights</h2>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#71717a", padding: 4 }}><X size={20} /></button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", border: "1px solid #e4e4e7", marginBottom: 12 }}>
+          <div style={{ padding: "10px 10px", borderRight: "1px solid #e4e4e7" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}><Flame size={13} color={stats.streak > 0 ? "#e11d48" : "#d4d4d8"} /><span style={{ fontSize: 15, fontWeight: 700 }}>{stats.streak}</span></div>
+            <div style={{ fontSize: 9, letterSpacing: "0.05em", color: "#a1a1aa", fontFamily: "monospace" }}>STREAK</div>
+          </div>
+          <div style={{ padding: "10px 10px", borderRight: "1px solid #e4e4e7" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}><Star size={13} color="#7c3aed" fill="#7c3aed" /><span style={{ fontSize: 15, fontWeight: 700 }}>Lv {stats.level}</span></div>
+            <div style={{ fontSize: 9, letterSpacing: "0.05em", color: "#a1a1aa", fontFamily: "monospace" }}>{levelProgress}/100XP</div>
+          </div>
+          <div style={{ padding: "10px 10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}><Trophy size={13} color="#facc15" /><span style={{ fontSize: 15, fontWeight: 700 }}>{unlocked.length}/{ACHIEVEMENTS.length}</span></div>
+            <div style={{ fontSize: 9, letterSpacing: "0.05em", color: "#a1a1aa", fontFamily: "monospace" }}>BADGES</div>
+          </div>
+        </div>
+        <div style={{ height: 4, background: "#f4f4f5", marginBottom: 28 }}>
+          <div style={{ height: "100%", width: `${levelProgress}%`, background: "#7c3aed", transition: "width 0.4s ease" }} />
+        </div>
+
+        {teamStats && teamStats.length > 0 && (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#71717a", marginBottom: 10, fontFamily: "monospace", display: "flex", alignItems: "center", gap: 5 }}>
+              <Users size={12} /> TEAM COMPLETION
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 28 }}>
+              {teamStats.map((m) => {
+                const pct = m.total ? Math.round((m.done / m.total) * 100) : 0;
+                return (
+                  <div key={m.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: "50%", background: avatarColor(m.name), color: "#fff", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{initials(m.name)}</div>
+                        <span style={{ fontSize: 12, fontWeight: 600 }}>{m.name}</span>
+                      </div>
+                      <span style={{ fontSize: 11, color: "#a1a1aa", fontFamily: "monospace" }}>{m.done}/{m.total}</span>
+                    </div>
+                    <div style={{ height: 5, background: "#f4f4f5", borderRadius: 3 }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: "#7c3aed", borderRadius: 3, transition: "width 0.4s ease" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#71717a", marginBottom: 10, fontFamily: "monospace" }}>LAST 12 WEEKS</div>
+        <Heatmap byDay={stats.byDay} />
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#71717a", margin: "28px 0 10px", fontFamily: "monospace" }}>BADGES</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {ACHIEVEMENTS.map((a) => {
+            const isUnlocked = unlocked.includes(a.id);
+            return (
+              <div key={a.id} style={{ border: "1px solid #e4e4e7", padding: "10px 12px", display: "flex", alignItems: "center", gap: 10, opacity: isUnlocked ? 1 : 0.4 }}>
+                <Trophy size={14} color={isUnlocked ? "#facc15" : "#d4d4d8"} />
+                <div><div style={{ fontSize: 11, fontWeight: 700 }}>{a.label}</div><div style={{ fontSize: 10, color: "#a1a1aa" }}>{a.desc}</div></div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ---------- Workspace Switcher ---------- */
+function WorkspaceSwitcher({ workspaces, activeId, onSwitch, onCreate }) {
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState("");
+  const active = workspaces.find((w) => w.id === activeId) || workspaces[0];
+
+  const submit = () => {
+    if (!name.trim()) return;
+    onCreate(name.trim());
+    setName("");
+    setCreating(false);
+    setOpen(false);
+  };
+
+  return (
+    <div style={{ position: "relative", marginBottom: 16 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="tappable"
+        style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", border: "1px solid #e4e4e7", borderRadius: 10, padding: "10px 12px", background: "#fff", cursor: "pointer" }}
+      >
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: active.type === "personal" ? "#f4f4f5" : "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          {active.type === "personal" ? <User size={13} color="#71717a" /> : <Building2 size={13} color="#7c3aed" />}
+        </div>
+        <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{active.name}</div>
+          <div style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "monospace" }}>{active.type === "personal" ? "PERSONAL" : `${active.members.length} MEMBER${active.members.length === 1 ? "" : "S"}`}</div>
+        </div>
+        <ChevronDown size={16} color="#a1a1aa" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", flexShrink: 0 }} />
+      </button>
+
+      {open && (
+        <>
+          <div onClick={() => { setOpen(false); setCreating(false); }} style={{ position: "fixed", inset: 0, zIndex: 39 }} />
+          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "#fff", border: "1px solid #e4e4e7", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.08)", zIndex: 40, overflow: "hidden", animation: "dropdown-in 0.18s ease" }}>
+            {workspaces.map((w) => (
+              <button
+                key={w.id}
+                onClick={() => { onSwitch(w.id); setOpen(false); }}
+                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", border: "none", borderBottom: "1px solid #f4f4f5", background: w.id === activeId ? "#f5f3ff" : "transparent", padding: "12px 14px", cursor: "pointer", textAlign: "left" }}
+              >
+                <div style={{ width: 24, height: 24, borderRadius: 6, background: w.type === "personal" ? "#f4f4f5" : "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {w.type === "personal" ? <User size={12} color="#71717a" /> : <Building2 size={12} color="#7c3aed" />}
+                </div>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: w.id === activeId ? "#7c3aed" : "#18181b" }}>{w.name}</span>
+                {w.id === activeId && <Check size={14} color="#7c3aed" />}
+              </button>
+            ))}
+            {!creating ? (
+              <button onClick={() => setCreating(true)} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", border: "none", background: "transparent", padding: "12px 14px", cursor: "pointer", color: "#7c3aed", fontSize: 13, fontWeight: 700 }}>
+                <Plus size={15} /> Create team workspace
+              </button>
+            ) : (
+              <div style={{ display: "flex", gap: 6, padding: "10px 14px" }}>
+                <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder="Team name" style={{ flex: 1, fontSize: 13, border: "1px solid #e4e4e7", borderRadius: 6, padding: "7px 9px", outline: "none" }} />
+                <button onClick={submit} style={{ background: "#7c3aed", border: "none", borderRadius: 6, color: "#fff", padding: "0 12px", cursor: "pointer" }}><Check size={14} /></button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      <style>{`@keyframes dropdown-in { 0% { opacity: 0; transform: translateY(-6px); } 100% { opacity: 1; transform: translateY(0); } }`}</style>
+    </div>
+  );
+}
+
+/* ---------- Settings Screen ---------- */
+function SettingsScreen({
+  open, onClose, profile, onUpdateProfile,
+  workspace, isPersonal, onInvite, onRemoveMember, onChangeRole,
+  googleConnected, onToggleGoogle,
+}) {
+  const [tab, setTab] = useState("profile");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("member");
+
+  if (!open) return null;
+
+  const submitInvite = () => {
+    if (!inviteEmail.trim() || !inviteEmail.includes("@")) return;
+    onInvite(inviteEmail.trim(), inviteRole);
+    setInviteEmail("");
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 96, background: "#ffffff", overflowY: "auto", animation: "focus-in 0.25s ease" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 20px 0", maxWidth: 480, margin: "0 auto" }}>
+        <button onClick={onClose} style={{ display: "flex", alignItems: "center", gap: 4, background: "transparent", border: "none", cursor: "pointer", color: "#71717a", fontSize: 13, fontWeight: 600, padding: 4 }}>
+          <ChevronLeft size={17} /> Back
+        </button>
+        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Settings</h2>
+        <div style={{ width: 40 }} />
+      </div>
+
+      <div style={{ display: "flex", gap: 4, padding: "18px 20px 0", maxWidth: 480, margin: "0 auto", borderBottom: "1px solid #f4f4f5" }}>
+        {[
+          { id: "profile", label: "Profile", icon: User },
+          { id: "workspace", label: "Team", icon: Users },
+          { id: "integrations", label: "Integrations", icon: Globe2 },
+        ].map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, padding: "10px 12px", border: "none", borderBottom: tab === t.id ? "2px solid #18181b" : "2px solid transparent", marginBottom: -1, background: "transparent", color: tab === t.id ? "#18181b" : "#a1a1aa", cursor: "pointer" }}>
+            <t.icon size={13} /> {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding: "24px 20px 60px", maxWidth: 480, margin: "0 auto" }}>
+        {tab === "profile" && (
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "block", marginBottom: 6 }}>NAME</label>
+            <input value={profile.name} onChange={(e) => onUpdateProfile({ ...profile, name: e.target.value })} placeholder="Your name" style={{ width: "100%", border: "1px solid #e4e4e7", borderRadius: 8, padding: "10px 12px", fontSize: 14, marginBottom: 16, boxSizing: "border-box" }} />
+            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "block", marginBottom: 6 }}>EMAIL</label>
+            <input value={profile.email} onChange={(e) => onUpdateProfile({ ...profile, email: e.target.value })} placeholder="you@example.com" style={{ width: "100%", border: "1px solid #e4e4e7", borderRadius: 8, padding: "10px 12px", fontSize: 14, boxSizing: "border-box" }} />
+            <p style={{ fontSize: 12, color: "#a1a1aa", marginTop: 24, lineHeight: 1.5 }}>
+              This name and email is how teammates will see you inside shared workspaces once invites go live.
+            </p>
+          </div>
+        )}
+
+        {tab === "workspace" && (
+          <div>
+            {isPersonal ? (
+              <div style={{ textAlign: "center", padding: "40px 12px", color: "#a1a1aa", fontSize: 13, border: "1px dashed #e4e4e7", borderRadius: 10 }}>
+                This is your personal workspace — it's just for you.<br />Switch to (or create) a team workspace to invite people.
+              </div>
+            ) : (
+              <>
+                <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "block", marginBottom: 8 }}>MEMBERS</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                  {workspace.members.map((m) => (
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid #e4e4e7", borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ width: 30, height: 30, borderRadius: "50%", background: avatarColor(m.name || m.email), color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {initials(m.name || m.email)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.name || m.email}</div>
+                        <div style={{ fontSize: 11, color: m.status === "pending" ? "#d97706" : "#a1a1aa" }}>{m.status === "pending" ? "Invite sent · pending" : m.email || "—"}</div>
+                      </div>
+                      {m.id !== "me" ? (
+                        <>
+                          <select value={m.role} onChange={(e) => onChangeRole(m.id, e.target.value)} style={{ fontSize: 11, border: "1px solid #e4e4e7", borderRadius: 6, padding: "5px 6px", background: "#fff" }}>
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          <button onClick={() => onRemoveMember(m.id)} style={{ background: "transparent", border: "none", color: "#e11d48", cursor: "pointer", padding: 4 }}><X size={15} /></button>
+                        </>
+                      ) : (
+                        <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "#7c3aed" }}><Shield size={12} /> Admin (you)</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "block", marginBottom: 8 }}>INVITE SOMEONE</label>
+                <div style={{ border: "1px solid #e4e4e7", borderRadius: 10, overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #f4f4f5" }}>
+                    <Mail size={14} color="#a1a1aa" />
+                    <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="teammate@gmail.com" style={{ flex: 1, border: "none", outline: "none", fontSize: 13 }} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px" }}>
+                    <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} style={{ fontSize: 12, border: "1px solid #e4e4e7", borderRadius: 6, padding: "6px 8px" }}>
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <button className="tappable" onClick={submitInvite} style={{ display: "flex", alignItems: "center", gap: 6, background: "#18181b", color: "#fff", border: "none", borderRadius: 8, padding: "9px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      <UserPlus size={13} /> Send invite
+                    </button>
+                  </div>
+                </div>
+                <p style={{ fontSize: 11, color: "#a1a1aa", marginTop: 10, lineHeight: 1.5 }}>
+                  In the full app, this sends a real email invite. Here it just adds them as "pending" so you can preview how the workspace will look.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
+        {tab === "integrations" && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, border: "1px solid #e4e4e7", borderRadius: 10, padding: "14px" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <CalendarDays size={18} color="#7c3aed" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Google Account</div>
+                <div style={{ fontSize: 11, color: "#a1a1aa" }}>{googleConnected ? "Connected — Gmail & Calendar" : "Not connected"}</div>
+              </div>
+              <button className="tappable" onClick={onToggleGoogle} style={{ fontSize: 12, fontWeight: 700, padding: "8px 12px", borderRadius: 8, border: googleConnected ? "1px solid #e4e4e7" : "none", background: googleConnected ? "transparent" : "#18181b", color: googleConnected ? "#e11d48" : "#fff", cursor: "pointer" }}>
+                {googleConnected ? "Disconnect" : "Connect"}
+              </button>
+            </div>
+            <p style={{ fontSize: 11, color: "#a1a1aa", marginTop: 10, lineHeight: 1.5 }}>
+              Connecting signs in with your Gmail account via Google, so Flow can create real Calendar events for your reminders. Once linked, any reminder can choose Flow's own alarm or a synced Google Calendar event. This toggle simulates that connected state for now.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Alarm Banner ---------- */
+function AlarmBanner({ task, onDone, onSnooze, onDismiss }) {
+  if (!task) return null;
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 90, background: "#18181b", color: "#fff", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, animation: "banner-in 0.3s ease", boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+      <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#e11d48", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, animation: "ring-shake 0.5s ease infinite" }}>
+        <Bell size={16} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 10, letterSpacing: "0.06em", color: "#f4a1b5", fontFamily: "monospace" }}>TIME'S UP</div>
+        <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.text}</div>
+      </div>
+      <button onClick={onSnooze} style={{ background: "rgba(255,255,255,0.12)", border: "none", color: "#fff", fontSize: 11, fontWeight: 700, padding: "8px 10px", cursor: "pointer", flexShrink: 0 }}>+10m</button>
+      <button onClick={onDone} style={{ background: "#7c3aed", border: "none", color: "#fff", fontSize: 11, fontWeight: 700, padding: "8px 10px", cursor: "pointer", flexShrink: 0 }}>Done</button>
+      <button onClick={onDismiss} style={{ background: "transparent", border: "none", color: "#a1a1aa", cursor: "pointer", padding: 4, flexShrink: 0 }}><X size={16} /></button>
+      <style>{`
+        @keyframes banner-in { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
+        @keyframes ring-shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+      `}</style>
+    </div>
+  );
+}
+
+/* ---------- Odometer countdown ---------- */
+function OdometerDigit({ char }) {
+  const prevRef = useRef(char);
+  const tickRef = useRef(0);
+  if (prevRef.current !== char) {
+    tickRef.current += 1;
+    prevRef.current = char;
+  }
+  const isColon = char === ":";
+  return (
+    <div style={{ width: isColon ? 18 : 38, height: 56, overflow: "hidden", position: "relative" }}>
+      <span
+        key={tickRef.current}
+        style={{
+          position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 46, fontWeight: 700, fontFamily: "'Courier New', monospace", color: "#fef3c7",
+          animation: "digit-roll 0.4s cubic-bezier(0.3, 0.9, 0.4, 1)",
+          textShadow: "0 0 18px rgba(251,191,36,0.5)",
+        }}
+      >
+        {char}
+      </span>
+    </div>
+  );
+}
+
+function Odometer({ seconds }) {
+  const mm = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const ss = Math.floor(seconds % 60).toString().padStart(2, "0");
+  const text = `${mm}:${ss}`;
+  return (
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      {text.split("").map((c, i) => <OdometerDigit key={i} char={c} />)}
+      <style>{`@keyframes digit-roll { 0% { transform: translateY(-60%); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }`}</style>
+    </div>
+  );
+}
+
+/* ---------- Duration Picker ---------- */
+function DurationPicker({ task, onCancel, onStart }) {
+  const [custom, setCustom] = useState(15);
+  if (!task) return null;
+  const presets = [5, 10, 15, 25, 45];
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 95, background: "rgba(24,24,27,0.5)", display: "flex", alignItems: "flex-end" }} onClick={onCancel}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", background: "#fff", padding: "22px 20px 32px", animation: "sheet-up 0.28s cubic-bezier(0.22,1,0.36,1)" }}>
+        <div style={{ width: 36, height: 4, background: "#e4e4e7", borderRadius: 2, margin: "0 auto 18px" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <Flame size={16} color="#f59e0b" />
+          <span style={{ fontSize: 15, fontWeight: 700 }}>Focus session</span>
+        </div>
+        <p style={{ fontSize: 13, color: "#71717a", margin: "2px 0 18px" }}>{task.text}</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          {presets.map((m) => (
+            <button key={m} className="tappable" onClick={() => onStart(m * 60)} style={{ flex: "1 1 auto", minWidth: 56, fontSize: 13, fontWeight: 700, padding: "12px 0", border: "1px solid #e4e4e7", borderRadius: 8, background: "transparent", cursor: "pointer" }}>
+              {m}m
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="range" min="1" max="90" value={custom} onChange={(e) => setCustom(Number(e.target.value))} style={{ flex: 1 }} />
+          <span style={{ fontSize: 12, fontFamily: "monospace", width: 44, textAlign: "right" }}>{custom}m</span>
+          <button className="tappable" onClick={() => onStart(custom * 60)} style={{ background: "#18181b", color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Start</button>
+        </div>
+      </div>
+      <style>{`@keyframes sheet-up { 0% { transform: translateY(100%); } 100% { transform: translateY(0); } }`}</style>
+    </div>
+  );
+}
+
+/* ---------- Focus Mode (the candle) ---------- */
+function FocusMode({ task, totalSeconds, onExit, onComplete }) {
+  const [remaining, setRemaining] = useState(totalSeconds);
+  const [finished, setFinished] = useState(false);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused || finished) return;
+    if (remaining <= 0) {
+      setFinished(true);
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.3, 0.6].forEach((delay) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = 660;
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + delay + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.9);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 1);
+        });
+      } catch (e) {}
+      return;
+    }
+    const iv = setTimeout(() => setRemaining((r) => r - 1), 1000);
+    return () => clearTimeout(iv);
+  }, [remaining, paused, finished]);
+
+  const fraction = Math.max(0, remaining / totalSeconds);
+  const waxHeight = 20 + fraction * 150;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "radial-gradient(circle at 50% 30%, #2a1810 0%, #120a08 55%, #050303 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, animation: "focus-in 0.4s ease" }}>
+      <button onClick={onExit} style={{ position: "absolute", top: 24, right: 24, background: "rgba(255,255,255,0.08)", border: "none", color: "#d4d4d8", padding: 8, borderRadius: 8, cursor: "pointer" }}>
+        <X size={18} />
+      </button>
+
+      <p style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "monospace", margin: "0 0 6px" }}>
+        {finished ? "session complete" : "focusing on"}
+      </p>
+      <h2 style={{ color: "#fef3c7", fontSize: 18, fontWeight: 600, margin: "0 0 36px", textAlign: "center", maxWidth: 320 }}>{task.text}</h2>
+
+      {/* Candle */}
+      <div style={{ position: "relative", width: 90, height: 220, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", marginBottom: 40 }}>
+        {!finished && (
+          <div
+            style={{
+              width: 22, height: 32, marginBottom: -4,
+              background: "radial-gradient(circle at 50% 35%, #fff9db 0%, #fbbf24 35%, #f59e0b 65%, transparent 75%)",
+              borderRadius: "50% 50% 50% 50% / 65% 65% 35% 35%",
+              filter: "blur(0.3px)",
+              boxShadow: "0 0 30px 8px rgba(251,191,36,0.45)",
+              animation: "flicker 1.6s ease-in-out infinite",
+              transformOrigin: "bottom center",
+            }}
+          />
+        )}
+        {finished && (
+          <div style={{ position: "relative", marginBottom: 4, height: 20 }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ position: "absolute", bottom: 0, left: i * 6 - 6, width: 6, height: 6, borderRadius: "50%", background: "rgba(200,200,200,0.4)", animation: `smoke 1.6s ease-out ${i * 0.3}s infinite` }} />
+            ))}
+          </div>
+        )}
+        <div style={{ width: 56, height: waxHeight, background: "linear-gradient(180deg, #fffbeb 0%, #fde68a 40%, #fbbf24 100%)", borderRadius: "6px 6px 3px 3px", transition: "height 1s linear", boxShadow: "inset -6px 0 10px rgba(180,120,20,0.25)" }} />
+        <div style={{ width: 74, height: 14, background: "#3f3f46", borderRadius: 3, marginTop: -1 }} />
+      </div>
+
+      {!finished ? (
+        <>
+          <Odometer seconds={remaining} />
+          <div style={{ display: "flex", gap: 10, marginTop: 36 }}>
+            <button className="tappable" onClick={() => setPaused((p) => !p)} style={{ background: "rgba(255,255,255,0.1)", color: "#fef3c7", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              {paused ? "Resume" : "Pause"}
+            </button>
+            <button className="tappable" onClick={onExit} style={{ background: "transparent", color: "#a1a1aa", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              End early
+            </button>
+          </div>
+        </>
+      ) : (
+        <div style={{ textAlign: "center", animation: "fade-up 0.5s ease" }}>
+          <p style={{ color: "#d4d4d8", fontSize: 13, marginBottom: 20 }}>The candle burned all the way down.</p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <button className="tappable" onClick={onComplete} style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: 8, padding: "11px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              Mark task done
+            </button>
+            <button className="tappable" onClick={onExit} style={{ background: "transparent", color: "#a1a1aa", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "11px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              Back to tasks
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes focus-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes flicker {
+          0%, 100% { transform: scale(1) skewX(0deg); }
+          25% { transform: scale(1.05, 0.96) skewX(-2deg); }
+          50% { transform: scale(0.95, 1.05) skewX(2deg); }
+          75% { transform: scale(1.03, 0.98) skewX(-1deg); }
+        }
+        @keyframes smoke {
+          0% { opacity: 0.5; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-40px) scale(2); }
+        }
+        @keyframes fade-up { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </div>
+  );
+}
+
+/* ---------- Task Row ---------- */
+function TaskRow({ t, onToggle, onDelete, onOpen, onFocus, popped, assigneeMember, showAssignee }) {
+  const p = PRIORITIES[t.priority] || PRIORITIES.important;
+  const Icon = p.icon;
+  const overdue = t.alarmTime && !t.done && t.alarmTime < Date.now();
+  const isUrgent = t.priority === "urgent";
+  const subtasks = t.subtasks || [];
+  const subDone = subtasks.filter((s) => s.done).length;
+
+  const cardBg = t.done ? "#f0fdf4" : isUrgent ? "rgba(225,29,72,0.035)" : "#ffffff";
+  const cardBorder = t.done ? "#bbf7d0" : isUrgent ? "#fecdd3" : "#e4e4e7";
+
+  return (
+    <div
+      className="tappable"
+      onClick={() => onOpen(t.id)}
+      style={{
+        display: "flex", alignItems: "center", gap: 10,
+        border: `1px solid ${cardBorder}`,
+        borderLeft: isUrgent && !t.done ? "3px solid #e11d48" : `1px solid ${cardBorder}`,
+        borderRadius: 10,
+        padding: "12px 10px",
+        marginBottom: 8,
+        cursor: "pointer",
+        animation: "task-in 0.28s ease",
+        background: cardBg,
+        boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+      }}
+    >
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggle(t.id); }}
+        style={{ width: 20, height: 20, borderRadius: "50%", border: t.done ? "none" : "1.5px solid #d4d4d8", background: t.done ? "#16a34a" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, padding: 0, animation: popped ? "check-pop 0.3s ease" : "none" }}
+      >
+        {t.done && <Check size={12} color="#fff" strokeWidth={3} />}
+      </button>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontSize: 14, fontWeight: t.done ? 400 : 500, textDecoration: t.done ? "line-through" : "none", color: t.done ? "#86929c" : "#18181b" }}>{t.text}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+          {showAssignee && (
+            assigneeMember ? (
+              <div title={assigneeMember.name} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <div style={{ width: 13, height: 13, borderRadius: "50%", background: avatarColor(assigneeMember.name || assigneeMember.email), color: "#fff", fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{initials(assigneeMember.name || assigneeMember.email)}</div>
+                <span style={{ fontSize: 10, color: "#a1a1aa" }}>{assigneeMember.name}</span>
+              </div>
+            ) : (
+              <div title="Visible to everyone in this workspace" style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <Globe2 size={10} color="#a1a1aa" />
+                <span style={{ fontSize: 10, color: "#a1a1aa" }}>Everyone</span>
+              </div>
+            )
+          )}
+          {t.alarmTime && (
+            <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              {t.reminderProvider === "google" ? (
+                <CalendarDays size={10} color={overdue ? "#e11d48" : "#a1a1aa"} />
+              ) : (
+                <Clock size={10} color={overdue ? "#e11d48" : "#a1a1aa"} style={overdue ? { animation: "pulse-dot 1s ease infinite" } : undefined} />
+              )}
+              <span style={{ fontSize: 10, color: overdue ? "#e11d48" : "#a1a1aa", fontFamily: "monospace", fontWeight: overdue ? 700 : 400 }}>{overdue ? "OVERDUE" : formatAlarm(t.alarmTime)}</span>
+            </div>
+          )}
+          {subtasks.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <ListChecks size={10} color="#a1a1aa" />
+              <span style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "monospace" }}>{subDone}/{subtasks.length}</span>
+            </div>
+          )}
+          {t.repeat && t.repeat !== "none" && <Repeat size={10} color="#a1a1aa" />}
+          {(t.tags || []).slice(0, 2).map((tag) => (
+            <span key={tag} style={{ fontSize: 9, color: "#7c3aed", background: "#f5f3ff", padding: "1px 6px", borderRadius: 4, fontFamily: "monospace" }}>#{tag}</span>
+          ))}
+        </div>
+      </div>
+
+      <div title={p.label} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+        <Icon size={12} color={p.color} />
+      </div>
+      {!t.done && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onFocus(t); }}
+          title="Start focus session"
+          style={{ background: "transparent", border: "none", color: "#f59e0b", cursor: "pointer", padding: 4, display: "flex", flexShrink: 0 }}
+        >
+          <Flame size={14} />
+        </button>
+      )}
+      <ChevronRight size={14} color="#d4d4d8" style={{ flexShrink: 0 }} />
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(t.id); }}
+        style={{ background: "transparent", border: "none", color: "#d4d4d8", cursor: "pointer", padding: 4, display: "flex", flexShrink: 0 }}
+      >
+        <Trash2 size={14} />
+      </button>
+      <style>{`@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
+    </div>
+  );
+}
+
+/* ---------- Task Detail Drawer ---------- */
+function TaskDetailDrawer({ task, projects, onClose, onUpdate, onDelete, onFocus, members, isTeamWorkspace, googleConnected }) {
+  const [tagInput, setTagInput] = useState("");
+  const [subInput, setSubInput] = useState("");
+  const [alarmPickerOpen, setAlarmPickerOpen] = useState(false);
+
+  if (!task) return null;
+  const p = PRIORITIES[task.priority] || PRIORITIES.important;
+
+  const addTag = () => {
+    if (!tagInput.trim()) return;
+    onUpdate(task.id, { tags: [...(task.tags || []), tagInput.trim().replace(/^#/, "")] });
+    setTagInput("");
+  };
+  const removeTag = (tag) => onUpdate(task.id, { tags: (task.tags || []).filter((t) => t !== tag) });
+
+  const addSubtask = () => {
+    if (!subInput.trim()) return;
+    onUpdate(task.id, { subtasks: [...(task.subtasks || []), { id: uid("s"), text: subInput.trim(), done: false }] });
+    setSubInput("");
+  };
+  const toggleSub = (subId) => onUpdate(task.id, { subtasks: (task.subtasks || []).map((s) => (s.id === subId ? { ...s, done: !s.done } : s)) });
+  const deleteSub = (subId) => onUpdate(task.id, { subtasks: (task.subtasks || []).filter((s) => s.id !== subId) });
+
+  const setQuickAlarm = (mins) => onUpdate(task.id, { alarmTime: Date.now() + mins * 60000, alarmFired: false });
+  const setTonight = () => { const d = new Date(); d.setHours(20, 0, 0, 0); if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1); onUpdate(task.id, { alarmTime: d.getTime(), alarmFired: false }); };
+  const setTomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); onUpdate(task.id, { alarmTime: d.getTime(), alarmFired: false }); };
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(24,24,27,0.35)", zIndex: 74 }} />
+      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(400px, 92vw)", background: "#ffffff", zIndex: 75, transform: "translateX(0)", animation: "drawer-in 0.32s cubic-bezier(0.22, 1, 0.36, 1)", boxShadow: "-8px 0 30px rgba(0,0,0,0.1)", overflowY: "auto", padding: "20px 20px 60px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+          <button onClick={onClose} style={{ display: "flex", alignItems: "center", gap: 4, background: "transparent", border: "none", cursor: "pointer", color: "#71717a", fontSize: 12, fontWeight: 600, padding: 4 }}>
+            <ChevronLeft size={16} /> Back
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            {!task.done && (
+              <button onClick={() => { onFocus(task); onClose(); }} title="Start focus session" style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "1px solid #fde68a", borderRadius: 8, cursor: "pointer", color: "#b45309", padding: "6px 10px", fontSize: 11, fontWeight: 700 }}>
+                <Flame size={13} /> Focus
+              </button>
+            )}
+            <button onClick={() => { onDelete(task.id); onClose(); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#e11d48", padding: 4 }}><Trash2 size={16} /></button>
+          </div>
+        </div>
+
+        {/* Title */}
+        <textarea
+          value={task.text}
+          onChange={(e) => onUpdate(task.id, { text: e.target.value })}
+          rows={2}
+          style={{ width: "100%", border: "none", outline: "none", fontSize: 19, fontWeight: 700, resize: "none", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 14, color: task.done ? "#a1a1aa" : "#18181b", textDecoration: task.done ? "line-through" : "none" }}
+        />
+
+        {/* Priority */}
+        <div style={{ display: "flex", marginBottom: 16, border: "1px solid #e4e4e7" }}>
+          {Object.entries(PRIORITIES).map(([key, pr], i) => {
+            const Icon = pr.icon;
+            return (
+              <button key={key} onClick={() => onUpdate(task.id, { priority: key })} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flex: 1, fontSize: 12, fontWeight: 600, padding: "9px 6px", border: "none", borderRight: i < 2 ? "1px solid #e4e4e7" : "none", background: task.priority === key ? "#18181b" : "transparent", color: task.priority === key ? "#fff" : "#71717a", cursor: "pointer" }}>
+                <Icon size={12} color={task.priority === key ? pr.color : "#a1a1aa"} />{pr.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Project */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "block", marginBottom: 6 }}>PROJECT</label>
+          <select
+            value={task.projectId || ""}
+            onChange={(e) => onUpdate(task.id, { projectId: e.target.value || null })}
+            style={{ width: "100%", border: "1px solid #e4e4e7", padding: "9px 10px", fontSize: 13, background: "#fff", fontFamily: "inherit" }}
+          >
+            <option value="">Inbox</option>
+            {projects.map((pr) => (<option key={pr.id} value={pr.id}>{pr.name}</option>))}
+          </select>
+        </div>
+
+        {isTeamWorkspace && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}><Users size={11} /> ASSIGNED TO</label>
+            <select
+              value={task.assigneeId || ""}
+              onChange={(e) => onUpdate(task.id, { assigneeId: e.target.value || null })}
+              style={{ width: "100%", border: "1px solid #e4e4e7", padding: "9px 10px", fontSize: 13, background: "#fff", fontFamily: "inherit" }}
+            >
+              <option value="">Everyone (visible to whole workspace)</option>
+              {(members || []).map((m) => (<option key={m.id} value={m.id}>{m.name}{m.id === "me" ? " (you)" : ""}</option>))}
+            </select>
+            <p style={{ fontSize: 11, color: "#a1a1aa", marginTop: 6, lineHeight: 1.4 }}>
+              {task.assigneeId ? "Only this person and workspace admins can see this task." : "Everyone in this workspace can see this task."}
+            </p>
+          </div>
+        )}
+
+        {/* Alarm */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "block", marginBottom: 6 }}>REMINDER</label>
+          <div style={{ border: "1px solid #e4e4e7" }}>
+            {googleConnected && task.alarmTime && (
+              <div style={{ display: "flex", borderBottom: "1px solid #f4f4f5" }}>
+                <button onClick={() => onUpdate(task.id, { reminderProvider: "default" })} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "8px 6px", border: "none", borderRight: "1px solid #f4f4f5", background: (task.reminderProvider || "default") === "default" ? "#18181b" : "transparent", color: (task.reminderProvider || "default") === "default" ? "#fff" : "#71717a", cursor: "pointer" }}>
+                  <Bell size={11} /> Flow reminder
+                </button>
+                <button onClick={() => onUpdate(task.id, { reminderProvider: "google" })} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "8px 6px", border: "none", background: task.reminderProvider === "google" ? "#18181b" : "transparent", color: task.reminderProvider === "google" ? "#fff" : "#71717a", cursor: "pointer" }}>
+                  <CalendarDays size={11} /> Google Calendar
+                </button>
+              </div>
+            )}
+            <button onClick={() => setAlarmPickerOpen(!alarmPickerOpen)} style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", border: "none", background: "transparent", padding: "10px 12px", fontSize: 12, color: task.alarmTime ? "#7c3aed" : "#a1a1aa", cursor: "pointer", fontWeight: task.alarmTime ? 700 : 400 }}>
+              {task.alarmTime && task.reminderProvider === "google" ? <CalendarDays size={13} /> : <Clock size={13} />}
+              {task.alarmTime ? formatAlarm(task.alarmTime) : "No reminder set"}
+            </button>
+            {alarmPickerOpen && (
+              <div style={{ padding: "0 12px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <button onClick={() => setQuickAlarm(60)} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>In 1h</button>
+                  <button onClick={() => setQuickAlarm(180)} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>In 3h</button>
+                  <button onClick={setTonight} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>Tonight 8pm</button>
+                  <button onClick={setTomorrow} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>Tmrw 9am</button>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input type="datetime-local" onChange={(e) => onUpdate(task.id, { alarmTime: new Date(e.target.value).getTime(), alarmFired: false })} style={{ flex: 1, fontSize: 12, border: "1px solid #e4e4e7", padding: "6px 8px" }} />
+                  {task.alarmTime && <button onClick={() => onUpdate(task.id, { alarmTime: null })} style={{ fontSize: 11, color: "#e11d48", background: "transparent", border: "1px solid #e4e4e7", padding: "0 10px", cursor: "pointer" }}>Clear</button>}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Repeat */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "block", marginBottom: 6 }}>REPEAT</label>
+          <div style={{ display: "flex", border: "1px solid #e4e4e7" }}>
+            {["none", "daily", "weekly"].map((r, i) => (
+              <button key={r} onClick={() => onUpdate(task.id, { repeat: r })} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 12, fontWeight: 600, padding: "9px 6px", border: "none", borderRight: i < 2 ? "1px solid #e4e4e7" : "none", background: (task.repeat || "none") === r ? "#18181b" : "transparent", color: (task.repeat || "none") === r ? "#fff" : "#71717a", cursor: "pointer", textTransform: "capitalize" }}>
+                {r !== "none" && <Repeat size={11} />} {r}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}><FileText size={11} /> NOTES</label>
+          <textarea
+            value={task.notes || ""}
+            onChange={(e) => onUpdate(task.id, { notes: e.target.value })}
+            placeholder="Add context, links, details…"
+            rows={3}
+            style={{ width: "100%", border: "1px solid #e4e4e7", padding: "10px 12px", fontSize: 13, resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }}
+          />
+        </div>
+
+        {/* Subtasks */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}><ListChecks size={11} /> SUBTASKS</label>
+          <div style={{ border: "1px solid #e4e4e7" }}>
+            {(task.subtasks || []).map((s) => (
+              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderBottom: "1px solid #f4f4f5" }}>
+                <button onClick={() => toggleSub(s.id)} style={{ width: 15, height: 15, border: s.done ? "none" : "1.5px solid #d4d4d8", background: s.done ? "#18181b" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, padding: 0 }}>
+                  {s.done && <Check size={9} color="#fff" />}
+                </button>
+                <span style={{ flex: 1, fontSize: 12.5, textDecoration: s.done ? "line-through" : "none", color: s.done ? "#a1a1aa" : "#18181b" }}>{s.text}</span>
+                <button onClick={() => deleteSub(s.id)} style={{ background: "transparent", border: "none", color: "#d4d4d8", cursor: "pointer", padding: 2 }}><X size={12} /></button>
+              </div>
+            ))}
+            <div style={{ display: "flex" }}>
+              <input value={subInput} onChange={(e) => setSubInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addSubtask()} placeholder="Add a subtask…" style={{ flex: 1, border: "none", outline: "none", padding: "9px 10px", fontSize: 12.5, fontFamily: "inherit" }} />
+              <button onClick={addSubtask} style={{ border: "none", background: "transparent", color: "#7c3aed", padding: "0 10px", cursor: "pointer" }}><Plus size={15} /></button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tags */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}><TagIcon size={11} /> TAGS</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+            {(task.tags || []).map((tag) => (
+              <span key={tag} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#7c3aed", background: "#f5f3ff", padding: "4px 8px" }}>
+                #{tag} <X size={10} style={{ cursor: "pointer" }} onClick={() => removeTag(tag)} />
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", border: "1px solid #e4e4e7" }}>
+            <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTag()} placeholder="Add a tag…" style={{ flex: 1, border: "none", outline: "none", padding: "9px 10px", fontSize: 12.5, fontFamily: "inherit" }} />
+            <button onClick={addTag} style={{ border: "none", background: "transparent", color: "#7c3aed", padding: "0 10px", cursor: "pointer" }}><Plus size={15} /></button>
+          </div>
+        </div>
+
+        {/* Meta */}
+        <div style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "monospace", borderTop: "1px solid #f4f4f5", paddingTop: 12 }}>
+          CREATED {new Date(task.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+          {task.completedAt && <div style={{ marginTop: 3 }}>COMPLETED {new Date(task.completedAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>}
+        </div>
+      </div>
+      <style>{`@keyframes drawer-in { 0% { transform: translateX(100%); } 100% { transform: translateX(0); } }`}</style>
+    </>
+  );
+}
+
+/* ---------- Main ---------- */
+function TaskTracker() {
+  const [entered, setEntered] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [activeProjectId, setActiveProjectId] = useState("inbox");
+  const [xp, setXp] = useState(0);
+  const [unlocked, setUnlocked] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [input, setInput] = useState("");
+  const [priority, setPriority] = useState("important");
+  const [filter, setFilter] = useState("active");
+  const [confettiKey, setConfettiKey] = useState(0);
+  const [xpToast, setXpToast] = useState(null);
+  const [achievementToast, setAchievementToast] = useState(null);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [poppedId, setPoppedId] = useState(null);
+  const [somedayOpen, setSomedayOpen] = useState(false);
+  const [alarmPickerOpen, setAlarmPickerOpen] = useState(false);
+  const [alarmTime, setAlarmTime] = useState(null);
+  const [customTime, setCustomTime] = useState("");
+  const [reminderProvider, setReminderProvider] = useState("default");
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [ringingTask, setRingingTask] = useState(null);
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [focusPickerTask, setFocusPickerTask] = useState(null);
+  const [focusSession, setFocusSession] = useState(null);
+  const [workspaces, setWorkspaces] = useState(defaultWorkspaces());
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState("personal");
+  const [profile, setProfile] = useState({ name: "You", email: "" });
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [assigneeId, setAssigneeId] = useState("");
+  const [viewAsMemberId, setViewAsMemberId] = useState(null);
+  const toastTimer = useRef(null);
+  const achTimer = useRef(null);
+  const popTimer = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await window.storage.get("flow-data-v4");
+        if (res?.value) {
+          const parsed = JSON.parse(res.value);
+          setTasks((parsed.tasks || []).map((t) => ({ ...t, priority: migratePriority(t.priority), notes: t.notes || "", subtasks: t.subtasks || [], tags: t.tags || [], repeat: t.repeat || "none", workspaceId: t.workspaceId || "personal", assigneeId: t.assigneeId || null, reminderProvider: t.reminderProvider || "default" })));
+          setProjects((parsed.projects || []).map((p) => ({ ...p, workspaceId: p.workspaceId || "personal" })));
+          setXp(parsed.xp || 0);
+          setUnlocked(parsed.unlocked || []);
+          setWorkspaces(parsed.workspaces || defaultWorkspaces());
+          setActiveWorkspaceId(parsed.activeWorkspaceId || "personal");
+          setProfile(parsed.profile || { name: "You", email: "" });
+          setGoogleConnected(!!parsed.googleConnected);
+        } else {
+          // migrate from older v3 store if present
+          const old = await window.storage.get("flow-data-v3").catch(() => null);
+          if (old?.value) {
+            const parsed = JSON.parse(old.value);
+            setTasks((parsed.tasks || []).map((t) => ({ ...t, priority: migratePriority(t.priority), notes: t.notes || "", subtasks: t.subtasks || [], tags: t.tags || [], repeat: t.repeat || "none", workspaceId: "personal", assigneeId: null, reminderProvider: "default" })));
+            setProjects((parsed.projects || []).map((p) => ({ ...p, workspaceId: "personal" })));
+            setXp(parsed.xp || 0);
+            setUnlocked(parsed.unlocked || []);
+          }
+        }
+      } catch (e) {}
+      setLoaded(true);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    window.storage.set("flow-data-v4", JSON.stringify({ tasks, projects, xp, unlocked, workspaces, activeWorkspaceId, profile, googleConnected })).catch(() => {});
+  }, [tasks, projects, xp, unlocked, workspaces, activeWorkspaceId, profile, googleConnected, loaded]);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      if (ringingTask) return;
+      const due = tasks.find((t) => t.alarmTime && !t.alarmFired && !t.done && t.alarmTime <= Date.now());
+      if (due) {
+        setTasks((prev) => prev.map((t) => (t.id === due.id ? { ...t, alarmFired: true } : t)));
+        setRingingTask(due);
+        beep();
+      }
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [tasks, ringingTask]);
+
+  const stats = computeStats(tasks, xp);
+  const levelProgress = xp % 100;
+
+  const checkAchievements = (newStats) => {
+    const newlyUnlocked = ACHIEVEMENTS.filter((a) => !unlocked.includes(a.id) && a.check(newStats));
+    if (newlyUnlocked.length) {
+      setUnlocked((prev) => [...prev, ...newlyUnlocked.map((a) => a.id)]);
+      clearTimeout(achTimer.current);
+      setAchievementToast(newlyUnlocked[0]);
+      achTimer.current = setTimeout(() => setAchievementToast(null), 3200);
+    }
+  };
+
+  const addTask = () => {
+    if (!input.trim()) return;
+    setTasks([
+      { id: uid(), text: input.trim(), priority, done: false, createdAt: Date.now(), completedAt: null, projectId: activeProjectId === "inbox" ? null : activeProjectId, workspaceId: activeWorkspaceId, assigneeId: assigneeId || null, alarmTime, alarmFired: false, reminderProvider, notes: "", subtasks: [], tags: [], repeat: "none" },
+      ...tasks,
+    ]);
+    setInput("");
+    setAlarmTime(null);
+    setAlarmPickerOpen(false);
+    setCustomTime("");
+    setReminderProvider("default");
+    setAssigneeId("");
+  };
+
+  const updateTask = (id, patch) => setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+
+  const toggleTask = (id) => {
+    const target = tasks.find((t) => t.id === id);
+    const willComplete = target && !target.done;
+    let updated = tasks.map((t) => (t.id === id ? { ...t, done: !t.done, completedAt: !t.done ? Date.now() : null } : t));
+
+    if (willComplete && target.repeat && target.repeat !== "none") {
+      const clone = { ...target, id: uid(), done: false, completedAt: null, alarmFired: false, subtasks: (target.subtasks || []).map((s) => ({ ...s, done: false })), alarmTime: target.alarmTime ? nextOccurrence(target.alarmTime, target.repeat) : null };
+      updated = [clone, ...updated];
+    }
+
+    setTasks(updated);
+    clearTimeout(popTimer.current);
+    setPoppedId(id);
+    popTimer.current = setTimeout(() => setPoppedId(null), 320);
+
+    if (willComplete) {
+      const gained = PRIORITIES[target.priority].xp;
+      const newXp = xp + gained;
+      setXp(newXp);
+      setConfettiKey((k) => k + 1);
+      clearTimeout(toastTimer.current);
+      setXpToast(`+${gained} XP`);
+      toastTimer.current = setTimeout(() => setXpToast(null), 1200);
+      checkAchievements(computeStats(updated, newXp));
+    }
+  };
+
+  const deleteTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
+
+  const addProject = () => {
+    if (!newProjectName.trim()) return;
+    const id = uid("p_");
+    setProjects([...projects, { id, name: newProjectName.trim(), notes: "", workspaceId: activeWorkspaceId }]);
+    setActiveProjectId(id);
+    setNewProjectName("");
+    setNewProjectOpen(false);
+  };
+  const updateProjectNotes = (id, notes) => setProjects(projects.map((p) => (p.id === id ? { ...p, notes } : p)));
+
+  const setQuickAlarm = (mins) => setAlarmTime(Date.now() + mins * 60000);
+  const setTonightAlarm = () => { const d = new Date(); d.setHours(20, 0, 0, 0); if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1); setAlarmTime(d.getTime()); };
+  const setTomorrowAlarm = () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); setAlarmTime(d.getTime()); };
+
+  const switchWorkspace = (id) => {
+    setActiveWorkspaceId(id);
+    setActiveProjectId("inbox");
+    setViewAsMemberId(null);
+  };
+  const createWorkspace = (name) => {
+    const id = uid("w_");
+    setWorkspaces([...workspaces, { id, name, type: "team", members: [{ id: "me", name: profile.name || "You", email: profile.email, role: "admin", status: "active" }] }]);
+    switchWorkspace(id);
+  };
+  const inviteMember = (email, role) => {
+    setWorkspaces((prev) => prev.map((w) => (w.id === activeWorkspaceId ? { ...w, members: [...w.members, { id: uid("u_"), name: email.split("@")[0], email, role, status: "pending" }] } : w)));
+  };
+  const removeMember = (memberId) => {
+    setWorkspaces((prev) => prev.map((w) => (w.id === activeWorkspaceId ? { ...w, members: w.members.filter((m) => m.id !== memberId) } : w)));
+    setTasks((prev) => prev.map((t) => (t.workspaceId === activeWorkspaceId && t.assigneeId === memberId ? { ...t, assigneeId: null } : t)));
+  };
+  const changeRole = (memberId, role) => {
+    setWorkspaces((prev) => prev.map((w) => (w.id === activeWorkspaceId ? { ...w, members: w.members.map((m) => (m.id === memberId ? { ...m, role } : m)) } : w)));
+  };
+
+  const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) || workspaces[0];
+  const isTeamWorkspace = activeWorkspace.type === "team";
+  const workspaceMembers = activeWorkspace.members || [];
+
+  const workspaceProjects = projects.filter((p) => p.workspaceId === activeWorkspaceId);
+  const workspaceTasksRaw = tasks.filter((t) => (t.workspaceId || "personal") === activeWorkspaceId);
+  const visibilityFilteredTasks = isTeamWorkspace
+    ? workspaceTasksRaw.filter((t) => !viewAsMemberId || !t.assigneeId || t.assigneeId === viewAsMemberId)
+    : workspaceTasksRaw;
+
+  const projectTasks = visibilityFilteredTasks.filter((t) => (activeProjectId === "inbox" ? !t.projectId : t.projectId === activeProjectId));
+  const visibleTasks = projectTasks.filter((t) => (filter === "all" ? true : filter === "active" ? !t.done : t.done));
+  const mainTasks = visibleTasks.filter((t) => t.priority !== "someday").sort((a, b) => (a.priority === "urgent" ? -1 : 1) - (b.priority === "urgent" ? -1 : 1));
+  const somedayTasks = visibleTasks.filter((t) => t.priority === "someday");
+  const activeCount = projectTasks.filter((t) => !t.done).length;
+  const activeProject = workspaceProjects.find((p) => p.id === activeProjectId);
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId);
+
+  const teamStats = isTeamWorkspace
+    ? workspaceMembers.filter((m) => m.status === "active").map((m) => {
+        const mine = workspaceTasksRaw.filter((t) => t.assigneeId === m.id);
+        return { id: m.id, name: m.name, total: mine.length, done: mine.filter((t) => t.done).length };
+      }).filter((m) => m.total > 0)
+    : [];
+
+  if (!entered) return <Splash onEnter={() => setEntered(true)} />;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#18181b", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", display: "flex", justifyContent: "center", position: "relative" }}>
+      <Confetti trigger={confettiKey} />
+      <AlarmBanner
+        task={ringingTask}
+        onDone={() => { toggleTask(ringingTask.id); setRingingTask(null); }}
+        onSnooze={() => { setTasks((prev) => prev.map((t) => (t.id === ringingTask.id ? { ...t, alarmTime: Date.now() + 600000, alarmFired: false } : t))); setRingingTask(null); }}
+        onDismiss={() => setRingingTask(null)}
+      />
+
+      {xpToast && (
+        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#18181b", color: "#fff", fontSize: 13, fontWeight: 700, padding: "8px 16px", zIndex: 60, display: "flex", alignItems: "center", gap: 6, animation: "toast-in 0.25s ease" }}>
+          <Star size={13} color="#facc15" fill="#facc15" /> {xpToast}
+        </div>
+      )}
+      {achievementToast && (
+        <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "#18181b", color: "#fff", padding: "12px 18px", zIndex: 60, display: "flex", alignItems: "center", gap: 10, border: "1px solid #7c3aed", maxWidth: 320, animation: "toast-up 0.3s ease" }}>
+          <Trophy size={18} color="#facc15" />
+          <div><div style={{ fontSize: 12, fontWeight: 700 }}>{achievementToast.label}</div><div style={{ fontSize: 11, color: "#a1a1aa" }}>{achievementToast.desc}</div></div>
+        </div>
+      )}
+
+      <InsightsDrawer open={insightsOpen} onClose={() => setInsightsOpen(false)} stats={stats} xp={xp} unlocked={unlocked} teamStats={teamStats} />
+      <TaskDetailDrawer task={selectedTask} projects={workspaceProjects} onClose={() => setSelectedTaskId(null)} onUpdate={updateTask} onDelete={deleteTask} onFocus={setFocusPickerTask} members={workspaceMembers} isTeamWorkspace={isTeamWorkspace} googleConnected={googleConnected} />
+
+      <SettingsScreen
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        profile={profile}
+        onUpdateProfile={setProfile}
+        workspace={activeWorkspace}
+        isPersonal={!isTeamWorkspace}
+        onInvite={inviteMember}
+        onRemoveMember={removeMember}
+        onChangeRole={changeRole}
+        googleConnected={googleConnected}
+        onToggleGoogle={() => setGoogleConnected((v) => !v)}
+      />
+
+      <DurationPicker
+        task={focusPickerTask}
+        onCancel={() => setFocusPickerTask(null)}
+        onStart={(secs) => { setFocusSession({ task: focusPickerTask, totalSeconds: secs }); setFocusPickerTask(null); }}
+      />
+
+      {focusSession && (
+        <FocusMode
+          task={focusSession.task}
+          totalSeconds={focusSession.totalSeconds}
+          onExit={() => setFocusSession(null)}
+          onComplete={() => {
+            const t = tasks.find((tk) => tk.id === focusSession.task.id);
+            if (t && !t.done) toggleTask(t.id);
+            setFocusSession(null);
+          }}
+        />
+      )}
+
+      <div style={{ width: "100%", maxWidth: 480, padding: "28px 20px 60px" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1.5px solid #18181b", paddingBottom: 16, marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Logo size={26} />
+            <div>
+              <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: "-0.02em", lineHeight: 1.1 }}>Flow</h1>
+              <span style={{ fontSize: 9, color: "#a1a1aa", fontFamily: "monospace", letterSpacing: "0.06em" }}>BY KIEVORA</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, border: "1px solid #f4f4f5", borderRadius: 8, padding: "7px 9px" }}>
+              <Flame size={13} color={stats.streak > 0 ? "#e11d48" : "#d4d4d8"} />
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{stats.streak}</span>
+            </div>
+            <button
+              onClick={() => setInsightsOpen(true)}
+              className="tappable"
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "#18181b", color: "#fff", border: "1px solid #18181b", borderRadius: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.03em", padding: "8px 9px 8px 11px", cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}
+            >
+              <BarChart3 size={13} /> Lv {stats.level}
+              <ChevronRight size={13} color="#a1a1aa" />
+            </button>
+            <button onClick={() => setSettingsOpen(true)} className="tappable" title="Settings" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "1px solid #e4e4e7", borderRadius: 8, color: "#71717a", padding: 8, cursor: "pointer" }}>
+              <SettingsIcon size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* Workspace switcher */}
+        <WorkspaceSwitcher workspaces={workspaces} activeId={activeWorkspaceId} onSwitch={switchWorkspace} onCreate={createWorkspace} />
+
+        {/* View-as (team workspaces only) */}
+        {isTeamWorkspace && workspaceMembers.length > 1 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid #e4e4e7", borderRadius: 8, padding: "8px 10px", marginBottom: 16 }}>
+            <Eye size={13} color="#a1a1aa" />
+            <select value={viewAsMemberId || ""} onChange={(e) => setViewAsMemberId(e.target.value || null)} style={{ flex: 1, fontSize: 12, border: "none", outline: "none", color: "#71717a", background: "transparent" }}>
+              <option value="">Admin view — see everything</option>
+              {workspaceMembers.filter((m) => m.id !== "me").map((m) => (<option key={m.id} value={m.id}>View as {m.name}</option>))}
+            </select>
+          </div>
+        )}
+
+        {/* Project chips */}
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
+          <button className="tappable" onClick={() => setActiveProjectId("inbox")} style={{ display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", fontSize: 12, fontWeight: 600, padding: "7px 12px", borderRadius: 8, border: activeProjectId === "inbox" ? "1px solid #18181b" : "1px solid #e4e4e7", background: activeProjectId === "inbox" ? "#18181b" : "transparent", color: activeProjectId === "inbox" ? "#fff" : "#71717a", cursor: "pointer", flexShrink: 0 }}>
+            <Folder size={12} /> Inbox
+          </button>
+          {workspaceProjects.map((p) => (
+            <button key={p.id} className="tappable" onClick={() => setActiveProjectId(p.id)} style={{ display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", fontSize: 12, fontWeight: 600, padding: "7px 12px", borderRadius: 8, border: activeProjectId === p.id ? "1px solid #18181b" : "1px solid #e4e4e7", background: activeProjectId === p.id ? "#18181b" : "transparent", color: activeProjectId === p.id ? "#fff" : "#71717a", cursor: "pointer", flexShrink: 0 }}>
+              <Folder size={12} /> {p.name}
+            </button>
+          ))}
+          {!newProjectOpen ? (
+            <button onClick={() => setNewProjectOpen(true)} style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 700, padding: "7px 12px", border: "1px dashed #d4d4d8", background: "transparent", color: "#a1a1aa", cursor: "pointer", flexShrink: 0 }}><Plus size={13} /></button>
+          ) : (
+            <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+              <input autoFocus value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addProject()} placeholder="Project name" style={{ fontSize: 12, border: "1px solid #18181b", padding: "6px 8px", outline: "none", width: 120 }} />
+              <button onClick={addProject} style={{ background: "#7c3aed", border: "none", color: "#fff", padding: "0 10px", cursor: "pointer" }}><Check size={13} /></button>
+            </div>
+          )}
+        </div>
+
+        {/* Project notes */}
+        {activeProject && (
+          <div style={{ marginBottom: 16, border: "1px solid #e4e4e7" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#a1a1aa", fontFamily: "monospace", padding: "8px 10px 0" }}>PROJECT NOTES</div>
+            <textarea value={activeProject.notes} onChange={(e) => updateProjectNotes(activeProject.id, e.target.value)} placeholder="Jot anything about this project here…" style={{ width: "100%", border: "none", outline: "none", resize: "none", fontSize: 13, padding: "6px 10px 10px", fontFamily: "inherit", boxSizing: "border-box", minHeight: 44 }} />
+          </div>
+        )}
+
+        {/* Input card */}
+        <div style={{ border: "1px solid #e4e4e7", marginBottom: 20 }}>
+          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTask()} placeholder="What needs doing?" style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#18181b", fontSize: 15, padding: "14px 14px 10px", boxSizing: "border-box", borderBottom: "1px solid #f4f4f5" }} />
+          <div style={{ display: "flex" }}>
+            {Object.entries(PRIORITIES).map(([key, p], i) => {
+              const Icon = p.icon;
+              return (
+                <button key={key} onClick={() => setPriority(key)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 12, fontWeight: 600, padding: "10px 8px", border: "none", borderRight: i < 2 ? "1px solid #f4f4f5" : "none", background: priority === key ? "#18181b" : "transparent", color: priority === key ? "#fff" : "#71717a", cursor: "pointer", flex: 1 }}>
+                  <Icon size={12} color={priority === key ? p.color : "#a1a1aa"} />{p.label}
+                </button>
+              );
+            })}
+          </div>
+          {isTeamWorkspace && (
+            <div style={{ borderTop: "1px solid #f4f4f5", padding: "9px 12px", display: "flex", alignItems: "center", gap: 6 }}>
+              <Users size={13} color="#a1a1aa" />
+              <select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} style={{ flex: 1, fontSize: 12, border: "none", outline: "none", color: assigneeId ? "#18181b" : "#a1a1aa", background: "transparent" }}>
+                <option value="">Everyone (workspace task)</option>
+                {workspaceMembers.map((m) => (<option key={m.id} value={m.id}>Assign to {m.name}{m.id === "me" ? " (you)" : ""}</option>))}
+              </select>
+            </div>
+          )}
+          <div style={{ borderTop: "1px solid #f4f4f5" }}>
+            {!alarmPickerOpen ? (
+              <button onClick={() => setAlarmPickerOpen(true)} style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", border: "none", background: "transparent", padding: "9px 12px", fontSize: 12, color: alarmTime ? "#7c3aed" : "#a1a1aa", cursor: "pointer", fontWeight: alarmTime ? 700 : 400 }}>
+                <Clock size={13} />{alarmTime ? `Alarm: ${formatAlarm(alarmTime)}` : "Set a reminder time (optional)"}
+              </button>
+            ) : (
+              <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+                {googleConnected && (
+                  <div style={{ display: "flex", border: "1px solid #e4e4e7" }}>
+                    <button onClick={() => setReminderProvider("default")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "7px 6px", border: "none", borderRight: "1px solid #e4e4e7", background: reminderProvider === "default" ? "#18181b" : "transparent", color: reminderProvider === "default" ? "#fff" : "#71717a", cursor: "pointer" }}>
+                      <Bell size={11} /> Flow
+                    </button>
+                    <button onClick={() => setReminderProvider("google")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "7px 6px", border: "none", background: reminderProvider === "google" ? "#18181b" : "transparent", color: reminderProvider === "google" ? "#fff" : "#71717a", cursor: "pointer" }}>
+                      <CalendarDays size={11} /> Google Calendar
+                    </button>
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <button onClick={() => setQuickAlarm(60)} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>In 1h</button>
+                  <button onClick={() => setQuickAlarm(180)} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>In 3h</button>
+                  <button onClick={setTonightAlarm} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>Tonight 8pm</button>
+                  <button onClick={setTomorrowAlarm} style={{ fontSize: 11, fontWeight: 600, padding: "6px 10px", border: "1px solid #e4e4e7", background: "transparent", cursor: "pointer" }}>Tmrw 9am</button>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input type="datetime-local" value={customTime} onChange={(e) => { setCustomTime(e.target.value); setAlarmTime(new Date(e.target.value).getTime()); }} style={{ flex: 1, fontSize: 12, border: "1px solid #e4e4e7", padding: "6px 8px" }} />
+                  {alarmTime && <button onClick={() => { setAlarmTime(null); setCustomTime(""); }} style={{ fontSize: 11, color: "#e11d48", background: "transparent", border: "1px solid #e4e4e7", padding: "0 10px", cursor: "pointer" }}>Clear</button>}
+                  <button onClick={() => setAlarmPickerOpen(false)} style={{ fontSize: 11, background: "#18181b", color: "#fff", border: "none", padding: "0 10px", cursor: "pointer" }}>OK</button>
+                </div>
+              </div>
+            )}
+          </div>
+          <button className="tappable" onClick={addTask} style={{ width: "100%", border: "none", borderTop: "1px solid #e4e4e7", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", padding: "11px 0", fontSize: 13, fontWeight: 700 }}>
+            <Plus size={15} /> Add task
+          </button>
+        </div>
+
+        {/* Filter tabs */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, borderBottom: "1px solid #f4f4f5" }}>
+          <div style={{ display: "flex" }}>
+            {["active", "done", "all"].map((f) => (
+              <button key={f} onClick={() => setFilter(f)} style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "8px 14px", border: "none", borderBottom: filter === f ? "2px solid #18181b" : "2px solid transparent", marginBottom: -1, background: "transparent", color: filter === f ? "#18181b" : "#a1a1aa", cursor: "pointer" }}>{f}</button>
+            ))}
+          </div>
+          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#a1a1aa", alignSelf: "center" }}>{activeCount} open</span>
+        </div>
+
+        {/* Task list */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {!loaded && <p style={{ color: "#a1a1aa", fontSize: 13 }}>Loading…</p>}
+          {loaded && mainTasks.length === 0 && somedayTasks.length === 0 && (
+            <div style={{ textAlign: "center", padding: "48px 12px", color: "#a1a1aa", fontSize: 13, border: "1px dashed #e4e4e7" }}>Nothing here. Add a task above — tap it after to add subtasks, notes, tags, and more.</div>
+          )}
+          {mainTasks.map((t) => (
+            <TaskRow key={t.id} t={t} onToggle={toggleTask} onDelete={deleteTask} onOpen={setSelectedTaskId} onFocus={setFocusPickerTask} popped={poppedId === t.id} showAssignee={isTeamWorkspace} assigneeMember={workspaceMembers.find((m) => m.id === t.assigneeId)} />
+          ))}
+        </div>
+
+        {somedayTasks.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <button onClick={() => setSomedayOpen(!somedayOpen)} style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", background: "transparent", border: "none", borderTop: "1px solid #f4f4f5", padding: "12px 4px", cursor: "pointer", color: "#71717a" }}>
+              {somedayOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              <Moon size={13} /><span style={{ fontSize: 12, fontWeight: 700 }}>Someday</span>
+              <span style={{ fontSize: 11, fontFamily: "monospace", marginLeft: "auto" }}>{somedayTasks.length}</span>
+            </button>
+            {somedayOpen && somedayTasks.map((t) => (
+              <TaskRow key={t.id} t={t} onToggle={toggleTask} onDelete={deleteTask} onOpen={setSelectedTaskId} onFocus={setFocusPickerTask} popped={poppedId === t.id} showAssignee={isTeamWorkspace} assigneeMember={workspaceMembers.find((m) => m.id === t.assigneeId)} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes confetti-fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(120px) rotate(200deg); } }
+        @keyframes task-in { 0% { opacity: 0; transform: translateY(-8px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes check-pop { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        @keyframes toast-in { 0% { opacity: 0; transform: translate(-50%, -8px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes toast-up { 0% { opacity: 0; transform: translate(-50%, 12px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
+        .tappable { transition: transform 0.1s ease, box-shadow 0.1s ease; }
+        .tappable:active { transform: scale(0.97); }
+      `}</style>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<TaskTracker />);
+</script>
+</body>
+</html>
