@@ -2344,6 +2344,8 @@
         kieHist.forEach(m => {
           if (m.role !== 'user' && m.fileCard && m.fileCard.html) {
             appendKiePrintCard(m.fileCard.name, m.fileCard.html, m.content, true);
+          } else if (m.role !== 'user' && m.templatePicker) {
+            showKieTemplatePicker(m.content || '', false);
           } else if (m.role === 'user' && m.imageRef) {
             const imgData = _kieImageStore.get(m.imageRef);
             if (imgData) {
@@ -4106,7 +4108,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     // ── KIE: SHOW TEMPLATE PICKER IN CHAT ────────────────────────────────────
-    function showKieTemplatePicker(introText) {
+    function showKieTemplatePicker(introText, persist = true) {
       const tpls = window.TPLS_REF || [];
       const msgs = g('kieMsgs');
       msgs.style.display = 'flex';
@@ -4135,6 +4137,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         </div>`;
       msgs.insertBefore(w, g('kieTyp'));
       scrollKie();
+
+      // Persist so the picker survives a reload/navigate-away instead of just
+      // vanishing — same pattern used for file cards and attached images.
+      if (persist) {
+        kieHist.push({ role: 'assistant', content: introText || '', templatePicker: true });
+        saveKieHistory();
+      }
     }
 
     window.applyKieTemplate = async function(tplId) {
