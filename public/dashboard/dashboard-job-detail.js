@@ -47,6 +47,13 @@
     // Description — rendered properly
     renderDesc(document.getElementById('jdDesc'), j.description || j.snippet);
 
+    // Adzuna's API only ever returns a truncated snippet — point people to the
+    // original posting instead of pretending we have the full description.
+    if (j.source === 'Adzuna' && j.url) {
+      document.getElementById('jdDesc').insertAdjacentHTML('beforeend',
+        `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
+    }
+
     // Requirements
     const reqEl   = document.getElementById('jdRequirements');
     const reqBody = document.getElementById('jdReqContent');
