@@ -1,4 +1,3 @@
-  <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --p:#7c3aed;--p2:#a855f7;--ps:#5b21b6;
@@ -1548,12 +1547,10 @@
     .ksb-rename-cancel:hover{background:rgba(255,255,255,.12)}
     .ksb-rename-save{flex:2;padding:11px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:11px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s;box-shadow:0 3px 12px rgba(124,58,237,.3)}
     .ksb-rename-save:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(124,58,237,.45)}
-  </style>
 
 
 /* ───────────────────────────────────────────────────────────── */
 
-  <style>
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
     /* ── KIE MODEL DRAWER — overridden by main style block; kept for animation only ── */
@@ -1737,12 +1734,10 @@
       transition:background .15s;font-family:inherit;
     }
     .pum-btn-switch:hover{background:#ede9fe;border-color:var(--p2)}
-  </style>
 
 
 /* ───────────────────────────────────────────────────────────── */
 
-  <style>
     /* Funnel stats */
     .gpipe-funnel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
     .gpipe-funnel-seg{background:#faf8ff;border:1.5px solid #ede9fe;border-radius:14px;padding:14px 12px;text-align:center}
@@ -1797,20 +1792,16 @@
     .gpipe-optout{font-size:11px;color:#94a3b8;text-align:center;padding:10px 0 4px}
     .gpipe-optout button{background:none;border:none;color:#94a3b8;font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
     .gpipe-empty{text-align:center;padding:28px 16px;color:#94a3b8;font-size:12.5px;line-height:1.6}
-  </style>
 
 
 /* ───────────────────────────────────────────────────────────── */
 
-<style>
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-</style>
 
 
 /* ───────────────────────────────────────────────────────────── */
 
-<style>
   #jobDetailDrawer{position:fixed;inset:0;z-index:950;pointer-events:none}
   #jobDetailBackdrop{position:absolute;inset:0;background:rgba(15,14,23,.5);backdrop-filter:blur(4px);opacity:0;transition:opacity .28s;pointer-events:none}
   #jobDetailSheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);padding:0 0 env(safe-area-inset-bottom,16px)}
@@ -1838,7 +1829,6 @@
   .jd-apply:active{opacity:.85}
   .jd-apply.locked{background:linear-gradient(135deg,#94a3b8,#64748b);box-shadow:none;cursor:default}
   .jd-source{text-align:center;font-size:10.5px;color:#94a3b8;margin-top:10px}
-</style>
 
 
 /* ───────────────────────────────────────────────────────────── */
