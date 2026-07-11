@@ -12,6 +12,7 @@ module.exports = function registerGmailRoutes(app) {
     attachStaleFlags, computePipelineStats, getWeekKey, recordPipelineTrend,
     getTrendComparison, detectGhostingPattern, buildKieBrainBlock,
     getGmailCareerBrainRaw, getGmailCareerBrain, getValidTokens, syncGmailForUser,
+    RESUMES, normaliseStr,
   } = require('./lib');
 
   // ─── Gmail Routes ────────────────────────────────────────────────────────────

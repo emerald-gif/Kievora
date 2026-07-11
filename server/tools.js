@@ -9,7 +9,7 @@ module.exports = function registerToolsRoutes(app) {
   const {
     admin, db, authenticate,
     RESUMES, USERS, PLANS, getPlanConfig, getUserPlanKey, UPGRADE_MESSAGES,
-    callKieAI,
+    callKieAI, KIE_MODELS,
   } = require('./lib');
 
   app.get('/api/resumes', authenticate, async (req, res) => {

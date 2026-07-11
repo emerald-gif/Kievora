@@ -9,7 +9,7 @@ module.exports = function registerBillingRoutes(app) {
     getExchangeRates, getUsdToNgnRate, COUNTRY_CURRENCY,
     UPGRADE_MESSAGES, TOPUP_MESSAGES,
     applyPaystackMetadata, checkAndIncrementKieUsage,
-    USERS,
+    USERS, RESUMES, getCycleAnchorDate, getCycleStart, serviceAccount,
   } = require('./lib');
 
 

@@ -12,7 +12,7 @@ module.exports = function registerKieRoutes(app) {
     performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
     getGmailCareerBrain,
     generateConvSummary, saveConvSummary, getConvSummary,
-    USERS,
+    USERS, attachStaleFlags, detectGhostingPattern, buildKieBrainBlock, getGmailCareerBrainRaw,
   } = require('./lib');
 
   app.post('/api/kie/summarize', authenticate, async (req,res) => {
