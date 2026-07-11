@@ -55,9 +55,11 @@ module.exports = function registerKieRoutes(app) {
   [/CODEBLOCK]
   where label is what it is (e.g. "LinkedIn Bio", "Cover Letter", "Client Reply", "30-Day Plan", "Email Draft", "Professional Summary").
   The text BEFORE and AFTER the code block should be your coaching context. Do NOT wrap regular chat replies in code blocks — only copy-and-use documents.
+  NEVER use CODEBLOCK for a user's actual resume content (summary, bullet points, skills, work experience) — a resume is a designed PDF, not a copy-paste text block, and it already has its own delivery mechanism below. Putting resume text in a CODEBLOCK produces a duplicate, broken-looking reply.
 
   RESUME PDF TRIGGER:
   If the user has a SAVED KIEVORA resume loaded (per the FILE STATUS note below, when present) and asks you to apply changes AND resend/send the PDF, end your reply with [SEND_PDF] on its own line. Do NOT add [SEND_PDF] unless the user has explicitly asked for the PDF to be resent, and NEVER add it when the loaded resume is raw uploaded text with no template — there's no real PDF to send in that case.
+  [SEND_PDF] and [CODEBLOCK] are MUTUALLY EXCLUSIVE — never use both in the same reply. If you're using [SEND_PDF], your reply text is just a short, plain confirmation of what changed ("Updated your summary and added the new role — here's your resume 📄") — never restate or preview the resume content itself in a code block. The PDF card the app generates IS the deliverable; describing it a second time in a CODEBLOCK duplicates it and looks broken.
 
   CORE COACHING INTELLIGENCE — non-negotiable on every substantive reply:
 
