@@ -310,6 +310,7 @@
     // ─── localStorage keys — set to generic fallback, scoped to UID after auth ──
     // SECURITY: All keys MUST include uid so no two accounts ever share storage.
     let KIE_LS_KEY    = 'kievora_kie_history';   // overwritten once uid is known
+    let KIE_IMG_LS_KEY = 'kievora_kie_images';    // overwritten once uid is known — persists attached images across reloads
     let DRAFTS_LS_KEY = 'kievora_drafts';         // overwritten once uid is known
     let drafts = []; // local-only draft resumes
     let currentDraftId = null; // active draft id while in builder
@@ -750,8 +751,9 @@
       }
 
       // Now scope keys to THIS user's uid
-      KIE_LS_KEY    = `kievora_kie_history_${currentUid}`;
-      DRAFTS_LS_KEY = `kievora_drafts_${currentUid}`;
+      KIE_LS_KEY     = `kievora_kie_history_${currentUid}`;
+      KIE_IMG_LS_KEY = `kievora_kie_images_${currentUid}`;
+      DRAFTS_LS_KEY  = `kievora_drafts_${currentUid}`;
 
       // Record which uid is active so we can detect account switches
       localStorage.setItem('kievora_active_uid', currentUid);
@@ -2280,6 +2282,38 @@
         const saved = localStorage.getItem(KIE_LS_KEY);
         kieHist = saved ? JSON.parse(saved) : [];
       } catch { kieHist = []; }
+      loadKieImageStore();
+    }
+    // Persist attached images (base64) so they survive reload/navigation instead
+    // of only living in the in-memory _kieImageStore Map, which is wiped on
+    // every page load. Only images actually referenced by the messages we keep
+    // (last 40) are stored, to avoid unbounded localStorage growth.
+    function loadKieImageStore() {
+      try {
+        const saved = localStorage.getItem(KIE_IMG_LS_KEY);
+        const obj   = saved ? JSON.parse(saved) : {};
+        _kieImageStore.clear();
+        Object.keys(obj).forEach(k => _kieImageStore.set(k, obj[k]));
+      } catch { /* corrupt or missing — start empty */ }
+    }
+    function saveKieImageStore() {
+      try {
+        // Only keep entries referenced by the messages we're about to persist
+        const keep = new Set(kieHist.slice(-40).filter(m => m.imageRef).map(m => m.imageRef));
+        const obj  = {};
+        keep.forEach(k => { const v = _kieImageStore.get(k); if (v) obj[k] = v; });
+        localStorage.setItem(KIE_IMG_LS_KEY, JSON.stringify(obj));
+      } catch {
+        // Likely quota exceeded (base64 images are heavy) — drop the oldest
+        // images and try again with just the most recent one so at least the
+        // latest attachment survives a reload.
+        try {
+          const refs = kieHist.slice(-40).filter(m => m.imageRef).map(m => m.imageRef);
+          const lastRef = refs[refs.length - 1];
+          const v = lastRef && _kieImageStore.get(lastRef);
+          localStorage.setItem(KIE_IMG_LS_KEY, v ? JSON.stringify({ [lastRef]: v }) : '{}');
+        } catch { /* give up silently — chat still works, just without image persistence */ }
+      }
     }
     function saveKieHistory() {
       try {
@@ -2294,6 +2328,7 @@
           localStorage.setItem('kieHistory_' + activeId, data);
         }
       } catch {}
+      saveKieImageStore();
     }
     function restoreKieUI() {
       const msgs = g('kieMsgs');
@@ -2309,6 +2344,18 @@
         kieHist.forEach(m => {
           if (m.role !== 'user' && m.fileCard && m.fileCard.html) {
             appendKiePrintCard(m.fileCard.name, m.fileCard.html, m.content, true);
+          } else if (m.role === 'user' && m.imageRef) {
+            const imgData = _kieImageStore.get(m.imageRef);
+            if (imgData) {
+              const dataUrl = `data:${imgData.mimeType || 'image/jpeg'};base64,${imgData.base64}`;
+              // Don't show the auto-generated placeholder text as a caption
+              const caption = (m.content && m.content !== '[Image sent]') ? m.content : '';
+              _appendKieImageMsg(dataUrl, caption);
+            } else {
+              // Image data aged out of storage — show a plain fallback so the
+              // conversation flow still makes sense
+              appendKMsg('user', (m.content && m.content !== '[Image sent]') ? m.content : '📷 Image (no longer available)', false);
+            }
           } else {
             appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null);
           }
@@ -3280,11 +3327,21 @@
       // If the response contains a CODEBLOCK with resume-style content AND the
       // user request was an edit verb, save it so a follow-up "yes love it" can
       // apply the change even if [SEND_PDF] wasn't included in this response.
-      const hasCodeBlock = /\[CODEBLOCK/i.test(reply);
+      let hasCodeBlock = /\[CODEBLOCK/i.test(reply);
       const EDIT_VERBS   = /\b(add|extend|expand|improve|update|change|rewrite|fix|edit|revise|include|remove|delete|shorten|lengthen|strengthen|enhance|rephrase|reword)\b/i;
       if (hasCodeBlock && userRequest && EDIT_VERBS.test(userRequest) && kieSelectedResume) {
         _kieLastEditRequest = userRequest;
         _kieLastEditTs      = Date.now();
+      }
+
+      // SAFETY NET: the model is instructed never to pair [SEND_PDF] with a
+      // [CODEBLOCK] in the same reply — but if it slips up anyway, don't show
+      // the resume content twice (once as raw code block, once as the real PDF
+      // card). Strip the code block out and keep just the surrounding coaching
+      // text; the PDF card carries the actual content.
+      if (shouldSendPdf && hasCodeBlock) {
+        reply = reply.replace(/\[CODEBLOCK(?::[^\]]*)?\]([\s\S]*?)(\[\/CODEBLOCK\]|$)/gi, '').replace(/\n{3,}/g, '\n\n').trim();
+        hasCodeBlock = false;
       }
 
       appendKMsg('ai', reply, true, shouldSendPdf ? () => kieActionSmartSend(userRequest || '') : null);
@@ -4689,11 +4746,25 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         hideKieStatus();
 
         const finalText = streamedText || "Sorry, I couldn't get a response.";
-        kieHist.push({ role:'assistant', content: finalText, sources: turnSources || undefined });
+
+        // SAFETY NET: the model is instructed never to pair [SEND_PDF] with a
+        // [CODEBLOCK] in the same reply — but if it slips up anyway, don't show
+        // the resume content twice (once as raw code block, once as the real
+        // PDF card kieActionSmartSend generates below). Strip the code block
+        // before this text is saved to history or rendered, so a reload later
+        // doesn't bring the duplicate back either.
+        let cleanedFinalText = finalText;
+        if (/\[SEND_PDF\]/i.test(finalText) && /\[CODEBLOCK/i.test(finalText)) {
+          cleanedFinalText = finalText
+            .replace(/\[CODEBLOCK(?::[^\]]*)?\]([\s\S]*?)(\[\/CODEBLOCK\]|$)/gi, '')
+            .replace(/\n{3,}/g, '\n\n').trim();
+        }
+
+        kieHist.push({ role:'assistant', content: cleanedFinalText, sources: turnSources || undefined });
         saveKieHistory();
 
         // Final render on the streaming bubble (already visible to user)
-        _finishBubble(finalText);
+        _finishBubble(cleanedFinalText);
 
         // If the AI generated a long roadmap/plan in chat (not from the tool panel),
         // store it so "send in file form" can package it as a PDF report.
