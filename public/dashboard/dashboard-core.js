@@ -62,6 +62,7 @@
     // Not persisted to localStorage (images are too large). Follow-up questions
     // in the same session include the image; cross-session refs show as missing.
     const _kieImageStore = new Map();
+    const _kieFileStore  = new Map(); // fileRef -> { base64, mimeType, name, ext } — uploaded PDFs/TXT for preview
     let kieMode  = 'default'; // active KIE mode
     let kieModel = 'spark';   // active KIE model (spark | core | nova) — ultra removed from frontend for now
     let kieResumeContext = ''; // text context for AI coaching
@@ -311,6 +312,7 @@
     // SECURITY: All keys MUST include uid so no two accounts ever share storage.
     let KIE_LS_KEY    = 'kievora_kie_history';   // overwritten once uid is known
     let KIE_IMG_LS_KEY = 'kievora_kie_images';    // overwritten once uid is known — persists attached images across reloads
+    let KIE_DOC_LS_KEY = 'kievora_kie_docs';      // overwritten once uid is known — persists attached PDFs/TXT for preview across reloads
     let DRAFTS_LS_KEY = 'kievora_drafts';         // overwritten once uid is known
     let drafts = []; // local-only draft resumes
     let currentDraftId = null; // active draft id while in builder
@@ -753,6 +755,7 @@
       // Now scope keys to THIS user's uid
       KIE_LS_KEY     = `kievora_kie_history_${currentUid}`;
       KIE_IMG_LS_KEY = `kievora_kie_images_${currentUid}`;
+      KIE_DOC_LS_KEY = `kievora_kie_docs_${currentUid}`;
       DRAFTS_LS_KEY  = `kievora_drafts_${currentUid}`;
 
       // Record which uid is active so we can detect account switches
@@ -2283,6 +2286,7 @@
         kieHist = saved ? JSON.parse(saved) : [];
       } catch { kieHist = []; }
       loadKieImageStore();
+      loadKieFileStore();
     }
     // Persist attached images (base64) so they survive reload/navigation instead
     // of only living in the in-memory _kieImageStore Map, which is wiped on
@@ -2315,6 +2319,31 @@
         } catch { /* give up silently — chat still works, just without image persistence */ }
       }
     }
+    // Same pattern as the image store, for uploaded PDFs/TXT files — so the
+    // "tap to preview" file card still works after a reload/navigate-away.
+    function loadKieFileStore() {
+      try {
+        const saved = localStorage.getItem(KIE_DOC_LS_KEY);
+        const obj   = saved ? JSON.parse(saved) : {};
+        _kieFileStore.clear();
+        Object.keys(obj).forEach(k => _kieFileStore.set(k, obj[k]));
+      } catch { /* corrupt or missing — start empty */ }
+    }
+    function saveKieFileStore() {
+      try {
+        const keep = new Set(kieHist.slice(-40).filter(m => m.fileRef).map(m => m.fileRef));
+        const obj  = {};
+        keep.forEach(k => { const v = _kieFileStore.get(k); if (v) obj[k] = v; });
+        localStorage.setItem(KIE_DOC_LS_KEY, JSON.stringify(obj));
+      } catch {
+        try {
+          const refs = kieHist.slice(-40).filter(m => m.fileRef).map(m => m.fileRef);
+          const lastRef = refs[refs.length - 1];
+          const v = lastRef && _kieFileStore.get(lastRef);
+          localStorage.setItem(KIE_DOC_LS_KEY, v ? JSON.stringify({ [lastRef]: v }) : '{}');
+        } catch { /* give up silently */ }
+      }
+    }
     function saveKieHistory() {
       try {
         const data = JSON.stringify(kieHist.slice(-40));
@@ -2329,6 +2358,7 @@
         }
       } catch {}
       saveKieImageStore();
+      saveKieFileStore();
     }
     function restoreKieUI() {
       const msgs = g('kieMsgs');
@@ -2358,6 +2388,15 @@
               // conversation flow still makes sense
               appendKMsg('user', (m.content && m.content !== '[Image sent]') ? m.content : '📷 Image (no longer available)', false);
             }
+          } else if (m.role === 'user' && m.fileRef) {
+            // Keep the file card (and its preview capability) alive across a
+            // reload, same pattern as images. If the actual bytes aged out of
+            // storage, the card still shows and preview falls back gracefully
+            // to "Preview unavailable" inside openKieFilePreview.
+            if (!_kieFileStore.has(m.fileRef)) {
+              _kieFileStore.set(m.fileRef, { base64: '', mimeType: '', name: m.fileName || 'File', ext: m.fileExt || 'file' });
+            }
+            _appendKieFileMsg(m.fileRef, m.fileName || 'File', m.fileExt || 'file', m.content);
           } else {
             appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null);
           }
@@ -2694,6 +2733,19 @@
           name: file.name, size: file.size,
         };
         _showKieAttachStage(ext, file.name, null);
+        // Read the raw bytes too (separate from the later text-extraction pass)
+        // so the "tap to preview" file card has something to render from.
+        try {
+          const previewDataUrl = await new Promise((resolve, reject) => {
+            const reader2 = new FileReader();
+            reader2.onload  = () => resolve(reader2.result);
+            reader2.onerror = reject;
+            reader2.readAsDataURL(file);
+          });
+          if (_stagedKieAttachment && _stagedKieAttachment.file === file) {
+            _stagedKieAttachment.previewDataUrl = previewDataUrl;
+          }
+        } catch { /* preview just won't be available for this file — non-fatal */ }
       }
       setTimeout(() => g('kieInp').focus(), 80);
     };
@@ -3267,6 +3319,163 @@
         </div>`;
       msgs.insertBefore(w, g('kieTyp'));
       scrollKie();
+    }
+
+    // ── APPEND UPLOADED FILE CARD (PDF/TXT the user sent) ──────────────────────
+    // Shows a tappable chip instead of raw "📎 filename" text — tapping it opens
+    // a preview overlay (rendered PDF pages, or a "Preview unavailable" state
+    // for anything that can't be rendered client-side).
+    function _appendKieFileMsg(fileRef, name, ext, caption) {
+      const msgs = g('kieMsgs');
+      msgs.style.display = 'flex';
+      const welcome = g('kieWelcome');
+      if (welcome) welcome.style.display = 'none';
+      const t = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+      const w = document.createElement('div');
+      w.className = 'km km-user';
+      const label = (ext || 'file').toUpperCase();
+      w.innerHTML = `
+        <div class="km-file-card" style="cursor:pointer" onclick="openKieFilePreview('${fileRef}')">
+          <div class="km-file-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="km-file-info">
+            <div class="km-file-name">${esc(name)}</div>
+            <div class="km-file-meta">${esc(label)} · Tap to preview</div>
+          </div>
+        </div>
+        ${caption ? `<div class="km-bubble" style="margin-top:6px">${caption.replace(/</g,'&lt;')}</div>` : ''}
+        <div class="km-meta" style="text-align:right">${t}</div>`;
+      msgs.insertBefore(w, g('kieTyp'));
+      scrollKie();
+    }
+
+    // Lazily loads pdf.js if it isn't already on the page (shared with the
+    // text-extraction path in extractPdfText, which usually loads it first).
+    async function _ensurePdfJsLoaded() {
+      if (window.pdfjsLib) return;
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = () => {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          resolve();
+        };
+        s.onerror = () => reject(new Error('PDF reader failed to load'));
+        document.head.appendChild(s);
+      });
+    }
+
+    function _base64ToUint8Array(base64) {
+      const binStr = atob(base64);
+      const bytes  = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+      return bytes;
+    }
+
+    function _ensureKieFilePreviewOverlay() {
+      let ol = document.getElementById('kieFilePreviewOverlay');
+      if (ol) return ol;
+      ol = document.createElement('div');
+      ol.id = 'kieFilePreviewOverlay';
+      ol.className = 'kie-file-overlay';
+      ol.innerHTML = `
+        <div class="kie-file-overlay-hdr">
+          <button class="kie-file-overlay-close" onclick="closeKieFilePreview()">×</button>
+          <div class="kie-file-overlay-title">
+            <div id="kieFilePreviewName">File</div>
+            <div id="kieFilePreviewSub">—</div>
+          </div>
+        </div>
+        <div class="kie-file-overlay-body" id="kieFilePreviewBody"></div>`;
+      ol.addEventListener('click', (e) => { if (e.target === ol) closeKieFilePreview(); });
+      document.body.appendChild(ol);
+      return ol;
+    }
+
+    window.closeKieFilePreview = function() {
+      const ol = document.getElementById('kieFilePreviewOverlay');
+      if (ol) ol.classList.remove('open');
+      document.body.style.overflow = '';
+    };
+
+    window.openKieFilePreview = async function(fileRef) {
+      const data = _kieFileStore.get(fileRef);
+      const ol   = _ensureKieFilePreviewOverlay();
+      const nameEl = document.getElementById('kieFilePreviewName');
+      const subEl  = document.getElementById('kieFilePreviewSub');
+      const bodyEl = document.getElementById('kieFilePreviewBody');
+
+      ol.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (!data || !data.base64) {
+        nameEl.textContent = (data && data.name) || 'File';
+        subEl.textContent  = 'Preview unavailable';
+        bodyEl.innerHTML   = _kieUnavailablePreviewHTML((data && data.ext) || 'file');
+        return;
+      }
+
+      nameEl.textContent = data.name || 'File';
+
+      if (data.ext === 'txt' || data.mimeType === 'text/plain') {
+        try {
+          const text = decodeURIComponent(escape(atob(data.base64)));
+          subEl.textContent = 'Text file';
+          bodyEl.innerHTML = `<pre class="kie-file-overlay-txt">${esc(text)}</pre>`;
+        } catch {
+          subEl.textContent = 'Preview unavailable';
+          bodyEl.innerHTML  = _kieUnavailablePreviewHTML('txt');
+        }
+        return;
+      }
+
+      if (data.ext === 'pdf' || data.mimeType === 'application/pdf') {
+        subEl.textContent = 'Loading…';
+        bodyEl.innerHTML   = `<div class="kie-file-overlay-loading">Loading preview…</div>`;
+        try {
+          await _ensurePdfJsLoaded();
+          const bytes = _base64ToUint8Array(data.base64);
+          const pdf   = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+          subEl.textContent = `${pdf.numPages} page${pdf.numPages === 1 ? '' : 's'}`;
+          bodyEl.innerHTML = '';
+          const maxPages = Math.min(pdf.numPages, 15); // sane cap for very long docs
+          for (let i = 1; i <= maxPages; i++) {
+            const page     = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 1.4 });
+            const canvas   = document.createElement('canvas');
+            canvas.className = 'kie-file-overlay-page';
+            canvas.width  = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            bodyEl.appendChild(canvas);
+          }
+          if (pdf.numPages > maxPages) {
+            const note = document.createElement('div');
+            note.className = 'kie-file-overlay-note';
+            note.textContent = `+ ${pdf.numPages - maxPages} more page${pdf.numPages - maxPages === 1 ? '' : 's'} not shown in preview`;
+            bodyEl.appendChild(note);
+          }
+        } catch {
+          subEl.textContent = 'Preview unavailable';
+          bodyEl.innerHTML  = _kieUnavailablePreviewHTML('pdf');
+        }
+        return;
+      }
+
+      // Unknown/unsupported type
+      subEl.textContent = 'Preview unavailable';
+      bodyEl.innerHTML  = _kieUnavailablePreviewHTML(data.ext || 'file');
+    };
+
+    function _kieUnavailablePreviewHTML(ext) {
+      return `
+        <div class="kie-file-overlay-unavail">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h.01M16 13h.01M8 17h.01M12 17h5"/></svg>
+          <div class="kie-file-overlay-unavail-type">Document · ${esc((ext || 'file').toUpperCase())}</div>
+          <div class="kie-file-overlay-unavail-msg">Preview unavailable</div>
+        </div>`;
     }
 
     // ── APPEND CODE BLOCK CARD ────────────────────────────────────────────────
@@ -4452,9 +4661,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // ── PDF/TXT ATTACHMENT → analyse and coach ───────────────────────────────
       if (att && (att.type === 'pdf' || att.type === 'txt')) {
         clearKieAttachStage();
-        const displayMsg = msg ? `📎 ${att.name} — ${msg}` : `📎 ${att.name}`;
-        appendKMsg('user', displayMsg, false);
-        kieHist.push({ role:'user', content: displayMsg });
+        const fileRef = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        const base64  = (att.previewDataUrl || '').split(',')[1] || '';
+        const mimeType = att.file?.type || (att.type === 'pdf' ? 'application/pdf' : 'text/plain');
+        _kieFileStore.set(fileRef, { base64, mimeType, name: att.name, ext: att.type });
+        _appendKieFileMsg(fileRef, att.name, att.type, msg);
+        kieHist.push({ role:'user', content: msg || '', fileRef, fileName: att.name, fileExt: att.type });
         inp.value = ''; inp.style.height = 'auto';
         await _processKieFileAttachment(att, msg);
         return;
