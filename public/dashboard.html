@@ -5381,7 +5381,18 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       // template change and silently dropped the content-update request.
       const namedTpl = detectTemplateInMsg(msg);
       const hasTemplateSignal = !!namedTpl || /\b(change|switch|update|use|apply|try|pick|select|go with)\b.*\btemplates?\b|\btemplates?\b.*(change|switch|update|use|apply)/i.test(msg);
-      const hasContentUpdateSignal = /\b(add|change|update|rewrite|improve|fix|edit|revise|rework|redo|include)\b.*\b(summary|headline|bio|objective|experience|skills?|bullet|educat\w*|degree|school|university|college|certificat\w*|qualification|name|email|phone|location|contact|address|title|role)\b/i.test(msg);
+
+      // BUG FIX: "restructure the resume and resend" used to fall through to
+      // plain SEND_RESUME — "restructure" wasn't in the update-verb list, and
+      // bare "resume" (as opposed to a specific section like "summary") wasn't
+      // in the noun list either. Broadened both, and switched from a single
+      // fragile order-dependent regex (verb...noun in that exact sequence) to
+      // independent presence checks, so "resend my resume, restructured" and
+      // "restructure the resume and resend" both work regardless of word order.
+      const UPDATE_VERBS = /\b(add|change|update|rewrite|improve|fix|edit|revise|rework|redo|include|re[\s-]?structure|reorgani[sz]e|reformat|revamp|redesign|overhaul|tailor|polish|refine)\b/i;
+      const UPDATE_NOUNS = /\b(summary|headline|bio|objective|experience|skills?|bullet|educat\w*|degree|school|university|college|certificat\w*|qualification|name|email|phone|location|contact|address|title|role|resume|cv)\b/i;
+      const RESEND_SIGNAL = /\b(and\s+(re)?send|resend|send\s+(it|the\s+(pdf|resume))|give\s+me\s+the\s+pdf|as\s+a?\s*file)\b/i;
+      const hasContentUpdateSignal = UPDATE_VERBS.test(msg) && UPDATE_NOUNS.test(msg);
 
       if (hasTemplateSignal && hasContentUpdateSignal && namedTpl) {
         return { type: 'UPDATE_TEMPLATE_AND_SEND', templateId: namedTpl.id };
@@ -5404,8 +5415,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       // matched plain SEND_RESUME first and the requested edit was silently
       // dropped. Compound (update + send) intents now resolve before the plain
       // send-only pattern, mirroring the UPDATE_TEMPLATE_AND_SEND fix above.
-      if (/\b(add|change|update|rewrite|improve|fix|edit|revise|rework|redo|include)\b.*\b(summary|headline|bio|objective|experience|skills?|bullet|educat\w*|degree|school|university|college|certificat\w*|qualification|name|email|phone|location|contact|title)\b.*\b(and\s+(re)?send|resend|send\s+(it|the\s+(pdf|resume))|give\s+me\s+the\s+pdf|as\s+a?\s*file)/i.test(msg)) return 'UPDATE_RESUME_AND_SEND';
-      if (/\b(update|change|rewrite|fix|add)\b.*\b(my|the)\b.*\b(summary|headline|educat\w*|name|email|phone|contact)\b/i.test(msg) && /\b(and\s+(re)?send|resend|new\s+pdf|send\s+(it|back|me|the)|as\s+a?\s*file)/i.test(msg)) return 'UPDATE_RESUME_AND_SEND';
+      if (hasContentUpdateSignal && RESEND_SIGNAL.test(msg)) return 'UPDATE_RESUME_AND_SEND';
       // BUG FIX: dropped the bare "resend my resume" alternative that used to
       // live here — it had no requirement that anything was actually changed,
       // so a plain "resend my resume" (nothing to update) was being misfiled as
@@ -5978,9 +5988,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         // If the last AI response was a roadmap/long-form report (not a resume
         // PDF card), the user is probably asking to save THAT, not the resume.
         // Detect by checking if _kieLastReportData is set and recent (<10 min).
-        if (window._kieLastReportData && (Date.now() - (window._kieLastReportData.ts || 0) < 10 * 60 * 1000)) {
+        // SAFETY: an explicit "resume"/"cv" mention in THIS message always wins
+        // over cached report data — if they said "resume", they mean the resume,
+        // full stop, regardless of what's sitting in the cache.
+        if (window._kieLastReportData && (Date.now() - (window._kieLastReportData.ts || 0) < 10 * 60 * 1000) && !/\b(resume|cv)\b/i.test(msg)) {
           const rd = window._kieLastReportData;
-          window.downloadKieReport(rd.title, rd.subtitle, rd.bodyHtml);
+          // Brief, honest loading beat before the print dialog opens — there's
+          // no AI call on this path (the content's already generated), but
+          // popping a native print sheet with zero chat acknowledgment felt
+          // like the file just appearing out of nowhere.
+          g('kieTyp').style.display = 'flex';
+          _setKieStatusCustom(['Preparing your report…', 'Formatting for PDF…']);
+          setTimeout(function() {
+            g('kieTyp').style.display = 'none';
+            hideKieStatus();
+            window.downloadKieReport(rd.title, rd.subtitle, rd.bodyHtml);
+          }, 900);
           window._kieLastReportData = null;
           return;
         }
@@ -6236,9 +6259,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
         // If the AI generated a long roadmap/plan in chat (not from the tool panel),
         // store it so "send in file form" can package it as a PDF report.
-        // Detect: long response (>300 chars) with phase/quarter/step structure + no resume card.
+        // BUG FIX: this used to scan the AI's RESPONSE for generic words like
+        // "step"/"plan"/"week"/"month" — which fires on almost any substantive
+        // coaching reply (especially since "Next step:" is now the standard
+        // action-label pattern), silently overwriting this with garbage from
+        // ordinary replies that were never a plan request at all. That stale,
+        // wrongly-set data would then get resent later when the user asked for
+        // something completely different (like an updated resume), because the
+        // SEND_RESUME branch below trusts whatever's most recently cached here.
+        // Now it checks what the USER actually asked for, not the AI's wording.
+        const PLAN_REQUEST_PATTERN = /\b(career\s+plan|action\s+plan|roadmap|30[\s-]?60[\s-]?90|strategy\s+(doc|document|plan)|game\s*plan|\d+[\s-]?(day|week|month)\s+plan|plan\s+(for|to)\s+(my|get|land|find|switch|become)|step[\s-]by[\s-]step\s+plan)\b/i;
         const isLongformPlan = finalText.length > 300
-          && /\b(phase|quarter|week|month|step|stage|roadmap|plan)\b/i.test(finalText)
+          && msg && PLAN_REQUEST_PATTERN.test(msg)
           && !/\[SEND_PDF\]/i.test(finalText);
         if (isLongformPlan) {
           // Build simple HTML body from the markdown text for the report PDF
@@ -6554,7 +6586,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (msgWrapper.querySelector('.kie-suggest-row')) return; // race guard
         var body = msgWrapper.querySelector('.km-ai-body');
         if (!body) return;
-        body.appendChild(row);
+        // Insert right after the message text, BEFORE the copy/speaker/share/
+        // regenerate icon row — landing after those (and the timestamp) made
+        // it look like an afterthought instead of part of what KIE just said.
+        var actionsEl = body.querySelector('.km-actions');
+        if (actionsEl) body.insertBefore(row, actionsEl);
+        else body.appendChild(row);
         scrollKie();
       }
       function schedule(row) {
