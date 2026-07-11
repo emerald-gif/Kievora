@@ -13,6 +13,7 @@ const {
   admin, db, authenticate, upload, cloudinary,
   callKieAI, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
   KIE_MODELS, USERS, sendWelcomeEmail, applyPaystackMetadata, PLANS,
+  serviceAccount,
 } = require('./lib');
 
 // ─── Articles / Community module toggle ────────────────────────────────────────
