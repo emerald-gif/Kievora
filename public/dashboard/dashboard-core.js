@@ -4106,7 +4106,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     // ── KIE: SHOW TEMPLATE PICKER IN CHAT ────────────────────────────────────
-    function showKieTemplatePicker() {
+    function showKieTemplatePicker(introText) {
       const tpls = window.TPLS_REF || [];
       const msgs = g('kieMsgs');
       msgs.style.display = 'flex';
@@ -4127,6 +4127,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       w.innerHTML = `
         <div class="km-ai-body">
           <div class="km-bubble">
+            ${introText ? `<div style="margin-bottom:10px">${esc(introText)}</div>` : ''}
             <strong>Choose a template:</strong>
             <div class="kie-tpl-pick-grid">${pillsHTML}</div>
           </div>
@@ -4530,7 +4531,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         inp.value = ''; inp.style.height = 'auto';
         const namedTpl = detectTemplateInMsg(msg);
         if (namedTpl) { applyKieTemplate(namedTpl.id); }
-        else { appendKMsg('ai', "Sure! Pick a template from the list below — I'll switch it right away:", true); showKieTemplatePicker(); }
+        else { showKieTemplatePicker("Sure! Pick a template from the list below — I'll switch it right away:"); }
         return;
       }
 
@@ -4574,7 +4575,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (classified.intent === 'CHANGE_TEMPLATE') {
             const namedTpl2 = detectTemplateInMsg(classified.templateName || msg);
             if (namedTpl2) applyKieTemplate(namedTpl2.id);
-            else { appendKMsg('ai', "Sure! Pick a template from the list below — I'll switch it right away:", true); showKieTemplatePicker(); }
+            else { showKieTemplatePicker("Sure! Pick a template from the list below — I'll switch it right away:"); }
             return;
           }
 
