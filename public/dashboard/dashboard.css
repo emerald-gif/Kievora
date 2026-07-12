@@ -784,7 +784,7 @@
     .kie-box{width:100%;max-width:760px;margin:0 auto;background:#fff;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;position:relative}
 
     /* Header — fixed at top */
-    .kie-hdr{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:10;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+    .kie-hdr{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:10;box-shadow:0 1px 8px rgba(0,0,0,.04)}
     .kie-hdr-l{display:flex;align-items:center;gap:10px}
     .kie-av{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#ede9fe,#c4b5fd);display:flex;align-items:center;justify-content:center;border:2px solid #ede9fe}
     .kie-av-svg{width:24px;height:24px}
@@ -1501,13 +1501,13 @@
     .ksb-ctx-item.danger:hover{background:#fff1f2;color:#e11d48}
 
     /* ── KIE HEADER UPGRADES ─────────────────────────────────────────────────── */
-    /* Hamburger in KIE header */
-    .kie-hbg{width:36px;height:36px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0}
-    .kie-hbg:hover{background:rgba(124,58,237,.2);border-color:rgba(124,58,237,.4)}
-    .kie-hbg svg line{stroke:#a78bfa;stroke-width:2;stroke-linecap:round;transition:all .22s cubic-bezier(.4,0,.2,1)}
-    /* "Back to Kievora" compact pill */
-    .kie-home-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;background:rgba(15,14,23,.06);border:1px solid rgba(124,58,237,.18);border-radius:20px;font-size:11px;font-weight:700;color:#7c6fa8;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;letter-spacing:-.1px}
-    .kie-home-pill:hover{background:#ede9fe;border-color:var(--p2);color:var(--p)}
+    /* Hamburger in KIE header — flat, borderless icon button (Claude-style) */
+    .kie-hbg{width:32px;height:32px;background:transparent;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;padding:0}
+    .kie-hbg:hover{background:rgba(124,58,237,.08)}
+    .kie-hbg svg line{stroke:#6b6b80;stroke-width:2;stroke-linecap:round;transition:all .22s cubic-bezier(.4,0,.2,1)}
+    /* Home icon button — plain icon, no text, no pill background */
+    .kie-home-pill{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:8px;color:#6b6b80;cursor:pointer;transition:background .15s,color .15s;flex-shrink:0;padding:0}
+    .kie-home-pill:hover{background:rgba(124,58,237,.08);color:var(--p)}
 
     /* ── TOOL CATEGORY SWIPERS ─────────────────────────────────────────────── */
     .kie-toolswiper-section{padding:0 0 6px;flex-shrink:0}
@@ -1526,12 +1526,8 @@
     .kie-tswipe-name{font-size:11.5px;font-weight:800;color:#1a1a2e;line-height:1.3;margin-bottom:2px}
     .kie-tswipe-sub{font-size:9.5px;color:#8b8b9e;font-weight:400;line-height:1.4}
 
-    /* ── NEW CHAT BUTTON (header, pencil-edit icon — was a floating plus FAB) ── */
-    .kie-newchat-btn{display:none;align-items:center;justify-content:center;width:34px;height:34px;background:#faf5ff;border:1.5px solid #ece7fb;border-radius:10px;cursor:pointer;color:#7c3aed;transition:background .15s,transform .12s;flex-shrink:0}
-    .kie-newchat-btn.show{display:flex;animation:fabIn .2s ease}
-    .kie-newchat-btn:hover{background:#f3ecff}
-    .kie-newchat-btn:active{transform:scale(.92)}
-    @keyframes fabIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+    /* Note: the header "new chat" icon was removed — startNewKieChat() is
+       still available via the sidebar's New Chat button (.ksb-new-chat). */
 
     /* ── MODEL DRAWER ───────────────────────────────────────────── */
     #kieModelDrawer{position:fixed;inset:0;z-index:800;display:none}
