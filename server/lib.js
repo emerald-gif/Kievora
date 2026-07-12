@@ -177,6 +177,7 @@ const PLANS = {
     prioritySupport: 'none',
     kieWebSearch: false,
     kieCreativeMode: false,
+    gmail: false,
     topupPriceUSD: null,
     topupMessages: 0,
   },
@@ -199,6 +200,7 @@ const PLANS = {
     prioritySupport: 'good',
     kieWebSearch: true,
     kieCreativeMode: true,
+    gmail: false,
     topupPriceUSD: 1.5,          // 100 extra KIE messages for $1.50
     topupMessages: 100,
   },
@@ -222,6 +224,7 @@ const PLANS = {
     prioritySupport: 'instant',
     kieWebSearch: true,
     kieCreativeMode: true,
+    gmail: true,
     topupPriceUSD: 5,            // 100 extra KIE messages for $5 (Sonnet is pricier)
     topupMessages: 100,
   },
@@ -386,6 +389,8 @@ const UPGRADE_MESSAGES = {
     : `Recruiter View is part of the $15 plan.`,
   // Find Jobs
   findJobs: () => `Upgrade to any paid plan to open and apply to jobs. $7 or $15 both give you full access.`,
+  // Gmail AI — Premier-exclusive inbox tracking
+  gmail: () => `Gmail AI is a Premier-exclusive feature — connect your inbox and let KIE auto-track applications, interviews, and recruiter emails. Upgrade to $15 to unlock it.`,
   // Cover letter from resume (end-of-builder screen or from existing resume)
   coverLetter: () => `Auto-building a cover letter from a resume needs a paid plan. You can still write one from scratch for free on the dashboard.`,
   // ATS score explanation
@@ -691,7 +696,7 @@ async function sendWelcomeEmail(email, name) {
         'api-key': brevoKey,
       },
       body: JSON.stringify({
-        sender:     { email: 'support@kievora.app', name: 'Kievora' },
+        sender:     { email: 'support@kievora.com', name: 'Kievora' },
         to:         [{ email, name }],
         templateId: 1,
         params:     { name },

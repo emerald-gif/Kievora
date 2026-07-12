@@ -15,12 +15,20 @@ module.exports = function registerGmailRoutes(app) {
     attachStaleFlags, computePipelineStats, getWeekKey, recordPipelineTrend,
     getTrendComparison, detectGhostingPattern, buildKieBrainBlock,
     getGmailCareerBrainRaw, getGmailCareerBrain, getValidTokens, syncGmailForUser,
-    RESUMES, normaliseStr,
+    RESUMES, normaliseStr, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
   } = require('./lib');
 
   // ─── Gmail Routes ────────────────────────────────────────────────────────────
   app.post('/api/gmail/connect', authenticate, async (req,res) => {
     if (!GMAIL_CLIENT_ID||!GMAIL_CLIENT_SECRET) return res.status(503).json({ error:'Gmail not configured' });
+    // Plan gate: Gmail AI is Premier-exclusive (see support.html). Enforced
+    // here server-side — the UI hiding/locking the button is just a nicety,
+    // this is what actually stops a Free/Pro user from connecting via a
+    // direct call or an unlocked UI path (e.g. Settings) that skips the gate.
+    const planKey = await getUserPlanKey(req.user.uid);
+    if (!getPlanConfig(planKey).gmail) {
+      return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.gmail() });
+    }
     const url = getOAuthClient().generateAuthUrl({ access_type:'offline', prompt:'consent',
       scope:['https://www.googleapis.com/auth/gmail.modify','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
       state: req.user.uid });
