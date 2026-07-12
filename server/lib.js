@@ -691,7 +691,7 @@ async function sendWelcomeEmail(email, name) {
         'api-key': brevoKey,
       },
       body: JSON.stringify({
-        sender:     { email: 'support@kievora.com', name: 'Kievora' },
+        sender:     { email: 'support@kievora.app', name: 'Kievora' },
         to:         [{ email, name }],
         templateId: 1,
         params:     { name },
