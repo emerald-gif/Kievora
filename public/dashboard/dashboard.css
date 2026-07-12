@@ -774,10 +774,8 @@
     .ksb-set-row-sub{font-size:11px;color:#94a3b8;margin-top:2px;font-weight:500}
     .ksb-set-row-arr{color:#c4b5fd;flex-shrink:0}
 
-    /* ── MODEL BADGE — SVG styled ── */
-    .kmd-trigger{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:4px 2px;border-radius:8px;transition:background .15s;font-family:inherit}
-    .kmd-trigger:hover{background:#f5f3ff}
-    .kmd-trigger span{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:-.1px}
+    /* ── MODEL BADGE — SVG styled (see .kmd-trigger pill rule further down,
+       which is the one actually applied) ── */
 
     #v-kie{display:none;flex-direction:column;height:100vh;height:100dvh;padding-top:0;background:#fff;position:fixed;inset:0;z-index:500}
     #v-kie.active{display:flex}
@@ -1121,20 +1119,22 @@
     .opt-sec-arrow{font-size:11px;color:#a78bfa;transition:transform .2s}
     .opt-sec-body{padding:16px;border-top:1px solid #ede9fe;display:none}
     .opt-sec-body.open{display:block}
-    .kie-input-row{display:flex;align-items:flex-end;gap:0;background:#f7f7fb;border:1.5px solid #e8e8ec;border-radius:20px;padding:10px 10px 10px 10px;transition:border-color .2s,box-shadow .2s}
+    .kie-input-row{display:flex;flex-direction:column;gap:6px;background:#f7f7fb;border:1.5px solid #e8e8ec;border-radius:20px;padding:10px 10px 8px;transition:border-color .2s,box-shadow .2s}
     .kie-input-row:focus-within{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.08);background:#fff}
-    .kie-attach{width:32px;height:32px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#c0b8d8;border-radius:10px;transition:all .2s;align-self:flex-end;margin-right:4px;padding:0}
+    .kie-input-toolrow{display:flex;align-items:center;gap:2px}
+    .kie-toolrow-spacer{flex:1}
+    .kie-attach{width:32px;height:32px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#c0b8d8;border-radius:10px;transition:all .2s;margin-right:4px;padding:0}
     .kie-attach:hover{background:#f0ecff;color:#7c3aed;transform:scale(1.1)}
     .kie-attach.has-resume{color:#7c3aed}
     .kie-attach.has-resume svg{filter:drop-shadow(0 0 3px rgba(124,58,237,.4))}
-    .kie-mic{width:32px;height:32px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#c0b8d8;border-radius:10px;transition:all .2s;align-self:flex-end;margin-right:2px;padding:0}
+    .kie-mic{width:32px;height:32px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#c0b8d8;border-radius:10px;transition:all .2s;margin-right:2px;padding:0}
     .kie-mic:hover{background:#f0ecff;color:#7c3aed}
     .kie-mic.listening{color:#e11d48;background:#fff1f2;animation:micPulse 1s ease infinite}
     @keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(225,29,72,.25)}50%{box-shadow:0 0 0 6px rgba(225,29,72,0)}}
-    .kie-inp{flex:1;border:none;background:transparent;font-size:15px;outline:none;font-family:inherit;color:#1a1a2e;line-height:1.5;resize:none;max-height:120px;min-height:24px;overflow-y:auto;padding:2px 0;scrollbar-width:none}
+    .kie-inp{width:100%;border:none;background:transparent;font-size:15px;outline:none;font-family:inherit;color:#1a1a2e;line-height:1.5;resize:none;max-height:120px;min-height:24px;overflow-y:auto;padding:2px 2px 0;scrollbar-width:none;box-sizing:border-box}
     .kie-inp::-webkit-scrollbar{display:none}
     .kie-inp::placeholder{color:#b0b0c0}
-    .kie-send{width:36px;height:36px;background:var(--g);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;box-shadow:0 2px 8px rgba(124,58,237,.25);align-self:flex-end}
+    .kie-send{width:36px;height:36px;background:var(--g);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;box-shadow:0 2px 8px rgba(124,58,237,.25)}
     .kie-send:hover{transform:scale(1.08);box-shadow:0 4px 14px rgba(124,58,237,.4)}
     .kie-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
     .kie-send.kie-stop{background:#1a1a2e;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
@@ -1557,7 +1557,7 @@
     .premium-lock-corner{position:absolute;top:10px;right:10px;font-size:10px;font-weight:800;color:#fff;
       background:linear-gradient(135deg,#7c3aed,#a855f7);padding:4px 9px;border-radius:99px;z-index:2;
       display:flex;align-items:center;gap:3px;box-shadow:0 2px 8px rgba(124,58,237,.35)}
-    .kmd-trigger{display:inline-flex;align-items:center;gap:5px;background:rgba(15,14,23,.07);border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:5px 10px 5px 8px;cursor:pointer;transition:all .18s;font-family:inherit}
+    .kmd-trigger{display:inline-flex;align-items:center;gap:5px;background:rgba(15,14,23,.07);border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:5px 10px 5px 8px;cursor:pointer;transition:all .18s;font-family:inherit;flex-shrink:0;margin-left:2px}
     .kmd-trigger:hover{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.35)}
     .kmd-trigger span{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;color:#0f0e17}
 
