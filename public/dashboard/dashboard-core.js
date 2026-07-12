@@ -3397,6 +3397,8 @@
     window.closeKieFilePreview = function() {
       const ol = document.getElementById('kieFilePreviewOverlay');
       if (ol) ol.classList.remove('open');
+      const bodyEl = document.getElementById('kieFilePreviewBody');
+      if (bodyEl) bodyEl.onscroll = null;
       document.body.style.overflow = '';
     };
 
@@ -3433,14 +3435,14 @@
 
       if (data.ext === 'pdf' || data.mimeType === 'application/pdf') {
         subEl.textContent = 'Loading…';
-        bodyEl.innerHTML   = `<div class="kie-file-overlay-loading">Loading preview…</div>`;
+        bodyEl.innerHTML   = `<div class="kie-file-overlay-loading"><div class="kie-file-overlay-spinner"></div><div class="kie-file-overlay-loading-txt">Loading preview…</div></div>`;
         try {
           await _ensurePdfJsLoaded();
           const bytes = _base64ToUint8Array(data.base64);
           const pdf   = await window.pdfjsLib.getDocument({ data: bytes }).promise;
-          subEl.textContent = `${pdf.numPages} page${pdf.numPages === 1 ? '' : 's'}`;
           bodyEl.innerHTML = '';
           const maxPages = Math.min(pdf.numPages, 15); // sane cap for very long docs
+          const pageEls = [];
           for (let i = 1; i <= maxPages; i++) {
             const page     = await pdf.getPage(i);
             const viewport = page.getViewport({ scale: 1.4 });
@@ -3450,6 +3452,7 @@
             canvas.height = viewport.height;
             await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
             bodyEl.appendChild(canvas);
+            pageEls.push(canvas);
           }
           if (pdf.numPages > maxPages) {
             const note = document.createElement('div');
@@ -3457,6 +3460,18 @@
             note.textContent = `+ ${pdf.numPages - maxPages} more page${pdf.numPages - maxPages === 1 ? '' : 's'} not shown in preview`;
             bodyEl.appendChild(note);
           }
+          // Live "Page X of Y" counter that tracks scroll position, like a
+          // standard PDF viewer (Chrome, Drive, Adobe) rather than a static label.
+          const updatePageCounter = () => {
+            const mid = bodyEl.scrollTop + bodyEl.clientHeight / 2;
+            let current = 1;
+            for (let i = 0; i < pageEls.length; i++) {
+              if (pageEls[i].offsetTop <= mid) current = i + 1;
+            }
+            subEl.textContent = `Page ${current} of ${pdf.numPages}`;
+          };
+          updatePageCounter();
+          bodyEl.onscroll = updatePageCounter;
         } catch {
           subEl.textContent = 'Preview unavailable';
           bodyEl.innerHTML  = _kieUnavailablePreviewHTML('pdf');

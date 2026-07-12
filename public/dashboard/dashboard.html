@@ -1508,6 +1508,27 @@
       </div>
     </div>
 
+    <!-- Bottom stack: attachment preview floats above mode pills + input as an
+         overlay (position:absolute) so attaching a file never reflows/shrinks
+         the message list — it just floats above everything, no layout jump. -->
+    <div class="kie-bottom-stack">
+
+      <!-- Attachment staging preview (shows before send) -->
+      <div class="kie-attach-stage" id="kieAttachStage">
+        <div class="kie-attach-chip" id="kieAttachChip">
+          <img class="kie-attach-chip-img" id="kieAttachThumb" src="" alt="" style="display:none">
+          <div class="kie-attach-chip-ico" id="kieAttachIco" style="display:none">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="kie-attach-chip-info">
+            <div class="kie-attach-chip-name" id="kieAttachName">file.pdf</div>
+            <div class="kie-attach-chip-type" id="kieAttachType">PDF</div>
+          </div>
+          <button class="kie-attach-chip-dismiss" onclick="clearKieAttachStage()">×</button>
+        </div>
+        <span class="kie-attach-hint">Add a message or send directly ↓</span>
+      </div>
+
     <!-- Mode pills -->
     <div class="kie-modes" id="kieModes">
       <button class="kie-mode-pill active" data-mode="default" onclick="setKieMode('default',this)">
@@ -1546,22 +1567,6 @@
     </div>
     <div class="kie-input-wrap">
 
-      <!-- Attachment staging preview (shows before send) -->
-      <div class="kie-attach-stage" id="kieAttachStage">
-        <div class="kie-attach-chip" id="kieAttachChip">
-          <img class="kie-attach-chip-img" id="kieAttachThumb" src="" alt="" style="display:none">
-          <div class="kie-attach-chip-ico" id="kieAttachIco" style="display:none">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-          <div class="kie-attach-chip-info">
-            <div class="kie-attach-chip-name" id="kieAttachName">file.pdf</div>
-            <div class="kie-attach-chip-type" id="kieAttachType">PDF</div>
-          </div>
-          <button class="kie-attach-chip-dismiss" onclick="clearKieAttachStage()">×</button>
-        </div>
-        <span class="kie-attach-hint">Add a message or send directly ↓</span>
-      </div>
-
       <div class="kie-input-row">
         <textarea id="kieInp" class="kie-inp" rows="1" placeholder="Ask KIE anything — career, resume, LinkedIn, messages…" autocomplete="off"></textarea>
         <div class="kie-input-toolrow">
@@ -1582,6 +1587,8 @@
         </div>
       </div>
       <div class="kie-footer">📎 Images · PDFs · Resumes · Career questions · Built by Kievora</div>
+    </div>
+
     </div>
 
   </div>
