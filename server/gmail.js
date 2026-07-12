@@ -3,6 +3,9 @@
 // status/draft-followup/digest-optout/pipeline actions/interview-prep/
 // draft-reply/resume-gap/disconnect).
 // ═══════════════════════════════════════════════════════════════════════════
+
+const { google } = require('googleapis'); // ✅ FIXED: google is now defined
+
 module.exports = function registerGmailRoutes(app) {
   const {
     admin, db, authenticate, getOAuthClient,
