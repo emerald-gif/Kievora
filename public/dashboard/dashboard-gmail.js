@@ -446,7 +446,7 @@ window.disconnectGmail = async function() {
     _gmailConnected = false;
     _gmailRenderPanel({connected:false});
     ['kieGmailAlert','kieFloatAlert'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-    const n = document.getElementById('kieGmailNudge'); if(n) n.style.display='block';
+    const n = document.getElementById('kieGmailNudge'); if(n) n.style.display='block'; if(typeof window.renderKieGmailNudgeGate==='function') window.renderKieGmailNudgeGate();
     if (typeof window.toast==='function') window.toast('Gmail disconnected','ok');
   } catch(e) { if (typeof window.toast==='function') window.toast('Failed. Try again.','err'); else alert('Failed. Try again.'); }
 };
@@ -487,7 +487,7 @@ function _renderAlert(status) {
   const nudge    = document.getElementById('kieGmailNudge');
   const kieMsgs  = document.getElementById('kieMsgs');
   const chatOpen = kieMsgs&&kieMsgs.style.display!=='none'&&Array.from(kieMsgs.children).some(c=>!c.id||c.id!=='kieTyp');
-  if(nudge) nudge.style.display = _gmailConnected?'none':'block';
+  if(nudge) { nudge.style.display = _gmailConnected?'none':'block'; if(typeof window.renderKieGmailNudgeGate==='function') window.renderKieGmailNudgeGate(); }
   if(!alert){ if(card)card.style.display='none'; if(floatBar)floatBar.style.display='none'; _gmailAlertAction=null; return; }
   _gmailAlertAction = alert.chip;
   if(chatOpen){
@@ -513,7 +513,7 @@ window.ensureGmailFreshAndAlert = async function() {
     const tok  = await _gmailTok();
     const data = await fetch('/api/gmail/status',{headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json());
     _gmailConnected = !!data.connected;
-    if(!data.connected){ const n=document.getElementById('kieGmailNudge');if(n)n.style.display='block'; return; }
+    if(!data.connected){ const n=document.getElementById('kieGmailNudge');if(n)n.style.display='block'; if(typeof window.renderKieGmailNudgeGate==='function') window.renderKieGmailNudgeGate(); return; }
     if(data.lastSynced&&(Date.now()-new Date(data.lastSynced))/60000>30){
       fetch('/api/gmail/sync',{method:'POST',headers:{Authorization:`Bearer ${tok}`}})
         .then(()=>fetch('/api/gmail/status',{headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json()))

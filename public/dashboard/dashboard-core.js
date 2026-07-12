@@ -173,6 +173,8 @@
         desc: 'Save any article from the Community Feed as a PDF to read or share offline.' },
       findJobs:       { icon: '💼', title: 'Job Applications', minPlan: 'paid7',
         desc: "Open and apply to every job we surface for you, not just preview the listing." },
+      gmail:          { icon: '📧', title: 'Gmail AI', minPlan: 'paid15',
+        desc: "KIE reads your inbox securely to auto-track applications, interviews, and recruiter emails — no more manually updating your pipeline." },
     };
     const TOOL_INFO = {
       aibuild:      { icon: '✍️',  title: 'AI Resume Builder',   desc: 'Build a complete resume from a single prompt — KIE writes it for you.' },
@@ -277,6 +279,31 @@
     // Re-renders every plan-aware surface currently in the DOM. Called once
     // after loadPlanGates() resolves, and again any time the plan might have
     // changed (e.g. coming back from a successful checkout).
+    // Gmail AI is a Premier-exclusive feature (see support.html). Premier
+    // users tapping the nudge go straight to the connect flow; everyone else
+    // gets the same paywall drawer every other locked feature uses.
+    window.kieGmailNudgeTap = function() {
+      if (PLAN_KEY === 'paid15') {
+        if (typeof window.openSidebarSettings === 'function') window.openSidebarSettings();
+        setTimeout(() => { if (typeof window.openGmailPanel === 'function') window.openGmailPanel(); }, 350);
+      } else {
+        lockTapped('gmail');
+      }
+    };
+    function renderKieGmailNudgeGate() {
+      const badge = g('kieGmailBadge');
+      const cta   = g('kieGmailCta');
+      if (!badge || !cta) return;
+      if (PLAN_KEY === 'paid15') {
+        badge.style.display = 'none';
+        cta.textContent = 'Connect →';
+      } else {
+        badge.style.display = '';
+        cta.textContent = 'Upgrade →';
+      }
+    }
+    window.renderKieGmailNudgeGate = renderKieGmailNudgeGate;
+
     function applyPlanGatesToUI() {
       if (typeof renderModeLocks === 'function') renderModeLocks();
       if (typeof renderToolHubLocks === 'function') renderToolHubLocks();
@@ -284,6 +311,7 @@
       if (typeof renderAtsExplanationLock === 'function') renderAtsExplanationLock();
       if (typeof renderRecruiterViewLock === 'function') renderRecruiterViewLock();
       if (typeof renderSidebarUpgradeBanner === 'function') renderSidebarUpgradeBanner();
+      renderKieGmailNudgeGate();
       if (document.getElementById('kmdList')) renderModelList();
       if (document.querySelector('.tcard')) renderTpickScaled();
     }
