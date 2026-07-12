@@ -2944,7 +2944,6 @@
       setupKiePicker();
       showView('kie');
       restoreKieUI();
-      setTimeout(() => g('kieInp').focus(), 100);
       if(typeof ensureGmailFreshAndAlert==='function') ensureGmailFreshAndAlert().catch(()=>{});
     }
     function closeKie() { showView(_kieReturnView || 'home'); }

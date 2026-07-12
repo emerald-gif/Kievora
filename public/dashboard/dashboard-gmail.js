@@ -414,8 +414,18 @@ window.connectGmail = async function() {
   if (btn) { btn.textContent='Redirecting to Google…'; btn.disabled=true; btn.style.opacity='.8'; }
   try {
     const tok  = await _gmailTok();
-    const {url} = await fetch('/api/gmail/connect',{method:'POST',headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json());
-    window.location.href = url;
+    const res  = await fetch('/api/gmail/connect',{method:'POST',headers:{Authorization:`Bearer ${tok}`}});
+    const data = await res.json();
+    if (!res.ok) {
+      if (btn) { btn.textContent='Connect Gmail →'; btn.disabled=false; btn.style.opacity='1'; }
+      if (data.error === 'plan_locked') {
+        if (typeof window.lockTapped === 'function') window.lockTapped('gmail');
+        else if (typeof window.toast === 'function') window.toast(data.message || 'Gmail AI needs a Premier plan.', 'err');
+        return;
+      }
+      throw new Error(data.message || 'Connection failed.');
+    }
+    window.location.href = data.url;
   } catch(e) {
     if (btn) { btn.textContent='Connect Gmail →'; btn.disabled=false; btn.style.opacity='1'; }
     if (typeof window.toast==='function') window.toast('Connection failed. Try again.','err');
