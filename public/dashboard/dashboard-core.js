@@ -234,11 +234,12 @@
     function showLockToast(msg) {
       const t = g('toast');
       if (!t) return;
-      t.innerHTML = '🔒 ' + esc(msg) + ' <a href="/billing" style="color:#c4b5fd;text-decoration:underline;margin-left:6px;font-weight:800;white-space:nowrap;pointer-events:auto">Upgrade →</a>';
-      t.style.background = '#1a1130';
-      t.style.opacity = '1';
+      t.innerHTML = '<span class="toast-ico">🔒</span><span>' + esc(msg) + '</span>'
+        + ' <a href="/billing">Upgrade →</a>';
+      t.className = 'toast-lock';
       clearTimeout(window._tt);
-      window._tt = setTimeout(() => { t.style.opacity = '0'; }, 5500);
+      requestAnimationFrame(() => t.classList.add('show'));
+      window._tt = setTimeout(() => t.classList.remove('show'), 5500);
     }
 
     // KIE model & mode pills already say everything that's locked right on the
@@ -5976,11 +5977,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
     function toast(msg, type = 'ok') {
       const t = g('toast');
-      t.innerHTML = (type === 'err' ? '❌ ' : '✅ ') + msg;
-      t.style.background = type === 'err' ? '#be123c' : '#0f0e17';
-      t.style.opacity = '1';
+      const icon = type === 'err' ? '⚠️' : '✅';
+      t.innerHTML = '<span class="toast-ico">' + icon + '</span><span>' + esc(msg) + '</span>';
+      t.className = type === 'err' ? 'toast-err' : 'toast-ok';
       clearTimeout(window._tt);
-      window._tt = setTimeout(() => t.style.opacity = '0', 3500);
+      requestAnimationFrame(() => t.classList.add('show'));
+      window._tt = setTimeout(() => t.classList.remove('show'), 3500);
     }
     window.toast = toast; // bridge — other <script> blocks (e.g. Gmail panel) aren't module-scoped and can't see this otherwise
     function fmtDate(ts) {
@@ -6253,7 +6255,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
     window.runRecruiterIntel = async function() {
       const btn = g('recruiterIntelBtn');
-      if (!analysisResult) { alert('Upload and analyze a resume first.'); return; }
+      if (!analysisResult) { toast('Upload and analyze a resume first.', 'err'); return; }
       if (!isFeatureUnlocked('recruiterView')) {
         lockTapped('recruiterView');
         return; // never open the panel/spinner for something that's just going to fail
@@ -7164,7 +7166,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       window.runJobMatch = async function() {
         const jd = (g('jmJobDesc')?.value || '').trim();
-        if (!jd || jd.length < 50) { alert('Please paste a job description (at least 50 characters).'); return; }
+        if (!jd || jd.length < 50) { toast('Please paste a job description (at least 50 characters).', 'err'); return; }
         ctoolLoading('jobmatchLoading', 'jobmatchBtn', true);
         ctoolResult('jobmatchResult', false);
         const rid = g('jmResumePicker')?.value || '';
@@ -7187,7 +7189,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         } catch(err) {
           clearInterval(si_int);
           ctoolLoading('jobmatchLoading', 'jobmatchBtn', false);
-          alert('Error: ' + err.message);
+          toast('Error: ' + err.message, 'err');
         }
       };
 
@@ -7224,7 +7226,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       window.runResignation = async function() {
         const role = (g('rsCurrentRole')?.value || '').trim();
         const company = (g('rsCompany')?.value || '').trim();
-        if (!role || !company) { alert('Please enter your role and company name.'); return; }
+        if (!role || !company) { toast('Please enter your role and company name.', 'err'); return; }
         ctoolLoading('resignationLoading', 'resignationBtn', true);
         ctoolResult('resignationResult', false);
         try {
@@ -7247,7 +7249,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           ctoolResult('resignationResult', true);
         } catch(err) {
           ctoolLoading('resignationLoading', 'resignationBtn', false);
-          alert('Error: ' + err.message);
+          toast('Error: ' + err.message, 'err');
         }
       };
 
@@ -7599,7 +7601,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       window._aibuildData = null;
       window.runAiBuild = async function() {
         const prompt = (g('aibuildPrompt')?.value||'').trim();
-        if (!prompt || prompt.length < 8) { alert('Please describe the resume you want to create.'); return; }
+        if (!prompt || prompt.length < 8) { toast('Please describe the resume you want to create.', 'err'); return; }
         showModelSuggestion('aibuild','aibuildSuggest');
         ctoolLoading('aibuildLoading','aibuildBtn',true);
         ctoolResult('aibuildResult',false);
@@ -7618,7 +7620,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         } catch(err) {
           clearInterval(si_int);
           ctoolLoading('aibuildLoading','aibuildBtn',false);
-          alert('Error: '+err.message);
+          toast('Error: '+err.message, 'err');
         }
       };
       function renderAiBuildResult(d) {
@@ -7645,7 +7647,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       window.runCareerHealth = async function() {
         const sel = g('chResumePicker'); const rid = sel?.value||'';
         const resume = rid ? getResumeById(rid) : null;
-        if(!resume) { alert('Please select a resume to analyze.'); return; }
+        if(!resume) { toast('Please select a resume to analyze.', 'err'); return; }
         showModelSuggestion('careerhealth','careerhealthSuggest');
         ctoolLoading('careerhealthLoading','careerhealthBtn',true);
         ctoolResult('careerhealthResult',false);
@@ -7657,7 +7659,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('career_health', { model: kieModel });
           ctoolLoading('careerhealthLoading','careerhealthBtn',false);
           ctoolResult('careerhealthResult',true);
-        } catch(err) { ctoolLoading('careerhealthLoading','careerhealthBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('careerhealthLoading','careerhealthBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderCareerHealth(d) {
         const el = g('careerhealthResult'); if(!el) return;
@@ -7704,7 +7706,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       };
       window.runRoadmap = async function() {
         const curr=(g('rmCurrentRole')?.value||'').trim(), tgt=(g('rmTargetRole')?.value||'').trim();
-        if(!curr||!tgt) { alert('Enter your current and target role.'); return; }
+        if(!curr||!tgt) { toast('Enter your current and target role.', 'err'); return; }
         showModelSuggestion('roadmap','roadmapSuggest');
         ctoolLoading('roadmapLoading','roadmapBtn',true);
         ctoolResult('roadmapResult',false);
@@ -7716,7 +7718,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('career_roadmap', { model: kieModel });
           ctoolLoading('roadmapLoading','roadmapBtn',false);
           ctoolResult('roadmapResult',true);
-        } catch(err) { ctoolLoading('roadmapLoading','roadmapBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('roadmapLoading','roadmapBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderRoadmap(rm) {
         const el = g('roadmapResult'); if(!el) return;
@@ -7744,7 +7746,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       // ── SALARY INTELLIGENCE ────────────────────────────────────────────────────
       window.runSalaryIntel = async function() {
         const jt=(g('salJobTitle')?.value||'').trim();
-        if(!jt) { alert('Enter a job title.'); return; }
+        if(!jt) { toast('Enter a job title.', 'err'); return; }
         showModelSuggestion('salary','salarySuggest');
         ctoolLoading('salaryLoading','salaryBtn',true);
         ctoolResult('salaryResult',false);
@@ -7756,7 +7758,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('salary_intel', { model: kieModel });
           ctoolLoading('salaryLoading','salaryBtn',false);
           ctoolResult('salaryResult',true);
-        } catch(err) { ctoolLoading('salaryLoading','salaryBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('salaryLoading','salaryBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderSalary(d) {
         const el = g('salaryResult'); if(!el) return;
@@ -7798,7 +7800,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       // ── INDUSTRY INTELLIGENCE ──────────────────────────────────────────────────
       window.runIndustryIntel = async function() {
         const ind=(g('indIndustry')?.value||'').trim();
-        if(!ind) { alert('Enter an industry.'); return; }
+        if(!ind) { toast('Enter an industry.', 'err'); return; }
         showModelSuggestion('industry','industrySuggest');
         ctoolLoading('industryLoading','industryBtn',true);
         ctoolResult('industryResult',false);
@@ -7810,7 +7812,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('industry_intel', { model: kieModel });
           ctoolLoading('industryLoading','industryBtn',false);
           ctoolResult('industryResult',true);
-        } catch(err) { ctoolLoading('industryLoading','industryBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('industryLoading','industryBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderIndustry(d) {
         const el = g('industryResult'); if(!el) return;
@@ -7837,7 +7839,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       // ── LINKEDIN OPTIMIZER ─────────────────────────────────────────────────────
       window.runLinkedIn = async function() {
         const hl=(g('liHeadline')?.value||'').trim();
-        if(!hl) { alert('Enter your current LinkedIn headline.'); return; }
+        if(!hl) { toast('Enter your current LinkedIn headline.', 'err'); return; }
         showModelSuggestion('linkedin','linkedinSuggest');
         ctoolLoading('linkedinLoading','linkedinBtn',true);
         ctoolResult('linkedinResult',false);
@@ -7849,7 +7851,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('linkedin_optimize', { model: kieModel });
           ctoolLoading('linkedinLoading','linkedinBtn',false);
           ctoolResult('linkedinResult',true);
-        } catch(err) { ctoolLoading('linkedinLoading','linkedinBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('linkedinLoading','linkedinBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderLinkedIn(d) {
         const el = g('linkedinResult'); if(!el) return;
@@ -7877,7 +7879,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       };
       window.runGetQuestion = async function() {
         const jt=(g('ivJobTitle')?.value||'').trim();
-        if(!jt) { alert('Enter the job title you are interviewing for.'); return; }
+        if(!jt) { toast('Enter the job title you are interviewing for.', 'err'); return; }
         showModelSuggestion('interview','interviewSuggest');
         ctoolLoading('ivLoading','ivStartBtn',true);
         const loadTxt=g('ivLoadingTxt'); if(loadTxt) loadTxt.textContent='Getting your question…';
@@ -7896,7 +7898,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           if(g('ivSetup')) g('ivSetup').style.display='none';
           if(g('ivSession')) g('ivSession').style.display='block';
           if(g('ivStartBtn')) g('ivStartBtn').disabled=false;
-        } catch(err) { if(g('ivLoading')) g('ivLoading').style.display='none'; if(g('ivStartBtn')) g('ivStartBtn').disabled=false; alert('Error: '+err.message); }
+        } catch(err) { if(g('ivLoading')) g('ivLoading').style.display='none'; if(g('ivStartBtn')) g('ivStartBtn').disabled=false; toast('Error: '+err.message, 'err'); }
       };
       function renderIvQuestion(q) {
         const card=g('ivQuestionCard'); if(!card) return;
@@ -7907,7 +7909,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       window.runGetFeedback = async function() {
         if(!ivCurrentQ) return;
         const jt=(g('ivJobTitle')?.value||'').trim(), ans=(g('ivAnswer')?.value||'').trim();
-        if(!ans||ans.length<20) { alert('Write a more complete answer before getting feedback.'); return; }
+        if(!ans||ans.length<20) { toast('Write a more complete answer before getting feedback.', 'err'); return; }
         const loadTxt=g('ivLoadingTxt'); if(loadTxt) loadTxt.textContent='Analyzing your answer…';
         if(g('ivLoading')) g('ivLoading').style.display='block';
         ctoolResult('ivFeedback',false);
@@ -7919,7 +7921,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('mock_interview_fb', { model: kieModel });
           if(g('ivLoading')) g('ivLoading').style.display='none';
           ctoolResult('ivFeedback',true);
-        } catch(err) { if(g('ivLoading')) g('ivLoading').style.display='none'; alert('Error: '+err.message); }
+        } catch(err) { if(g('ivLoading')) g('ivLoading').style.display='none'; toast('Error: '+err.message, 'err'); }
       };
       function renderIvFeedback(fb) {
         const el=g('ivFeedback'); if(!el) return;
@@ -7961,7 +7963,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('personal_brand', { model: kieModel });
           ctoolLoading('brandingLoading','brandingBtn',false);
           ctoolResult('brandingResult',true);
-        } catch(err) { ctoolLoading('brandingLoading','brandingBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('brandingLoading','brandingBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderBranding(d) {
         const el=g('brandingResult'); if(!el) return;
@@ -7988,7 +7990,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       };
       window.runMessaging = async function() {
         const jt=(g('msgJobTitle')?.value||'').trim(), co=(g('msgCompany')?.value||'').trim();
-        if(!jt||!co) { alert('Enter the job title and company name.'); return; }
+        if(!jt||!co) { toast('Enter the job title and company name.', 'err'); return; }
         showModelSuggestion('messaging','messagingSuggest');
         ctoolLoading('messagingLoading','messagingBtn',true);
         ctoolResult('messagingResult',false);
@@ -8002,7 +8004,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('professional_msg', { model: kieModel });
           ctoolLoading('messagingLoading','messagingBtn',false);
           ctoolResult('messagingResult',true);
-        } catch(err) { ctoolLoading('messagingLoading','messagingBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('messagingLoading','messagingBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderMessaging(d) {
         const el=g('messagingResult'); if(!el) return;
@@ -8024,7 +8026,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       // ── PROMOTION READINESS ────────────────────────────────────────────────────
       window.runPromotion = async function() {
         const curr=(g('prCurrentRole')?.value||'').trim(), tgt=(g('prTargetRole')?.value||'').trim();
-        if(!curr||!tgt) { alert('Enter your current and target role.'); return; }
+        if(!curr||!tgt) { toast('Enter your current and target role.', 'err'); return; }
         showModelSuggestion('promotion','promotionSuggest');
         ctoolLoading('promotionLoading','promotionBtn',true);
         ctoolResult('promotionResult',false);
@@ -8038,7 +8040,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           logEvent('promotion_readiness', { model: kieModel });
           ctoolLoading('promotionLoading','promotionBtn',false);
           ctoolResult('promotionResult',true);
-        } catch(err) { ctoolLoading('promotionLoading','promotionBtn',false); alert('Error: '+err.message); }
+        } catch(err) { ctoolLoading('promotionLoading','promotionBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderPromotion(d) {
         const el=g('promotionResult'); if(!el) return;

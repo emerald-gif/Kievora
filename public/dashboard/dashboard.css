@@ -1164,8 +1164,27 @@
     .mbtn-cancel{background:#f1f5f9;color:#374151}.mbtn-cancel:hover{background:#e2e8f0;transform:translateY(-1px)}
     .mbtn-del{background:linear-gradient(135deg,#e11d48,#f43f5e);color:#fff;box-shadow:0 2px 12px rgba(225,29,72,.25)}.mbtn-del:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 16px rgba(225,29,72,.3)}
 
-    /* ── TOAST ── */
-    #toast{position:fixed;bottom:28px;right:28px;z-index:980;padding:14px 22px;border-radius:14px;font-size:14px;font-weight:700;box-shadow:0 8px 32px rgba(0,0,0,.2);opacity:0;transition:opacity .3s;pointer-events:none;background:var(--txt);color:#fff;display:flex;align-items:center;gap:10px;max-width:360px;backdrop-filter:blur(8px)}
+    /* ── TOAST — slides down from top, centered, never collides with a
+       bottom input bar. One consistent dark card with a colored accent per
+       type, instead of swapping the whole background to red/black. ── */
+    #toast{
+      position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;
+      transform:translateX(-50%) translateY(-14px);
+      z-index:10050;padding:13px 18px;border-radius:14px;
+      font-size:13.5px;font-weight:600;line-height:1.4;
+      box-shadow:0 10px 32px rgba(15,14,23,.28),0 2px 8px rgba(15,14,23,.12);
+      opacity:0;transition:opacity .25s ease,transform .25s ease;pointer-events:none;
+      background:#1f1b2e;color:#fff;
+      display:flex;align-items:center;gap:10px;
+      max-width:min(420px,calc(100vw - 32px));width:max-content;
+      border-left:3px solid #7c3aed;
+    }
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    #toast.toast-ok{border-left-color:#22c55e}
+    #toast.toast-err{border-left-color:#f87171}
+    #toast.toast-lock{border-left-color:#a78bfa}
+    #toast .toast-ico{flex-shrink:0;font-size:15px;line-height:1}
+    #toast a{color:#c4b5fd;text-decoration:underline;font-weight:800;white-space:nowrap;pointer-events:auto;margin-left:2px}
 
     /* print area — download handled by pdfmake */
 
