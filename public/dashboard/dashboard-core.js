@@ -2762,11 +2762,11 @@
         thumb.src           = dataUrl;
         thumb.style.display = 'block';
         ico.style.display   = 'none';
-        typeEl.textContent  = 'Image · add a message or send directly';
+        typeEl.textContent  = 'Image';
       } else {
         thumb.style.display = 'none';
         ico.style.display   = 'flex';
-        typeEl.textContent  = type.toUpperCase() + ' · add a message or send directly';
+        typeEl.textContent  = type.toUpperCase();
       }
       stage.classList.add('visible');
     }
@@ -2802,7 +2802,14 @@
 
         if (resumeText.trim().length < 30) {
           g('kieTyp').style.display = 'none'; hideKieStatus();
-          appendKMsg('ai', "Couldn't extract text from that file — it might be a scanned image PDF. Try pasting your content directly into the chat. 🙏", true);
+          const shortMsg = "Couldn't extract text from that file — it might be a scanned image PDF. Try pasting your content directly into the chat. 🙏";
+          appendKMsg('ai', shortMsg, true);
+          // The user's file message was already pushed to kieHist by sendKie()
+          // before this function ran — save now so it (and this reply) survive
+          // a reload, instead of only living in memory until some later turn
+          // happens to trigger a save.
+          kieHist.push({ role: 'assistant', content: shortMsg });
+          saveKieHistory();
           return;
         }
 
@@ -2819,7 +2826,13 @@
         g('kieTyp').style.display = 'none'; hideKieStatus();
         logEvent('analyze_resume', { model: kieModel });
 
-        if (analysis.error) { appendKMsg('ai', `Trouble analysing that file. ${analysis.error}`, true); return; }
+        if (analysis.error) {
+          const errMsg = `Trouble analysing that file. ${analysis.error}`;
+          appendKMsg('ai', errMsg, true);
+          kieHist.push({ role: 'assistant', content: errMsg });
+          saveKieHistory();
+          return;
+        }
 
         if (analysis.jobTitle) setJobProfession(analysis.jobTitle, 'kie');
         kieResumeContext  = resumeText.slice(0, 5000);
@@ -2881,9 +2894,18 @@
         kieHist.push({ role: 'assistant', content: msg });
         saveKieHistory();
       } catch (err) {
-        if (err.name === 'AbortError') return;
+        if (err.name === 'AbortError') {
+          // The user's file message is already in kieHist (pushed by sendKie()
+          // before this ran) — save it even though the reply never came back,
+          // so the attachment doesn't just vanish on reload.
+          saveKieHistory();
+          return;
+        }
         g('kieTyp').style.display = 'none'; hideKieStatus();
-        appendKMsg('ai', 'Had a problem reading that file. Make sure it\'s a proper PDF with selectable text, or paste your resume directly into the chat. 🙏', true);
+        const failMsg = 'Had a problem reading that file. Make sure it\'s a proper PDF with selectable text, or paste your resume directly into the chat. 🙏';
+        appendKMsg('ai', failMsg, true);
+        kieHist.push({ role: 'assistant', content: failMsg });
+        saveKieHistory();
       }
     }
 
