@@ -4,6 +4,18 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Welcome to Kievora — Set up your profile</title>
+<meta name="description" content="Set up your Kievora profile in minutes and get personalized career recommendations."/>
+<meta name="robots" content="noindex, nofollow"/>
+<meta property="og:title" content="Welcome to Kievora — Set up your profile"/>
+<meta property="og:description" content="Set up your Kievora profile in minutes and get personalized career recommendations."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://kievora.app/onboarding.html"/>
+<meta property="og:image" content="https://kievora.app/banner.jpg"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Welcome to Kievora — Set up your profile"/>
+<meta name="twitter:description" content="Set up your Kievora profile in minutes and get personalized career recommendations."/>
+<link rel="icon" type="image/jpeg" href="logo.jpg"/>
+<link rel="apple-touch-icon" href="logo.jpg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -139,6 +151,22 @@ nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-fi
 @media(min-width:480px){
   .cat-grid{grid-template-columns:repeat(3,1fr)}
 }
+
+/* Keyboard focus — cat-card/int-pill are divs acting as buttons, so this matters */
+.cat-card:focus-visible,.int-pill:focus-visible,.cta-btn:focus-visible,
+.cta-secondary:focus-visible,.skip-link:focus-visible,.jt-inp:focus-visible{
+  outline:2.5px solid var(--p);outline-offset:2px}
+
+.step1-hint{font-size:11.5px;color:var(--mute);text-align:center;margin-top:10px}
+.int-count{color:var(--p);font-weight:700}
+
+.skip-link{background:none;border:none;font-family:inherit;width:100%;padding:4px;font-size:12.5px}
+
+@media(prefers-reduced-motion:reduce){
+  .step,.cat-check,.progress-fill,.loading-spinner{animation:none!important;transition:none!important}
+}
+
+body{padding-bottom:env(safe-area-inset-bottom)}
 </style>
 
 <script type="module">
@@ -157,7 +185,7 @@ const fbApp = initializeApp({
   measurementId: "G-X6VG3MVQ96"
 });
 const auth = getAuth(fbApp);
-const db   = getFirestore(fbApp);
+const db   = getFirestore(fbApp, 'default');
 
 // Shared localStorage keys used across dashboard, articles, profile, find-jobs
 function userCatKey(uid){ return `kievora_user_cat_${uid}`; }
@@ -190,6 +218,10 @@ onAuthStateChanged(auth, async user => {
 window.finishOnboarding = async function(category, interests, jobTitle) {
   if (!currentUser) return;
   const overlay = document.getElementById('loadingOverlay');
+  const lt = document.getElementById('loadingTitle');
+  const ls = document.getElementById('loadingSub');
+  if (lt) lt.textContent = 'Setting up your profile…';
+  if (ls) ls.textContent = 'Taking you to your dashboard';
   overlay.classList.add('show');
 
   const profTitle = jobTitle || category;
@@ -219,6 +251,12 @@ window.finishOnboarding = async function(category, interests, jobTitle) {
 
 window.skipOnboarding = async function() {
   if (!currentUser) { window.location.href = '/dashboard'; return; }
+  const overlay = document.getElementById('loadingOverlay');
+  const lt = document.getElementById('loadingTitle');
+  const ls = document.getElementById('loadingSub');
+  if (lt) lt.textContent = 'Skipping for now…';
+  if (ls) ls.textContent = 'Taking you to your dashboard';
+  overlay.classList.add('show');
   try {
     const writePromise = setDoc(doc(db,'users',currentUser.uid), { onboardingDone: true }, { merge: true });
     const timeout = new Promise(resolve => setTimeout(resolve, 3000));
@@ -242,8 +280,8 @@ window.skipOnboarding = async function() {
 <div class="loading-overlay show" id="loadingOverlay">
   <div class="loading-card">
     <div class="loading-spinner"></div>
-    <p>Getting your account ready…</p>
-    <span>Just a second</span>
+    <p id="loadingTitle">Getting your account ready…</p>
+    <span id="loadingSub">Just a second</span>
   </div>
 </div>
 
@@ -270,14 +308,15 @@ window.skipOnboarding = async function() {
     Continue
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
   </button>
-  <a class="skip-link" onclick="skipOnboarding()">Skip for now</a>
+  <div class="step1-hint" id="step1Hint">Choose one to continue</div>
+  <button type="button" class="skip-link" onclick="skipOnboarding()">Skip for now</button>
 </div>
 
 <!-- STEP 2 — INTERESTS + JOB TITLE -->
 <div class="step" id="step2">
   <div class="section-label"><span class="num">2</span> What content do you want to see?</div>
   <div class="int-wrap" id="intWrap"><!-- populated by JS --></div>
-  <p class="int-hint">Pick as many as you like — you can change these anytime in your profile.</p>
+  <p class="int-hint" id="intHint">Pick as many as you like — you can change these anytime in your profile.</p>
 
   <div class="jt-field">
     <label for="jobTitleInp">Your current or target job title <span class="opt">(optional)</span></label>
@@ -295,7 +334,7 @@ window.skipOnboarding = async function() {
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     Back
   </button>
-  <a class="skip-link" onclick="skipOnboarding()">Skip for now</a>
+  <button type="button" class="skip-link" onclick="skipOnboarding()">Skip for now</button>
 </div>
 </div>
 
@@ -374,7 +413,9 @@ let selectedInterests = new Set();
 function renderCatGrid(){
   const grid = document.getElementById('catGrid');
   grid.innerHTML = CATEGORIES.map(c => `
-    <div class="cat-card" data-id="${c.id}" onclick="selectCategory('${c.id.replace(/'/g,"\\'")}')">
+    <div class="cat-card" data-id="${c.id}" tabindex="0" role="button" aria-pressed="false"
+      onclick="selectCategory('${c.id.replace(/'/g,"\\'")}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCategory('${c.id.replace(/'/g,"\\'")}')}">
       <div class="cat-icon-tile" style="background:${c.color}1a;color:${c.color}">${svg(c.icon)}</div>
       <div class="cat-name">${c.id}</div>
       <div class="cat-check">${svg('check')}</div>
@@ -385,16 +426,22 @@ function renderCatGrid(){
 window.selectCategory = function(id){
   selectedCategory = id;
   document.querySelectorAll('#catGrid .cat-card').forEach(card => {
-    card.classList.toggle('selected', card.dataset.id === id);
+    const isSel = card.dataset.id === id;
+    card.classList.toggle('selected', isSel);
+    card.setAttribute('aria-pressed', isSel ? 'true' : 'false');
   });
   document.getElementById('step1Btn').disabled = false;
+  const hint = document.getElementById('step1Hint');
+  if (hint) hint.style.display = 'none';
 };
 
 // ── Render step 2 ────────────────────────────────────────────────────────
 function renderInterestPills(){
   const wrap = document.getElementById('intWrap');
   wrap.innerHTML = INTERESTS.map(i => `
-    <div class="int-pill" data-id="${i.id}" onclick="toggleInterest('${i.id.replace(/'/g,"\\'")}')">
+    <div class="int-pill" data-id="${i.id}" tabindex="0" role="button" aria-pressed="false"
+      onclick="toggleInterest('${i.id.replace(/'/g,"\\'")}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleInterest('${i.id.replace(/'/g,"\\'")}')}">
       ${svg(i.icon)}<span>${i.id}</span>
     </div>
   `).join('');
@@ -404,8 +451,17 @@ window.toggleInterest = function(id){
   if (selectedInterests.has(id)) selectedInterests.delete(id);
   else selectedInterests.add(id);
   document.querySelectorAll('#intWrap .int-pill').forEach(pill => {
-    pill.classList.toggle('selected', selectedInterests.has(pill.dataset.id));
+    const isSel = selectedInterests.has(pill.dataset.id);
+    pill.classList.toggle('selected', isSel);
+    pill.setAttribute('aria-pressed', isSel ? 'true' : 'false');
   });
+  const hint = document.getElementById('intHint');
+  if (hint) {
+    const n = selectedInterests.size;
+    hint.innerHTML = n
+      ? `<span class="int-count">${n} selected</span> — change these anytime in your profile.`
+      : 'Pick as many as you like — you can change these anytime in your profile.';
+  }
 };
 
 // ── Step navigation ──────────────────────────────────────────────────────
