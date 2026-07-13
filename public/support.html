@@ -4,6 +4,18 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Support — Kievora</title>
+<meta name="description" content="Get help with your Kievora account — browse FAQs, contact support, or track a support ticket."/>
+<link rel="canonical" href="https://kievora.app/support.html"/>
+<meta property="og:title" content="Support — Kievora"/>
+<meta property="og:description" content="Get help with your Kievora account — browse FAQs, contact support, or track a support ticket."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://kievora.app/support.html"/>
+<meta property="og:image" content="https://kievora.app/banner.jpg"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Support — Kievora"/>
+<meta name="twitter:description" content="Get help with your Kievora account — browse FAQs, contact support, or track a support ticket."/>
+<link rel="icon" type="image/jpeg" href="logo.jpg"/>
+<link rel="apple-touch-icon" href="logo.jpg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -271,6 +283,12 @@
     @keyframes typingBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
     .kie-sugs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px 6px;flex-shrink:0;border-top:1px solid var(--border)}
     .kie-sug{background:#F5F3FF;border:1.5px solid #EDE9FE;border-radius:99px;padding:6px 13px;font-size:11px;font-weight:600;color:var(--p);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+    .kie-sug:focus-visible{outline:2.5px solid var(--p);outline-offset:2px}
+    .kie-followups{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px 38px}
+    .kie-fup{background:#fff;border:1.5px solid #EDE9FE;border-radius:99px;padding:6px 12px;font-size:11px;
+      font-weight:600;color:var(--p);cursor:pointer;transition:all .15s;font-family:inherit;text-align:left}
+    .kie-fup:hover{background:#F5F3FF;border-color:#C4B5FD}
+    .kie-fup:focus-visible{outline:2.5px solid var(--p);outline-offset:2px}
     .kie-sug:hover{background:#EDE9FE;border-color:#C4B5FD}
     .kie-input-row{display:flex;align-items:flex-end;gap:8px;padding:12px 14px 14px;border-top:1px solid var(--border);background:#fff;flex-shrink:0}
     .kie-input{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13px;font-family:inherit;outline:none;resize:none;transition:border-color .2s;background:#F9F8FF;color:var(--txt);min-height:42px;max-height:100px}
@@ -545,33 +563,31 @@
     .kgo-fs-name{font-size:13px;font-weight:900;color:#fff;letter-spacing:-.2px}
     .kgo-fs-desc{font-size:12px;color:rgba(196,181,253,.85);line-height:1.6}
 
-    /* Model slides */
+    /* Model slides — all three share Kievora's purple brand instead of three unrelated hues */
     .kgo-model-slide{padding:22px 18px}
-    .kgo-ms-flash{background:linear-gradient(160deg,#FFF7ED,#FEF3C7);border-color:#FDE68A}
-    .kgo-ms-swift{background:linear-gradient(160deg,#F0FFF4,#DCFCE7);border-color:#BBF7D0}
-    .kgo-ms-elite{background:linear-gradient(160deg,#FAF8FF,#EDE9FE);border-color:#C4B5FD}
-    .kgo-ms-ultra{background:linear-gradient(160deg,#1E0845,#2D1565);border-color:#4C1D95}
+    .kgo-ms-flash{background:linear-gradient(160deg,#FAF8FF,#F3EEFF);border-color:#EDE9FE}
+    .kgo-ms-swift{background:linear-gradient(160deg,#FAF5FF,#F3E8FF);border-color:#DDD6FE;
+      box-shadow:0 6px 20px rgba(124,58,237,.14)}
+    .kgo-ms-ultra{background:linear-gradient(160deg,#1c0b3d 0%,#5b21b6 65%,#7c3aed 130%);border-color:#7C3AED}
     .kgo-ms-badge{font-size:14px;font-weight:900;display:inline-flex;align-items:center;gap:6px;margin-bottom:4px}
-    .kgo-ms-flash .kgo-ms-badge{color:#B45309}
-    .kgo-ms-swift .kgo-ms-badge{color:#065F46}
-    .kgo-ms-elite .kgo-ms-badge{color:#4C1D95}
+    .kgo-ms-flash .kgo-ms-badge{color:#5B21B6}
+    .kgo-ms-swift .kgo-ms-badge{color:#6D28D9}
     .kgo-ms-ultra .kgo-ms-badge{color:#DDD6FE}
     .kgo-ms-tagline{font-size:11px;font-weight:700;margin-bottom:10px}
-    .kgo-ms-flash .kgo-ms-tagline,.kgo-ms-swift .kgo-ms-tagline{color:#64748B}
-    .kgo-ms-elite .kgo-ms-tagline{color:#7C3AED}
+    .kgo-ms-flash .kgo-ms-tagline{color:#64748B}
+    .kgo-ms-swift .kgo-ms-tagline{color:#7C3AED}
     .kgo-ms-ultra .kgo-ms-tagline{color:rgba(196,181,253,.8)}
     .kgo-ms-desc{font-size:12px;line-height:1.65;margin-bottom:12px}
     .kgo-ms-flash .kgo-ms-desc,.kgo-ms-swift .kgo-ms-desc{color:#475569}
-    .kgo-ms-elite .kgo-ms-desc{color:#475569}
     .kgo-ms-ultra .kgo-ms-desc{color:rgba(196,181,253,.85)}
     .kgo-ms-list{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:5px}
     .kgo-ms-list li{font-size:11.5px;font-weight:600;padding-left:16px;position:relative}
-    .kgo-ms-flash .kgo-ms-list li,.kgo-ms-swift .kgo-ms-list li,.kgo-ms-elite .kgo-ms-list li{color:#334155}
+    .kgo-ms-flash .kgo-ms-list li,.kgo-ms-swift .kgo-ms-list li{color:#334155}
     .kgo-ms-ultra .kgo-ms-list li{color:#DDD6FE}
     .kgo-ms-list li::before{content:"✓";position:absolute;left:0;font-weight:900}
-    .kgo-ms-flash .kgo-ms-list li::before{color:#D97706}
-    .kgo-ms-swift .kgo-ms-list li::before{color:#059669}
-    .kgo-ms-elite .kgo-ms-list li::before,.kgo-ms-ultra .kgo-ms-list li::before{color:#A855F7}
+    .kgo-ms-flash .kgo-ms-list li::before{color:#7C3AED}
+    .kgo-ms-swift .kgo-ms-list li::before{color:#7C3AED}
+    .kgo-ms-ultra .kgo-ms-list li::before{color:#A855F7}
     .kgo-ms-pill{display:inline-block;font-size:10px;font-weight:800;padding:3px 10px;border-radius:99px;background:#EDE9FE;color:#5B21B6}
     .kgo-ms-pill-pop{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff}
     .kgo-ms-pill-ultra{background:rgba(168,85,247,.3);color:#DDD6FE}
@@ -1595,7 +1611,7 @@
     <div class="footer-legal">
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
-      <a href="#">Cookies</a>
+      <a href="/privacy#cookies">Cookies</a>
     </div>
   </div>
 </footer>
@@ -1651,9 +1667,9 @@
 
   <div class="kie-sugs" id="kieSugs">
     <button class="kie-sug" onclick="sendKieQ('How do I create a resume?')">Create a resume</button>
-    <button class="kie-sug" onclick="sendKieQ('Why won\'t my PDF download?')">PDF won't download</button>
-    <button class="kie-sug" onclick="sendKieQ('How does KIE AI work?')">How KIE AI works</button>
-    <button class="kie-sug" onclick="sendKieQ('Which template should I use?')">Pick a template</button>
+    <button class="kie-sug" onclick="sendKieQ('What does each plan include?')">Compare plans</button>
+    <button class="kie-sug" onclick="sendKieQ('How does Gmail Intelligence work?')">Gmail Intelligence</button>
+    <button class="kie-sug" onclick="sendKieQ('How do I find and apply to jobs?')">Find a job</button>
   </div>
 
   <div class="kie-input-row">
@@ -1679,11 +1695,10 @@
     measurementId: "G-X6VG3MVQ96"
   };
 
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const db   = firebase.firestore();
-  const auth = firebase.auth();
+  const fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+  const db    = firebase.firestore(fbApp, 'default');
+  const auth  = firebase.auth(fbApp);
 
-  // ── SUBMIT REQUEST ──
   // ── SUBMIT REQUEST ──
   function genTicketId() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1726,12 +1741,17 @@
       if (!auth.currentUser) {
         try { await auth.signInAnonymously(); } catch(authErr) { /* anonymous auth disabled — attempt write regardless */ }
       }
-      await db.collection('support_requests').doc(ticketId).set({
+      const writePromise = db.collection('support_requests').doc(ticketId).set({
         ticketId, name, email, category, subject, message,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         status: 'pending',
         source: 'support_page'
       });
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 12000)
+      );
+      await Promise.race([writePromise, timeout]);
+
       _lastTicketId = ticketId;
       document.getElementById('successTicketId').textContent = ticketId;
       document.getElementById('requestForm').style.display = 'none';
@@ -1739,7 +1759,9 @@
     } catch(e) {
       btn.disabled = false;
       btn.innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Request';
-      errEl.textContent = 'Something went wrong. Please try emailing support@kievora.app directly.';
+      errEl.textContent = e && e.message === 'timeout'
+        ? "This is taking longer than it should. Please try again, or email support@kievora.app directly."
+        : 'Something went wrong. Please try emailing support@kievora.app directly.';
       errEl.classList.add('show');
     }
   }
@@ -2225,10 +2247,18 @@
         body: JSON.stringify({ messages: kieHist })
       });
       const data = await res.json();
-      const reply = data.reply || "Sorry, I couldn't get a response right now. Try emailing support@kievora.app";
+      let reply = data.reply || "Sorry, I couldn't get a response right now. Try emailing support@kievora.app";
+
+      let followUps = [];
+      const sugMatch = reply.match(/<<SUGGESTIONS:\s*(.+?)\s*>>\s*$/i);
+      if (sugMatch) {
+        followUps = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
+        reply = reply.slice(0, sugMatch.index).trim();
+      }
+
       kieHist.push({ role:'assistant', content:reply });
       setKieTyping(false);
-      appendKieMsg('ai', reply);
+      appendKieMsg('ai', reply, followUps);
     } catch(e) {
       setKieTyping(false);
       appendKieMsg('ai', "I'm having trouble connecting right now. Please try again, or email support@kievora.app for help.");
@@ -2240,7 +2270,7 @@
     sendKieMsg();
   }
 
-  function appendKieMsg(role, text) {
+  function appendKieMsg(role, text, followUps) {
     const msgs = document.getElementById('kieMsgs');
     const typing = document.getElementById('kieTyping');
     const w = document.createElement('div');
@@ -2252,6 +2282,16 @@
       w.innerHTML = `<div class="kie-msg-av user">U</div><div class="kie-bubble user">${formatted}</div>`;
     }
     msgs.insertBefore(w, typing);
+
+    if (role === 'ai' && Array.isArray(followUps) && followUps.length) {
+      const fw = document.createElement('div');
+      fw.className = 'kie-followups';
+      fw.innerHTML = followUps.map(q =>
+        `<button type="button" class="kie-fup" onclick="sendKieQ('${q.replace(/'/g,"\\'")}')">${q}</button>`
+      ).join('');
+      msgs.insertBefore(fw, typing);
+    }
+
     msgs.scrollTop = msgs.scrollHeight;
   }
 
@@ -2284,8 +2324,11 @@
     el.classList.add('open');
     document.body.style.overflow = 'hidden';
     el.querySelector('.kgo-body').scrollTop = 0;
-    if (!kgoSwipers.length) initKgoSwipers();
-    // cancel any running loop, then start fresh
+    if (!kgoSwipers.length) {
+      try { initKgoSwipers(); }
+      catch(e) { console.error('KIE guide: swiper init failed (continuing anyway):', e); }
+    }
+    // cancel any running loop, then start fresh — always runs, even if swipers above failed
     kgoTwActive = false;
     if (kgoTwTimer) { clearTimeout(kgoTwTimer); kgoTwTimer = null; }
     setTimeout(startKgoTypewriter, 0);
@@ -2305,20 +2348,24 @@
       { id: 'swiper3', prev: 'prev3', next: 'next3', perView: 1.15 },
     ];
     configs.forEach(({ id, prev, next, perView }) => {
-      const sw = new Swiper('#' + id, {
-        slidesPerView: perView,
-        spaceBetween: 12,
-        grabCursor: true,
-        freeMode: true,
-        navigation: { prevEl: '#' + prev, nextEl: '#' + next },
-        pagination: { el: '#' + id + ' .swiper-pagination', clickable: true, dynamicBullets: true },
-        breakpoints: {
-          480: { slidesPerView: 2.1 },
-          700: { slidesPerView: 2.8 },
-          900: { slidesPerView: 3.2 },
-        }
-      });
-      kgoSwipers.push(sw);
+      try {
+        const sw = new Swiper('#' + id, {
+          slidesPerView: perView,
+          spaceBetween: 12,
+          grabCursor: true,
+          freeMode: true,
+          navigation: { prevEl: '#' + prev, nextEl: '#' + next },
+          pagination: { el: '#' + id + ' .swiper-pagination', clickable: true, dynamicBullets: true },
+          breakpoints: {
+            480: { slidesPerView: 2.1 },
+            700: { slidesPerView: 2.8 },
+            900: { slidesPerView: 3.2 },
+          }
+        });
+        kgoSwipers.push(sw);
+      } catch(e) {
+        console.error('KIE guide: could not init swiper #' + id, e);
+      }
     });
   }
 
