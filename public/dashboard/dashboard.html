@@ -205,7 +205,6 @@
 
         <!-- LEFT: text + buttons -->
         <div class="hero-left">
-          <div class="hero-greet">Dashboard</div>
           <div class="hero-title">Build resumes that<br>get you hired</div>
           <div class="hero-sub">Create standout resumes, get expert tips,<br>and unlock new opportunities.</div>
           <div class="hero-btns">
@@ -308,15 +307,15 @@
     </div>
 
     <!-- Recent Resumes — after Quick Actions -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:9px">
-        <div style="width:26px;height:26px;background:var(--txt);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.25)">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
-        <span style="font-size:15px;font-weight:700;color:var(--txt);letter-spacing:-.01em">Recent Resumes</span>
+        <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px">Recent Resumes</span>
         <span class="sh-badge" id="rCount" style="font-size:10px;padding:2px 8px">0</span>
       </div>
-      <a id="shAllLink" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--txt);text-decoration:none;background:var(--card);border:1px solid var(--border);padding:6px 13px;border-radius:99px;transition:all .15s" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='var(--card)'">View all<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+      <a id="shAllLink" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px;transition:all .15s" onmouseover="this.style.background='rgba(124,58,237,.14)'" onmouseout="this.style.background='rgba(124,58,237,.08)'">View all<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
     </div>
     <div class="rswiper-outer" style="margin-bottom:0">
       <div id="rGrid" class="rswiper-track"></div>
@@ -327,15 +326,15 @@
     <div class="jobs-home-section" id="jobsHomeSection" style="display:none">
       <div class="sh" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div class="sh-title" style="margin-bottom:3px">Jobs for You</div>
+          <div class="sh-title" style="margin-bottom:3px">💼 Jobs for You</div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <div id="jobsHomeProfPill" style="font-size:11px;color:var(--p);font-weight:600;background:var(--p-tint);border:1px solid var(--p-tint-border);border-radius:99px;padding:2px 10px;display:inline-block"></div>
-            <a href="/find-jobs" style="font-size:11px;color:var(--mute);font-weight:600;text-decoration:none">Change →</a>
+            <div id="jobsHomeProfPill" style="font-size:11px;color:#7c3aed;font-weight:700;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:99px;padding:2px 10px;display:inline-block"></div>
+            <a href="/find-jobs" style="font-size:11px;color:#9ca3af;font-weight:600;text-decoration:none">Change →</a>
           </div>
         </div>
-        <a href="/find-jobs" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--txt);text-decoration:none;background:var(--card);border:1px solid var(--border);padding:6px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        <a href="/find-jobs" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
       </div>
-      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x" id="jobsHomeTrack">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:none" id="jobsHomeTrack">
         <div style="display:flex;gap:12px;width:max-content" id="jobsHomeCards">
           <!-- populated by JS -->
         </div>
@@ -344,15 +343,15 @@
 
     <!-- no-profession CTA -->
     <div class="jobs-home-cta" id="jobsHomeCta" style="display:none">
-      <div style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--rad);padding:16px 18px;margin-bottom:20px;box-shadow:var(--shadow-xs)">
-        <div style="width:40px;height:40px;background:var(--txt);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <div style="display:flex;align-items:center;gap:14px;background:#faf5ff;border:1.5px dashed rgba(124,58,237,.25);border-radius:16px;padding:16px 18px;margin-bottom:20px">
+        <div style="width:42px;height:42px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:2px">Find jobs matching your resume</div>
-          <div style="font-size:12px;color:var(--sub)">Create or upload a resume and we'll show you live job offers matched to your profession.</div>
+          <div style="font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:2px">Find jobs matching your resume</div>
+          <div style="font-size:12px;color:#6b7280">Create or upload a resume and we'll show you live job offers matched to your profession.</div>
         </div>
-        <a href="/find-jobs" style="flex-shrink:0;background:var(--txt);color:#fff;border-radius:99px;padding:9px 15px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">Find Jobs</a>
+        <a href="/find-jobs" style="flex-shrink:0;background:var(--g);color:#fff;border-radius:99px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">Find Jobs</a>
       </div>
     </div>
 

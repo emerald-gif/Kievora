@@ -3756,7 +3756,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         if (!changedKeys.length && missingFields.length) {
           appendKMsg('ai', `I'd love to add your ${missingFields.join(' and ')}, but I'll need the real details first — school name, degree, dates, that kind of thing. Share those and I'll update it right away. 🙏`, true);
           _kieGenerating = false; _kieStopTyping = false;
-          const inp2 = g('kieInp'); if (inp2) { inp2.disabled = false; inp2.focus(); }
+          const inp2 = g('kieInp'); if (inp2) { inp2.disabled = false; }
           setKieSendMode('send');
           return;
         }
@@ -3962,7 +3962,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       } finally {
         _kieGenerating = false;
         _kieStopTyping = false;
-        const inp2 = g('kieInp'); if (inp2) { inp2.disabled = false; inp2.focus(); }
+        const inp2 = g('kieInp'); if (inp2) { inp2.disabled = false; }
         setKieSendMode('send');
       }
     }
@@ -4213,9 +4213,17 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
     }
 
     function detectTemplateInMsg(msg) {
-      return (window.TPLS_REF || []).find(t =>
-        msg.toLowerCase().includes(t.name.toLowerCase()) || msg.toLowerCase().includes(t.id)
-      );
+      const lower = msg.toLowerCase();
+      const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Word-boundary match only — a plain .includes() here matches "ink"
+      // inside "think"/"LinkedIn" and "nova" inside "innovative"/"innovation",
+      // silently hijacking completely unrelated messages into a template
+      // switch. Short template names/ids must only match as a whole word.
+      return (window.TPLS_REF || []).find(t => {
+        const name = esc(t.name.toLowerCase());
+        const id   = esc(t.id.toLowerCase());
+        return new RegExp(`\\b${name}\\b`).test(lower) || new RegExp(`\\b${id}\\b`).test(lower);
+      });
     }
 
     // ── INTENT SAFETY-NET — fast server-side classification fallback ────────
@@ -4674,7 +4682,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // Restore UI
       _kieGenerating = false;
       g('kieInp').disabled = false;
-      g('kieInp').focus();
       setKieSendMode('send');
     }
 
@@ -5200,7 +5207,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           maybeShowKieSuggestions(text, w);
           _kieGenerating = false;
           g('kieInp').disabled = false;
-          g('kieInp').focus();
           setKieSendMode('send');
           scrollKie();
           if (typeof onDone === 'function') onDone();
