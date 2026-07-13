@@ -193,7 +193,12 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
     window.location.href = needsVerification(u) ? '/signup?verify=1' : redirectTo;
   }
 
-  onAuthStateChanged(auth,u=>{ if(u) routeAfterAuth(u); });
+  // Passive page-load check: only skip the login page if this is a fully
+  // verified, ready-to-go session. An unverified stale session is left alone
+  // here on purpose — otherwise someone who abandoned OTP verification would
+  // get bounced straight back to it every time they so much as glance at the
+  // login page, with no way to just look around or try something else.
+  onAuthStateChanged(auth, u => { if (u && !needsVerification(u)) window.location.href = redirectTo; });
 
   document.addEventListener('DOMContentLoaded',()=>{
     const err=document.getElementById('err'), btn=document.getElementById('sbtn'), pwd=document.getElementById('password');

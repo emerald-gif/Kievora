@@ -144,7 +144,7 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
   import { getAuth, createUserWithEmailAndPassword, updateProfile, signInWithPopup,
-           GoogleAuthProvider, onAuthStateChanged, getAdditionalUserInfo }
+           GoogleAuthProvider, onAuthStateChanged, getAdditionalUserInfo, signOut }
     from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 
 
@@ -179,17 +179,22 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
   }
 
   let signingUp = false; // prevents onAuthStateChanged from redirecting mid-signup
+  const explicitVerifyIntent = new URLSearchParams(location.search).get('verify') === '1';
   onAuthStateChanged(auth, u => {
     if (!u || signingUp) return;
-    // Covers two cases: someone lands here via /signup?verify=1 after logging
-    // in with an unverified password account, and someone who abandoned the
-    // OTP step mid-signup and came back — both get the OTP screen again
-    // instead of ever reaching the dashboard unverified.
-    if (needsVerification(u)) {
+    // Only force the OTP screen when there's an explicit signal that's why
+    // we're here (login.html sends ?verify=1 after a real login attempt with
+    // an unverified account). A bare visit to /signup with a stale unverified
+    // session in the background should NOT trap the person here — they might
+    // just want to look around, or sign up fresh with a different email
+    // (which naturally supersedes the old unverified session anyway).
+    if (explicitVerifyIntent && needsVerification(u)) {
       startOtpVerification(u, u.displayName || 'there', u.email || '');
-    } else {
+    } else if (!needsVerification(u)) {
       window.location.href = redirectTo;
     }
+    // else: unverified session, no explicit intent — leave the normal signup
+    // form visible and don't touch anything.
   });
 
   async function saveUserToFirestore(user, name, email, username) {
@@ -375,6 +380,13 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
         }
       }, 1000);
     };
+
+    const signOutLink = document.getElementById('otpSignOutLink');
+    signOutLink.onclick = async (e) => {
+      e.preventDefault();
+      try { await signOut(auth); } catch {}
+      window.location.href = '/signup';
+    };
   }
 
   async function sendOtpRequest(user, name) {
@@ -543,6 +555,9 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
       <button id="otpVerifyBtn" class="sbtn" type="button">Verify &amp; Continue →</button>
       <p class="ft" style="margin-top:14px">
         Didn't get it? <a href="#" id="otpResendLink" style="color:var(--p);font-weight:700;text-decoration:none">Resend code</a>
+      </p>
+      <p class="ft" style="margin-top:6px">
+        Wrong email or not you? <a href="#" id="otpSignOutLink" style="color:#9CA3AF;text-decoration:underline">Sign out and start over</a>
       </p>
     </div>
 
