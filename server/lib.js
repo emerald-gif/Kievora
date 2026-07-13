@@ -681,6 +681,46 @@ function extractSessionFacts(messages) {
   return [...facts];
 }
 
+// ─── Brevo Signup OTP Email (templateId 2) ─────────────────────────────────────
+// Used only for email/password signups — Google signups already come with a
+// verified email from Firebase, so they skip this entirely.
+async function sendOtpEmail(email, name, otp) {
+  const brevoKey = process.env.BREVO_API_KEY;
+  if (!brevoKey) {
+    console.warn('⚠️  BREVO_API_KEY not set — skipping OTP email for', email);
+    return false;
+  }
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': brevoKey,
+      },
+      body: JSON.stringify({
+        sender:     { email: 'support@kievora.com', name: 'Kievora' },
+        to:         [{ email, name }],
+        templateId: 2,
+        params:     { name, otp },
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error('❌ Brevo OTP email failed:', res.status, errBody);
+      return false;
+    }
+    console.log(`✅ OTP email sent → ${email}`);
+    db.collection('emailLogs').add({
+      email, name, type: 'otp', success: true,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+    return true;
+  } catch (err) {
+    console.error('❌ Brevo sendOtpEmail error:', err.message);
+    return false;
+  }
+}
+
 // ─── Brevo Welcome Email ───────────────────────────────────────────────────────
 async function sendWelcomeEmail(email, name) {
   const brevoKey = process.env.BREVO_API_KEY;
@@ -1211,7 +1251,7 @@ module.exports = {
   UPGRADE_MESSAGES, TOPUP_MESSAGES,
   callKieAI, callKieAIStream, fetchWithRetry,
   performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
-  sendWelcomeEmail, sendWeeklyDigest,
+  sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest,
   classifyCareerEmail, extractEmailEntities, extractInterviewDateTime, normaliseStr, isSameApplication,
   syncUserGmail, buildApplicationList, generateInsights, computeNextAction, attachStaleFlags, computePipelineStats,
   getWeekKey, recordPipelineTrend, getTrendComparison, detectGhostingPattern, buildKieBrainBlock,

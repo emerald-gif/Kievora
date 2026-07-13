@@ -12,7 +12,7 @@ const crypto  = require('crypto'); // Paystack webhook signature verification
 const {
   admin, db, authenticate, upload, cloudinary,
   callKieAI, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
-  KIE_MODELS, USERS, sendWelcomeEmail, applyPaystackMetadata, PLANS,
+  KIE_MODELS, USERS, sendWelcomeEmail, sendOtpEmail, applyPaystackMetadata, PLANS,
   serviceAccount,
 } = require('./lib');
 
@@ -166,6 +166,72 @@ app.post('/api/register-user', authenticate, async (req, res) => {
   } catch (err) {
     console.error('POST /api/register-user ERROR:', err.message);
     res.status(500).json({ error: 'Failed to register user: ' + err.message });
+  }
+});
+
+// ─── Email/Password Signup Verification (OTP via Brevo templateId 2) ──────────
+// Google signups already arrive with emailVerified:true from Firebase (Google
+// already verified that email), so this whole flow is skipped for them —
+// signup.html only calls these for the email/password path.
+const OTP_TTL_MS      = 10 * 60 * 1000; // 10 minutes
+const OTP_MAX_ATTEMPTS = 5;
+
+// ─── POST /api/send-otp — generates + emails a 6-digit code ───────────────────
+app.post('/api/send-otp', authenticate, async (req, res) => {
+  const uid   = req.user.uid;
+  const email = req.user.email || req.body.email;
+  const name  = req.body.name || 'there';
+  if (!email) return res.status(400).json({ error: 'No email on this account.' });
+  try {
+    const otp = String(crypto.randomInt(100000, 1000000)); // 6 digits, no leading-zero bias issue
+    await db.collection('otps').doc(uid).set({
+      code:      otp,
+      email,
+      attempts:  0,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      expiresAt: Date.now() + OTP_TTL_MS,
+    });
+    const sent = await sendOtpEmail(email, name, otp);
+    if (!sent) return res.status(502).json({ error: 'Could not send verification email. Try again in a moment.' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('POST /api/send-otp ERROR:', err.message);
+    res.status(500).json({ error: 'Failed to send verification code: ' + err.message });
+  }
+});
+
+// ─── POST /api/verify-otp — checks the code, marks the account verified ───────
+app.post('/api/verify-otp', authenticate, async (req, res) => {
+  const uid  = req.user.uid;
+  const code = String(req.body.code || '').trim();
+  if (!/^\d{6}$/.test(code)) return res.status(400).json({ error: 'Enter the 6-digit code.' });
+  try {
+    const ref  = db.collection('otps').doc(uid);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(400).json({ error: 'No verification code found. Request a new one.' });
+
+    const data = snap.data();
+    if (Date.now() > data.expiresAt) {
+      await ref.delete();
+      return res.status(400).json({ error: 'Code expired. Request a new one.' });
+    }
+    if (data.attempts >= OTP_MAX_ATTEMPTS) {
+      await ref.delete();
+      return res.status(429).json({ error: 'Too many incorrect attempts. Request a new code.' });
+    }
+    if (code !== data.code) {
+      await ref.update({ attempts: admin.firestore.FieldValue.increment(1) });
+      return res.status(400).json({ error: 'Incorrect code. Please try again.' });
+    }
+
+    // Correct — mark the real Firebase Auth record as verified. This is what
+    // account.html (and everything else) reads to decide "Email Verified".
+    await admin.auth().updateUser(uid, { emailVerified: true });
+    await ref.delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('POST /api/verify-otp ERROR:', err.message);
+    res.status(500).json({ error: 'Failed to verify code: ' + err.message });
   }
 });
 
