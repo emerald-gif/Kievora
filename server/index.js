@@ -161,7 +161,15 @@ app.post('/api/register-user', authenticate, async (req, res) => {
       createdAt:   admin.firestore.FieldValue.serverTimestamp(),
     });
     console.log(`👤 User doc created for ${email}${cleanUn ? ' (@' + cleanUn + ')' : ''}`);
-    await sendWelcomeEmail(email || req.user.email, name || 'there');
+    // Google signups arrive already emailVerified:true — welcome them right away.
+    // Password signups aren't verified yet at this point (OTP hasn't run), so
+    // hold the welcome email until /api/verify-otp succeeds instead. Firing
+    // both emails back-to-back at signup was likely why the welcome email
+    // wasn't reliably showing up for password signups — most ESPs are more
+    // conservative with rapid multi-sends to a brand-new address.
+    if (req.user.email_verified) {
+      await sendWelcomeEmail(email || req.user.email, name || 'there');
+    }
     res.json({ success: true });
   } catch (err) {
     console.error('POST /api/register-user ERROR:', err.message);
@@ -228,6 +236,17 @@ app.post('/api/verify-otp', authenticate, async (req, res) => {
     // account.html (and everything else) reads to decide "Email Verified".
     await admin.auth().updateUser(uid, { emailVerified: true });
     await ref.delete();
+
+    // Now that they've actually proven they own this inbox, send the welcome
+    // email (held back at registration for password accounts — see register-user).
+    try {
+      const userSnap = await db.collection(USERS).doc(uid).get();
+      const userName = userSnap.exists ? (userSnap.data().name || 'there') : 'there';
+      await sendWelcomeEmail(data.email, userName);
+    } catch (e) {
+      console.warn('Could not send welcome email after OTP verify:', e.message);
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error('POST /api/verify-otp ERROR:', err.message);
