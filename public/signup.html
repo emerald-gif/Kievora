@@ -171,8 +171,26 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
   // so the old "welcome=1" redirect helper is no longer needed.
   const redirectTo = getRedirect(); // used by onAuthStateChanged (existing user re-login edge case)
 
+  // Only password accounts ever need OTP verification — Google accounts are
+  // always emailVerified:true already, so this never triggers for them.
+  function needsVerification(u) {
+    const isPasswordAccount = u.providerData?.some(p => p.providerId === 'password');
+    return isPasswordAccount && !u.emailVerified;
+  }
+
   let signingUp = false; // prevents onAuthStateChanged from redirecting mid-signup
-  onAuthStateChanged(auth,u=>{ if(u && !signingUp) window.location.href=redirectTo; });
+  onAuthStateChanged(auth, u => {
+    if (!u || signingUp) return;
+    // Covers two cases: someone lands here via /signup?verify=1 after logging
+    // in with an unverified password account, and someone who abandoned the
+    // OTP step mid-signup and came back — both get the OTP screen again
+    // instead of ever reaching the dashboard unverified.
+    if (needsVerification(u)) {
+      startOtpVerification(u, u.displayName || 'there', u.email || '');
+    } else {
+      window.location.href = redirectTo;
+    }
+  });
 
   async function saveUserToFirestore(user, name, email, username) {
     try {
@@ -273,13 +291,110 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
         await updateProfile(cred.user,{displayName:name});
         await saveUserToFirestore(cred.user, name, email, username);
         document.getElementById('form').style.display='none';
-        succ.textContent='🎉 Account created! Setting up your profile…';
+        succ.textContent='🎉 Account created! Let\'s verify your email…';
         succ.style.display='block';
-        setTimeout(()=>window.location.href='/onboarding', 1400);
+        await startOtpVerification(cred.user, name, email);
       }
       catch(e){ err.textContent=fe(e.code); err.style.display='block'; btn.disabled=false; btn.textContent='Create Free Account →'; signingUp=false; }
     };
   });
+
+  // ── Email/password OTP verification step ──
+  // Google signups never call this — they already arrive with a Firebase-
+  // verified email, so they go straight to /onboarding (see googleBtn handler).
+  async function startOtpVerification(user, name, email) {
+    document.getElementById('form').style.display='none';
+    document.getElementById('googleBtn').style.display='none';
+    document.getElementById('signupDivider').style.display='none';
+    document.getElementById('succ').style.display='none';
+    document.getElementById('signupFooterLinks').style.display='none';
+    document.getElementById('signupTerms').style.display='none';
+    document.getElementById('otpEmailLabel').textContent = email;
+    document.getElementById('otpStep').style.display='block';
+
+    await sendOtpRequest(user, name);
+
+    const verifyBtn  = document.getElementById('otpVerifyBtn');
+    const codeInput  = document.getElementById('otpCode');
+    const otpErr     = document.getElementById('otpErr');
+    const resendLink = document.getElementById('otpResendLink');
+
+    codeInput.addEventListener('input', () => {
+      codeInput.value = codeInput.value.replace(/\D/g,'').slice(0,6);
+    });
+
+    verifyBtn.onclick = async () => {
+      const code = codeInput.value.trim();
+      otpErr.style.display='none';
+      if (!/^\d{6}$/.test(code)) {
+        otpErr.textContent = 'Enter the 6-digit code sent to your email.';
+        otpErr.style.display='block';
+        return;
+      }
+      verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying…';
+      try {
+        const idToken = await user.getIdToken();
+        const res = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+          body: JSON.stringify({ code }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Verification failed.');
+        // emailVerified only updates on a fresh token — force a refresh so the
+        // rest of the app (account page, etc.) sees the correct status right away
+        await user.getIdToken(true);
+        document.getElementById('succ').textContent = '✓ Email verified! Setting up your profile…';
+        document.getElementById('succ').style.display='block';
+        setTimeout(()=>window.location.href='/onboarding', 1000);
+      } catch(e) {
+        otpErr.textContent = e.message;
+        otpErr.style.display='block';
+        verifyBtn.disabled = false; verifyBtn.textContent = 'Verify & Continue →';
+      }
+    };
+
+    let resendCooldown = false;
+    resendLink.onclick = async (e) => {
+      e.preventDefault();
+      if (resendCooldown) return;
+      resendCooldown = true;
+      const original = resendLink.textContent;
+      resendLink.textContent = 'Sending…';
+      await sendOtpRequest(user, name);
+      let secs = 30;
+      resendLink.textContent = `Resent ✓ — you can resend again in ${secs}s`;
+      const iv = setInterval(() => {
+        secs--;
+        if (secs <= 0) {
+          clearInterval(iv);
+          resendLink.textContent = original;
+          resendCooldown = false;
+        } else {
+          resendLink.textContent = `Resent ✓ — you can resend again in ${secs}s`;
+        }
+      }, 1000);
+    };
+  }
+
+  async function sendOtpRequest(user, name) {
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(()=>({}));
+        const otpErr = document.getElementById('otpErr');
+        otpErr.textContent = data.error || 'Could not send the code. Tap "Resend code" to try again.';
+        otpErr.style.display='block';
+      }
+    } catch(e) {
+      console.warn('sendOtpRequest:', e.message);
+    }
+  }
 
   function fe(c){
     return({
@@ -364,7 +479,7 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
       Continue with Google
     </button>
 
-    <div class="divider"><hr/><span>or sign up with email</span><hr/></div>
+    <div class="divider" id="signupDivider"><hr/><span>or sign up with email</span><hr/></div>
 
     <div id="err" class="err"></div>
     <div id="succ" class="succ"></div>
@@ -411,8 +526,28 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
       <button id="sbtn" class="sbtn" type="submit">Create Free Account →</button>
     </form>
 
-    <p class="ft">Already have an account? <a href="/login">Sign in here</a></p>
-    <p class="terms">By signing up you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</p>
+    <!-- OTP verification step — shown only after email/password signup.
+         Google signups skip this entirely (already verified by Google). -->
+    <div id="otpStep" style="display:none;width:100%">
+      <p class="sub" style="margin-bottom:18px">
+        We sent a 6-digit code to <strong id="otpEmailLabel" style="color:var(--txt)"></strong>. Enter it below to verify your account.
+      </p>
+      <div id="otpErr" class="err"></div>
+      <div class="field">
+        <label for="otpCode">Verification code</label>
+        <div class="iw">
+          <span class="ii"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <input type="text" id="otpCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="letter-spacing:6px;font-weight:700;font-size:18px"/>
+        </div>
+      </div>
+      <button id="otpVerifyBtn" class="sbtn" type="button">Verify &amp; Continue →</button>
+      <p class="ft" style="margin-top:14px">
+        Didn't get it? <a href="#" id="otpResendLink" style="color:var(--p);font-weight:700;text-decoration:none">Resend code</a>
+      </p>
+    </div>
+
+    <p class="ft" id="signupFooterLinks">Already have an account? <a href="/login">Sign in here</a></p>
+    <p class="terms" id="signupTerms">By signing up you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</p>
   </div>
 
 </div>

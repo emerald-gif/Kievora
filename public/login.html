@@ -183,7 +183,17 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
   }
   const redirectTo = getRedirect();
 
-  onAuthStateChanged(auth,u=>{ if(u) window.location.href=redirectTo; });
+  // Only password accounts ever need OTP verification — Google accounts are
+  // always emailVerified:true already, so this never triggers for them.
+  function needsVerification(u) {
+    const isPasswordAccount = u.providerData?.some(p => p.providerId === 'password');
+    return isPasswordAccount && !u.emailVerified;
+  }
+  function routeAfterAuth(u) {
+    window.location.href = needsVerification(u) ? '/signup?verify=1' : redirectTo;
+  }
+
+  onAuthStateChanged(auth,u=>{ if(u) routeAfterAuth(u); });
 
   document.addEventListener('DOMContentLoaded',()=>{
     const err=document.getElementById('err'), btn=document.getElementById('sbtn'), pwd=document.getElementById('password');
@@ -201,7 +211,7 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
           err.style.display = 'block';
           return;
         }
-        window.location.href=redirectTo;
+        routeAfterAuth(result.user);
       }
       catch(e){ err.textContent=fe(e.code); err.style.display='block'; }
     };
@@ -214,8 +224,8 @@ input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
       e.preventDefault(); err.style.display='none';
       btn.disabled=true; btn.textContent='Signing in…';
       try{
-        await signInWithEmailAndPassword(auth,document.getElementById('email').value.trim(),pwd.value);
-        window.location.href=redirectTo;
+        const cred = await signInWithEmailAndPassword(auth,document.getElementById('email').value.trim(),pwd.value);
+        routeAfterAuth(cred.user);
       }
       catch(e){ err.textContent=fe(e.code); err.style.display='block'; btn.disabled=false; btn.textContent='Sign In'; }
     };
