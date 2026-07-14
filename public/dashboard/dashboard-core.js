@@ -2477,13 +2477,16 @@
     function setupKiePicker() {
       const picker  = g('kieResumePicker');
       const pillsEl = g('kieResumePills');
+      const wrap    = g('kieTplWrap');
       if (!picker || !pillsEl) return;
 
       pillsEl.innerHTML = '';
+      closeKieResumeDropdown();
 
       if (!resumes || resumes.length === 0) {
-        picker.style.display = 'none';
+        if (wrap) wrap.classList.remove('show');
         kieResumeContext = 'NO_RESUME_YET';
+        updateKieTplIndicator();
         return;
       }
 
@@ -2502,12 +2505,48 @@
         pillsEl.appendChild(pill);
       });
 
-      picker.style.display = 'flex';
+      if (wrap) wrap.classList.add('show');
       // If no resume is selected, set unselected context; if one is selected keep its context
       if (!kieSelectedResume) {
         kieResumeContext = 'HAS_RESUMES_UNSELECTED';
       }
+      updateKieTplIndicator();
     }
+
+    // Icon-triggered dropdown for the picker above (icon replaces the old always-on bar)
+    window.toggleKieResumeDropdown = function(e) {
+      if (e) e.stopPropagation();
+      const panel = g('kieResumePicker');
+      const btn   = g('kieTemplateBtn');
+      if (!panel) return;
+      const opening = !panel.classList.contains('open');
+      panel.classList.toggle('open', opening);
+      if (btn) btn.classList.toggle('open', opening);
+    };
+
+    function closeKieResumeDropdown() {
+      const panel = g('kieResumePicker');
+      const btn   = g('kieTemplateBtn');
+      if (panel) panel.classList.remove('open');
+      if (btn) btn.classList.remove('open');
+    }
+
+    // Small dot on the template icon so it's clear at a glance whether KIE is
+    // currently coaching on a resume, since that's no longer visible inline.
+    function updateKieTplIndicator() {
+      const dot = g('kieTplDot');
+      if (!dot) return;
+      const hasActive = !!kieSelectedResume || (!!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED');
+      dot.classList.toggle('on', hasActive);
+    }
+
+    // Close the dropdown on outside tap (same pattern as closeCtxMenu in dashboard-kie-sidebar.js)
+    document.addEventListener('click', (e) => {
+      const panel = g('kieResumePicker');
+      if (panel && panel.classList.contains('open') && !e.target.closest('#kieTplWrap')) {
+        closeKieResumeDropdown();
+      }
+    });
 
     // Renders a small × dismiss button inside an active pill
     function renderKieResumeDismiss(pill, index) {
@@ -2542,6 +2581,7 @@
       }
       const attachBtn = g('kieAttachBtn');
       if (attachBtn) attachBtn.classList.remove('has-resume');
+      updateKieTplIndicator();
     };
 
     window.selectKieResume = function(index) {
@@ -2574,6 +2614,8 @@
       if (_kieJobTitle) setJobProfession(_kieJobTitle, 'kie');
       const btn = g('kieAttachBtn');
       if (btn) btn.classList.add('has-resume');
+      updateKieTplIndicator();
+      closeKieResumeDropdown();
 
       const name = r.resumeName || r.resumeData?.fullName || 'your resume';
       sendKieRecommendation(name);
@@ -2893,7 +2935,9 @@
             xBtn.onclick = e => { e.stopPropagation(); dismissKieResume(); };
             uPill.appendChild(xBtn);
           }
-          picker.style.display = 'flex';
+          const wrap = g('kieTplWrap');
+          if (wrap) wrap.classList.add('show');
+          updateKieTplIndicator();
         }
 
         const grade = analysis.grade || '—';
@@ -6427,6 +6471,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         kieSelectedResume = null;
         const attachBtn = g('kieAttachBtn');
         if (attachBtn) attachBtn.classList.remove('has-resume');
+        updateKieTplIndicator();
+        closeKieResumeDropdown();
       };
 
       // ── KIE SWIPER ──────────────────────────────────────────────────────────
