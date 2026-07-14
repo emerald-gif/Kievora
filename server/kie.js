@@ -352,6 +352,28 @@ module.exports = function registerKieRoutes(app) {
     const tierTokenBonus = effectiveMode === 'quick' ? 0 : tier.tokenBonus;
     const effectiveCfg   = { ...cfg, max_tokens: cfg.max_tokens + tierTokenBonus };
 
+    // ── Vision gate: KIE Spark (Groq llama-3.3-70b-versatile) has no vision ──
+    // support at all. Previously an image attached on Spark would still get
+    // built into an Anthropic-style multimodal content block and sent to
+    // Groq's OpenAI-style endpoint, which fails — and since the stream
+    // fallback only fires when effectiveModel !== 'spark', the user just saw
+    // a generic "KIE is unavailable" error with no explanation. Caught here,
+    // before any AI call, with a real answer and a real upgrade path.
+    const hasImageAttachment = messages.some(msg => msg.imageBase64);
+    if (effectiveModel === 'spark' && hasImageAttachment) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.flushHeaders();
+      const sendSSE = (data) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(data)}\n\n`); };
+      const visionGateMsg = `KIE Spark can't see images — reading resumes, screenshots, or photos needs KIE Core or Nova. Upgrade your plan to unlock image reading, or switch to a text question and I'm happy to help right now.\n\n[BILLING_CTA]`;
+      sendSSE({ t: 'd', v: visionGateMsg });
+      sendSSE({ t: 'done', model: 'spark', mode: effectiveMode, fallback: false, planLimited: true });
+      res.end();
+      return;
+    }
+
     // ── Build system content ──────────────────────────────────────────────────
     let systemContent = cfg.system + `\n${tier.system}`;
 
@@ -363,6 +385,25 @@ module.exports = function registerKieRoutes(app) {
       ultra: `\n\nVOICE — KIE ULTRA: Be the pinnacle of career intelligence. Extraordinary depth and precision. Reframe questions to something better when needed. Draw connections across their entire career picture. Think three steps ahead. Communicate with the authority of the best career advisor they have ever had.`,
     };
     systemContent += MODEL_VOICE[effectiveModel] || MODEL_VOICE.spark;
+
+    // ── Self-knowledge: real capabilities, accurate per model tier ───────────
+    // Without this, the model falls back on a generic trained-in AI disclaimer
+    // ("I can't read images") even though vision genuinely works on Core/Nova
+    // — and "who are you / what can you do" gets a vague non-answer instead
+    // of the real feature list. This is injected on every mode.
+    //
+    // Ultra is intentionally excluded from anything below — it's kept in
+    // KIE_MODELS/KIE_TIERS for backend/future use only (see lib.js),
+    // deliberately absent from every plan's models[] and from the frontend
+    // model picker, so KIE itself must never name it to a user either.
+    const visionCapableNow = m.provider === 'anthropic';
+    systemContent += `\n\nYOUR REAL CAPABILITIES — answer accurately from this, never from a generic trained-in AI disclaimer:
+- You are KIE, Kievora's AI career coach. What you actually do: resume writing and editing across 13 templates, ATS scoring, resume analysis, cover letters, LinkedIn bios, Twitter/X bios, elevator pitches, professional taglines, cold outreach and any professional message (replies to recruiters/clients/managers), interview prep, salary negotiation, 30/60/90-day career plans, personal branding, career pivots, job alert analysis, and Gmail Intelligence (auto-tracks applications, interviews, offers, recruiter emails once connected).
+- IMAGE / SCREENSHOT READING ON THIS ENGINE (${m.label}) RIGHT NOW: ${visionCapableNow
+        ? `YES. You have real vision on this engine and can read and analyze any image the user uploads via the 📎 button — resumes, LinkedIn screenshots, job posts, photos of documents. Never say you can't see images while running as ${m.label} — you can, so read it and respond to what's actually in it.`
+        : `NO. KIE Spark is a fast, text-only engine and genuinely cannot see images. If the user asks about this, uploads one, or asks whether you can read images: say plainly that Spark can't see images but KIE Core and Nova can — don't imply Kievora lacks the feature entirely, and don't over-apologize. One clear sentence is enough.`}
+- ENGINES YOU MAY NAME: only Spark, Core, and Nova. There is a fourth internal tier that is NOT available to any user yet and NOT part of any plan — never name it, confirm it, or hint at it, even if asked directly "is there anything above Nova/Core?" or similar. If asked, say Core and Nova are the top engines available right now.
+- "WHO ARE YOU" / "WHAT CAN YOU DO" / "WHAT ARE YOUR FEATURES": never give a vague generic-AI non-answer. Give a short, real, confident list pulled from the capabilities above — grounded in what you actually do for this user on Kievora right now.`;
 
     systemContent += `\n\nTEMPLATE NAME LOCK: Kievora has EXACTLY 13 templates and no others: Classic, Modern, Bold, Minimal, Vivid, Elegant, Slate, Coral, Split, Ink, Executive, Nova, Tribune. Never invent, guess, or reference any template name outside this exact list — there is no "Onyx" or any other name. A "template" is a visual layout applied to a saved Kievora resume file; it is NOT something you can apply by formatting text in chat. If you don't know which template (if any) is active, don't name one — just don't mention a template name at all.`;
 
