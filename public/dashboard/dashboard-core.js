@@ -5394,7 +5394,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // Called on every streaming frame — formats partial text including live code
     // blocks and strips internal markers ([SEND_PDF], [GMAIL_CTA]).
     function _formatKieLive(partial, isFinal) {
-      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').trim();
+      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').trim();
 
       // Detect code blocks — handles MULTIPLE blocks in the same message
       // (previously only the first was ever found; a second block's raw
@@ -5545,6 +5545,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         bBtn.onclick = function () { window.location.href = '/billing'; };
         bRow.appendChild(bBtn);
         schedule(bRow);
+        return; // don't also run [FU]/fallback chip logic on the same message
+      }
+
+      // [MODEL_CTA] — a real, tappable button that opens the model picker
+      // drawer. Sent by the server instead of [BILLING_CTA] when the vision
+      // gate fires but the user's plan already includes Core/Nova — they
+      // don't need to pay, they just need to switch off Spark.
+      if (/\[MODEL_CTA\]/i.test(text)) {
+        var mRow = document.createElement('div');
+        mRow.className = 'kie-suggest-row';
+        var mBtn = document.createElement('button');
+        mBtn.className = 'kie-gmail-cta-btn';
+        mBtn.innerHTML = 'Switch model <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>';
+        mBtn.onclick = function () { window.openModelDrawer(); };
+        mRow.appendChild(mBtn);
+        schedule(mRow);
         return; // don't also run [FU]/fallback chip logic on the same message
       }
 
