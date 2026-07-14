@@ -359,8 +359,17 @@ module.exports = function registerKieRoutes(app) {
     // fallback only fires when effectiveModel !== 'spark', the user just saw
     // a generic "KIE is unavailable" error with no explanation. Caught here,
     // before any AI call, with a real answer and a real upgrade path.
-    const hasImageAttachment = messages.some(msg => msg.imageBase64);
-    if (effectiveModel === 'spark' && hasImageAttachment) {
+    //
+    // BUG FIX: this must only look at the CURRENT message, not the whole
+    // history. `messages` carries every prior turn, and any turn where an
+    // image was ever attached keeps its imageBase64 rehydrated on every later
+    // API call (by design, so follow-up questions about that image still
+    // work) — so checking the full array meant this gate fired on every
+    // single plain-text message for the rest of the conversation, ignoring
+    // what the user actually just asked ("Why", "how much to upgrade", etc).
+    const lastMsg = messages[messages.length - 1];
+    const currentMsgHasImage = !!(lastMsg && lastMsg.imageBase64);
+    if (effectiveModel === 'spark' && currentMsgHasImage) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
@@ -617,7 +626,14 @@ module.exports = function registerKieRoutes(app) {
     };
 
     try {
-      await callKieAIStream(effectiveModel, systemContent, trimmedMessages, effectiveCfg, (token) => {
+      // Spark has no vision at all — even a stale image from an earlier turn
+      // in this same conversation (rehydrated onto its original message so
+      // follow-ups about it still work on Core/Nova) must never reach Groq's
+      // endpoint as a multimodal block, or the request errors outright. The
+      // gate above only catches a FRESH image on the current turn; this
+      // covers every other case by simply never sending images to Spark.
+      const primaryMessages = effectiveModel === 'spark' ? textOnlyMessages : trimmedMessages;
+      await callKieAIStream(effectiveModel, systemContent, primaryMessages, effectiveCfg, (token) => {
         fullReply += token;
         streamStarted = true;
         sendSSE({ t: 'd', v: token });
