@@ -5629,6 +5629,91 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       btn.title = 'Listen aloud';
     }
 
+    // ── Floating voice player (pill with play/pause, timer, progress, close) ─
+    let _kieVoiceTimer = null;
+    let _kieVoiceElapsed = 0;
+    let _kieVoiceDuration = 0;
+    let _kieVoicePaused = false;
+
+    function _kieEstimateDuration(text, rate) {
+      const words = (text.trim().match(/\S+/g) || []).length;
+      const wpm = 155 * (rate || 1); // avg TTS speaking pace, adjusted for utterance rate
+      return Math.max(3, (words / wpm) * 60);
+    }
+
+    function _kieFormatTime(sec) {
+      sec = Math.max(0, Math.round(sec));
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function _kieSetVoicePlayIcon(playing) {
+      const playBtn = document.getElementById('kieVoicePlayBtn');
+      if (!playBtn) return;
+      const pauseIco = playBtn.querySelector('.kvp-icon-pause');
+      const playIco  = playBtn.querySelector('.kvp-icon-play');
+      if (pauseIco) pauseIco.style.display = playing ? '' : 'none';
+      if (playIco)  playIco.style.display  = playing ? 'none' : '';
+      playBtn.title = playing ? 'Pause' : 'Play';
+    }
+
+    function _kieVoiceTick() {
+      if (_kieVoicePaused) return;
+      _kieVoiceElapsed += 0.25;
+      const timeEl = document.getElementById('kieVoiceTime');
+      const fillEl = document.getElementById('kieVoiceFill');
+      if (timeEl) timeEl.textContent = _kieFormatTime(_kieVoiceElapsed);
+      if (fillEl) fillEl.style.width = Math.min(100, (_kieVoiceElapsed / _kieVoiceDuration) * 100) + '%';
+      // Once estimated duration is reached but speech is still going (estimate ran short),
+      // hold the bar near-full instead of stalling visibly.
+      if (_kieVoiceElapsed >= _kieVoiceDuration && fillEl) fillEl.style.width = '100%';
+    }
+
+    function showKieVoicePlayer(duration) {
+      _kieVoiceElapsed = 0;
+      _kieVoiceDuration = duration;
+      _kieVoicePaused = false;
+      const player = document.getElementById('kieVoicePlayer');
+      const timeEl  = document.getElementById('kieVoiceTime');
+      const fillEl  = document.getElementById('kieVoiceFill');
+      if (timeEl) timeEl.textContent = '00:00';
+      if (fillEl) fillEl.style.width = '0%';
+      _kieSetVoicePlayIcon(true);
+      if (player) player.classList.add('show');
+      clearInterval(_kieVoiceTimer);
+      _kieVoiceTimer = setInterval(_kieVoiceTick, 250);
+    }
+
+    function hideKieVoicePlayer() {
+      clearInterval(_kieVoiceTimer);
+      _kieVoiceTimer = null;
+      const player = document.getElementById('kieVoicePlayer');
+      if (player) player.classList.remove('show');
+    }
+
+    window.kieVoiceToggle = function() {
+      if (!window.speechSynthesis) return;
+      if (_kieVoicePaused) {
+        window.speechSynthesis.resume();
+        _kieVoicePaused = false;
+        _kieSetVoicePlayIcon(true);
+      } else {
+        window.speechSynthesis.pause();
+        _kieVoicePaused = true;
+        _kieSetVoicePlayIcon(false);
+      }
+    };
+
+    window.kieVoiceClose = function() {
+      window.speechSynthesis?.cancel();
+      hideKieVoicePlayer();
+      if (_activeSpeakBtn) {
+        resetSpeakBtn(_activeSpeakBtn);
+        _activeSpeakBtn = null;
+      }
+    };
+
     window.kieSpeak = function(btn) {
       const bubble = btn.closest('.km-ai-body')?.querySelector('.km-bubble');
       if (!bubble) return;
@@ -5643,6 +5728,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         window.speechSynthesis.cancel();
         resetSpeakBtn(btn);
         _activeSpeakBtn = null;
+        hideKieVoicePlayer();
         setTimeout(() => window.speechSynthesis.cancel(), 0);
         return;
       }
@@ -5652,6 +5738,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         window.speechSynthesis.cancel();
         resetSpeakBtn(_activeSpeakBtn);
         _activeSpeakBtn = null;
+        hideKieVoicePlayer();
       }
 
       // Mark this btn as active
@@ -5667,11 +5754,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const voice = pickMaleVoice();
       if (voice) utter.voice = voice;
 
+      showKieVoicePlayer(_kieEstimateDuration(txt, utter.rate));
+
       utter.onend = utter.onerror = () => {
         if (_activeSpeakBtn === btn) {
           resetSpeakBtn(btn);
           _activeSpeakBtn = null;
         }
+        hideKieVoicePlayer();
       };
 
       // Defensive cancel right before speaking — on some Chrome builds the

@@ -910,6 +910,17 @@
     .km-act-btn svg{flex-shrink:0;display:block}
     .km-act-btn.act-speaking{color:#e11d48;background:#fff1f2}
 
+    /* Floating voice player — shown while KIE reads a reply aloud */
+    .kie-voice-player{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-14px);width:min(320px,calc(100% - 32px));background:#fff;border-radius:26px;box-shadow:0 10px 30px rgba(15,14,23,.18),0 2px 8px rgba(15,14,23,.06);padding:7px 10px 7px 7px;display:flex;align-items:center;gap:10px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+    .kie-voice-player.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .kvp-play{width:34px;height:34px;border-radius:50%;background:#0f0e17;border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+    .kvp-play:active{transform:scale(.92)}
+    .kvp-time{font-size:12.5px;font-weight:700;color:#0f0e17;flex-shrink:0;font-variant-numeric:tabular-nums;min-width:34px}
+    .kvp-track{flex:1;height:3px;background:#e5e3ec;border-radius:2px;position:relative;overflow:hidden}
+    .kvp-fill{position:absolute;left:0;top:0;height:100%;width:0%;background:#0f0e17;border-radius:2px}
+    .kvp-close{width:26px;height:26px;border:none;background:none;color:#9a97a8;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;border-radius:50%;transition:background .15s,color .15s}
+    .kvp-close:hover{background:#f2f1f6;color:#0f0e17}
+
     /* Typing dots */
     .kie-typing{display:none;align-self:flex-start;align-items:flex-end;gap:10px;width:100%}
     .kie-typing-av{display:none}

@@ -1392,6 +1392,19 @@
       </div>
     </div>
 
+    <!-- Voice player — floats up while KIE reads a reply aloud -->
+    <div id="kieVoicePlayer" class="kie-voice-player">
+      <button id="kieVoicePlayBtn" class="kvp-play" onclick="kieVoiceToggle()" title="Pause">
+        <svg class="kvp-icon-pause" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        <svg class="kvp-icon-play" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <span id="kieVoiceTime" class="kvp-time">00:00</span>
+      <div class="kvp-track"><div id="kieVoiceFill" class="kvp-fill"></div></div>
+      <button class="kvp-close" onclick="kieVoiceClose()" title="Stop">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M6 18L18 6"/></svg>
+      </button>
+    </div>
+
     <!-- Welcome screen (shown when no history) -->
     <div class="kie-welcome" id="kieWelcome">
 
