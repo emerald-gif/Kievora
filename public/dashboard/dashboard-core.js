@@ -205,7 +205,18 @@
         minPlan = 'paid7';
       }
 
-      g('pfdIcon').textContent  = info.icon;
+      const iconWrapEl = g('pfdIconWrap');
+      const iconEl     = g('pfdIcon');
+      if (feature === 'gmail') {
+        // Gmail gets its real logo, not the generic emoji-in-a-purple-box
+        // treatment every other locked feature uses — matches how the
+        // Gmail icon is shown everywhere else in the app.
+        if (iconWrapEl) iconWrapEl.classList.add('pfd-icon-wrap-plain');
+        if (iconEl) iconEl.innerHTML = '<img src="/gmail.jpg" alt="Gmail" style="width:56px;height:56px;object-fit:contain" onerror="this.outerHTML=\'<svg width=&quot;48&quot; height=&quot;48&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>\'">';
+      } else {
+        if (iconWrapEl) iconWrapEl.classList.remove('pfd-icon-wrap-plain');
+        if (iconEl) iconEl.textContent = info.icon;
+      }
       g('pfdTitle').textContent = info.title;
       g('pfdDesc').textContent  = info.desc;
 

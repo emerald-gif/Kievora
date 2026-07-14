@@ -1250,9 +1250,9 @@
     <div class="ksb-set-section">
       <span class="ksb-set-section-label">Integrations</span>
       <div class="ksb-set-card">
-        <button class="ksb-set-row" onclick="openGmailPanel()">
-          <div class="ksb-set-row-ico" style="background:rgba(234,67,53,.15)">
-            <img src="/gmail.jpg" alt="Gmail" style="width:18px;height:18px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.3&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"/>
+        <button class="ksb-set-row" onclick="window.kieGmailNudgeTap()">
+          <div class="ksb-set-row-ico">
+            <img src="/gmail.jpg" alt="Gmail" style="width:26px;height:26px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.3&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"/>
           </div>
           <div class="ksb-set-row-txt">
             <div class="ksb-set-row-title">Gmail Intelligence</div>
@@ -2929,7 +2929,7 @@
 <div id="pfdSheet" class="pfd-sheet">
   <div class="pfd-handle"></div>
   <button class="pfd-close" onclick="closePremiumDrawer()">✕</button>
-  <div class="pfd-icon-wrap"><span id="pfdIcon" class="pfd-icon">🔒</span></div>
+  <div class="pfd-icon-wrap" id="pfdIconWrap"><span id="pfdIcon" class="pfd-icon">🔒</span></div>
   <div class="pfd-title" id="pfdTitle">Premium Feature</div>
   <div class="pfd-desc" id="pfdDesc">This feature is part of a paid plan.</div>
   <div class="pfd-sub" id="pfdSub"></div>
