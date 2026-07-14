@@ -2474,18 +2474,47 @@
     }
 
     // ── RESUME PICKER ─────────────────────────────────────────────────────────
+    // Sets the visible name inside a pill using a dedicated shrinkable span,
+    // so a long resume name ellipsis-truncates instead of pushing the ×
+    // dismiss button out of view.
+    function setKieRpillLabel(pill, text) {
+      const label = document.createElement('span');
+      label.className = 'kie-rpill-label';
+      label.textContent = text;
+      pill.appendChild(label);
+    }
+
+    // Empty state — no saved resume and nothing uploaded yet. The icon is
+    // always visible now, so this is what someone sees the first time they
+    // open the dropdown with nothing to coach on.
+    function renderKieEmptyPicker(pillsEl) {
+      const empty = document.createElement('div');
+      empty.className = 'kie-rpill-empty';
+      empty.id = 'kieRpillEmpty';
+      empty.innerHTML =
+        '<div class="kie-rpill-empty-msg">No resume yet</div>' +
+        '<button type="button" class="kie-rpill-action" onclick="closeKieResumeDropdown();showView(\'tpick\')">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+          'Create a resume' +
+        '</button>' +
+        '<button type="button" class="kie-rpill-action" onclick="closeKieResumeDropdown();openKieAttachSheet()">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+          'Upload a resume' +
+        '</button>';
+      pillsEl.appendChild(empty);
+    }
+
     function setupKiePicker() {
       const picker  = g('kieResumePicker');
       const pillsEl = g('kieResumePills');
-      const wrap    = g('kieTplWrap');
       if (!picker || !pillsEl) return;
 
       pillsEl.innerHTML = '';
       closeKieResumeDropdown();
 
       if (!resumes || resumes.length === 0) {
-        if (wrap) wrap.classList.remove('show');
         kieResumeContext = 'NO_RESUME_YET';
+        renderKieEmptyPicker(pillsEl);
         updateKieTplIndicator();
         return;
       }
@@ -2494,7 +2523,7 @@
         const name = r.resumeName || r.resumeData?.fullName || `Resume ${i + 1}`;
         const pill = document.createElement('button');
         pill.className = 'kie-rpill';
-        pill.textContent = name;
+        setKieRpillLabel(pill, name);
         pill.title = 'Tap to coach on this resume';
         pill.onclick = () => selectKieResume(i);
         // Restore active state if this resume was previously selected
@@ -2505,7 +2534,6 @@
         pillsEl.appendChild(pill);
       });
 
-      if (wrap) wrap.classList.add('show');
       // If no resume is selected, set unselected context; if one is selected keep its context
       if (!kieSelectedResume) {
         kieResumeContext = 'HAS_RESUMES_UNSELECTED';
@@ -2524,12 +2552,14 @@
       if (btn) btn.classList.toggle('open', opening);
     };
 
-    function closeKieResumeDropdown() {
+    // Global (not just an internal helper) since the empty-state's "Create a
+    // resume" / "Upload a resume" rows call this directly from inline onclick.
+    window.closeKieResumeDropdown = function() {
       const panel = g('kieResumePicker');
       const btn   = g('kieTemplateBtn');
       if (panel) panel.classList.remove('open');
       if (btn) btn.classList.remove('open');
-    }
+    };
 
     // Small dot on the template icon so it's clear at a glance whether KIE is
     // currently coaching on a resume, since that's no longer visible inline.
@@ -2771,6 +2801,66 @@
       return text.trim();
     }
 
+    // ── KIE ATTACH SHEET — replaces the old direct-to-native-picker button
+    // with a custom options sheet (Take Photo / Choose Photo / Choose File),
+    // each routing to its own hidden input so the OS opens straight into the
+    // right picker instead of a generic "everything" file browser. Built the
+    // same way as openModelDrawer()/openSourcesDrawer() for consistency.
+    window.openKieAttachSheet = function() {
+      let sheet = document.getElementById('kieAttachSheet');
+      if (!sheet) {
+        sheet = document.createElement('div');
+        sheet.id = 'kieAttachSheet';
+        sheet.innerHTML = `
+          <div class="kmd-backdrop" onclick="closeKieAttachSheet()"></div>
+          <div class="kmd-sheet">
+            <div class="kmd-handle"></div>
+            <div class="kmd-hdr-inner">
+              <div class="kmd-title">Add to chat</div>
+            </div>
+            <div class="kmd-list">
+              <div class="kmd-item" onclick="triggerKieAttach('camera')">
+                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+                <div class="kmd-item-body">
+                  <div class="kmd-item-name">Take Photo</div>
+                  <div class="kmd-item-tag">Snap a resume or document</div>
+                </div>
+              </div>
+              <div class="kmd-item" onclick="triggerKieAttach('photo')">
+                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+                <div class="kmd-item-body">
+                  <div class="kmd-item-name">Choose Photo</div>
+                  <div class="kmd-item-tag">From your library</div>
+                </div>
+              </div>
+              <div class="kmd-item" onclick="triggerKieAttach('file')">
+                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></div>
+                <div class="kmd-item-body">
+                  <div class="kmd-item-name">Choose File</div>
+                  <div class="kmd-item-tag">PDF or TXT resume</div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+        document.body.appendChild(sheet);
+        setTimeout(() => sheet.classList.add('open'), 10);
+      } else {
+        sheet.classList.add('open');
+      }
+    };
+
+    window.closeKieAttachSheet = function() {
+      const sheet = document.getElementById('kieAttachSheet');
+      if (sheet) sheet.classList.remove('open');
+    };
+
+    window.triggerKieAttach = function(kind) {
+      closeKieAttachSheet();
+      const id = kind === 'camera' ? 'kieFileInputCamera' : kind === 'photo' ? 'kieFileInputPhoto' : 'kieFileInputDoc';
+      const input = g(id);
+      if (input) input.click();
+    };
+
     // ── KIE FILE UPLOAD — STAGING (no auto-send) ─────────────────────────────
     window.handleKieFileUpload = async function(input) {
       const file = input.files?.[0];
@@ -2915,6 +3005,7 @@
         const picker  = g('kieResumePicker');
         const pillsEl = g('kieResumePills');
         if (picker && pillsEl) {
+          pillsEl.querySelector('#kieRpillEmpty')?.remove();
           document.querySelectorAll('.kie-rpill').forEach(p => {
             p.classList.remove('active');
             const x = p.querySelector('.kie-rpill-dismiss'); if (x) x.remove();
@@ -2923,7 +3014,7 @@
           if (!uPill) {
             uPill = document.createElement('button');
             uPill.className = 'kie-rpill kie-rpill-uploaded';
-            uPill.textContent = '📎 Uploaded Resume';
+            setKieRpillLabel(uPill, '📎 Uploaded Resume');
             pillsEl.prepend(uPill);
           }
           uPill.classList.add('active');
@@ -2935,8 +3026,6 @@
             xBtn.onclick = e => { e.stopPropagation(); dismissKieResume(); };
             uPill.appendChild(xBtn);
           }
-          const wrap = g('kieTplWrap');
-          if (wrap) wrap.classList.add('show');
           updateKieTplIndicator();
         }
 

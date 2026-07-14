@@ -938,20 +938,30 @@
 
     /* Input bar — Claude-style, sticky bottom, never scrolls away */
     .kie-input-wrap{padding:10px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));background:#fff;flex-shrink:0;border-top:1px solid #f0f0f4;position:sticky;bottom:0}
-    /* Resume/template picker — icon-triggered dropdown (was an always-on bar) */
-    .kie-tpl-wrap{position:relative;display:none;flex-shrink:0}
-    .kie-tpl-wrap.show{display:inline-flex}
+    /* Resume/template picker — icon-triggered dropdown (was an always-on bar).
+       Icon is always visible now (not just when a resume exists), so KIE
+       always has an entry point to create/upload/pick a resume. */
+    .kie-tpl-wrap{position:relative;display:inline-flex;flex-shrink:0}
     .kie-resume-picker{position:absolute;top:calc(100% + 10px);right:0;width:210px;background:#fff;border:1px solid #eeeef2;border-radius:16px;box-shadow:0 14px 34px rgba(15,14,23,.14);padding:8px;display:none;flex-direction:column;gap:2px;z-index:60}
     .kie-resume-picker.open{display:flex;animation:kieTplPop .16s ease}
     @keyframes kieTplPop{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
     .kie-resume-picker-label{font-size:10.5px;font-weight:700;color:#b0b0c0;white-space:nowrap;letter-spacing:.05em;padding:4px 8px 6px}
     .kie-resume-pills{display:flex;flex-direction:column;gap:2px;max-height:240px;overflow-y:auto}
     .kie-resume-pills::-webkit-scrollbar{display:none}
-    .kie-rpill{width:100%;padding:8px 10px;border-radius:10px;border:none;background:transparent;font-size:12.5px;font-weight:600;color:#54536a;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;transition:all .15s;flex-shrink:0;font-family:inherit}
+    /* Pill is always a flex row [label][dismiss?] so a long name truncates
+       with ellipsis instead of pushing the dismiss (×) button out of view */
+    .kie-rpill{width:100%;padding:8px 10px;border-radius:10px;border:none;background:transparent;font-size:12.5px;font-weight:600;color:#54536a;cursor:pointer;text-align:left;transition:all .15s;flex-shrink:0;font-family:inherit;display:flex;align-items:center;gap:6px}
+    .kie-rpill-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .kie-rpill:hover:not(.active){background:#faf5ff;color:#7c3aed}
-    .kie-rpill.active{background:#f3ecff;color:#7c3aed;box-shadow:none;display:flex;align-items:center;gap:6px;font-weight:700}
+    .kie-rpill.active{background:#f3ecff;color:#7c3aed;font-weight:700}
     .kie-rpill-dismiss{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(124,58,237,.12);color:#7c3aed;font-size:13px;line-height:1;cursor:pointer;transition:background .15s;flex-shrink:0;margin-left:auto}
     .kie-rpill-dismiss:hover{background:rgba(124,58,237,.22)}
+    /* Empty state — no resume saved or uploaded yet */
+    .kie-rpill-empty{display:flex;flex-direction:column;gap:2px}
+    .kie-rpill-empty-msg{font-size:12px;color:#9b9bab;padding:6px 10px 8px;line-height:1.4}
+    .kie-rpill-action{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:none;background:transparent;font-size:12.5px;font-weight:700;color:#7c3aed;cursor:pointer;text-align:left;transition:background .15s;font-family:inherit}
+    .kie-rpill-action:hover{background:#faf5ff}
+    .kie-rpill-action svg{flex-shrink:0}
 
     /* ── KIE ATTACHMENT STAGING PREVIEW ── */
     /* Anchoring context for the floating attach-stage below — kie-modes and
@@ -1585,10 +1595,14 @@
     #kieModelDrawer.open{display:block}
     #kieSourcesDrawer{position:fixed;inset:0;z-index:800;display:none}
     #kieSourcesDrawer.open{display:block}
+    #kieAttachSheet{position:fixed;inset:0;z-index:800;display:none}
+    #kieAttachSheet.open{display:block}
+    .kas-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,#ede9fe,#ddd6fe);margin-right:2px}
     .kmd-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
     .kmd-sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:0 0 36px;max-height:70vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.12);transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1)}
     #kieModelDrawer.open .kmd-sheet{transform:translateY(0)}
     #kieSourcesDrawer.open .kmd-sheet{transform:translateY(0)}
+    #kieAttachSheet.open .kmd-sheet{transform:translateY(0)}
     .kmd-handle{width:36px;height:4px;background:#e2e8f0;border-radius:99px;margin:14px auto 18px}
     .kmd-hdr-inner{padding:0 20px 14px;border-bottom:1px solid #f1f5f9}
     .kmd-title{font-size:16px;font-weight:800;color:#0f0e17;letter-spacing:-.3px}
