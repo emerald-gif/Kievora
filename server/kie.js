@@ -376,7 +376,17 @@ module.exports = function registerKieRoutes(app) {
       res.setHeader('X-Accel-Buffering', 'no');
       res.flushHeaders();
       const sendSSE = (data) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(data)}\n\n`); };
-      const visionGateMsg = `KIE Spark can't see images — reading resumes, screenshots, or photos needs KIE Core or Nova. Upgrade your plan to unlock image reading, or switch to a text question and I'm happy to help right now.\n\n[BILLING_CTA]`;
+
+      // The plan may already allow Core/Nova — Spark can still be the
+      // *effective* model simply because it's the one currently selected
+      // in the picker (see comment on effectiveModel above). Don't tell a
+      // paying user to upgrade when what they actually need is to switch
+      // models. planCfg.models is already computed above for this request,
+      // so no extra lookup is needed to tell the two cases apart.
+      const planHasVisionModel = planCfg.models.includes('core') || planCfg.models.includes('nova');
+      const visionGateMsg = planHasVisionModel
+        ? `KIE Spark can't see images — reading resumes, screenshots, or photos needs KIE Core or Nova. Your plan already includes those — just switch models, or send a text question and I'm happy to help right now.\n\n[MODEL_CTA]`
+        : `KIE Spark can't see images — reading resumes, screenshots, or photos needs KIE Core or Nova. Upgrade your plan to unlock image reading, or switch to a text question and I'm happy to help right now.\n\n[BILLING_CTA]`;
       sendSSE({ t: 'd', v: visionGateMsg });
       sendSSE({ t: 'done', model: 'spark', mode: effectiveMode, fallback: false, planLimited: true });
       res.end();
