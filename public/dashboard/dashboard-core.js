@@ -5394,7 +5394,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // Called on every streaming frame — formats partial text including live code
     // blocks and strips internal markers ([SEND_PDF], [GMAIL_CTA]).
     function _formatKieLive(partial, isFinal) {
-      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').trim();
+      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').trim();
 
       // Detect code blocks — handles MULTIPLE blocks in the same message
       // (previously only the first was ever found; a second block's raw
@@ -5533,6 +5533,21 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (instant) place(row); else setTimeout(function () { place(row); }, 550);
       }
 
+      // [BILLING_CTA] — a real, tappable button that sends the user to /billing.
+      // Sent by the server as a deterministic gate (e.g. KIE Spark can't read
+      // an attached image) rather than something the model decides to add.
+      if (/\[BILLING_CTA\]/i.test(text)) {
+        var bRow = document.createElement('div');
+        bRow.className = 'kie-suggest-row';
+        var bBtn = document.createElement('button');
+        bBtn.className = 'kie-gmail-cta-btn';
+        bBtn.innerHTML = 'Upgrade plan <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>';
+        bBtn.onclick = function () { window.location.href = '/billing'; };
+        bRow.appendChild(bBtn);
+        schedule(bRow);
+        return; // don't also run [FU]/fallback chip logic on the same message
+      }
+
       // [GMAIL_CTA] — a real, tappable button that opens the Gmail Intelligence
       // panel. KIE only includes this tag when Gmail genuinely came up in the
       // conversation, so this doesn't fire on every message.
@@ -5578,6 +5593,24 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       navigator.clipboard?.writeText(txt).then(() => {
         btn.innerHTML = CHECK_ICON;
         setTimeout(() => { btn.innerHTML = COPY_ICON; }, 1500);
+      }).catch(() => {});
+    };
+
+    // Shared handler for AI-tool-output copy buttons (cover letters, personal
+    // branding, outreach messages, etc). The text to copy lives in a data-*
+    // attribute — HTML-escaped by esc() when the button markup is built —
+    // instead of being inlined into the onclick JS string. Reading it back
+    // via getAttribute() auto-decodes the HTML entities, so any quotes,
+    // apostrophes, or newlines in AI-generated content are handled safely and
+    // can never break out of the attribute and render as raw visible text.
+    window.kieCopyBtnClick = function(btn) {
+      const txt = btn.getAttribute('data-copy') || '';
+      if (!txt || !navigator.clipboard) return;
+      const orig = btn.getAttribute('data-label') || btn.textContent;
+      navigator.clipboard.writeText(txt).then(() => {
+        clearTimeout(btn._kieCopyResetTimer);
+        btn.textContent = 'Copied!';
+        btn._kieCopyResetTimer = setTimeout(() => { btn.textContent = orig; }, 1500);
       }).catch(() => {});
     };
 
@@ -7514,7 +7547,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function renderResignation(d) {
         const el = g('resignationResult'); if (!el) return;
         window._kieToolData.resignation = d;
-        const copyAll = (txt) => `<button onclick="navigator.clipboard.writeText(${JSON.stringify(txt)}).then(()=>this.textContent='Copied!').catch(()=>{})" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy Letter</button>`;
+        // Text lives in a data-* attribute (HTML-escaped by esc()) rather than
+        // inlined into the onclick JS string — so quotes/apostrophes/newlines
+        // in AI-generated content can never break out of the attribute and
+        // render as raw visible text (the "Copied!').catch(()=>{})" bug).
+        const copyAll = (txt) => `<button data-copy="${esc(txt)}" data-label="Copy Letter" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy Letter</button>`;
         el.innerHTML = `
           <div class="ctool-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -8121,7 +8158,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           </div></div>
           ${mkTakeaway(d.youTakeaway)}
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:6px">✨ Optimized Headline</div><div style="font-size:14px;font-weight:700;color:var(--p);line-height:1.4;margin-bottom:8px">${esc(d.optimizedHeadline||'')}</div><div style="font-size:11px;color:var(--sub)">${esc(d.headlineFeedback||'')}</div></div>
-          <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:8px">📝 Optimized About <span style="float:right;font-size:10px;color:#059669;font-weight:700" onclick="navigator.clipboard.writeText(this.previousSibling.nextSibling.textContent)">Copy</span></div><div style="font-size:13px;color:var(--txt);line-height:1.65;white-space:pre-line">${esc(d.optimizedAbout||'')}</div></div>
+          <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:8px">📝 Optimized About <button data-copy="${esc(d.optimizedAbout||'')}" data-label="Copy" onclick="kieCopyBtnClick(this)" style="float:right;font-size:10px;font-weight:700;color:#059669;background:none;border:none;cursor:pointer;font-family:inherit">Copy</button></div><div style="font-size:13px;color:var(--txt);line-height:1.65;white-space:pre-line">${esc(d.optimizedAbout||'')}</div></div>
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:8px">🎯 Missing Keywords</div>${mkTags(d.keywordGaps,'#fee2e2','#dc2626')}</div>
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:8px">➕ Skills to Add</div>${mkTags(d.skillsToAdd)}</div>
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:10px">📋 Profile Tips</div>${mkListItems(d.profileTips)}</div>
@@ -8226,7 +8263,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       function renderBranding(d) {
         const el=g('brandingResult'); if(!el) return;
         window._kieToolData.branding = d;
-        const copyBtn = (txt,label)=>`<button onclick="navigator.clipboard.writeText(${JSON.stringify(txt)}).then(()=>this.textContent='Copied!').catch(()=>{})" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit;float:right;margin-top:-2px">${label}</button>`;
+        const copyBtn = (txt,label)=>`<button data-copy="${esc(txt)}" data-label="${esc(label)}" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit;float:right;margin-top:-2px">${label}</button>`;
         el.innerHTML=`
           <div class="ctool-card" style="background:linear-gradient(135deg,#1e0845,#3b1a7a)"><div style="font-size:20px;font-weight:900;color:#fff;text-align:center;padding:6px 0">✨ ${esc(d.tagline||'')}</div><div style="font-size:11px;color:#c4b5fd;text-align:center;margin-top:4px">${esc(d.brandVoice||'')}</div></div>
           ${mkTakeaway(d.youTakeaway)}
@@ -8268,7 +8305,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         const el=g('messagingResult'); if(!el) return;
         const mkMsgCard=(subj,msg,label)=>`
           <div class="ctool-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:12px;font-weight:800;color:var(--p)">${label}</div><button onclick="navigator.clipboard.writeText(${JSON.stringify(msg)}).then(()=>this.textContent='Copied!').catch(()=>{})" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy</button></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:12px;font-weight:800;color:var(--p)">${label}</div><button data-copy="${esc(msg)}" data-label="Copy" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy</button></div>
             ${subj?`<div style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Subject</div><div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px">${esc(subj)}</div>`:''}
             <div style="font-size:13px;color:var(--txt);line-height:1.65;white-space:pre-line">${esc(msg)}</div>
           </div>`;
