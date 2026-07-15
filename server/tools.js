@@ -415,14 +415,28 @@ module.exports = function registerToolsRoutes(app) {
   // Remotive is always on (free, no key needed)
 
   // ─── Country → Adzuna country code map ───────────────────────────────────────
-  // Adzuna supports a fixed set of country codes. For countries not in the list
-  // we fall back to us+gb+za (global reach). Add more as Adzuna expands.
+  // Adzuna supports a fixed set of country codes. If the user's selected country
+  // isn't on this list, we skip Adzuna entirely for that request rather than
+  // fall back to an unrelated country — falling back would silently show jobs
+  // from the wrong country, which defeats the point of country filtering.
   const ADZUNA_COUNTRIES = {
     us:'us', gb:'gb', uk:'gb', au:'au', ca:'ca', za:'za',
     de:'de', fr:'fr', br:'br', in:'in', nl:'nl', sg:'sg',
     nz:'nz', at:'at', be:'be', it:'it', mx:'mx', pl:'pl', ru:'ru',
   };
+  // Only used when the user hasn't picked a country at all ("worldwide" mode).
   const ADZUNA_FALLBACK = ['us','gb','za'];
+
+  // Full country names, keyed by the same lowercase codes used across the app
+  // (find-jobs.html's country selector, /api/user-country, etc). Used to (a)
+  // embed a real location phrase in the JSearch query and (b) match Remotive's
+  // free-text "candidate_required_location" field against the selected country.
+  const COUNTRY_NAMES = {
+    ng: 'Nigeria', gh: 'Ghana', ke: 'Kenya', za: 'South Africa', eg: 'Egypt',
+    us: 'United States', gb: 'United Kingdom', uk: 'United Kingdom', ca: 'Canada',
+    au: 'Australia', de: 'Germany', fr: 'France', in: 'India', sg: 'Singapore',
+    ae: 'United Arab Emirates', br: 'Brazil', nl: 'Netherlands',
+  };
 
   // Maps IP → {country, countryCode} via ip-api.com (free, no key, 45 req/min).
   // Returns null gracefully on any failure — job search still works, just without
@@ -446,13 +460,15 @@ module.exports = function registerToolsRoutes(app) {
   async function _fetchJSearch(query, limit, countryCode) {
     const KEY = process.env.JSEARCH_API_KEY;
     if (!KEY) return [];
-    // JSearch supports free-text country in the query — most natural approach
-    const q = countryCode && countryCode !== 'worldwide'
-      ? `${query} in ${countryCode}`
-      : query;
+    const isLocal = countryCode && countryCode !== 'worldwide';
+    // JSearch strictly filters by the `country` param, but also recommends
+    // including the location in the query text for best matching — so we do both.
+    const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
+    const q = isLocal ? `${query} in ${countryName}` : query;
+    const countryParam = isLocal ? `&country=${encodeURIComponent(countryCode)}` : '';
     try {
       const res = await fetch(
-        `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(q)}&page=1&num_pages=1&date_posted=month`,
+        `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(q)}${countryParam}&page=1&num_pages=1&date_posted=month`,
         { headers: { 'X-RapidAPI-Key': KEY, 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com' } }
       );
       if (!res.ok) return [];
@@ -487,7 +503,11 @@ module.exports = function registerToolsRoutes(app) {
       countries = ADZUNA_FALLBACK;
     } else {
       const mapped = ADZUNA_COUNTRIES[countryCode];
-      countries = mapped ? [mapped] : ADZUNA_FALLBACK;
+      // Strict mode: if the user picked a specific country and Adzuna doesn't
+      // cover it, skip Adzuna for this request instead of showing jobs from
+      // an unrelated country — JSearch/Remotive still carry that country's coverage.
+      if (!mapped) return [];
+      countries = [mapped];
     }
     const perCountry = Math.ceil(limit / countries.length);
     const results    = [];
@@ -520,12 +540,32 @@ module.exports = function registerToolsRoutes(app) {
     return results;
   }
 
-  async function _fetchRemotive(query, limit) {
+  // Remotive's "candidate_required_location" is free text (e.g. "Worldwide",
+  // "USA Only", "UK, Europe"). There's no country filter param, so we filter
+  // client-side: keep roles open to anyone, plus ones that name the selected
+  // country; drop roles that are clearly restricted to somewhere else.
+  const GLOBAL_LOCATION_HINTS = ['worldwide', 'anywhere', 'global', 'remote'];
+  function _remotiveMatchesCountry(locationStr, countryCode, countryName) {
+    const loc = (locationStr || '').toLowerCase();
+    if (!loc) return true; // no restriction stated — assume open
+    if (GLOBAL_LOCATION_HINTS.some(hint => loc.includes(hint))) return true;
+    if (countryName && loc.includes(countryName.toLowerCase())) return true;
+    if (countryCode && loc.includes(countryCode.toLowerCase())) return true;
+    return false;
+  }
+
+  async function _fetchRemotive(query, limit, countryCode) {
     try {
       const res = await fetch(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=${limit}`);
       if (!res.ok) return [];
       const data = await res.json();
-      return (data.jobs || []).slice(0, limit).map(j => ({
+      const isLocal = countryCode && countryCode !== 'worldwide';
+      const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || '') : '';
+      let jobs = data.jobs || [];
+      if (isLocal) {
+        jobs = jobs.filter(j => _remotiveMatchesCountry(j.candidate_required_location, countryCode, countryName));
+      }
+      return jobs.slice(0, limit).map(j => ({
         id:       String(j.id),
         title:    j.title,
         company:  j.company_name,
@@ -575,7 +615,7 @@ module.exports = function registerToolsRoutes(app) {
     const [r1, r2, r3] = await Promise.allSettled([
       _fetchJSearch(query, limit, countryCode),
       _fetchAdzuna(query, limit, countryCode),
-      _fetchRemotive(query, 10),
+      _fetchRemotive(query, 10, countryCode),
     ]);
 
     let jobs = [
