@@ -9,7 +9,7 @@ module.exports = function registerToolsRoutes(app) {
   const {
     admin, db, authenticate,
     RESUMES, USERS, PLANS, getPlanConfig, getUserPlanKey, UPGRADE_MESSAGES,
-    callKieAI, KIE_MODELS,
+    callKieAI, callKieAIJson, parseAIJson, KIE_MODELS,
   } = require('./lib');
 
   app.get('/api/resumes', authenticate, async (req, res) => {
@@ -267,6 +267,78 @@ module.exports = function registerToolsRoutes(app) {
     }
   });
 
+  // ─── Lightweight few-shot grounding for resume analysis ───────────────────────
+  // Real RAG (embeddings + vector search) is overkill for a curated set this
+  // small — this is a simple category detector + static example bank. Same
+  // grounding benefit, zero new infra, zero added latency from a retrieval call.
+  const RESUME_FEWSHOT = {
+    swe: {
+      label: 'Software / Engineering',
+      keywords: ['engineer', 'developer', 'software', 'backend', 'frontend', 'full stack', 'fullstack', 'devops', 'programmer', 'api', 'sde', 'sre'],
+      examples: `- Weak bullet: "Responsible for building features for the company website."
+  Strong rewrite: "Built and shipped 12 customer-facing features on a React/Node stack, cutting average page load time by 40% and reducing support tickets by 25%."
+- Weak bullet: "Worked on backend systems and databases."
+  Strong rewrite: "Redesigned the order-processing service, reducing p99 latency from 800ms to 120ms and eliminating a recurring outage that had cost ~6 hours/month of downtime."
+- Common ATS failure for this field: listing only tech-stack nouns ("Python, AWS, Docker") with no evidence of what was built or the scale/impact — recruiters and ATS scoring both weight "did X, resulting in Y" far higher than a bare skills list.`,
+    },
+    product: {
+      label: 'Product / PM',
+      keywords: ['product manager', 'product owner', 'roadmap', 'product strategy', 'pm ', ' pm', 'product lead'],
+      examples: `- Weak bullet: "Managed the product roadmap and worked with engineering."
+  Strong rewrite: "Owned the roadmap for a 3-team product line, shipping a redesigned onboarding flow that raised activation rate from 34% to 51% within one quarter."
+- Weak bullet: "Gathered requirements from stakeholders."
+  Strong rewrite: "Ran discovery across 20+ customer interviews to identify the top churn driver, then led a cross-functional team to ship a fix that cut 90-day churn by 18%."
+- Common ATS failure for this field: describing process ("ran standups," "wrote PRDs") instead of outcomes — a PM resume needs metrics tied to user or business impact, not process ownership alone.`,
+    },
+    design: {
+      label: 'Design / UX',
+      keywords: ['designer', 'ux', 'ui', 'product design', 'visual design', 'figma', 'user research'],
+      examples: `- Weak bullet: "Designed user interfaces for mobile and web products."
+  Strong rewrite: "Redesigned the checkout flow across iOS/web, reducing drop-off by 22% and cutting average completion time from 90s to 35s, validated through 3 rounds of usability testing."
+- Weak bullet: "Collaborated with product and engineering teams."
+  Strong rewrite: "Partnered with PM and 4 engineers to ship a design system used across 15+ screens, cutting new-feature design time by roughly a third."
+- Common ATS failure for this field: leaning entirely on a portfolio link with no bullet content at all — a portfolio link should support a resume's claims, not replace them, since ATS and recruiters skim text first.`,
+    },
+    sales_marketing: {
+      label: 'Sales / Marketing',
+      keywords: ['sales', 'account executive', 'marketing', 'seo', 'campaign', 'growth', 'quota', 'revenue', 'demand gen'],
+      examples: `- Weak bullet: "Responsible for meeting sales targets and managing client relationships."
+  Strong rewrite: "Closed $1.2M in new ARR across 40 enterprise accounts, exceeding quota by 118% for 3 consecutive quarters."
+- Weak bullet: "Ran marketing campaigns to increase brand awareness."
+  Strong rewrite: "Launched a paid + organic campaign that grew qualified leads by 65% quarter-over-quarter while cutting cost-per-lead by 30%."
+- Common ATS failure for this field: vague ownership language ("helped drive growth," "supported sales efforts") with no attached number — this category is scored almost entirely on quantified revenue/growth/conversion metrics.`,
+    },
+    finance: {
+      label: 'Finance / Accounting',
+      keywords: ['financial analyst', 'accounting', 'accountant', 'finance', 'audit', 'controller', 'fp&a', 'investment'],
+      examples: `- Weak bullet: "Prepared financial reports and assisted with budgeting."
+  Strong rewrite: "Built a rolling 13-week cash flow model that flagged a liquidity shortfall 6 weeks early, giving leadership time to renegotiate a credit line before it became urgent."
+- Weak bullet: "Performed financial analysis for the team."
+  Strong rewrite: "Identified $340K in annual vendor overspend through a cost-audit model, leading to renegotiated contracts that cut the line item by 22%."
+- Common ATS failure for this field: describing tools used (Excel, SAP) instead of the financial outcome those tools produced — the tool is assumed, the insight/decision it enabled is what differentiates a candidate.`,
+    },
+    general: {
+      label: 'General / Other',
+      keywords: [],
+      examples: `- Weak bullet: "Responsible for daily operations and team coordination."
+  Strong rewrite: "Coordinated a team of 8 across 3 shifts, cutting scheduling conflicts by 60% and reducing overtime costs by $15K/year."
+- Weak bullet: "Helped improve processes at the company."
+  Strong rewrite: "Redesigned the intake process for customer requests, cutting average resolution time from 4 days to 36 hours."
+- Common ATS failure across all fields: bullets that describe a responsibility instead of a result — "did X" scores lower than "did X, which caused Y," even when X is genuinely impressive work.`,
+    },
+  };
+
+  function detectResumeCategory(text) {
+    const lower = text.toLowerCase();
+    let best = 'general', bestScore = 0;
+    for (const [key, cat] of Object.entries(RESUME_FEWSHOT)) {
+      if (key === 'general') continue;
+      const score = cat.keywords.reduce((n, kw) => n + (lower.includes(kw) ? 1 : 0), 0);
+      if (score > bestScore) { bestScore = score; best = key; }
+    }
+    return best;
+  }
+
   // ─── POST /api/analyze-resume ──────────────────────────────────────────────────
   app.post('/api/analyze-resume', authenticate, async (req, res) => {
     const groqKey = process.env.GROQ_API_KEY;
@@ -293,6 +365,9 @@ module.exports = function registerToolsRoutes(app) {
     const classificationInstruction = forceResume
       ? `The user uploaded this through the resume-analysis tool, so treat it as a resume/CV and analyze it fully even if formatting is unusual. Set "isResume": true.`
       : `First, honestly judge whether this document actually IS a resume/CV. Plenty of uploads are not — a personal biography, a book or article excerpt, notes for a career roadmap, a cover letter, a legal or business document (contract, agreement, invoice), or something with nothing to do with careers at all. Set "isResume" to true only if it genuinely is a resume or CV. If it is not: set "isResume": false, fill "docType" with one short label (e.g. "personal biography", "book excerpt", "career roadmap notes", "cover letter", "legal agreement", "unrelated document"), fill "docNote" with one warm, specific sentence telling the user what you actually see in it, and set "couldBeResume" — true only if there's a REALISTIC chance the user actually meant this as a resume attempt (e.g. it lists some work history or skills but is poorly formatted, or it's genuinely ambiguous), false if it's obviously and entirely unrelated to a resume (a legal contract, an invoice, a novel, an unrelated article — nothing a reasonable person would mistake for a CV). When isResume is false you may leave every resume-scoring field (atsScore, grade, strengths, weaknesses, suggestions, missingItems, workExperience, education, skills) empty or zero — do NOT invent a fake ATS score or fake resume content for something that isn't a resume.`;
+
+    const category = detectResumeCategory(resumeText);
+    const fewshot  = RESUME_FEWSHOT[category];
 
     const prompt = `You are an expert ATS resume analyst and career coach. Analyze the document text below and return ONLY a valid JSON object — no markdown, no code fences, no explanation before or after.
 
@@ -334,50 +409,22 @@ module.exports = function registerToolsRoutes(app) {
   - suggestions: 3–5 CONCRETE fixes with exact guidance (e.g. "Turn 'managed team' into 'Managed a team of [X], delivering [result]'")
   - missingItems: only genuinely absent sections that would strengthen the resume
 
+  This resume reads as ${fewshot.label} — use these real weak→strong rewrite examples from that exact field as your calibration for what "specific" and "concrete" mean in your suggestions and weaknesses (do NOT copy these examples verbatim into your output, they're reference calibration only, your suggestions must come from the actual document below):
+  ${fewshot.examples}
+
   DOCUMENT TEXT:
   ${resumeText.slice(0, 7000)}`;
 
     try {
-      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + groqKey,
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 2500,
-          temperature: 0.15,
-          messages: [
-            { role: 'system', content: 'You are an expert resume analyst. Always respond with valid JSON only — no extra text, no markdown.' },
-            { role: 'user', content: prompt },
-          ],
-        }),
-      });
+      const { data: analysis, retried } = await callKieAIJson(
+        'spark',
+        'You are an expert resume analyst. Always respond with valid JSON only — no extra text, no markdown.',
+        [{ role: 'user', content: prompt }],
+        { max_tokens: 2500, temperature: 0.15 }
+      );
+      if (retried) console.log('POST /api/analyze-resume — needed one self-correction retry');
 
-      if (!groqRes.ok) {
-        const errBody = await groqRes.text();
-        console.error('Groq analyze-resume error:', groqRes.status, errBody);
-        return res.status(502).json({ error: 'AI analysis unavailable. Please try again.' });
-      }
-
-      const data    = await groqRes.json();
-      const rawText = data.choices?.[0]?.message?.content || '';
-
-      let analysis;
-      try {
-        // Strip any accidental markdown fences, then find the JSON object
-        const clean = rawText.replace(/```json\n?|```\n?/g, '').trim();
-        const start = clean.indexOf('{');
-        const end   = clean.lastIndexOf('}');
-        if (start === -1 || end === -1) throw new Error('no JSON object found');
-        analysis = JSON.parse(clean.slice(start, end + 1));
-      } catch (parseErr) {
-        console.error('JSON parse error in analyze-resume:', parseErr.message, rawText.slice(0, 300));
-        return res.status(500).json({ error: 'Could not parse resume analysis — please try again.' });
-      }
-
-      console.log(`POST /api/analyze-resume — isResume:${analysis.isResume !== false} score:${analysis.atsScore} grade:${analysis.grade} plan:${planKey} uid:${req.user.uid}`);
+      console.log(`POST /api/analyze-resume — isResume:${analysis.isResume !== false} score:${analysis.atsScore} grade:${analysis.grade} category:${category} plan:${planKey} uid:${req.user.uid}`);
 
       // Not a resume — nothing to score or gate. Hand back the classification
       // so the frontend can respond naturally about the actual content instead
@@ -770,15 +817,6 @@ module.exports = function registerToolsRoutes(app) {
     res.json({ jobs, source: 'merged', countryCode });
   });
 
-  // ─── JSON parser helper for AI structured outputs ────────────────────────────
-  function parseAIJson(raw) {
-    const clean = raw.replace(/```json\n?|```\n?/g, '').trim();
-    const start = clean.indexOf('{');
-    const end   = clean.lastIndexOf('}');
-    if (start === -1 || end === -1) throw new Error('No JSON found in AI response');
-    return JSON.parse(clean.slice(start, end + 1));
-  }
-
   // ─── POST /api/prompt-resume ──────────────────────────────────────────────────
   app.post('/api/prompt-resume', authenticate, async (req, res) => {
     const { prompt } = req.body;
@@ -805,24 +843,25 @@ module.exports = function registerToolsRoutes(app) {
   - workExperience: 2-3 entries with realistic companies, strong bullet points with action verbs and real metrics, separated by newlines. Most recent first.
   - education: 1-2 entries appropriate to the seniority level requested
   - skills: 10-14 relevant skills mixing technical and soft skills
-  - templateSuggestion: one of [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split`;
+  - templateSuggestion: one of [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split
 
-    const cfg = { max_tokens: 2000, temperature: 0.78 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 2000, temperature: 0.78, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Create a complete professional resume for: ${prompt}` }], cfg);
-      const resumeData = parseAIJson(raw);
+      const { data: resumeData } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a complete professional resume for: ${prompt}` }], cfg);
       console.log(`POST /api/prompt-resume — model:${m} job:"${resumeData.jobTitle}"`);
       res.json({ resumeData, model: m });
     } catch (err) {
       console.error('POST /api/prompt-resume:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Create a resume for: ${prompt}` }], cfg);
-          return res.json({ resumeData: parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) { console.error('prompt-resume fallback:', fe.message); }
-      }
       res.status(500).json({ error: 'Resume generation failed. Try a more specific description.' });
     }
   });
@@ -858,25 +897,26 @@ module.exports = function registerToolsRoutes(app) {
   - focus: 1 phrase summarizing each phase's theme
   - summary: 2 sentences on the overall strategy and why this path makes sense for getting from the start role to the target role
   - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them, in plain terms, what this roadmap is really asking of them, which single phase matters most for getting unstuck, and what their career will look like if they follow it through — make it feel like a realistic, motivating plan rather than a wall of tasks
-  - Everything must be specific to the actual roles — no generic advice`;
+  - Everything must be specific to the actual roles — no generic advice
 
-    const cfg = { max_tokens: 2000, temperature: 0.65 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 2000, temperature: 0.65, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
     const skillStr = skills.length ? `\nCurrent skills: ${skills.join(', ')}` : '';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Create a ${tf} career roadmap.\nFrom: ${currentRole}\nTo: ${targetRole}${skillStr}` }], cfg);
-      const roadmap = parseAIJson(raw);
+      const { data: roadmap } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a ${tf} career roadmap.\nFrom: ${currentRole}\nTo: ${targetRole}${skillStr}` }], cfg);
       console.log(`POST /api/career-roadmap — ${currentRole}→${targetRole} model:${m}`);
       res.json({ roadmap, model: m });
     } catch (err) {
       console.error('POST /api/career-roadmap:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `${tf} career roadmap from ${currentRole} to ${targetRole}.` }], cfg);
-          return res.json({ roadmap: parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Roadmap generation failed. Please try again.' });
     }
   });
@@ -909,25 +949,26 @@ module.exports = function registerToolsRoutes(app) {
   - remoteImpact: 1 sentence on how remote work affects this role's salary
   - topPayingIndustries: 4-5 industries that pay most for this role
   - topPayingLocations: 4-5 cities/regions with highest pay
-  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them where they likely sit in this range given their experience level, the ONE factor most likely to move them toward the top of the range, and a concrete next step (e.g. a number to anchor on, a skill to highlight, or a location/remote angle to consider) — make it feel like advice from a friend who has their back in a negotiation`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them where they likely sit in this range given their experience level, the ONE factor most likely to move them toward the top of the range, and a concrete next step (e.g. a number to anchor on, a skill to highlight, or a location/remote angle to consider) — make it feel like advice from a friend who has their back in a negotiation
 
-    const cfg = { max_tokens: 1200, temperature: 0.45 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1200, temperature: 0.45, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
     const skillStr = skills.length ? `, skills: ${skills.slice(0, 6).join(', ')}` : '';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Salary analysis for: ${jobTitle}\nLocation: ${location}\nExperience: ${yearsExp} years\nEducation: ${education}${skillStr}${industry ? '\nIndustry: ' + industry : ''}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Salary analysis for: ${jobTitle}\nLocation: ${location}\nExperience: ${yearsExp} years\nEducation: ${education}${skillStr}${industry ? '\nIndustry: ' + industry : ''}` }], cfg);
       console.log(`POST /api/salary-intel — "${jobTitle}" ${location} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/salary-intel:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Salary data for ${jobTitle} in ${location} with ${yearsExp} years experience.` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Salary analysis failed. Please try again.' });
     }
   });
@@ -962,24 +1003,25 @@ module.exports = function registerToolsRoutes(app) {
   - opportunities: 4 clear opportunities for professionals
   - threats: 3 threats professionals should be aware of
   - summary: 3-4 sharp sentences on the state of this industry
-  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Translate this industry snapshot into what it means for SOMEONE BUILDING A CAREER here right now — name the single skill or move that would position them best given where this industry is heading, and what that could mean for their job security or growth`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Translate this industry snapshot into what it means for SOMEONE BUILDING A CAREER here right now — name the single skill or move that would position them best given where this industry is heading, and what that could mean for their job security or growth
 
-    const cfg = { max_tokens: 1800, temperature: 0.6 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1800, temperature: 0.6, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Comprehensive industry intelligence for: ${industry}${role ? '\nProfessional role focus: ' + role : ''}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Comprehensive industry intelligence for: ${industry}${role ? '\nProfessional role focus: ' + role : ''}` }], cfg);
       console.log(`POST /api/industry-intel — "${industry}" model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/industry-intel:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Industry intelligence for: ${industry}` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Industry analysis failed. Please try again.' });
     }
   });
@@ -1014,25 +1056,26 @@ module.exports = function registerToolsRoutes(app) {
   - headlineFeedback: 1-2 sentence critique of current headline
   - aboutFeedback: 1-2 sentence critique of current about
   - summary: 2-sentence overall LinkedIn profile assessment
-  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them, compared to their current headline/about, what changing to the optimized version will actually do for them (e.g. how it changes who finds them and what recruiters assume about them at a glance), and the ONE edit to make first if they only do one thing today`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them, compared to their current headline/about, what changing to the optimized version will actually do for them (e.g. how it changes who finds them and what recruiters assume about them at a glance), and the ONE edit to make first if they only do one thing today
 
-    const cfg = { max_tokens: 1800, temperature: 0.72 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1800, temperature: 0.72, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'core';
     const skillStr = skills.length ? `\nCurrent skills: ${skills.join(', ')}` : '';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Optimize my LinkedIn profile.\nCurrent headline: "${headline}"\nAbout section: "${about || 'Not provided'}"\nCurrent role: ${currentRole || 'Not specified'}\nTarget role: ${targetRole || 'Same field'}${skillStr}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Optimize my LinkedIn profile.\nCurrent headline: "${headline}"\nAbout section: "${about || 'Not provided'}"\nCurrent role: ${currentRole || 'Not specified'}\nTarget role: ${targetRole || 'Same field'}${skillStr}` }], cfg);
       console.log(`POST /api/linkedin-optimize — model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/linkedin-optimize:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Optimize LinkedIn profile. Headline: "${headline}". Current role: ${currentRole}. Target: ${targetRole}.` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'LinkedIn optimization failed. Please try again.' });
     }
   });
@@ -1058,25 +1101,22 @@ module.exports = function registerToolsRoutes(app) {
   - context: 1-2 sentences explaining why interviewers ask this specific question
   - tips: 3-4 specific tips for answering this exact question well
   - whatWeAreLooking: what a great answer includes (2-3 sentences)
-  - framework: recommended answer framework (e.g. "STAR Method", "Past-Present-Future", "Problem-Action-Result")`;
+  - framework: recommended answer framework (e.g. "STAR Method", "Past-Present-Future", "Problem-Action-Result")
+
+STRICTNESS RULES:
+- The question must be specific enough that it could only apply to this exact role/level — reject anything so generic it could be asked in any interview for any job.
+- context and whatWeAreLooking must reference the actual skills/seniority implied by the job title given, not boilerplate interview advice.`;
 
     const prev = previousQuestions.length ? `\nDo NOT repeat or closely paraphrase these: ${previousQuestions.slice(-5).join(' | ')}` : '';
-    const cfg = { max_tokens: 800, temperature: 0.85 };
+    const cfg = { max_tokens: 800, temperature: 0.85, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Generate a ${type} interview question for: ${jobTitle} (${level} level)${prev}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Generate a ${type} interview question for: ${jobTitle} (${level} level)${prev}` }], cfg);
       console.log(`POST /api/mock-interview-q — ${type} for "${jobTitle}" model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/mock-interview-q:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `${type} interview question for ${jobTitle} (${level} level)` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Failed to generate question. Please try again.' });
     }
   });
@@ -1109,24 +1149,25 @@ module.exports = function registerToolsRoutes(app) {
   - sampleAnswer: a strong model answer in the recommended framework (150-200 words)
   - structureFeedback: 2 sentences on the answer's logical structure
   - confidenceTips: 2-3 delivery tips for this specific answer
-  - youTakeaway: 2-3 sentences written DIRECTLY to the candidate ("You..."/"Your..."). Reference something specific they actually said, tell them honestly how that would land in a real interview, and give them ONE thing to fix before the next question that would make the biggest difference`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the candidate ("You..."/"Your..."). Reference something specific they actually said, tell them honestly how that would land in a real interview, and give them ONE thing to fix before the next question that would make the biggest difference
 
-    const cfg = { max_tokens: 1400, temperature: 0.55 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1400, temperature: 0.55, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Evaluate this ${type} interview answer for ${jobTitle}.\n\nQuestion: ${question}\n\nCandidate's Answer: ${answer}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Evaluate this ${type} interview answer for ${jobTitle}.\n\nQuestion: ${question}\n\nCandidate's Answer: ${answer}` }], cfg);
       console.log(`POST /api/mock-interview-fb — score:${data.score} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/mock-interview-fb:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Rate this answer for ${jobTitle}. Q: ${question}. A: ${answer}` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Feedback generation failed. Please try again.' });
     }
   });
@@ -1157,27 +1198,28 @@ module.exports = function registerToolsRoutes(app) {
   - brandKeywords: 7-9 keywords that define their professional brand
   - brandVoice: 1 sentence describing their brand voice/personality
   - tips: 5 specific, actionable personal branding tips for their situation
-  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them what makes this brand package distinctly THEIRS (referencing something specific from their background if provided), where to use it first for the biggest impact, and the one habit that will keep this brand consistent across their profiles`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them what makes this brand package distinctly THEIRS (referencing something specific from their background if provided), where to use it first for the biggest impact, and the one habit that will keep this brand consistent across their profiles
 
-    const cfg = { max_tokens: 1800, temperature: 0.82 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1800, temperature: 0.82, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
     let context = resumeData
       ? `Name: ${resumeData.fullName || ''}\nRole: ${resumeData.jobTitle || ''}\nSummary: ${(resumeData.summary || '').slice(0, 250)}\nTop skills: ${(resumeData.skills || []).slice(0, 8).join(', ')}\nExperience: ${(resumeData.workExperience || []).slice(0, 2).map(e => `${e.position} at ${e.company}`).join(', ')}`
       : 'No resume provided — create a generic but compelling template.';
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Create a ${bioType} personal brand package targeted at ${targetAudience}.\n${context}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a ${bioType} personal brand package targeted at ${targetAudience}.\n${context}` }], cfg);
       console.log(`POST /api/personal-brand — type:${bioType} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/personal-brand:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Create ${bioType} personal brand. ${context}` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Brand generation failed. Please try again.' });
     }
   });
@@ -1212,26 +1254,27 @@ module.exports = function registerToolsRoutes(app) {
   - criticalGaps: 3 most important issues to fix, each with the specific reason it's holding them back
   - quickWins: 3 things they can do THIS WEEK for immediate impact — concrete and doable in under an hour each
   - strategicActions: 3 longer-term moves (1-3 months) that compound into real career progress
-  - verdict: 2-3 sentence honest, big-picture career health verdict — the "bottom line" if they only read one thing`;
+  - verdict: 2-3 sentence honest, big-picture career health verdict — the "bottom line" if they only read one thing
 
-    const cfg = { max_tokens: 1800, temperature: 0.45 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1800, temperature: 0.45, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
     const d   = resumeData;
     const ctx = `Name: ${d.fullName || 'N/A'}\nRole: ${d.jobTitle || jobTitle || 'N/A'}\nYears exp: ${yearsExp || 'unknown'}\nSummary length: ${(d.summary || '').length} chars\nSummary: ${(d.summary || '').slice(0, 200)}\nSkills: ${(d.skills || []).join(', ')}\nWork experience entries: ${(d.workExperience || []).length}\nExperience: ${(d.workExperience || []).slice(0, 3).map(e => `${e.position} at ${e.company}`).join(', ')}\nEducation: ${(d.education || []).map(e => `${e.degree} in ${e.field}`).join(', ') || 'N/A'}`;
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Comprehensive career health analysis:\n${ctx}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Comprehensive career health analysis:\n${ctx}` }], cfg);
       console.log(`POST /api/career-health — score:${data.overallScore} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/career-health:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Career health analysis: ${ctx}` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Career health analysis failed. Please try again.' });
     }
   });
@@ -1266,9 +1309,17 @@ module.exports = function registerToolsRoutes(app) {
   - visibilityActions: 4 things to become more visible to decision-makers
   - roadmap: 3-4 monthly phases with specific milestones and actions (realistic, role-specific)
   - timelineAssessment: 2 sentences on whether their timeline is realistic
-  - leadershipTips: 4 leadership-specific tips for this exact transition`;
+  - leadershipTips: 4 leadership-specific tips for this exact transition
 
-    const cfg = { max_tokens: 1800, temperature: 0.6 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1800, temperature: 0.6, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
     let ctx = `From: ${currentRole}\nTo: ${targetRole}\nTimeline: ${timeline}`;
     if (resumeData) {
@@ -1276,18 +1327,11 @@ module.exports = function registerToolsRoutes(app) {
     }
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Assess promotion readiness:\n${ctx}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Assess promotion readiness:\n${ctx}` }], cfg);
       console.log(`POST /api/promotion-readiness — ${currentRole}→${targetRole} score:${data.readinessScore} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/promotion-readiness:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Promotion readiness from ${currentRole} to ${targetRole}. ${ctx}` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Promotion analysis failed. Please try again.' });
     }
   });
@@ -1319,9 +1363,17 @@ module.exports = function registerToolsRoutes(app) {
   - tips: 4 specific sending and follow-up tips
   - doList: 3 things to do when sending
   - dontList: 3 common mistakes to avoid
-  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them which of the two versions fits their situation best and why, plus the single most important thing to do AFTER sending (timing of follow-up, what to prep for, etc.)`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Tell them which of the two versions fits their situation best and why, plus the single most important thing to do AFTER sending (timing of follow-up, what to prep for, etc.)
 
-    const cfg = { max_tokens: 1400, temperature: 0.78 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1400, temperature: 0.78, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'core';
     let ctx = `Message type: ${msgType}\nTarget job: ${targetJob}\nCompany: ${targetCompany}\nTone: ${tone}${recruiterName ? '\nRecruiter name: ' + recruiterName : ''}`;
     if (resumeData) {
@@ -1329,18 +1381,11 @@ module.exports = function registerToolsRoutes(app) {
     }
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Generate a ${msgType} message:\n${ctx}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Generate a ${msgType} message:\n${ctx}` }], cfg);
       console.log(`POST /api/professional-msg — type:${msgType} company:"${targetCompany}" model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/professional-msg:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `${msgType} message for ${targetJob} at ${targetCompany}.` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Message generation failed. Please try again.' });
     }
   });
@@ -1378,26 +1423,27 @@ module.exports = function registerToolsRoutes(app) {
   - atsRisks: 4 specific ATS keyword/format issues
   - standoutMoves: 4 high-impact things to stand out from 200 other applicants
   - improvements: 5 ranked improvements from most to least impactful
-  - verdict: 2-3 sentence recruiter's blunt assessment`;
+  - verdict: 2-3 sentence recruiter's blunt assessment
 
-    const cfg = { max_tokens: 1500, temperature: 0.5 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1500, temperature: 0.5, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
     const d   = resumeData;
     const ctx = `Target role: ${targetRole || d.jobTitle || 'N/A'}\nName: ${d.fullName || 'N/A'}\nSummary: ${(d.summary || '').slice(0, 200)}\nWork: ${(d.workExperience || []).map(e => `${e.position} at ${e.company}`).join(', ')}\nSkills: ${(d.skills || []).join(', ')}\nEducation: ${(d.education || []).map(e => e.degree).join(', ') || 'N/A'}`;
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: `Review this resume as a recruiter:\n${ctx}` }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Review this resume as a recruiter:\n${ctx}` }], cfg);
       console.log(`POST /api/recruiter-intel — score:${data.recruiterScore} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/recruiter-intel:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: `Recruiter review: ${ctx}` }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) {}
-      }
       res.status(500).json({ error: 'Recruiter analysis failed. Please try again.' });
     }
   });
@@ -1431,9 +1477,17 @@ module.exports = function registerToolsRoutes(app) {
   - experienceMatch: 1 sentence on how their experience level matches
   - educationMatch: 1 sentence on education/qualification fit
   - tips: 4 specific actions to improve this application (tailor resume, cover letter angle, etc.)
-  - youTakeaway: 2-3 sentences written DIRECTLY to the candidate ("You..."/"Your..."). Tell them honestly whether this is worth applying to and why, the ONE change to their resume that would raise this score the most before they hit submit, and what to lean on in a cover letter or interview given this specific match`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the candidate ("You..."/"Your..."). Tell them honestly whether this is worth applying to and why, the ONE change to their resume that would raise this score the most before they hit submit, and what to lean on in a cover letter or interview given this specific match
 
-    const cfg = { max_tokens: 1200, temperature: 0.4 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 1200, temperature: 0.4, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     // Build candidate context
@@ -1450,24 +1504,14 @@ module.exports = function registerToolsRoutes(app) {
     const jdSlice = jobDescription.slice(0, 4000);
 
     try {
-      const raw = await callKieAI(m, system, [{
+      const { data } = await callKieAIJson(m, system, [{
         role: 'user',
         content: `Job Description:\n${jdSlice}\n\n---\n${candidateCtx}`,
       }], cfg);
-      const data = parseAIJson(raw);
       console.log(`POST /api/job-match — score:${data.matchScore} model:${m} uid:${req.user.uid}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/job-match:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{
-            role: 'user',
-            content: `Job Description:\n${jdSlice}\n\n---\n${candidateCtx}`,
-          }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) { console.error('job-match fallback:', fe.message); }
-      }
       res.status(500).json({ error: 'Job match analysis failed. Please try again.' });
     }
   });
@@ -1512,9 +1556,17 @@ module.exports = function registerToolsRoutes(app) {
   - tone: ${selectedTone}
   - NEVER mention the specific reason for leaving unless it is something positive like "an exciting new opportunity"
   - tips: 4 practical tips for a smooth exit (what to do in the notice period, how to handle handover, etc.)
-  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Reassure them this letter strikes the right tone for leaving on good terms, and tell them the ONE thing to handle carefully in the days right after sending it (e.g. the conversation with their manager, timing of the announcement, or protecting references)`;
+  - youTakeaway: 2-3 sentences written DIRECTLY to the person ("You..."/"Your..."). Reassure them this letter strikes the right tone for leaving on good terms, and tell them the ONE thing to handle carefully in the days right after sending it (e.g. the conversation with their manager, timing of the announcement, or protecting references)
 
-    const cfg = { max_tokens: 800, temperature: 0.65 };
+STRICTNESS RULES — apply to every field, not just the summary ones:
+- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
+- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
+- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
+- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
+- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
+- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
+
+    const cfg = { max_tokens: 800, temperature: 0.65, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'spark';
 
     // Build context — only pass reason if it's positive/neutral so the AI can reference it
@@ -1525,18 +1577,11 @@ module.exports = function registerToolsRoutes(app) {
     const userPrompt = `Write a resignation letter.\nRole: ${currentRole}\nCompany: ${company}\nNotice period: ${noticePeriod}${reasonCtx}`;
 
     try {
-      const raw = await callKieAI(m, system, [{ role: 'user', content: userPrompt }], cfg);
-      const data = parseAIJson(raw);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: userPrompt }], cfg);
       console.log(`POST /api/resignation-letter — role:"${currentRole}" company:"${company}" model:${m} uid:${req.user.uid}`);
       res.json({ ...data, model: m });
     } catch (err) {
       console.error('POST /api/resignation-letter:', err.message);
-      if (m !== 'spark') {
-        try {
-          const raw = await callKieAI('spark', system, [{ role: 'user', content: userPrompt }], cfg);
-          return res.json({ ...parseAIJson(raw), model: 'spark', fallback: true });
-        } catch (fe) { console.error('resignation fallback:', fe.message); }
-      }
       res.status(500).json({ error: 'Letter generation failed. Please try again.' });
     }
   });

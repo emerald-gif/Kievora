@@ -421,15 +421,22 @@ async function callKieAI(modelKey, systemContent, messages, cfg) {
   if (m.provider === 'groq') {
     const key = process.env.GROQ_API_KEY;
     if (!key) throw new Error('Groq API key not configured.');
+    const body = {
+      model:       m.model,
+      max_tokens:  cfg.max_tokens,
+      temperature: cfg.temperature,
+      messages:    [{ role: 'system', content: systemContent }, ...messages],
+    };
+    // JSON MODE — Groq's OpenAI-compatible endpoint supports native structured
+    // output. This alone eliminates most "model wrapped it in markdown" or
+    // "model added a sentence before the JSON" failures at the source, instead
+    // of trying to regex/repair our way out of them after the fact.
+    if (cfg.jsonMode) body.response_format = { type: 'json_object' };
+
     const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({
-        model:       m.model,
-        max_tokens:  cfg.max_tokens,
-        temperature: cfg.temperature,
-        messages:    [{ role: 'system', content: systemContent }, ...messages],
-      }),
+      body: JSON.stringify(body),
     }, 1); // BUG FIX: one quick retry on transient 429/5xx before throwing
     if (!res.ok) { const e = await res.text(); throw new Error('Groq error: ' + e); }
     const data = await res.json();
@@ -442,6 +449,17 @@ async function callKieAI(modelKey, systemContent, messages, cfg) {
     // Creative should be 0.93, etc.)
     const key = process.env.ANTHROPIC_API_KEY;
     if (!key) throw new Error('Anthropic API key not configured. Add ANTHROPIC_API_KEY to your env.');
+
+    // JSON MODE — Claude has no response_format flag, so we use the standard
+    // "prefill" trick: append an assistant turn that already starts the JSON
+    // object. Claude then has no room to preface the answer with "Sure, here's
+    // your analysis:" — it can only continue the object we started. We strip
+    // the seed back off before returning so callers always get a clean string
+    // starting at "{" either way.
+    const finalMessages = cfg.jsonMode
+      ? [...messages, { role: 'assistant', content: '{' }]
+      : messages;
+
     const res = await fetchWithRetry('https://api.anthropic.com/v1/messages', {
       method:  'POST',
       headers: {
@@ -454,12 +472,83 @@ async function callKieAI(modelKey, systemContent, messages, cfg) {
         max_tokens:  cfg.max_tokens,
         temperature: cfg.temperature,   // ← FIX: was missing before
         system:      systemContent,
-        messages:    messages,
+        messages:    finalMessages,
       }),
     }, 1); // BUG FIX: one quick retry on transient 429/5xx before throwing
     if (!res.ok) { const e = await res.text(); throw new Error('Anthropic error: ' + e); }
     const data = await res.json();
-    return data.content?.[0]?.text || '';
+    const text = data.content?.[0]?.text || '';
+    return cfg.jsonMode ? '{' + text : text;
+  }
+}
+
+// ─── Robust JSON extraction for AI structured outputs ─────────────────────────
+// Replaces the old parseAIJson (indexOf '{' / lastIndexOf '}') which broke on:
+//   - a stray '}' appearing inside a string value before the real object ends
+//   - output truncated mid-object because max_tokens ran out
+//   - trailing commas, which Groq/Claude both occasionally emit
+// This version finds the first '{' and walks forward counting brace depth
+// (respecting quoted strings, so braces inside string values don't confuse it)
+// to find the TRUE matching closing brace, then applies a couple of cheap,
+// safe repairs before parsing.
+function parseAIJson(raw) {
+  const clean = raw.replace(/```json\n?|```\n?/g, '').trim();
+  const start = clean.indexOf('{');
+  if (start === -1) throw new Error('No JSON object found in AI response');
+
+  let depth = 0, inString = false, escaped = false, end = -1;
+  for (let i = start; i < clean.length; i++) {
+    const c = clean[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (c === '\\') escaped = true;
+      else if (c === '"') inString = false;
+      continue;
+    }
+    if (c === '"') { inString = true; continue; }
+    if (c === '{') depth++;
+    else if (c === '}') { depth--; if (depth === 0) { end = i; break; } }
+  }
+
+  let candidate = end !== -1 ? clean.slice(start, end + 1) : clean.slice(start);
+
+  try {
+    return JSON.parse(candidate);
+  } catch (e) {
+    // Cheap repairs for the most common near-misses, then one more try.
+    const repaired = candidate
+      .replace(/,\s*([}\]])/g, '$1')      // trailing commas before } or ]
+      .replace(/[""]/g, '"')              // smart quotes → straight quotes
+      .replace(/['']/g, "'");
+    try {
+      return JSON.parse(repaired);
+    } catch (e2) {
+      throw new Error('Could not parse AI JSON output: ' + e2.message);
+    }
+  }
+}
+
+// ─── AI call + parsed JSON, with one self-correcting retry ────────────────────
+// Wraps callKieAI with jsonMode on, parses the result, and — if parsing still
+// fails — retries ONCE with a corrective follow-up message telling the model
+// exactly what went wrong, rather than silently failing the whole request.
+// This replaces the old per-endpoint "if (m !== 'spark') retry on spark" logic,
+// which never actually ran (every tool already hardcodes model to spark, so
+// that condition was always false — dead code masking as a safety net).
+async function callKieAIJson(modelKey, systemContent, messages, cfg) {
+  const jsonCfg = { ...cfg, jsonMode: true };
+  try {
+    const raw = await callKieAI(modelKey, systemContent, messages, jsonCfg);
+    return { data: parseAIJson(raw), retried: false };
+  } catch (err) {
+    console.error(`callKieAIJson: first attempt failed (${err.message}) — retrying with correction`);
+    const correctiveMessages = [
+      ...messages,
+      { role: 'assistant', content: '(invalid output)' },
+      { role: 'user', content: 'Your last response was not valid JSON and could not be parsed. Respond again with ONLY the JSON object — no markdown fences, no commentary before or after, no trailing commas.' },
+    ];
+    const raw = await callKieAI(modelKey, systemContent, correctiveMessages, jsonCfg);
+    return { data: parseAIJson(raw), retried: true };
   }
 }
 
@@ -1249,7 +1338,7 @@ module.exports = {
   getCycleAnchorDate, getCycleStart, checkAndIncrementKieUsage,
   COUNTRY_CURRENCY, FX_FALLBACKS, getExchangeRates, getUsdToNgnRate,
   UPGRADE_MESSAGES, TOPUP_MESSAGES,
-  callKieAI, callKieAIStream, fetchWithRetry,
+  callKieAI, callKieAIStream, callKieAIJson, parseAIJson, fetchWithRetry,
   performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
   sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest,
   classifyCareerEmail, extractEmailEntities, extractInterviewDateTime, normaliseStr, isSameApplication,
