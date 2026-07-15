@@ -365,6 +365,9 @@ app.get('/support',   (_req, res) => res.sendFile(path.join(__dirname, '..', 'pu
 app.get('/account',   (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'account.html')));
 app.get('/settings',  (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'settings.html')));
 app.get('/billing',   (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'billing.html')));
+app.get('/pricing',   (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'pricing.html')));
+app.get('/about',     (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'about.html')));
+app.get('/gmail-ai',  (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'gmail-ai.html')));
 
 
 // ─── Articles / Community routes (follow, feed, submissions, profile/article pages) ──
