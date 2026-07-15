@@ -299,7 +299,7 @@ module.exports = function registerKieRoutes(app) {
   //           "mode":"default","fallback":false}
   //   data: {"t":"err","v":"message"}      ← unrecoverable error
   app.post('/api/kie', authenticate, async (req, res) => {
-    const { messages, mode = 'default', model = 'spark', resumeContext = '', docContext = '', userCategory = '' } = req.body;
+    const { messages, mode = 'default', model = 'spark', resumeContext = '', docContext = '', userCategory = '', userName = '' } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages array is required.' });
     }
@@ -442,6 +442,17 @@ module.exports = function registerKieRoutes(app) {
 
     if (userCategory) {
       systemContent += `\n\nUSER CONTEXT: This user's professional field is "${userCategory}". Don't announce that you know this — just let it shape your answer naturally.`;
+    }
+
+    // ── Name usage — smart, sparing, never robotic ───────────────────────────
+    // A real mentor uses someone's name occasionally, at the moments it lands
+    // (opening a fresh conversation, marking a genuine win, softening tough
+    // feedback, re-engaging after a while) — never as a verbal tic stapled to
+    // every reply. Bad automated tone drills the name into every line; that's
+    // exactly what this instruction is designed to prevent.
+    const cleanUserName = (userName || '').trim().slice(0, 40);
+    if (cleanUserName && /^[a-zA-Z][a-zA-Z'’.-]*$/.test(cleanUserName)) {
+      systemContent += `\n\nUSER'S NAME: ${cleanUserName}. You may address them by this name, but be deliberate about it — real mentors don't say someone's name in every sentence, that reads as scripted and fake. Good moments to use it: the very first message of a new conversation, right after they share something significant (a big win, a rejection, a hard decision), when delivering praise or tough feedback that deserves to feel personal, or when re-opening the conversation after it's gone quiet. Do NOT use it as a greeting tic, a sign-off habit, or more than once in a short reply. Most replies — quick answers, follow-ups, back-and-forth — should have zero uses of their name. Never say "Hi ${cleanUserName}!" as a reflex opener; only use the name when it actually adds warmth to that specific moment.`;
     }
 
     // Generic uploaded document that hasn't been confirmed as a resume (e.g.
