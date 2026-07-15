@@ -1129,7 +1129,7 @@ async function handleResumeFile(file) {
 
     if (resumeText.length < 30) throw new Error('Could not extract enough text from this file');
 
-    const result = await api('POST', '/api/analyze-resume', { resumeText });
+    const result = await api('POST', '/api/analyze-resume', { resumeText, forceResume: true });
     if (result.jobTitle) {
       setProfession(result.jobTitle, 'upload');
       toast('✅ Resume analyzed — finding jobs for ' + result.jobTitle);
