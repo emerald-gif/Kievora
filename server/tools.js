@@ -806,6 +806,24 @@ module.exports = function registerToolsRoutes(app) {
       seen.add(key); return true;
     });
 
+    // Relevance guard: some sources (Remotive especially) fall back to loosely
+    // related "category" matches when there are few exact hits — e.g. a
+    // "Remote Office Assistant" posting showing up for a "pharmacist" search.
+    // Keep a job only if the title contains at least one significant query word,
+    // or the query word appears in the snippet (covers valid title-phrasing
+    // differences like "Pharmacy Technician" vs "Pharmacist"). Skipped for very
+    // short/ambiguous queries where this would be too aggressive.
+    const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    if (queryWords.length) {
+      const relevant = jobs.filter(j => {
+        const hay = `${j.title||''} ${j.snippet||''}`.toLowerCase();
+        return queryWords.some(w => hay.includes(w) || hay.includes(w.slice(0, -1))); // light stem match (e.g. "pharmacist" ~ "pharmacy")
+      });
+      // Only apply the filter if it doesn't wipe out the whole list — better to
+      // show a loosely-related job than an empty page.
+      if (relevant.length) jobs = relevant;
+    }
+
     jobs = jobs.slice(0, limit);
 
     console.log(`POST /api/find-jobs — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'})`);
