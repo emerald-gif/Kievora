@@ -213,22 +213,14 @@
   .chip:hover { border-color: var(--p); color: var(--p); }
   .chip.active { background: var(--p); color: #fff; border-color: var(--p); }
 
-  /* ── COUNTRY SELECTOR ROW ── */
-  .country-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-  .country-select {
-    display: flex; align-items: center; gap: 6px;
-    background: #fff; border: 1.5px solid var(--border);
-    border-radius: 12px; padding: 7px 12px; font-size: 12px;
-    font-weight: 700; color: var(--txt); cursor: pointer;
-    font-family: inherit; transition: border-color .15s;
-  }
-  .country-select:focus-within { border-color: var(--p); }
-  .country-select select {
-    border: none; outline: none; background: transparent;
-    font-size: 12px; font-weight: 700; color: var(--txt);
-    font-family: inherit; cursor: pointer; padding-right: 4px;
+  /* ── COUNTRY FIELD (now grouped with title/location as one search block) ── */
+  .country-native-select {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-size: 14px; font-weight: 700; color: var(--txt);
+    font-family: inherit; cursor: pointer; min-width: 0;
   }
   .country-detected-badge {
+    flex-shrink: 0;
     font-size: 10.5px; font-weight: 700; color: #15803d;
     background: #f0fdf4; border: 1.5px solid #bbf7d0;
     border-radius: 20px; padding: 3px 9px;
@@ -491,6 +483,29 @@
 
     <!-- Search bar -->
     <div class="search-bar-group">
+      <div class="search-field country-field" id="countryFieldWrap">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        <select id="countrySelect" class="country-native-select" onchange="onCountryChange()">
+          <option value="worldwide">🌍 Worldwide</option>
+          <option value="ng">🇳🇬 Nigeria</option>
+          <option value="gh">🇬🇭 Ghana</option>
+          <option value="ke">🇰🇪 Kenya</option>
+          <option value="za">🇿🇦 South Africa</option>
+          <option value="eg">🇪🇬 Egypt</option>
+          <option value="us">🇺🇸 United States</option>
+          <option value="gb">🇬🇧 United Kingdom</option>
+          <option value="ca">🇨🇦 Canada</option>
+          <option value="au">🇦🇺 Australia</option>
+          <option value="de">🇩🇪 Germany</option>
+          <option value="fr">🇫🇷 France</option>
+          <option value="in">🇮🇳 India</option>
+          <option value="sg">🇸🇬 Singapore</option>
+          <option value="ae">🇦🇪 UAE</option>
+          <option value="br">🇧🇷 Brazil</option>
+          <option value="nl">🇳🇱 Netherlands</option>
+        </select>
+        <span class="country-detected-badge" id="countryDetectedBadge" style="display:none">📍 Auto</span>
+      </div>
       <div class="search-field" id="titleFieldWrap">
         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
         <input class="search-inp" id="searchInp" type="text" placeholder="Search job title, skill, or keyword…" autocomplete="off">
@@ -515,33 +530,6 @@
       <button class="chip" data-filter="full" onclick="setFilter(this,'full')">Full-time</button>
       <button class="chip" data-filter="part" onclick="setFilter(this,'part')">Part-time</button>
       <button class="chip" data-filter="contract" onclick="setFilter(this,'contract')">Contract</button>
-    </div>
-
-    <!-- Country selector -->
-    <div class="country-row">
-      <div class="country-select">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-        <select id="countrySelect" onchange="onCountryChange()">
-          <option value="worldwide">🌍 Worldwide</option>
-          <option value="ng">🇳🇬 Nigeria</option>
-          <option value="gh">🇬🇭 Ghana</option>
-          <option value="ke">🇰🇪 Kenya</option>
-          <option value="za">🇿🇦 South Africa</option>
-          <option value="eg">🇪🇬 Egypt</option>
-          <option value="us">🇺🇸 United States</option>
-          <option value="gb">🇬🇧 United Kingdom</option>
-          <option value="ca">🇨🇦 Canada</option>
-          <option value="au">🇦🇺 Australia</option>
-          <option value="de">🇩🇪 Germany</option>
-          <option value="fr">🇫🇷 France</option>
-          <option value="in">🇮🇳 India</option>
-          <option value="sg">🇸🇬 Singapore</option>
-          <option value="ae">🇦🇪 UAE</option>
-          <option value="br">🇧🇷 Brazil</option>
-          <option value="nl">🇳🇱 Netherlands</option>
-        </select>
-      </div>
-      <span class="country-detected-badge" id="countryDetectedBadge" style="display:none">📍 Auto-detected</span>
     </div>
 
     <!-- Results header -->
