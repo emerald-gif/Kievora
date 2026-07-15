@@ -664,6 +664,66 @@ module.exports = function registerToolsRoutes(app) {
         res.json({ countryCode: 'worldwide', country: 'Worldwide', cached: false });
       }
     } catch(e) { res.json({ countryCode: 'worldwide', country: 'Worldwide' }); }
+  }); // end /api/user-country
+
+  // ─── GET /api/location-suggest — live street/city autocomplete via LocationIQ ──
+  // Env var: LOCATIONIQ_API_KEY (locationiq.com — free tier: 5,000 req/day, no card
+  // required). Scoped to the selected country via `countrycodes` when provided, so
+  // "Lekki" only surfaces Nigerian results, "Lekki" + worldwide surfaces everywhere.
+  // A tiny per-uid rate limiter guards the shared free daily quota from a runaway
+  // client (e.g. a debounce bug re-firing on every keystroke).
+  const _locSuggestHits = new Map(); // uid -> [timestamps in last 10s]
+  function _locSuggestRateOk(uid) {
+    const now = Date.now();
+    const hits = (_locSuggestHits.get(uid) || []).filter(t => now - t < 10_000);
+    if (hits.length >= 12) return false; // >12 requests/10s from one user is almost certainly a bug, not typing
+    hits.push(now);
+    _locSuggestHits.set(uid, hits);
+    return true;
+  }
+
+  app.get('/api/location-suggest', authenticate, async (req, res) => {
+    const KEY = process.env.LOCATIONIQ_API_KEY;
+    if (!KEY) {
+      console.warn('/api/location-suggest — LOCATIONIQ_API_KEY is not set in env vars.');
+      return res.json({ suggestions: [] });
+    }
+    const q = String(req.query.q || '').trim();
+    if (q.length < 2) return res.json({ suggestions: [] }); // avoid burning quota on 1-char queries
+
+    if (!_locSuggestRateOk(req.user.uid)) {
+      return res.status(429).json({ suggestions: [], error: 'Slow down a little.' });
+    }
+
+    const rawCountry = String(req.query.countryCode || '').toLowerCase();
+    const isLocal = rawCountry && rawCountry !== 'worldwide';
+    const cc = isLocal ? (rawCountry === 'uk' ? 'gb' : rawCountry) : '';
+
+    try {
+      const url = `https://api.locationiq.com/v1/autocomplete?key=${KEY}&q=${encodeURIComponent(q)}&format=json&limit=8&normalizecity=1${cc ? `&countrycodes=${cc}` : ''}`;
+      const r = await fetch(url);
+      if (!r.ok) {
+        // 404 just means "no matches" — not an error worth logging loudly.
+        if (r.status !== 404) {
+          const bodyText = await r.text().catch(() => '');
+          console.error(`/api/location-suggest — LocationIQ returned ${r.status} for q:"${q}" cc:"${cc}" — ${bodyText.slice(0,200)}`);
+        }
+        return res.json({ suggestions: [] });
+      }
+      const data = await r.json();
+      const suggestions = (Array.isArray(data) ? data : []).map(p => ({
+        label: p.display_place
+          ? `${p.display_place}${p.display_address ? ', ' + p.display_address : ''}`
+          : (p.display_name || ''),
+        value: p.display_place || (p.display_name || '').split(',')[0],
+        full:  p.display_name || '',
+        lat:   p.lat, lon: p.lon,
+      })).filter(s => s.label);
+      res.json({ suggestions });
+    } catch (err) {
+      console.error(`/api/location-suggest — request threw for q:"${q}":`, err.message);
+      res.json({ suggestions: [] });
+    }
   });
 
   app.post('/api/find-jobs', authenticate, async (req, res) => {
