@@ -197,8 +197,8 @@ module.exports = function registerToolsRoutes(app) {
   - Fully optional and disconnectable at any time from Settings
 
   6. ONBOARDING
-  - New users pick one professional category (e.g. Software & Tech, Design & Creative, Marketing & Growth, Finance & Banking, etc.) and any number of content interests (Career Growth, Resume Tips, Interview Prep, Job Search, Salary Negotiation, etc.)
-  - This personalizes KIE's suggestions and the content the user sees — can be changed anytime from the profile
+  - New users pick one professional category (e.g. Software & Tech, Design & Creative, Marketing & Growth, Finance & Banking, etc.) and enter their current or target job title (required)
+  - This personalizes KIE's suggestions, job matches, and the content the user sees — can be changed anytime from the profile
   - Onboarding can be skipped and completed later
 
   7. BILLING & PLANS
