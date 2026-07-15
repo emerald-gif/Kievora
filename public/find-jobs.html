@@ -1193,18 +1193,24 @@ g('searchInp')?.addEventListener('input', e => {
 g('searchInp')?.addEventListener('blur', () => setTimeout(() => g('titleSuggest')?.classList.remove('open'), 120));
 g('searchInp')?.addEventListener('focus', e => { if (e.target.value.trim()) e.target.dispatchEvent(new Event('input')); });
 
-// ── Autosuggest: location ────────────────────────────────────────────────────
-// City/region suggestions, scoped to whichever country is currently selected —
-// this is what lets "Lekki, Lagos" (rather than just "Nigeria") get sent down
-// to Jooble/JSearch for a much more precise, locally-relevant result set.
-const LOCATION_DATA = {
+// ── Autosuggest: location (live, worldwide) ─────────────────────────────────
+// Backed by /api/location-suggest → LocationIQ (OpenStreetMap data), which covers
+// every country down to street level — not just a fixed set of state capitals.
+// Scoped to whichever country is selected via `countryCode`; left worldwide when
+// "🌍 Worldwide" is picked. This is what lets "Lekki, Lagos" (rather than just
+// "Nigeria") get sent down to Jooble/JSearch for a much more precise result set.
+let _locReqId = 0; // guards against a slow earlier request overwriting a newer one
+
+// Tiny offline fallback — only used if the live API is unreachable (network
+// hiccup, key missing, quota hit), so the field never goes completely dead.
+const LOCATION_FALLBACK = {
   ng: ['Lagos State','Lagos, Lagos State','Lekki, Lagos','Ikeja, Lagos','Ikorodu, Lagos','Abuja, FCT','Port Harcourt, Rivers','Kano','Ibadan, Oyo','Benin City, Edo','Enugu','Kaduna'],
   gh: ['Accra','Kumasi','Tema','Takoradi','Tamale'],
   ke: ['Nairobi','Mombasa','Kisumu','Nakuru'],
   za: ['Johannesburg','Cape Town','Durban','Pretoria'],
   eg: ['Cairo','Giza','Alexandria'],
-  us: ['New York, NY','Los Angeles, CA','Chicago, IL','Austin, TX','Remote, USA'],
-  gb: ['London','Manchester','Birmingham','Remote, UK'],
+  us: ['New York, NY','Los Angeles, CA','Chicago, IL','Austin, TX'],
+  gb: ['London','Manchester','Birmingham'],
   ca: ['Toronto, ON','Vancouver, BC','Montreal, QC'],
   au: ['Sydney, NSW','Melbourne, VIC','Brisbane, QLD'],
   de: ['Berlin','Munich','Hamburg'],
@@ -1216,19 +1222,30 @@ const LOCATION_DATA = {
   nl: ['Amsterdam','Rotterdam'],
 };
 
-function _matchLocationSuggestions(query) {
-  const list = LOCATION_DATA[_selectedCountry] || [];
-  const q = query.trim().toLowerCase();
-  const filtered = q ? list.filter(l => l.toLowerCase().includes(q)) : list;
-  return filtered.slice(0, 8).map(l => ({ label: l, value: l }));
+async function _matchLocationSuggestions(query) {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const myReqId = ++_locReqId;
+  try {
+    const res = await api('GET', `/api/location-suggest?q=${encodeURIComponent(q)}&countryCode=${encodeURIComponent(_selectedCountry)}`);
+    if (myReqId !== _locReqId) return null; // a newer keystroke already superseded this request
+    return (res.suggestions || []).map(s => ({ label: s.label, value: s.value }));
+  } catch (_) {
+    if (myReqId !== _locReqId) return null;
+    // Live API failed — fall back to the small curated list so the field still works.
+    const list = LOCATION_FALLBACK[_selectedCountry] || [];
+    const ql = q.toLowerCase();
+    return list.filter(l => l.toLowerCase().includes(ql)).slice(0, 8).map(l => ({ label: l, value: l }));
+  }
 }
 
 function updateLocationFieldState() {
   const inp = g('locInp');
   if (!inp) return;
-  const hasData = _selectedCountry && _selectedCountry !== 'worldwide' && LOCATION_DATA[_selectedCountry];
-  inp.disabled = !hasData;
-  inp.placeholder = hasData ? `e.g. ${LOCATION_DATA[_selectedCountry][0]}…` : 'Pick a country to search by city…';
+  inp.disabled = false; // live API covers every country, including worldwide
+  inp.placeholder = _selectedCountry && _selectedCountry !== 'worldwide'
+    ? 'City, street, or area…'
+    : 'City, street, or area (any country)…';
 }
 
 function clearLocation() {
@@ -1245,9 +1262,12 @@ let _locDebounce;
 g('locInp')?.addEventListener('input', e => {
   clearTimeout(_locDebounce);
   const val = e.target.value;
-  _locDebounce = setTimeout(() => {
-    const matches = _matchLocationSuggestions(val);
-    const re = val.trim() ? new RegExp('(' + val.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig') : null;
+  if (val.trim().length < 2) { g('locSuggest')?.classList.remove('open'); return; }
+  _locDebounce = setTimeout(async () => {
+    _renderSuggestDropdown(g('locSuggest'), [{ label: 'Searching…', value: '', _loading: true }], () => {});
+    const matches = await _matchLocationSuggestions(val);
+    if (matches === null) return; // superseded by a newer keystroke
+    const re = new RegExp('(' + val.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
     _renderSuggestDropdown(g('locSuggest'), matches, item => {
       g('locInp').value = item.value;
       _selectedLocation = item.value;
@@ -1256,10 +1276,10 @@ g('locInp')?.addEventListener('input', e => {
       const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
       if (q) loadJobs(q, true);
     }, re);
-  }, 120);
+  }, 300); // slightly longer debounce than title — this hits a live paid-tier API
 });
 g('locInp')?.addEventListener('blur', () => setTimeout(() => g('locSuggest')?.classList.remove('open'), 120));
-g('locInp')?.addEventListener('focus', e => { if (!e.target.disabled) e.target.dispatchEvent(new Event('input')); });
+g('locInp')?.addEventListener('focus', e => { if (e.target.value.trim().length >= 2) e.target.dispatchEvent(new Event('input')); });
 
 // ── Search ────────────────────────────────────────────────────────────────────
 function doSearch() {
