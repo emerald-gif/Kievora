@@ -2618,6 +2618,8 @@
       kieSelectedResume = null;
       kieResumeContext  = resumes?.length ? 'HAS_RESUMES_UNSELECTED' : 'NO_RESUME_YET';
       kieDocContext     = '';
+      _kiePendingFileText = '';
+      _kiePendingFileName = '';
       document.querySelectorAll('.kie-rpill:not(.kie-rpill-uploaded)').forEach(p => {
         p.classList.remove('active');
         const x = p.querySelector('.kie-rpill-dismiss');
@@ -2968,6 +2970,8 @@
       if (analysis.jobTitle) setJobProfession(analysis.jobTitle, 'kie');
       kieResumeContext  = resumeText.slice(0, 5000);
       kieDocContext     = ''; // promoted — no longer "pending", it's the resume now
+      _kiePendingFileText = '';
+      _kiePendingFileName = '';
       kieSelectedResume = null;
       const btn = g('kieAttachBtn');
       if (btn) btn.classList.add('has-resume');
@@ -3138,7 +3142,16 @@
           let msg = userPrompt
             ? `Got it — I've read your file. ${note}\n\n`
             : `Alright, I've gone through it. ${note}\n\n`;
-          msg += `Happy to talk it through, help with whatever you're actually after, or if I've got it wrong and this is meant to be your resume, just say so.\n\n[CONFIRM_RESUME_CTA]`;
+
+          // Only dangle "score it as my resume" when there's a realistic
+          // chance that's actually what the user meant — showing that button
+          // under an obviously unrelated file (a legal contract, an invoice)
+          // reads as the AI not having actually understood what it just read.
+          if (analysis.couldBeResume) {
+            msg += `Happy to talk it through, help with whatever you're actually after, or if I've got it wrong and this is meant to be your resume, just say so.\n\n[CONFIRM_RESUME_CTA]`;
+          } else {
+            msg += `Happy to talk it through or help with whatever you're actually after.`;
+          }
 
           appendKMsg('ai', msg, true);
           kieHist.push({ role: 'assistant', content: msg });
@@ -4424,11 +4437,23 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       if (/\b(send|get|give me|share|show me)\b.*\bpdf\b|\bpdf\b.*\b(send|get|download|please)\b/i.test(msg)) return 'SEND_RESUME';
       if (/\b(send|resend|download|give me|get me|share|show me|forward|attach|export)\b.*\bresume\b|\bresume\b.*(send|file|pdf|download|please)/i.test(msg)) return 'SEND_RESUME';
       if (/\b(can i (get|have|download|see)|i (need|want) (my|the)|let me (see|have|get))\b.*\bresume\b/i.test(msg)) return 'SEND_RESUME';
-      if (/\b(the (file|pdf|document)|my (file|pdf|document))\b/i.test(msg) && !/\b(upload|attach|add)\b/i.test(msg)) return 'SEND_RESUME';
+      // BUG FIX: the exclusion below used to be \b(upload|attach|add)\b — a
+      // strict whole-word match that does NOT match "uploaded"/"uploading"
+      // ("upload" and the following "ed" share no word boundary), so "analyze
+      // the file I uploaded" slipped past the exclusion and got misread as a
+      // download request. Widened to \w* so any form of the verb excludes.
+      // Also excludes inspection/discussion verbs — "analyze/check/summarize
+      // the file" means "look at it and talk to me", not "send it to me".
+      const FILE_INSPECT_VERBS = /\b(analy[sz]e|read|review|check|summar\w*|explain|examine|look at|go over|break\s?down|discuss|what('?s| is| does| are)|tell me about)\b/i;
+      if (/\b(the (file|pdf|document)|my (file|pdf|document))\b/i.test(msg) && !/\b(upload\w*|attach\w*|add\w*)\b/i.test(msg) && !FILE_INSPECT_VERBS.test(msg)) return 'SEND_RESUME';
       // Catches phrasing with no literal "resume"/"pdf" — "send as file so I can download",
       // "can I download this", "let me download it" — all of which previously fell through
       // to the raw LLM and produced generic "I'm a language model" replies.
-      if (/\bas\s+a?\s*file\b|\bsend\s+(it|this|that)?\s*as\s+a?\s*(file|document)\b/i.test(msg) && !/\b(upload|attach|add)\b/i.test(msg)) return 'SEND_RESUME';
+      // Same word-boundary bug as above lived here too — \b(upload|attach|add)\b
+      // doesn't match "attached"/"adding"/"uploaded". Fixed identically, plus
+      // the same inspection-verb exclusion ("read it as a file" for context
+      // isn't "send it to me").
+      if (/\bas\s+a?\s*file\b|\bsend\s+(it|this|that)?\s*as\s+a?\s*(file|document)\b/i.test(msg) && !/\b(upload\w*|attach\w*|add\w*)\b/i.test(msg) && !FILE_INSPECT_VERBS.test(msg)) return 'SEND_RESUME';
       if (/\b(can|could)\s+i\s+download|\bi\s+(want|need)\s+to\s+download|\blet\s+me\s+download|\bdownload\s+(it|this|that)\b/i.test(msg)) return 'SEND_RESUME';
 
       // Template change — also catch "use the [name] one", "switch it to [name]"
@@ -4970,8 +4995,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         return;
       }
 
+      // ── PENDING RESUME CONFIRMATION (plain text, no button needed) ─────────
+      // If KIE read an uploaded file, decided it wasn't a resume, and is now
+      // holding it as pending — a plain "yes it's my resume" / "score it"
+      // reply should promote it exactly like tapping the CTA button would,
+      // instead of forcing the user to hunt for a button that may not even
+      // be showing (it's hidden entirely for obviously unrelated files).
+      if (_kiePendingFileText && /\b(yes|yeah|yep|it'?s|treat (it|this) as|score it as|analyze it as|that is)\b.*\b(my )?resume\b|\b(it'?s|this is) my resume\b/i.test(msg)) {
+        appendKMsg('user', msg, true);
+        kieHist.push({ role: 'user', content: msg });
+        inp.value = ''; inp.style.height = 'auto';
+        window.kieConfirmPendingResume();
+        return;
+      }
+
       // ── INTENT DETECTION ────────────────────────────────────────────────────
-      const intent = detectKieIntent(msg);
+      let intent = detectKieIntent(msg);
 
       if (intent && intent.type === 'UPDATE_TEMPLATE_AND_SEND') {
         appendKMsg('user', msg, true);
@@ -5006,7 +5045,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         // SAFETY: an explicit "resume"/"cv" mention in THIS message always wins
         // over cached report data — if they said "resume", they mean the resume,
         // full stop, regardless of what's sitting in the cache.
-        if (window._kieLastReportData && (Date.now() - (window._kieLastReportData.ts || 0) < 10 * 60 * 1000) && !/\b(resume|cv)\b/i.test(msg)) {
+        // Same \b(word)\b suffix bug as elsewhere in this file — \bresume\b
+        // doesn't match "resumes" (plural), so widened to \w*.
+        if (window._kieLastReportData && (Date.now() - (window._kieLastReportData.ts || 0) < 10 * 60 * 1000) && !/\bresume\w*\b|\bcvs?\b/i.test(msg)) {
           const rd = window._kieLastReportData;
           // Brief, honest loading beat before the print dialog opens — there's
           // no AI call on this path (the content's already generated), but
@@ -5025,6 +5066,19 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
         kieActionSendResume();
         return;
+      }
+
+      // Same broadened intelligence as the upload-classification fix: an
+      // update/restructure verb + noun match doesn't automatically mean "edit
+      // my resume" — if there's no resume selected or uploaded, but there IS
+      // a pending non-resume file from this conversation, "restructure my
+      // bio" almost certainly means that file, not a resume nobody picked.
+      // Downgrade to no-intent so it falls through to normal chat, where
+      // docContext lets KIE handle it against the actual file in play.
+      if (intent === 'UPDATE_RESUME_AND_SEND') {
+        const hasResumeTarget = (kieSelectedResume && kieSelectedResume.resumeData) ||
+          (!!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED');
+        if (!hasResumeTarget && _kiePendingFileText) intent = null;
       }
 
       if (intent === 'UPDATE_RESUME_AND_SEND') {
@@ -5077,6 +5131,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         try { classified = await _kieClassifyIntent(msg); }
         catch (e) { console.warn('[kie] intent safety-net skipped:', e.message); }
         _kieIntentClassifying = false;
+
+        // Same broadened intelligence as the regex layer above: don't commit
+        // to "edit my resume" when there's no resume to edit but there IS a
+        // pending non-resume file in play — neutralize BEFORE dispatch so
+        // this falls straight through to the normal chat path below (which
+        // does its own single append), instead of returning early with
+        // nothing sent and the user's message stuck unanswered.
+        if (classified && classified.intent === 'UPDATE_RESUME_AND_SEND') {
+          const hasResumeTarget = (kieSelectedResume && kieSelectedResume.resumeData) ||
+            (!!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED');
+          if (!hasResumeTarget && _kiePendingFileText) classified.intent = 'NONE';
+        }
 
         if (classified && classified.intent && classified.intent !== 'NONE') {
           appendKMsg('user', msg, true);
