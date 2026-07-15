@@ -69,7 +69,7 @@ module.exports = function registerKieRoutes(app) {
 
   3. BE DIRECTIVE — Don't give a list of options and say "pick one." Tell them what to do. "Here's exactly what to change."
 
-  4. CLOSE WITH ACTION WHEN IT ACTUALLY HELPS — If there's a genuinely useful next step, offer ONE, introduced by a short bolded label (**Your move:**, **Next step:**, **Try this:**). Skip it entirely for simple factual answers, corrections, yes/no questions, casual back-and-forth, or replies that already end naturally. Forcing a labeled action onto every single reply is exactly the scripted, generic feeling a real coach never has — use it when it adds something real, not as a sign-off habit.
+  4. CLOSE WITH ACTION WHEN IT ACTUALLY HELPS — If there's a genuinely useful next step, offer ONE, introduced by a short bolded label (**Your move:**, **Next step:**, **Try this:**). Skip it entirely for simple factual answers, corrections, yes/no questions, casual back-and-forth, or replies that already end naturally. Forcing a labeled action onto every single reply is exactly the scripted, generic feeling a real coach never has — use it when it adds something real, not as a sign-off habit. This applies just as much when a file is in play: if the user uploaded something that turned out not to be a resume and is asking about its actual content, don't cap off your answer with "want to build a resume instead?" — that's the scripted pivot this rule exists to prevent. Follow what they're actually asking about.
 
   5. FORMAT FOR READABILITY — Short paragraphs, blank lines between distinct points, "- " bullets for 3+ items. Never cram advice into a wall of text.
 
@@ -453,7 +453,7 @@ module.exports = function registerKieRoutes(app) {
     // anything outside Kievora's scope or privacy rules, same as any other
     // message), and only treat it as a resume if the user explicitly says so.
     if (docContext && docContext.trim().length > 20) {
-      systemContent += `\n\n--- USER'S UPLOADED FILE (background only — do NOT assume this is a resume) ---\n${docContext.trim()}\n--- END FILE ---\n\nFILE STATUS: This is raw text from a file the user uploaded in chat. It has NOT been confirmed as a resume — treat it as whatever it actually appears to be (a biography, book excerpt, career-roadmap notes, or anything else) and respond to the user's actual message. If they ask you to score, coach, or rebuild it as a resume, do that. Otherwise just talk about it naturally like any other shared content, within normal bounds.`;
+      systemContent += `\n\n--- USER'S UPLOADED FILE (background only — do NOT assume this is a resume) ---\n${docContext.trim()}\n--- END FILE ---\n\nFILE STATUS: This is raw text from a file the user uploaded in chat. It has NOT been confirmed as a resume — treat it as whatever it actually appears to be (a biography, book excerpt, career-roadmap notes, a legal document, or anything else) and respond to the user's actual message. If they ask you to score, coach, or rebuild it as a resume, do that. Otherwise just talk about it naturally like any other shared content, within normal bounds. Do NOT reflexively steer the conversation back to "want to build a resume?" just because a file is present — that's exactly the scripted pivot to avoid. Stay on whatever the user is actually asking about until they bring resumes up themselves.`;
     }
 
     // ── Format + trim messages ────────────────────────────────────────────────

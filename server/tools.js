@@ -292,7 +292,7 @@ module.exports = function registerToolsRoutes(app) {
     // is actively wrong and confusing.
     const classificationInstruction = forceResume
       ? `The user uploaded this through the resume-analysis tool, so treat it as a resume/CV and analyze it fully even if formatting is unusual. Set "isResume": true.`
-      : `First, honestly judge whether this document actually IS a resume/CV. Plenty of uploads are not — a personal biography, a book or article excerpt, notes for a career roadmap, a cover letter, or something with nothing to do with careers at all. Set "isResume" to true only if it genuinely is a resume or CV. If it is not: set "isResume": false, fill "docType" with one short label (e.g. "personal biography", "book excerpt", "career roadmap notes", "cover letter", "unrelated document"), and fill "docNote" with one warm, specific sentence telling the user what you actually see in it. When isResume is false you may leave every resume-scoring field (atsScore, grade, strengths, weaknesses, suggestions, missingItems, workExperience, education, skills) empty or zero — do NOT invent a fake ATS score or fake resume content for something that isn't a resume.`;
+      : `First, honestly judge whether this document actually IS a resume/CV. Plenty of uploads are not — a personal biography, a book or article excerpt, notes for a career roadmap, a cover letter, a legal or business document (contract, agreement, invoice), or something with nothing to do with careers at all. Set "isResume" to true only if it genuinely is a resume or CV. If it is not: set "isResume": false, fill "docType" with one short label (e.g. "personal biography", "book excerpt", "career roadmap notes", "cover letter", "legal agreement", "unrelated document"), fill "docNote" with one warm, specific sentence telling the user what you actually see in it, and set "couldBeResume" — true only if there's a REALISTIC chance the user actually meant this as a resume attempt (e.g. it lists some work history or skills but is poorly formatted, or it's genuinely ambiguous), false if it's obviously and entirely unrelated to a resume (a legal contract, an invoice, a novel, an unrelated article — nothing a reasonable person would mistake for a CV). When isResume is false you may leave every resume-scoring field (atsScore, grade, strengths, weaknesses, suggestions, missingItems, workExperience, education, skills) empty or zero — do NOT invent a fake ATS score or fake resume content for something that isn't a resume.`;
 
     const prompt = `You are an expert ATS resume analyst and career coach. Analyze the document text below and return ONLY a valid JSON object — no markdown, no code fences, no explanation before or after.
 
@@ -303,6 +303,7 @@ module.exports = function registerToolsRoutes(app) {
     "isResume": true,
     "docType": "",
     "docNote": "",
+    "couldBeResume": false,
     "fullName": "",
     "jobTitle": "",
     "email": "",
@@ -386,6 +387,7 @@ module.exports = function registerToolsRoutes(app) {
           isResume: false,
           docType:  analysis.docType || 'document',
           docNote:  analysis.docNote || "This doesn't look like a resume.",
+          couldBeResume: analysis.couldBeResume === true,
           fullName: analysis.fullName || null,
         });
       }
