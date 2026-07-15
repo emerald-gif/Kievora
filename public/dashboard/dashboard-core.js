@@ -6132,13 +6132,25 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     };
 
     // ── Fetch jobs from Remotive (free, no key) ────────────────────────────────
-    async function fetchJobsRemotive(query, limit = 8) {
+    const GLOBAL_LOCATION_HINTS = ['worldwide', 'anywhere', 'global', 'remote'];
+    function _remotiveMatchesCountry(locationStr, countryCode, countryName) {
+      const loc = (locationStr || '').toLowerCase();
+      if (!loc) return true;
+      if (GLOBAL_LOCATION_HINTS.some(hint => loc.includes(hint))) return true;
+      if (countryName && loc.includes(countryName.toLowerCase())) return true;
+      if (countryCode && loc.includes(countryCode.toLowerCase())) return true;
+      return false;
+    }
+    async function fetchJobsRemotive(query, limit = 8, countryCode, countryName) {
       try {
         const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=${limit}`;
         const res  = await fetch(url);
         if (!res.ok) return [];
         const data = await res.json();
-        return (data.jobs || []).map(j => ({
+        const isLocal = countryCode && countryCode !== 'worldwide';
+        let jobs = data.jobs || [];
+        if (isLocal) jobs = jobs.filter(j => _remotiveMatchesCountry(j.candidate_required_location, countryCode, countryName));
+        return jobs.map(j => ({
           id:          j.id,
           title:       j.title,
           company:     j.company_name,
@@ -6179,15 +6191,23 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       return _detectedCountry;
     }
 
-    // ── Try server first, fall back to Remotive ────────────────────────────────
+    // ── Try server first, fall back to Remotive only on a real failure ──────────
+    // Important: if the server call SUCCEEDS but returns 0 jobs, that's the
+    // accurate, country-filtered answer — we trust it and let the caller show
+    // the "no jobs in your country" state, rather than silently falling back
+    // to an unfiltered worldwide Remotive search (which would defeat strict
+    // country filtering without telling the user).
     async function fetchJobs(query, limit = 8) {
       const country = await getUserCountry();
       try {
         const res = await api('POST', '/api/find-jobs', { query, limit, countryCode: country.code });
-        if (res.jobs?.length) { logEvent('find_jobs'); return res.jobs; }
-      } catch (_) { /* server might not have key yet */ }
-      logEvent('find_jobs');
-      return fetchJobsRemotive(query, limit);
+        logEvent('find_jobs');
+        return res.jobs || [];
+      } catch (_) {
+        // Server truly unreachable/erroring — fall back so home isn't empty
+        logEvent('find_jobs');
+        return fetchJobsRemotive(query, limit, country.code, country.name);
+      }
     }
 
     // ── ARTICLE SWIPER (real data) ───────────────────────────────────────────
@@ -6344,13 +6364,31 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _jobsSwiperRendered = true;
         if (!cards) return;
         if (!allJobs.length) {
-          cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#7c3aed;font-weight:700">search manually</a></div>`;
+          const country = await getUserCountry();
+          if (country.code !== 'worldwide') {
+            cards.innerHTML = `
+              <div style="padding:18px;text-align:center">
+                <div style="font-size:12.5px;color:#6b7280;font-weight:600;margin-bottom:10px">No ${prof.title} jobs found in ${country.name} right now.</div>
+                <button onclick="switchHomeJobsWorldwide()" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Show worldwide jobs →</button>
+              </div>`;
+          } else {
+            cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#7c3aed;font-weight:700">search manually</a></div>`;
+          }
           return;
         }
         _renderHomeJobCards(allJobs, cards);
       } catch (err) {
         if (cards) cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">Could not load jobs right now.</div>`;
       }
+    }
+
+    // Lets the user broaden their home job snapshot to worldwide results after
+    // seeing "no jobs in your country" — persists the choice so find-jobs.html
+    // picks it up too, since both pages share the same localStorage country key.
+    async function switchHomeJobsWorldwide() {
+      _detectedCountry = { code: 'worldwide', name: 'Worldwide' };
+      try { localStorage.setItem(COUNTRY_LS_KEY, JSON.stringify(_detectedCountry)); } catch {}
+      await renderJobsSwiper(true);
     }
 
     function _renderHomeJobCards(allJobs, cards) {
