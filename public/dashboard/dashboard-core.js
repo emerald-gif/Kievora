@@ -361,6 +361,14 @@
     let KIE_LS_KEY    = 'kievora_kie_history';   // overwritten once uid is known
     let KIE_IMG_LS_KEY = 'kievora_kie_images';    // overwritten once uid is known — persists attached images across reloads
     let KIE_DOC_LS_KEY = 'kievora_kie_docs';      // overwritten once uid is known — persists attached PDFs/TXT for preview across reloads
+    // Stable conversation id for the background summary system (getConvSummary/
+    // generateConvSummary in server/kie.js already read+write this, they just
+    // never had a real id to key off — "New Chat" resets kieHist but there's
+    // no separate per-thread id concept in the UI today, so this is one
+    // stable id per user, matching how kieHist itself already behaves as a
+    // single ongoing thread. Never overwritten once created, so summaries
+    // accumulate against the same doc for as long as the account exists.
+    let KIE_CONVID_LS_KEY = 'kievora_kie_convid'; // overwritten once uid is known
     let DRAFTS_LS_KEY = 'kievora_drafts';         // overwritten once uid is known
     let drafts = []; // local-only draft resumes
     let currentDraftId = null; // active draft id while in builder
@@ -804,6 +812,7 @@
       KIE_LS_KEY     = `kievora_kie_history_${currentUid}`;
       KIE_IMG_LS_KEY = `kievora_kie_images_${currentUid}`;
       KIE_DOC_LS_KEY = `kievora_kie_docs_${currentUid}`;
+      KIE_CONVID_LS_KEY = `kievora_kie_convid_${currentUid}`;
       DRAFTS_LS_KEY  = `kievora_drafts_${currentUid}`;
 
       // Record which uid is active so we can detect account switches
@@ -1914,10 +1923,7 @@
       ${d.summary?`<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Professional Summary</div><p style="color:#444;font-size:11px">${esc(d.summary)}</p></div>`:''}
       ${(d.workExperience||[]).length?`<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Work Experience</div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><strong style="font-size:11px">${esc(w.position)}</strong><span style="color:#999;font-size:9px;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div><div style="color:#6b7280;font-size:10px;margin-top:1px">${esc(w.company)}</div>${w.description?`<p style="color:#777;font-size:10px;margin-top:3px;line-height:1.4">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
       ${(d.education||[]).length?`<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between"><strong style="font-size:11px">${esc(e.degree)} in ${esc(e.field)}</strong><span style="color:#999;font-size:9px">${esc(e.graduationDate)}</span></div><div style="color:#6b7280;font-size:10px">${esc(e.school)}</div></div>`).join('')}</div>`:''}
-      ${(d.skills||[]).length?`<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Skills</div><div style="display:flex;flex-wrap:wrap;gap:5px">${(d.skills||[]).map(s=>`<span style="background:${c}18;color:${c};padding:2px 10px;border-radius:99px;font-size:10px;font-weight:600">${esc(s)}</span>`).join('')}</div></div>`:''}
-      ${(d.certifications||[]).length?`<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Certifications</div>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:6px"><strong style="font-size:11px">${esc(ce.name)}</strong>${ce.issuer?`<div style="color:#6b7280;font-size:10px">${esc(ce.issuer)}</div>`:''}${ce.date?`<span style="color:#999;font-size:9px">${esc(ce.date)}</span>`:''}</div>`).join('')}</div>`:''}
-      ${(d.projects||[]).length?`<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Projects</div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:8px"><strong style="font-size:11px">${esc(pj.name)}</strong>${pj.url?` <span style="color:${c};font-size:9px">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="color:#777;font-size:10px;margin-top:2px;line-height:1.4">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
-      ${(d.languages||[]).length?`<div><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Languages</div><div style="display:flex;flex-wrap:wrap;gap:5px">${(d.languages||[]).map(lg=>`<span style="background:${c}18;color:${c};padding:2px 10px;border-radius:99px;font-size:10px;font-weight:600">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</span>`).join('')}</div></div>`:''}
+      ${(d.skills||[]).length?`<div><div style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Skills</div><div style="display:flex;flex-wrap:wrap;gap:5px">${(d.skills||[]).map(s=>`<span style="background:${c}18;color:${c};padding:2px 10px;border-radius:99px;font-size:10px;font-weight:600">${esc(s)}</span>`).join('')}</div></div>`:''}
     </div>`;}
 
     function tplModern(d,c,fc){return`<div class="${fc}" style="font-size:12px;display:grid;grid-template-columns:190px 1fr;background:#fff;min-height:700px">
@@ -1925,16 +1931,13 @@
         ${d.photo?`<img src="${d.photo}" alt="" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:12px;border:2px solid rgba(255,255,255,.5);display:block">`:` <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;margin-bottom:12px;border:2px solid rgba(255,255,255,.3)">${(d.fullName||'?')[0].toUpperCase()}</div>`}
         <h1 style="font-size:15px;font-weight:800;line-height:1.2;margin-bottom:3px">${esc(d.fullName||'Your Name')}</h1>
         <p style="opacity:.8;font-size:11px;font-weight:500">${esc(d.jobTitle||'')}</p>
-        <div style="margin-top:16px;font-size:10px;opacity:.85;line-height:1.9;overflow-wrap:break-word">${d.email?`<p style="word-break:break-word">✉ ${esc(d.email)}</p>`:''} ${d.phone?`<p>☎ ${esc(d.phone)}</p>`:''} ${d.location?`<p>⌖ ${esc(d.location)}</p>`:''}</div>
+        <div style="margin-top:16px;font-size:10px;opacity:.85;line-height:1.9">${d.email?`<p>✉ ${esc(d.email)}</p>`:''} ${d.phone?`<p>☎ ${esc(d.phone)}</p>`:''} ${d.location?`<p>⌖ ${esc(d.location)}</p>`:''}</div>
         ${(d.skills||[]).length?`<div style="margin-top:20px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-bottom:8px">Skills</p>${(d.skills||[]).map(s=>`<div style="background:rgba(255,255,255,.15);border-radius:5px;padding:3px 9px;font-size:10px;margin-bottom:4px;border-left:3px solid rgba(255,255,255,.4)">${esc(s)}</div>`).join('')}</div>`:''}
-        ${(d.languages||[]).length?`<div style="margin-top:20px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-bottom:8px">Languages</p>${(d.languages||[]).map(lg=>`<div style="background:rgba(255,255,255,.15);border-radius:5px;padding:3px 9px;font-size:10px;margin-bottom:4px;border-left:3px solid rgba(255,255,255,.4)">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</div>`).join('')}</div>`:''}
       </div>
       <div style="padding:24px 22px;line-height:1.5">
         ${d.summary?`<div style="margin-bottom:16px"><p style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">About Me</p><p style="color:#444;font-size:11px">${esc(d.summary)}</p></div>`:''}
         ${(d.workExperience||[]).length?`<div style="margin-bottom:14px"><p style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Experience</p>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11px">${esc(w.position)}</strong><div style="color:#6b7280;font-size:10px">${esc(w.company)}</div></div><span style="color:#999;font-size:9px;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="color:#666;font-size:10px;margin-top:3px">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
-        ${(d.education||[]).length?`<div style="margin-bottom:14px"><p style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Education</p>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:11px">${esc(e.degree)} in ${esc(e.field)}</strong><div style="color:#6b7280;font-size:10px">${esc(e.school)} · ${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
-        ${(d.certifications||[]).length?`<div style="margin-bottom:14px"><p style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Certifications</p>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:6px"><strong style="font-size:11px">${esc(ce.name)}</strong>${ce.issuer?`<div style="color:#6b7280;font-size:10px">${esc(ce.issuer)}${ce.date?' · '+esc(ce.date):''}</div>`:''}</div>`).join('')}</div>`:''}
-        ${(d.projects||[]).length?`<div><p style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Projects</p>${(d.projects||[]).map(pj=>`<div style="margin-bottom:8px"><strong style="font-size:11px">${esc(pj.name)}</strong>${pj.url?` <span style="color:${c};font-size:9px">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="color:#666;font-size:10px;margin-top:2px">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
+        ${(d.education||[]).length?`<div><p style="font-size:9px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Education</p>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:11px">${esc(e.degree)} in ${esc(e.field)}</strong><div style="color:#6b7280;font-size:10px">${esc(e.school)} · ${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
       </div>
     </div>`;}
 
@@ -1947,14 +1950,11 @@
       <div style="display:grid;grid-template-columns:1fr 180px">
         <div style="padding:24px 28px;border-right:2px solid #f8f7ff">
           ${d.summary?`<div style="margin-bottom:16px"><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:4px;margin-bottom:8px">Profile</div><p style="color:#444;font-size:11px">${esc(d.summary)}</p></div>`:''}
-          ${(d.workExperience||[]).length?`<div style="margin-bottom:16px"><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:4px;margin-bottom:10px">Experience</div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><strong style="font-size:11px">${esc(w.position)}</strong><span style="color:#999;font-size:9px">${esc(w.startDate)} – ${esc(w.endDate||'Now')}</span></div><div style="color:#6b7280;font-size:10px">${esc(w.company)}</div>${w.description?`<p style="color:#555;font-size:10px;margin-top:3px">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
-          ${(d.projects||[]).length?`<div><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:4px;margin-bottom:10px">Projects</div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:10px"><strong style="font-size:11px">${esc(pj.name)}</strong>${pj.url?` <span style="color:${c};font-size:9px">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="color:#555;font-size:10px;margin-top:3px">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
+          ${(d.workExperience||[]).length?`<div><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:4px;margin-bottom:10px">Experience</div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><strong style="font-size:11px">${esc(w.position)}</strong><span style="color:#999;font-size:9px">${esc(w.startDate)} – ${esc(w.endDate||'Now')}</span></div><div style="color:#6b7280;font-size:10px">${esc(w.company)}</div>${w.description?`<p style="color:#555;font-size:10px;margin-top:3px">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
         </div>
         <div style="padding:24px 16px;background:#faf9ff">
           ${(d.skills||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Skills</div>${(d.skills||[]).map(s=>`<div style="margin-bottom:5px;font-size:10px;color:#374151;display:flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:${c};flex-shrink:0"></span>${esc(s)}</div>`).join('')}</div>`:''}
-          ${(d.education||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:10px">${esc(e.degree)}</strong><div style="color:#7c3aed;font-size:9px">${esc(e.field)}</div><div style="color:#6b7280;font-size:9px">${esc(e.school)}</div><div style="color:#999;font-size:9px">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
-          ${(d.certifications||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Certifications</div>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:8px"><strong style="font-size:10px">${esc(ce.name)}</strong><div style="color:#6b7280;font-size:9px">${esc(ce.issuer||'')}</div><div style="color:#999;font-size:9px">${esc(ce.date||'')}</div></div>`).join('')}</div>`:''}
-          ${(d.languages||[]).length?`<div><div style="font-size:8px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Languages</div>${(d.languages||[]).map(lg=>`<div style="margin-bottom:5px;font-size:10px;color:#374151">${esc(lg.language)}${lg.proficiency?` <span style="color:#999;font-size:9px">(${esc(lg.proficiency)})</span>`:''}</div>`).join('')}</div>`:''}
+          ${(d.education||[]).length?`<div><div style="font-size:8px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:10px">${esc(e.degree)}</strong><div style="color:#7c3aed;font-size:9px">${esc(e.field)}</div><div style="color:#6b7280;font-size:9px">${esc(e.school)}</div><div style="color:#999;font-size:9px">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
         </div>
       </div>
     </div>`;}
@@ -1968,10 +1968,7 @@
       ${d.summary?`<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:6px">About</p><p style="color:#555;font-size:11px">${esc(d.summary)}</p></div>`:''}
       ${(d.workExperience||[]).length?`<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Experience</p>${(d.workExperience||[]).map(w=>`<div style="display:flex;gap:20px;margin-bottom:10px"><div style="color:#ccc;font-size:9px;white-space:nowrap;padding-top:2px;min-width:60px">${esc(w.startDate)}<br>– ${esc(w.endDate||'Now')}</div><div><strong style="font-size:11px;color:#111">${esc(w.position)}</strong><div style="color:#666;font-size:10px">${esc(w.company)}</div>${w.description?`<p style="color:#777;font-size:10px;margin-top:2px">${esc(w.description)}</p>`:''}</div></div>`).join('')}</div>`:''}
       ${(d.education||[]).length?`<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Education</p>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#111">${esc(e.degree)} in ${esc(e.field)}</strong><div style="color:#666;font-size:10px">${esc(e.school)} · ${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
-      ${(d.skills||[]).length?`<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Skills</p><div style="display:flex;flex-wrap:wrap;gap:6px">${(d.skills||[]).map(s=>`<span style="border:1.5px solid #e2e8f0;color:#374151;padding:3px 12px;border-radius:5px;font-size:10px">${esc(s)}</span>`).join('')}</div></div>`:''}
-      ${(d.certifications||[]).length?`<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Certifications</p>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#111">${esc(ce.name)}</strong><div style="color:#666;font-size:10px">${[ce.issuer,ce.date].filter(Boolean).map(esc).join(' · ')}</div></div>`).join('')}</div>`:''}
-      ${(d.projects||[]).length?`<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Projects</p>${(d.projects||[]).map(pj=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#111">${esc(pj.name)}</strong>${pj.url?` <span style="color:${c};font-size:9.5px">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="color:#777;font-size:10px;margin-top:2px">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
-      ${(d.languages||[]).length?`<div style="padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Languages</p><div style="display:flex;flex-wrap:wrap;gap:6px">${(d.languages||[]).map(lg=>`<span style="border:1.5px solid #e2e8f0;color:#374151;padding:3px 12px;border-radius:5px;font-size:10px">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</span>`).join('')}</div></div>`:''}
+      ${(d.skills||[]).length?`<div style="padding-top:16px;border-top:1px solid #f1f5f9"><p style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Skills</p><div style="display:flex;flex-wrap:wrap;gap:6px">${(d.skills||[]).map(s=>`<span style="border:1.5px solid #e2e8f0;color:#374151;padding:3px 12px;border-radius:5px;font-size:10px">${esc(s)}</span>`).join('')}</div></div>`:''}
     </div>`;}
 
     function tplVivid(d,c,fc){return`<div class="${fc}" style="font-size:12px;background:#fff;min-height:700px">
@@ -1984,10 +1981,7 @@
         ${d.summary?`<div style="margin-bottom:16px;padding:14px 16px;background:${c}0d;border-left:4px solid ${c};border-radius:0 8px 8px 0"><p style="color:#444;font-size:11px;line-height:1.5">${esc(d.summary)}</p></div>`:''}
         ${(d.workExperience||[]).length?`<div style="margin-bottom:16px"><h3 style="font-size:13px;font-weight:800;color:${c};margin-bottom:10px">Work Experience</h3>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px;padding-left:12px;border-left:3px solid ${c}55"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11px">${esc(w.position)}</strong><div style="color:#6b7280;font-size:10px">${esc(w.company)}</div></div><span style="color:#aaa;font-size:9px;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="color:#555;font-size:10px;margin-top:3px">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
         ${(d.education||[]).length?`<div style="margin-bottom:16px"><h3 style="font-size:13px;font-weight:800;color:${c};margin-bottom:10px">Education</h3>${(d.education||[]).map(e=>`<div style="margin-bottom:8px;padding-left:12px;border-left:3px solid ${c}55"><strong style="font-size:11px">${esc(e.degree)} in ${esc(e.field)}</strong><div style="color:#6b7280;font-size:10px">${esc(e.school)} · ${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
-        ${(d.skills||[]).length?`<div style="margin-bottom:16px"><h3 style="font-size:13px;font-weight:800;color:${c};margin-bottom:8px">Skills</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${(d.skills||[]).map(s=>`<span style="background:${c};color:#fff;padding:3px 12px;border-radius:99px;font-size:10px;font-weight:600">${esc(s)}</span>`).join('')}</div></div>`:''}
-        ${(d.certifications||[]).length?`<div style="margin-bottom:16px"><h3 style="font-size:13px;font-weight:800;color:${c};margin-bottom:10px">Certifications</h3>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:8px;padding-left:12px;border-left:3px solid ${c}55"><strong style="font-size:11px">${esc(ce.name)}</strong><div style="color:#6b7280;font-size:10px">${[ce.issuer,ce.date].filter(Boolean).map(esc).join(' · ')}</div></div>`).join('')}</div>`:''}
-        ${(d.projects||[]).length?`<div style="margin-bottom:16px"><h3 style="font-size:13px;font-weight:800;color:${c};margin-bottom:10px">Projects</h3>${(d.projects||[]).map(pj=>`<div style="margin-bottom:8px;padding-left:12px;border-left:3px solid ${c}55"><strong style="font-size:11px">${esc(pj.name)}</strong>${pj.url?` <span style="color:${c};font-size:9px">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="color:#555;font-size:10px;margin-top:2px">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
-        ${(d.languages||[]).length?`<div><h3 style="font-size:13px;font-weight:800;color:${c};margin-bottom:8px">Languages</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${(d.languages||[]).map(lg=>`<span style="background:${c};color:#fff;padding:3px 12px;border-radius:99px;font-size:10px;font-weight:600">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</span>`).join('')}</div></div>`:''}
+        ${(d.skills||[]).length?`<div><h3 style="font-size:13px;font-weight:800;color:${c};margin-bottom:8px">Skills</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${(d.skills||[]).map(s=>`<span style="background:${c};color:#fff;padding:3px 12px;border-radius:99px;font-size:10px;font-weight:600">${esc(s)}</span>`).join('')}</div></div>`:''}
       </div>
     </div>`;}
 
@@ -2005,10 +1999,7 @@
       ${d.summary?`<div style="margin-bottom:18px;text-align:center"><p style="color:#57534e;font-size:11px;max-width:420px;margin:0 auto;font-style:italic;line-height:1.7">${esc(d.summary)}</p></div>`:''}
       ${(d.workExperience||[]).length?`<div style="margin-bottom:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="height:1px;flex:1;background:#e7e5e4"></div><span style="font-size:8.5px;font-weight:700;color:${c};letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif">Experience</span><div style="height:1px;flex:1;background:#e7e5e4"></div></div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><strong style="font-size:11.5px;color:#1c1917">${esc(w.position)}</strong><span style="color:#a8a29e;margin:0 6px">—</span><span style="font-size:10.5px;color:#78716c">${esc(w.company)}</span></div><span style="color:#a8a29e;font-size:9px;font-family:'Inter',sans-serif">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="color:#6b7280;font-size:10px;margin-top:3px;font-style:italic">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
       ${(d.education||[]).length?`<div style="margin-bottom:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="height:1px;flex:1;background:#e7e5e4"></div><span style="font-size:8.5px;font-weight:700;color:${c};letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif">Education</span><div style="height:1px;flex:1;background:#e7e5e4"></div></div>${(d.education||[]).map(e=>`<div style="display:flex;justify-content:space-between;margin-bottom:8px"><div><strong style="font-size:11px;color:#1c1917">${esc(e.degree)} in ${esc(e.field)}</strong><div style="color:#78716c;font-size:10px">${esc(e.school)}</div></div><span style="color:#a8a29e;font-size:9px;font-family:'Inter',sans-serif">${esc(e.graduationDate)}</span></div>`).join('')}</div>`:''}
-      ${(d.skills||[]).length?`<div style="margin-bottom:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="height:1px;flex:1;background:#e7e5e4"></div><span style="font-size:8.5px;font-weight:700;color:${c};letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif">Skills</span><div style="height:1px;flex:1;background:#e7e5e4"></div></div><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px">${(d.skills||[]).map(s=>`<span style="font-size:9.5px;color:#57534e;border:1px solid #d6d3d1;padding:2px 11px;border-radius:2px;font-family:'Inter',sans-serif">${esc(s)}</span>`).join('')}</div></div>`:''}
-      ${(d.certifications||[]).length?`<div style="margin-bottom:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="height:1px;flex:1;background:#e7e5e4"></div><span style="font-size:8.5px;font-weight:700;color:${c};letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif">Certifications</span><div style="height:1px;flex:1;background:#e7e5e4"></div></div>${(d.certifications||[]).map(ce=>`<div style="display:flex;justify-content:space-between;margin-bottom:8px"><div><strong style="font-size:11px;color:#1c1917">${esc(ce.name)}</strong><div style="color:#78716c;font-size:10px">${esc(ce.issuer||'')}</div></div><span style="color:#a8a29e;font-size:9px;font-family:'Inter',sans-serif">${esc(ce.date||'')}</span></div>`).join('')}</div>`:''}
-      ${(d.projects||[]).length?`<div style="margin-bottom:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="height:1px;flex:1;background:#e7e5e4"></div><span style="font-size:8.5px;font-weight:700;color:${c};letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif">Projects</span><div style="height:1px;flex:1;background:#e7e5e4"></div></div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#1c1917">${esc(pj.name)}</strong>${pj.url?`<span style="color:#a8a29e;margin:0 6px">—</span><span style="font-size:10px;color:#78716c">${esc(pj.url)}</span>`:''}${pj.description?`<p style="color:#6b7280;font-size:10px;margin-top:2px;font-style:italic">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
-      ${(d.languages||[]).length?`<div><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="height:1px;flex:1;background:#e7e5e4"></div><span style="font-size:8.5px;font-weight:700;color:${c};letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif">Languages</span><div style="height:1px;flex:1;background:#e7e5e4"></div></div><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px">${(d.languages||[]).map(lg=>`<span style="font-size:9.5px;color:#57534e;border:1px solid #d6d3d1;padding:2px 11px;border-radius:2px;font-family:'Inter',sans-serif">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</span>`).join('')}</div></div>`:''}
+      ${(d.skills||[]).length?`<div><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="height:1px;flex:1;background:#e7e5e4"></div><span style="font-size:8.5px;font-weight:700;color:${c};letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif">Skills</span><div style="height:1px;flex:1;background:#e7e5e4"></div></div><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px">${(d.skills||[]).map(s=>`<span style="font-size:9.5px;color:#57534e;border:1px solid #d6d3d1;padding:2px 11px;border-radius:2px;font-family:'Inter',sans-serif">${esc(s)}</span>`).join('')}</div></div>`:''}
     </div>`;}
 
     // SLATE — dark left panel with timeline experience, for senior/tech
@@ -2019,16 +2010,13 @@
           <h1 style="font-size:14px;font-weight:800;line-height:1.25;margin-bottom:4px;color:#f1f5f9">${esc(d.fullName||'Your Name')}</h1>
           <p style="font-size:10px;color:${c};font-weight:700;letter-spacing:.5px">${esc(d.jobTitle||'')}</p>
         </div>
-        <div style="margin-bottom:18px;font-size:9.5px;line-height:2;color:#94a3b8;overflow-wrap:break-word">${d.email?`<div style="word-break:break-word">✉ ${esc(d.email)}</div>`:''} ${d.phone?`<div>☎ ${esc(d.phone)}</div>`:''} ${d.location?`<div>⌖ ${esc(d.location)}</div>`:''}</div>
+        <div style="margin-bottom:18px;font-size:9.5px;line-height:2;color:#94a3b8">${d.email?`<div>✉ ${esc(d.email)}</div>`:''} ${d.phone?`<div>☎ ${esc(d.phone)}</div>`:''} ${d.location?`<div>⌖ ${esc(d.location)}</div>`:''}</div>
         ${(d.skills||[]).length?`<div><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#475569;margin-bottom:9px">Skills</p><div style="display:flex;flex-direction:column;gap:4px">${(d.skills||[]).map(s=>`<div style="font-size:10px;color:#cbd5e1;padding:4px 10px;background:rgba(255,255,255,.06);border-radius:5px;border-left:3px solid ${c}">${esc(s)}</div>`).join('')}</div></div>`:''}
         ${(d.education||[]).length?`<div style="margin-top:18px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#475569;margin-bottom:9px">Education</p>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><p style="font-size:10px;font-weight:700;color:#e2e8f0">${esc(e.degree)}</p><p style="font-size:9px;color:#94a3b8">${esc(e.field)}</p><p style="font-size:9px;color:#64748b">${esc(e.school)} · ${esc(e.graduationDate)}</p></div>`).join('')}</div>`:''}
-        ${(d.certifications||[]).length?`<div style="margin-top:18px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#475569;margin-bottom:9px">Certifications</p>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:8px"><p style="font-size:10px;font-weight:700;color:#e2e8f0">${esc(ce.name)}</p><p style="font-size:9px;color:#64748b">${[ce.issuer,ce.date].filter(Boolean).map(esc).join(' · ')}</p></div>`).join('')}</div>`:''}
-        ${(d.languages||[]).length?`<div style="margin-top:18px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#475569;margin-bottom:9px">Languages</p><div style="display:flex;flex-direction:column;gap:4px">${(d.languages||[]).map(lg=>`<div style="font-size:10px;color:#cbd5e1;padding:4px 10px;background:rgba(255,255,255,.06);border-radius:5px;border-left:3px solid ${c}">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</div>`).join('')}</div></div>`:''}
       </div>
       <div style="padding:28px 24px;background:#fff">
         ${d.summary?`<div style="margin-bottom:18px;padding:12px 14px;background:#f8fafc;border-left:4px solid ${c};border-radius:0 6px 6px 0"><p style="font-size:11px;color:#334155;line-height:1.6">${esc(d.summary)}</p></div>`:''}
-        ${(d.workExperience||[]).length?`<div style="margin-bottom:18px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:14px">Experience</p><div style="position:relative;padding-left:20px;border-left:2px solid #e2e8f0">${(d.workExperience||[]).map(w=>`<div style="position:relative;margin-bottom:14px"><div style="position:absolute;left:-25px;top:3px;width:8px;height:8px;border-radius:50%;background:${c};border:2px solid #fff;box-shadow:0 0 0 2px ${c}"></div><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11.5px;color:#0f172a">${esc(w.position)}</strong><div style="font-size:10px;color:#64748b">${esc(w.company)}</div></div><span style="font-size:9px;color:#94a3b8;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Now')}</span></div>${w.description?`<p style="font-size:10px;color:#475569;margin-top:3px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div></div>`:''}
-        ${(d.projects||[]).length?`<div><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:14px">Projects</p>${(d.projects||[]).map(pj=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><strong style="font-size:11.5px;color:#0f172a">${esc(pj.name)}</strong>${pj.url?`<span style="font-size:9px;color:${c};margin-left:8px">${esc(pj.url)}</span>`:''}</div>${pj.description?`<p style="font-size:10px;color:#475569;margin-top:3px;line-height:1.5">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
+        ${(d.workExperience||[]).length?`<div><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:14px">Experience</p><div style="position:relative;padding-left:20px;border-left:2px solid #e2e8f0">${(d.workExperience||[]).map(w=>`<div style="position:relative;margin-bottom:14px"><div style="position:absolute;left:-25px;top:3px;width:8px;height:8px;border-radius:50%;background:${c};border:2px solid #fff;box-shadow:0 0 0 2px ${c}"></div><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11.5px;color:#0f172a">${esc(w.position)}</strong><div style="font-size:10px;color:#64748b">${esc(w.company)}</div></div><span style="font-size:9px;color:#94a3b8;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Now')}</span></div>${w.description?`<p style="font-size:10px;color:#475569;margin-top:3px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div></div>`:''}
       </div>
     </div>`;}
 
@@ -2050,11 +2038,6 @@
           ${(d.education||[]).length?`<div><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:7px;padding:8px 12px;background:#fff7ed;border-radius:8px"><strong style="font-size:10px;color:#1c1917">${esc(e.degree)} in ${esc(e.field)}</strong><div style="font-size:9px;color:#78716c">${esc(e.school)} · ${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
           ${(d.skills||[]).length?`<div><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Skills</div><div style="display:flex;flex-wrap:wrap;gap:5px">${(d.skills||[]).map(s=>`<span style="background:${c};color:#fff;padding:3px 10px;border-radius:99px;font-size:9.5px;font-weight:600">${esc(s)}</span>`).join('')}</div></div>`:''}
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
-          ${(d.certifications||[]).length?`<div><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Certifications</div>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:7px;padding:8px 12px;background:#fff7ed;border-radius:8px"><strong style="font-size:10px;color:#1c1917">${esc(ce.name)}</strong><div style="font-size:9px;color:#78716c">${[ce.issuer,ce.date].filter(Boolean).map(esc).join(' · ')}</div></div>`).join('')}</div>`:''}
-          ${(d.languages||[]).length?`<div><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Languages</div><div style="display:flex;flex-wrap:wrap;gap:5px">${(d.languages||[]).map(lg=>`<span style="background:${c};color:#fff;padding:3px 10px;border-radius:99px;font-size:9.5px;font-weight:600">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</span>`).join('')}</div></div>`:''}
-        </div>
-        ${(d.projects||[]).length?`<div style="margin-top:16px"><div style="font-size:9px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px">Projects<div style="flex:1;height:2px;background:#fed7aa;border-radius:99px"></div></div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:10px;padding:10px 14px;border-radius:8px;border:1px solid #f3f4f6;background:#fafafa"><strong style="font-size:11px;color:#1c1917">${esc(pj.name)}</strong>${pj.url?` <span style="font-size:9.5px;color:${c}">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="font-size:10px;color:#57534e;margin-top:5px;line-height:1.5">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
       </div>
     </div>`;}
 
@@ -2067,14 +2050,11 @@
         <div style="width:100%;height:1px;background:rgba(255,255,255,.2);margin-bottom:14px"></div>
         <div style="width:100%;text-align:left;font-size:9.5px;color:rgba(255,255,255,.8);line-height:1.9">${d.email?`<div style="word-break:break-all">${esc(d.email)}</div>`:''} ${d.phone?`<div>${esc(d.phone)}</div>`:''} ${d.location?`<div>${esc(d.location)}</div>`:''}</div>
         ${(d.skills||[]).length?`<div style="margin-top:16px;width:100%"><p style="font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:7px;text-align:left">Skills</p>${(d.skills||[]).map(s=>`<div style="background:rgba(255,255,255,.12);border-radius:5px;padding:3px 8px;font-size:9.5px;color:rgba(255,255,255,.9);margin-bottom:4px;text-align:left">${esc(s)}</div>`).join('')}</div>`:''}
-        ${(d.languages||[]).length?`<div style="margin-top:16px;width:100%"><p style="font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:7px;text-align:left">Languages</p>${(d.languages||[]).map(lg=>`<div style="background:rgba(255,255,255,.12);border-radius:5px;padding:3px 8px;font-size:9.5px;color:rgba(255,255,255,.9);margin-bottom:4px;text-align:left">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</div>`).join('')}</div>`:''}
       </div>
       <div style="padding:28px 24px">
         ${d.summary?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">About</div><p style="color:#334155;font-size:11px;line-height:1.65">${esc(d.summary)}</p></div>`:''}
         ${(d.workExperience||[]).length?`<div style="margin-bottom:14px"><div style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px">Work Experience</div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f1f5f9"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11.5px;color:#0f172a">${esc(w.position)}</strong><div style="font-size:10px;color:${c};font-weight:600">${esc(w.company)}</div></div><span style="font-size:9px;color:#94a3b8;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="font-size:10px;color:#475569;margin-top:4px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
-        ${(d.education||[]).length?`<div style="margin-bottom:14px"><div style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#0f172a">${esc(e.degree)} in ${esc(e.field)}</strong><div style="font-size:10px;color:${c};font-weight:600">${esc(e.school)}</div><div style="font-size:9px;color:#94a3b8">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
-        ${(d.certifications||[]).length?`<div style="margin-bottom:14px"><div style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Certifications</div>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#0f172a">${esc(ce.name)}</strong><div style="font-size:10px;color:${c};font-weight:600">${esc(ce.issuer||'')}</div><div style="font-size:9px;color:#94a3b8">${esc(ce.date||'')}</div></div>`).join('')}</div>`:''}
-        ${(d.projects||[]).length?`<div><div style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Projects</div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#0f172a">${esc(pj.name)}</strong>${pj.url?` <span style="font-size:9px;color:${c}">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="font-size:10px;color:#475569;margin-top:3px;line-height:1.5">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
+        ${(d.education||[]).length?`<div><div style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#0f172a">${esc(e.degree)} in ${esc(e.field)}</strong><div style="font-size:10px;color:${c};font-weight:600">${esc(e.school)}</div><div style="font-size:9px;color:#94a3b8">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
       </div>
     </div>`;}
 
@@ -2093,15 +2073,10 @@
       <div style="padding:24px 32px">
         ${d.summary?`<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid #f1f5f9"><p style="font-size:11.5px;color:#374151;line-height:1.7">${esc(d.summary)}</p></div>`:''}
         ${(d.workExperience||[]).length?`<div style="margin-bottom:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111827">Experience</span><div style="flex:1;height:2px;background:#111827"></div></div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:8px"><div><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><strong style="font-size:11.5px;color:#111827">${esc(w.position)}</strong><span style="font-size:9px;color:#fff;background:${c};padding:1px 8px;border-radius:3px;font-weight:700">${esc(w.company)}</span></div>${w.description?`<p style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5">${esc(w.description)}</p>`:''}</div><div style="font-size:9px;color:#9ca3af;text-align:right;white-space:nowrap">${esc(w.startDate)}<br>– ${esc(w.endDate||'Now')}</div></div>`).join('')}</div>`:''}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
           ${(d.education||[]).length?`<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111827">Education</span><div style="flex:1;height:2px;background:#111827"></div></div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#111827">${esc(e.degree)} in ${esc(e.field)}</strong><div style="font-size:9.5px;color:#6b7280">${esc(e.school)} · ${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
           ${(d.skills||[]).length?`<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111827">Skills</span><div style="flex:1;height:2px;background:#111827"></div></div><div style="display:flex;flex-wrap:wrap;gap:5px">${(d.skills||[]).map(s=>`<span style="font-size:9.5px;font-weight:700;color:#111827;border:1.5px solid #111827;padding:2px 10px;border-radius:3px">${esc(s)}</span>`).join('')}</div></div>`:''}
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          ${(d.certifications||[]).length?`<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111827">Certifications</span><div style="flex:1;height:2px;background:#111827"></div></div>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#111827">${esc(ce.name)}</strong><div style="font-size:9.5px;color:#6b7280">${[ce.issuer,ce.date].filter(Boolean).map(esc).join(' · ')}</div></div>`).join('')}</div>`:''}
-          ${(d.languages||[]).length?`<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111827">Languages</span><div style="flex:1;height:2px;background:#111827"></div></div><div style="display:flex;flex-wrap:wrap;gap:5px">${(d.languages||[]).map(lg=>`<span style="font-size:9.5px;font-weight:700;color:#111827;border:1.5px solid #111827;padding:2px 10px;border-radius:3px">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</span>`).join('')}</div></div>`:''}
-        </div>
-        ${(d.projects||[]).length?`<div style="margin-top:18px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111827">Projects</span><div style="flex:1;height:2px;background:#111827"></div></div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:8px"><strong style="font-size:11px;color:#111827">${esc(pj.name)}</strong>${pj.url?` <span style="font-size:9px;color:#fff;background:${c};padding:1px 8px;border-radius:3px;font-weight:700">${esc(pj.url)}</span>`:''}${pj.description?`<p style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
       </div>
     </div>`;}
 
@@ -2131,14 +2106,11 @@
           <div style="padding:20px 24px 20px 32px;border-right:1px solid #e5e7eb">
             ${d.summary?`<div style="margin-bottom:16px"><div style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:6px;padding-bottom:4px;border-bottom:1.5px solid #111">Summary</div><p style="font-size:10.5px;color:#444;line-height:1.65">${esc(d.summary)}</p></div>`:''}
             ${(d.workExperience||[]).length?`<div style="margin-bottom:14px"><div style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Work Experience</div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11px;color:#111;text-transform:uppercase;letter-spacing:.3px">${esc(w.position)}</strong><div style="font-size:10px;color:${c};font-weight:600;margin-top:1px">${esc(w.company)}</div></div><span style="font-size:9px;color:#888;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="font-size:10px;color:#555;margin-top:3px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
-            ${(d.projects||[]).length?`<div><div style="font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Projects</div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:10px"><strong style="font-size:11px;color:#111;text-transform:uppercase;letter-spacing:.3px">${esc(pj.name)}</strong>${pj.url?` <span style="font-size:9.5px;color:${c};font-weight:600">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="font-size:10px;color:#555;margin-top:3px;line-height:1.5">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
           </div>
           <!-- Right sidebar: skills + education -->
           <div style="padding:20px 20px 20px 16px;background:#f9fafb">
             ${(d.skills||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Skills</div>${(d.skills||[]).map(s=>`<div style="font-size:10px;color:#374151;padding:3px 0;border-bottom:1px solid #e5e7eb">${esc(s)}</div>`).join('')}</div>`:``}
-            ${(d.education||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:10px;color:#111;display:block">${esc(e.degree)}</strong><div style="font-size:9.5px;color:#555">${esc(e.field)}</div><div style="font-size:9px;color:#7c3aed;font-weight:600">${esc(e.school)}</div><div style="font-size:9px;color:#888">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:``}
-            ${(d.certifications||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Certifications</div>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:8px"><strong style="font-size:10px;color:#111;display:block">${esc(ce.name)}</strong><div style="font-size:9.5px;color:#555">${esc(ce.issuer||'')}</div><div style="font-size:9px;color:#888">${esc(ce.date||'')}</div></div>`).join('')}</div>`:``}
-            ${(d.languages||[]).length?`<div><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Languages</div>${(d.languages||[]).map(lg=>`<div style="font-size:10px;color:#374151;padding:3px 0;border-bottom:1px solid #e5e7eb">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</div>`).join('')}</div>`:``}
+            ${(d.education||[]).length?`<div><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:10px;color:#111;display:block">${esc(e.degree)}</strong><div style="font-size:9.5px;color:#555">${esc(e.field)}</div><div style="font-size:9px;color:#7c3aed;font-weight:600">${esc(e.school)}</div><div style="font-size:9px;color:#888">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:``}
           </div>
         </div>
       </div>`;
@@ -2170,14 +2142,11 @@
           ${(d.skills||[]).length?`<div style="padding:14px 20px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:8px">Skills</p><div style="display:flex;flex-direction:column;gap:5px">${(d.skills||[]).map(s=>`<div style="font-size:10px;color:rgba(255,255,255,.9);background:rgba(255,255,255,.12);border-radius:6px;padding:4px 10px;border-left:3px solid rgba(255,255,255,.4)">${esc(s)}</div>`).join('')}</div></div>`:''}
           <!-- Education -->
           ${(d.education||[]).length?`<div style="padding:10px 20px 20px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:8px">Education</p>${(d.education||[]).map(e=>`<div style="margin-bottom:9px"><p style="font-size:10px;font-weight:700;color:#fff">${esc(e.degree)}</p><p style="font-size:9px;color:rgba(255,255,255,.7)">${esc(e.field)}</p><p style="font-size:9px;color:rgba(255,255,255,.5)">${esc(e.school)} · ${esc(e.graduationDate)}</p></div>`).join('')}</div>`:''}
-          ${(d.certifications||[]).length?`<div style="padding:0 20px 20px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:8px">Certifications</p>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:9px"><p style="font-size:10px;font-weight:700;color:#fff">${esc(ce.name)}</p><p style="font-size:9px;color:rgba(255,255,255,.5)">${[ce.issuer,ce.date].filter(Boolean).map(esc).join(' · ')}</p></div>`).join('')}</div>`:''}
-          ${(d.languages||[]).length?`<div style="padding:0 20px 20px"><p style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:8px">Languages</p><div style="display:flex;flex-direction:column;gap:5px">${(d.languages||[]).map(lg=>`<div style="font-size:10px;color:rgba(255,255,255,.9);background:rgba(255,255,255,.12);border-radius:6px;padding:4px 10px;border-left:3px solid rgba(255,255,255,.4)">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</div>`).join('')}</div></div>`:''}
         </div>
         <!-- Main content -->
         <div style="padding:28px 26px;background:#fff;line-height:1.55">
           ${d.summary?`<div style="margin-bottom:18px;padding:14px 16px;background:#f8f7ff;border-left:4px solid ${c};border-radius:0 8px 8px 0"><p style="font-size:11px;color:#374151;line-height:1.65;font-style:italic">${esc(d.summary)}</p></div>`:''}
-          ${(d.workExperience||[]).length?`<div style="margin-bottom:18px"><div style="font-size:8.5px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:8px">Experience <div style="flex:1;height:1.5px;background:${c}33"></div></div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f1f5f9"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11.5px;color:#111">${esc(w.position)}</strong><div style="font-size:10px;color:${c};font-weight:600;margin-top:1px">${esc(w.company)}</div></div><span style="font-size:9px;color:#94a3b8;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="font-size:10px;color:#475569;margin-top:4px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
-          ${(d.projects||[]).length?`<div><div style="font-size:8.5px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:8px">Projects <div style="flex:1;height:1.5px;background:${c}33"></div></div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f1f5f9"><strong style="font-size:11.5px;color:#111">${esc(pj.name)}</strong>${pj.url?` <span style="font-size:9px;color:${c};font-weight:600">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="font-size:10px;color:#475569;margin-top:4px;line-height:1.5">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
+          ${(d.workExperience||[]).length?`<div><div style="font-size:8.5px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:8px">Experience <div style="flex:1;height:1.5px;background:${c}33"></div></div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f1f5f9"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11.5px;color:#111">${esc(w.position)}</strong><div style="font-size:10px;color:${c};font-weight:600;margin-top:1px">${esc(w.company)}</div></div><span style="font-size:9px;color:#94a3b8;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="font-size:10px;color:#475569;margin-top:4px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
         </div>
       </div>`;
     }
@@ -2207,15 +2176,12 @@
           <!-- Left col -->
           <div style="padding:20px 20px 20px 28px;border-right:1px solid #e5e7eb">
             ${d.summary?`<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #e5e7eb"><p style="font-size:11px;color:#374151;line-height:1.7">${esc(d.summary)}</p></div>`:''}
-            ${(d.workExperience||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2.5px;color:#111;margin-bottom:10px;display:flex;align-items:center;gap:8px">Experience<div style="flex:1;height:2px;background:#111"></div></div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid #f1f5f9"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11px;color:#111">${esc(w.position)}</strong><div style="font-size:10px;font-weight:600;color:${c}">${esc(w.company)}</div></div><span style="font-size:9px;color:#9ca3af;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Now')}</span></div>${w.description?`<p style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
-            ${(d.projects||[]).length?`<div><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2.5px;color:#111;margin-bottom:10px;display:flex;align-items:center;gap:8px">Projects<div style="flex:1;height:2px;background:#111"></div></div>${(d.projects||[]).map(pj=>`<div style="margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid #f1f5f9"><strong style="font-size:11px;color:#111">${esc(pj.name)}</strong>${pj.url?` <span style="font-size:10px;font-weight:600;color:${c}">(${esc(pj.url)})</span>`:''}${pj.description?`<p style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5">${esc(pj.description)}</p>`:''}</div>`).join('')}</div>`:''}
+            ${(d.workExperience||[]).length?`<div><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2.5px;color:#111;margin-bottom:10px;display:flex;align-items:center;gap:8px">Experience<div style="flex:1;height:2px;background:#111"></div></div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid #f1f5f9"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:11px;color:#111">${esc(w.position)}</strong><div style="font-size:10px;font-weight:600;color:${c}">${esc(w.company)}</div></div><span style="font-size:9px;color:#9ca3af;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Now')}</span></div>${w.description?`<p style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
           </div>
           <!-- Right col -->
           <div style="padding:20px 20px 20px 16px;background:#fafafa">
             ${(d.skills||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;display:flex;align-items:center;gap:6px">Skills<div style="flex:1;height:1.5px;background:#111"></div></div><div style="display:flex;flex-direction:column;gap:4px">${(d.skills||[]).map(s=>`<div style="font-size:10px;color:#374151;padding:3px 8px;background:#fff;border-radius:5px;border-left:3px solid ${c};font-weight:500">${esc(s)}</div>`).join('')}</div></div>`:''}
-            ${(d.education||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;display:flex;align-items:center;gap:6px">Education<div style="flex:1;height:1.5px;background:#111"></div></div>${(d.education||[]).map(e=>`<div style="margin-bottom:9px"><strong style="font-size:10px;color:#111;display:block">${esc(e.degree)}</strong><div style="font-size:9.5px;color:#555">${esc(e.field)}</div><div style="font-size:9px;color:${c};font-weight:600">${esc(e.school)}</div><div style="font-size:9px;color:#9ca3af">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
-            ${(d.certifications||[]).length?`<div style="margin-bottom:16px"><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;display:flex;align-items:center;gap:6px">Certifications<div style="flex:1;height:1.5px;background:#111"></div></div>${(d.certifications||[]).map(ce=>`<div style="margin-bottom:9px"><strong style="font-size:10px;color:#111;display:block">${esc(ce.name)}</strong><div style="font-size:9px;color:#555">${[ce.issuer,ce.date].filter(Boolean).map(esc).join(' · ')}</div></div>`).join('')}</div>`:''}
-            ${(d.languages||[]).length?`<div><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;display:flex;align-items:center;gap:6px">Languages<div style="flex:1;height:1.5px;background:#111"></div></div><div style="display:flex;flex-direction:column;gap:4px">${(d.languages||[]).map(lg=>`<div style="font-size:10px;color:#374151;padding:3px 8px;background:#fff;border-radius:5px;border-left:3px solid ${c};font-weight:500">${esc(lg.language)}${lg.proficiency?` · ${esc(lg.proficiency)}`:''}</div>`).join('')}</div></div>`:''}
+            ${(d.education||[]).length?`<div><div style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;display:flex;align-items:center;gap:6px">Education<div style="flex:1;height:1.5px;background:#111"></div></div>${(d.education||[]).map(e=>`<div style="margin-bottom:9px"><strong style="font-size:10px;color:#111;display:block">${esc(e.degree)}</strong><div style="font-size:9.5px;color:#555">${esc(e.field)}</div><div style="font-size:9px;color:${c};font-weight:600">${esc(e.school)}</div><div style="font-size:9px;color:#9ca3af">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
           </div>
         </div>
       </div>`;
@@ -2435,6 +2401,45 @@
         } catch { /* give up silently */ }
       }
     }
+    // Stable per-user conversation id, created once and reused forever after.
+    // This is what lets getConvSummary/generateConvSummary (server/kie.js,
+    // already fully wired to consume a summary once one exists) actually have
+    // something to key off — previously convId was always null since nothing
+    // ever set it, so the summary system existed but silently never ran.
+    function _getKieConvId() {
+      try {
+        let id = localStorage.getItem(KIE_CONVID_LS_KEY);
+        if (!id) {
+          id = 'kc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+          localStorage.setItem(KIE_CONVID_LS_KEY, id);
+        }
+        return id;
+      } catch { return null; } // storage unavailable — convId stays null, chat works exactly as before
+    }
+
+    // Fires the (cheap, already-built) background summarizer every few turns
+    // so a running summary stays available for later requests, without
+    // calling it on literally every message. Fully fire-and-forget: never
+    // awaited by callers, any failure is swallowed silently, and it can never
+    // delay or block a chat response — matches how /api/kie/summarize itself
+    // already responds instantly and does the real work after replying.
+    let _kieSummaryLastLen = 0;
+    async function _maybeTriggerKieSummary() {
+      try {
+        if (kieHist.length < 6) return;
+        if (kieHist.length - _kieSummaryLastLen < 6) return; // every ~3 exchanges, not every message
+        const convId = _getKieConvId();
+        if (!convId || !usr) return;
+        _kieSummaryLastLen = kieHist.length;
+        const t = await usr.getIdToken();
+        fetch('/api/kie/summarize', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+          body:    JSON.stringify({ messages: kieHist.slice(-12).map(m => ({ role: m.role, content: m.content })), convId }),
+        }).catch(() => {}); // deliberately not awaited beyond the token fetch — background only
+      } catch { /* never let this affect the actual chat flow */ }
+    }
+
     function saveKieHistory() {
       try {
         const data = JSON.stringify(kieHist.slice(-40));
@@ -2450,6 +2455,7 @@
       } catch {}
       saveKieImageStore();
       saveKieFileStore();
+      _maybeTriggerKieSummary(); // fire-and-forget, never blocks or throws into this function
     }
     function restoreKieUI() {
       const msgs = g('kieMsgs');
@@ -2731,29 +2737,11 @@
     // category greetings, resume-edit PDF regeneration, and confirmation
     // scanning never actually produced real AI output — they always failed and
     // fell back.
-    // ── USER NAME — for KIE to address the person naturally, not on every ──
-    // message (see system prompt instructions server-side for when to use it).
-    // Prefers Firebase displayName's first token; falls back to the email
-    // local-part, capitalized. Never sends "undefined" or an empty string.
-    function getKieUserName() {
-      try {
-        const u = window._currentUser;
-        if (!u) return null;
-        let name = (u.displayName || '').trim();
-        if (!name && u.email) name = u.email.split('@')[0];
-        if (!name) return null;
-        // Take just the first word/token as the first name
-        const first = name.split(/[\s._-]+/)[0];
-        if (!first) return null;
-        return first.charAt(0).toUpperCase() + first.slice(1);
-      } catch { return null; }
-    }
-
     async function _kieCallSilent(payload, signal) {
       const res = await fetch('/api/kie', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-        body:    JSON.stringify({ userName: getKieUserName(), ...payload }),
+        body:    JSON.stringify(payload),
         signal,
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -4367,8 +4355,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
             resumeContext: kieResumeContext,
             docContext:    kieDocContext,
             userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
-            userName:      getKieUserName(),
-            convId:        (typeof _activeId !== 'undefined' ? _activeId : null),
+            convId:        _getKieConvId(),
           }),
           signal: _kieAbort?.signal,
         });
@@ -5335,8 +5322,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             model:         kieModel,
             resumeContext: kieResumeContext,
             docContext:    kieDocContext,
+            convId:        _getKieConvId(),
             userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
-            userName:      getKieUserName(),
           }),
           signal: _kieAbort.signal,
         });
@@ -6132,25 +6119,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     };
 
     // ── Fetch jobs from Remotive (free, no key) ────────────────────────────────
-    const GLOBAL_LOCATION_HINTS = ['worldwide', 'anywhere', 'global', 'remote'];
-    function _remotiveMatchesCountry(locationStr, countryCode, countryName) {
-      const loc = (locationStr || '').toLowerCase();
-      if (!loc) return true;
-      if (GLOBAL_LOCATION_HINTS.some(hint => loc.includes(hint))) return true;
-      if (countryName && loc.includes(countryName.toLowerCase())) return true;
-      if (countryCode && loc.includes(countryCode.toLowerCase())) return true;
-      return false;
-    }
-    async function fetchJobsRemotive(query, limit = 8, countryCode, countryName) {
+    async function fetchJobsRemotive(query, limit = 8) {
       try {
         const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=${limit}`;
         const res  = await fetch(url);
         if (!res.ok) return [];
         const data = await res.json();
-        const isLocal = countryCode && countryCode !== 'worldwide';
-        let jobs = data.jobs || [];
-        if (isLocal) jobs = jobs.filter(j => _remotiveMatchesCountry(j.candidate_required_location, countryCode, countryName));
-        return jobs.map(j => ({
+        return (data.jobs || []).map(j => ({
           id:          j.id,
           title:       j.title,
           company:     j.company_name,
@@ -6191,23 +6166,15 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       return _detectedCountry;
     }
 
-    // ── Try server first, fall back to Remotive only on a real failure ──────────
-    // Important: if the server call SUCCEEDS but returns 0 jobs, that's the
-    // accurate, country-filtered answer — we trust it and let the caller show
-    // the "no jobs in your country" state, rather than silently falling back
-    // to an unfiltered worldwide Remotive search (which would defeat strict
-    // country filtering without telling the user).
+    // ── Try server first, fall back to Remotive ────────────────────────────────
     async function fetchJobs(query, limit = 8) {
       const country = await getUserCountry();
       try {
         const res = await api('POST', '/api/find-jobs', { query, limit, countryCode: country.code });
-        logEvent('find_jobs');
-        return res.jobs || [];
-      } catch (_) {
-        // Server truly unreachable/erroring — fall back so home isn't empty
-        logEvent('find_jobs');
-        return fetchJobsRemotive(query, limit, country.code, country.name);
-      }
+        if (res.jobs?.length) { logEvent('find_jobs'); return res.jobs; }
+      } catch (_) { /* server might not have key yet */ }
+      logEvent('find_jobs');
+      return fetchJobsRemotive(query, limit);
     }
 
     // ── ARTICLE SWIPER (real data) ───────────────────────────────────────────
@@ -6364,31 +6331,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _jobsSwiperRendered = true;
         if (!cards) return;
         if (!allJobs.length) {
-          const country = await getUserCountry();
-          if (country.code !== 'worldwide') {
-            cards.innerHTML = `
-              <div style="padding:18px;text-align:center">
-                <div style="font-size:12.5px;color:#6b7280;font-weight:600;margin-bottom:10px">No ${prof.title} jobs found in ${country.name} right now.</div>
-                <button onclick="switchHomeJobsWorldwide()" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Show worldwide jobs →</button>
-              </div>`;
-          } else {
-            cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#7c3aed;font-weight:700">search manually</a></div>`;
-          }
+          cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#7c3aed;font-weight:700">search manually</a></div>`;
           return;
         }
         _renderHomeJobCards(allJobs, cards);
       } catch (err) {
         if (cards) cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">Could not load jobs right now.</div>`;
       }
-    }
-
-    // Lets the user broaden their home job snapshot to worldwide results after
-    // seeing "no jobs in your country" — persists the choice so find-jobs.html
-    // picks it up too, since both pages share the same localStorage country key.
-    async function switchHomeJobsWorldwide() {
-      _detectedCountry = { code: 'worldwide', name: 'Worldwide' };
-      try { localStorage.setItem(COUNTRY_LS_KEY, JSON.stringify(_detectedCountry)); } catch {}
-      await renderJobsSwiper(true);
     }
 
     function _renderHomeJobCards(allJobs, cards) {
