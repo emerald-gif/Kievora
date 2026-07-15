@@ -143,30 +143,62 @@
   .btn-sec:hover { border-color: var(--p); color: var(--p); }
 
   /* ── SEARCH BAR ── */
-  .search-bar {
+  .search-bar-group { margin-bottom: 16px; }
+  .search-field {
+    position: relative;
     background: #fff;
     border: 1.5px solid var(--border);
     border-radius: 16px;
     padding: 14px 16px;
     display: flex; align-items: center; gap: 10px;
-    margin-bottom: 16px;
     transition: border-color .2s, box-shadow .2s;
   }
-  .search-bar:focus-within { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.08); }
+  .search-field + .search-field { margin-top: 8px; }
+  .search-field:focus-within { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.08); z-index: 2; }
+  .search-field svg { flex-shrink: 0; }
   .search-inp {
     flex: 1; border: none; outline: none; background: transparent;
     font-size: 14px; color: var(--txt); font-family: inherit;
-    font-weight: 600;
+    font-weight: 600; min-width: 0;
   }
   .search-inp::placeholder { color: #b0b0c0; font-weight: 500; }
+  .search-inp:disabled { cursor: not-allowed; color: #cbd5e1; }
+  .loc-clear {
+    flex-shrink: 0; width: 22px; height: 22px; border: none; border-radius: 99px;
+    background: #f1f5f9; color: #94a3b8; font-size: 14px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  .loc-clear:hover { background: #e2e8f0; color: #64748b; }
   .search-btn {
+    width: 100%;
     background: var(--g); color: #fff; border: none;
-    border-radius: 12px; padding: 8px 16px;
-    font-size: 13px; font-weight: 700; font-family: inherit;
-    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    border-radius: 12px; padding: 12px 16px; margin-top: 10px;
+    font-size: 13.5px; font-weight: 700; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
     transition: all .15s; flex-shrink: 0;
   }
   .search-btn:hover { opacity: .88; }
+
+  /* ── SUGGESTION DROPDOWNS (title + location autosuggest) ── */
+  .suggest-dropdown {
+    position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+    background: #fff; border: 1.5px solid var(--border); border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(20,10,50,.12);
+    max-height: 260px; overflow-y: auto;
+    z-index: 30; display: none; padding: 6px;
+  }
+  .suggest-dropdown.open { display: block; }
+  .suggest-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 10px; border-radius: 9px;
+    font-size: 13px; font-weight: 600; color: var(--txt);
+    cursor: pointer; transition: background .12s;
+  }
+  .suggest-item:hover, .suggest-item.hi { background: #f5f3ff; }
+  .suggest-item svg { flex-shrink: 0; color: #b0b0c0; }
+  .suggest-item mark { background: none; color: var(--p); font-weight: 800; }
+  .suggest-empty { padding: 10px; font-size: 12px; color: var(--sub); font-weight: 600; }
 
   /* ── FILTER CHIPS ── */
   .filters {
@@ -458,9 +490,18 @@
     </div>
 
     <!-- Search bar -->
-    <div class="search-bar">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
-      <input class="search-inp" id="searchInp" type="text" placeholder="Search job title, skill, or keyword…">
+    <div class="search-bar-group">
+      <div class="search-field" id="titleFieldWrap">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+        <input class="search-inp" id="searchInp" type="text" placeholder="Search job title, skill, or keyword…" autocomplete="off">
+        <div class="suggest-dropdown" id="titleSuggest"></div>
+      </div>
+      <div class="search-field" id="locFieldWrap">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <input class="search-inp" id="locInp" type="text" placeholder="City or region (optional)…" autocomplete="off">
+        <button class="loc-clear" id="locClearBtn" onclick="clearLocation()" style="display:none" aria-label="Clear location" title="Clear location">✕</button>
+        <div class="suggest-dropdown" id="locSuggest"></div>
+      </div>
       <button class="search-btn" onclick="doSearch()">
         <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
         Search
@@ -637,6 +678,7 @@ let page           = 1;
 const PAGE_SIZE    = 12;
 let _selectedCountry = 'worldwide';
 let _countryName     = 'Worldwide';
+let _selectedLocation = ''; // precise city/region picked from the location suggestion dropdown
 
 const FJ_CACHE_KEY = 'kievora_fj_cache';
 const FJ_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -841,6 +883,7 @@ function applyCountryToUI(code, detected) {
   }
   const badge = g('countryDetectedBadge');
   if (badge) badge.style.display = detected && code && code !== 'worldwide' ? '' : 'none';
+  updateLocationFieldState();
 }
 
 function onCountryChange() {
@@ -855,6 +898,12 @@ function onCountryChange() {
   } catch {}
   const badge = g('countryDetectedBadge');
   if (badge) badge.style.display = 'none';
+  // A previously picked city belongs to the old country's suggestion list —
+  // clear it so we don't send a mismatched location to a new country.
+  _selectedLocation = '';
+  if (g('locInp')) g('locInp').value = '';
+  if (g('locClearBtn')) g('locClearBtn').style.display = 'none';
+  updateLocationFieldState();
   const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
   if (q) loadJobs(q, true); // force=true — country changed, must re-fetch
 }
@@ -868,12 +917,23 @@ function getCurrentProfQuery() {
 }
 
 async function fetchJobs(query) {
-  // Try server (JSearch + Adzuna) first — passes country for localised results
+  // Try server (JSearch + Adzuna + Remotive + Jooble) first — passes country
+  // (and a precise city/region if one was picked) for localised results.
+  // Important: if the server call SUCCEEDS but returns 0 jobs, that's the
+  // accurate, country-filtered answer — trust it and let loadJobs() show the
+  // "no jobs in your country" state, rather than silently swapping in an
+  // unfiltered worldwide Remotive-only search (which is what was happening
+  // and made every country look like it only had Remotive results).
   try {
-    const res = await api('POST', '/api/find-jobs', { query, limit: 20, countryCode: _selectedCountry });
-    if (res.jobs?.length) return res.jobs;
-  } catch (_) { /* fallback below */ }
-  // Free Remotive fallback
+    const res = await api('POST', '/api/find-jobs', {
+      query, limit: 20, countryCode: _selectedCountry,
+      location: _selectedLocation || undefined,
+    });
+    if (res && Array.isArray(res.jobs)) return res.jobs;
+  } catch (_) {
+    // Server truly unreachable/erroring — fall back so the page isn't empty
+    return fetchJobsRemotive(query, 20);
+  }
   return fetchJobsRemotive(query, 20);
 }
 
@@ -983,15 +1043,15 @@ function showSkeletons() {
   if (g('loadMoreWrap')) g('loadMoreWrap').style.display = 'none';
 }
 
-function _saveFjCache(query, jobs, country) {
-  try { sessionStorage.setItem(FJ_CACHE_KEY, JSON.stringify({ query, jobs, country, ts: Date.now() })); } catch {}
+function _saveFjCache(query, jobs, country, location) {
+  try { sessionStorage.setItem(FJ_CACHE_KEY, JSON.stringify({ query, jobs, country, location: location||'', ts: Date.now() })); } catch {}
 }
-function _loadFjCache(query, country) {
+function _loadFjCache(query, country, location) {
   try {
     const c = JSON.parse(sessionStorage.getItem(FJ_CACHE_KEY) || 'null');
     if (!c?.jobs?.length) return null;
     if (Date.now() - c.ts > FJ_CACHE_TTL) return null;
-    if (c.query !== query || c.country !== country) return null;
+    if (c.query !== query || c.country !== country || (c.location||'') !== (location||'')) return null;
     return c.jobs;
   } catch { return null; }
 }
@@ -999,7 +1059,7 @@ function _loadFjCache(query, country) {
 async function loadJobs(query, force) {
   // ── Cache hit — restore instantly, no fetch needed ───────────────────────────
   if (!force) {
-    const cached = _loadFjCache(query, _selectedCountry);
+    const cached = _loadFjCache(query, _selectedCountry, _selectedLocation);
     if (cached) {
       allJobs = cached;
       window._fjJobs = cached;
@@ -1026,7 +1086,7 @@ async function loadJobs(query, force) {
         </div>`;
       return;
     }
-    _saveFjCache(query, allJobs, _selectedCountry);
+    _saveFjCache(query, allJobs, _selectedCountry, _selectedLocation);
     if (!allJobs.length) toast('No jobs found — try a different title', 'err');
     renderJobs();
   } catch (err) {
@@ -1046,6 +1106,10 @@ function switchToWorldwide() {
   if (sel) sel.value = 'worldwide';
   const badge = g('countryDetectedBadge');
   if (badge) badge.style.display = 'none';
+  _selectedLocation = '';
+  if (g('locInp')) g('locInp').value = '';
+  if (g('locClearBtn')) g('locClearBtn').style.display = 'none';
+  updateLocationFieldState();
   const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
   if (q) loadJobs(q, true);
 }
@@ -1061,6 +1125,154 @@ function setFilter(el, filter) {
   renderJobs();
 }
 
+// ── Autosuggest: job title ───────────────────────────────────────────────────
+// A curated phrase bank, mirroring the "type a word → related search phrases"
+// experience of a real job board's search bar. Matching favors phrases whose
+// words start with what's typed (like Jooble's own dropdown).
+const TITLE_PHRASES = [
+  'virtual assistant','virtual assistant online','virtual office assistant','virtual office',
+  'virtual bookkeeper','virtual receptionist',
+  'customer service representative','customer service remote','customer support agent','call center agent',
+  'software engineer','software engineer remote','software developer','frontend developer','backend developer',
+  'full stack developer','mobile developer','android developer','ios developer','devops engineer',
+  'data analyst','data entry','data entry remote','data scientist','database administrator',
+  'graphic designer','graphic designer remote','ui/ux designer','ux designer','video editor','photographer',
+  'digital marketing','digital marketer','social media manager','content writer','copywriter','seo specialist',
+  'email marketing specialist','affiliate marketer','e-commerce manager','growth marketer','brand manager',
+  'accountant','accounting clerk','bookkeeper','financial analyst','investment analyst',
+  'administrative assistant','admin assistant','executive assistant','personal assistant','office manager','receptionist',
+  'sales representative','sales executive','business analyst','project manager','product manager',
+  'cybersecurity analyst','network engineer','system administrator','cloud engineer','machine learning engineer',
+  'human resources','hr manager','recruiter','teacher','tutor','online tutor',
+  'nurse','registered nurse','doctor','physician','dentist','pharmacist','lab technician',
+  'driver','delivery driver','logistics coordinator','supply chain analyst','warehouse associate',
+  'legal assistant','paralegal','technical writer','customer success manager','public relations','event planner',
+  'quality assurance','qa engineer','translator','transcriptionist','voice over artist',
+  'chef','restaurant manager','hospitality','cleaner','security guard',
+  'electrician','plumber','civil engineer','mechanical engineer','architect','construction manager',
+];
+function _renderSuggestDropdown(el, items, onPick, highlightRe) {
+  if (!items.length) { el.classList.remove('open'); el.innerHTML = ''; return; }
+  el.innerHTML = items.map((item, i) => {
+    const label = highlightRe
+      ? item.label.replace(highlightRe, m => `<mark>${m}</mark>`)
+      : item.label;
+    return `<div class="suggest-item" data-idx="${i}">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+      <span>${label}</span>
+    </div>`;
+  }).join('');
+  el.classList.add('open');
+  [...el.querySelectorAll('.suggest-item')].forEach(node => {
+    node.addEventListener('mousedown', ev => { // mousedown fires before input blur
+      ev.preventDefault();
+      onPick(items[Number(node.dataset.idx)]);
+    });
+  });
+}
+
+function _matchTitleSuggestions(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const words = q.split(/\s+/);
+  const lastWord = words[words.length - 1];
+  const scored = [];
+  for (const phrase of TITLE_PHRASES) {
+    const lower = phrase.toLowerCase();
+    if (lower === q) continue;
+    if (lower.startsWith(q)) scored.push({ phrase, rank: 0 });
+    else if (lower.split(/\s+/).some(w => w.startsWith(lastWord))) scored.push({ phrase, rank: 1 });
+    else if (lower.includes(q)) scored.push({ phrase, rank: 2 });
+  }
+  scored.sort((a, b) => a.rank - b.rank);
+  return scored.slice(0, 7).map(s => ({ label: s.phrase, value: s.phrase }));
+}
+
+let _titleDebounce;
+g('searchInp')?.addEventListener('input', e => {
+  clearTimeout(_titleDebounce);
+  const val = e.target.value;
+  _titleDebounce = setTimeout(() => {
+    const matches = _matchTitleSuggestions(val);
+    const re = val.trim() ? new RegExp('(' + val.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig') : null;
+    _renderSuggestDropdown(g('titleSuggest'), matches, item => {
+      g('searchInp').value = item.value;
+      g('titleSuggest').classList.remove('open');
+      doSearch();
+    }, re);
+  }, 120);
+});
+g('searchInp')?.addEventListener('blur', () => setTimeout(() => g('titleSuggest')?.classList.remove('open'), 120));
+g('searchInp')?.addEventListener('focus', e => { if (e.target.value.trim()) e.target.dispatchEvent(new Event('input')); });
+
+// ── Autosuggest: location ────────────────────────────────────────────────────
+// City/region suggestions, scoped to whichever country is currently selected —
+// this is what lets "Lekki, Lagos" (rather than just "Nigeria") get sent down
+// to Jooble/JSearch for a much more precise, locally-relevant result set.
+const LOCATION_DATA = {
+  ng: ['Lagos State','Lagos, Lagos State','Lekki, Lagos','Ikeja, Lagos','Ikorodu, Lagos','Abuja, FCT','Port Harcourt, Rivers','Kano','Ibadan, Oyo','Benin City, Edo','Enugu','Kaduna'],
+  gh: ['Accra','Kumasi','Tema','Takoradi','Tamale'],
+  ke: ['Nairobi','Mombasa','Kisumu','Nakuru'],
+  za: ['Johannesburg','Cape Town','Durban','Pretoria'],
+  eg: ['Cairo','Giza','Alexandria'],
+  us: ['New York, NY','Los Angeles, CA','Chicago, IL','Austin, TX','Remote, USA'],
+  gb: ['London','Manchester','Birmingham','Remote, UK'],
+  ca: ['Toronto, ON','Vancouver, BC','Montreal, QC'],
+  au: ['Sydney, NSW','Melbourne, VIC','Brisbane, QLD'],
+  de: ['Berlin','Munich','Hamburg'],
+  fr: ['Paris','Lyon','Marseille'],
+  in: ['Bengaluru','Mumbai','Delhi','Hyderabad'],
+  sg: ['Singapore'],
+  ae: ['Dubai','Abu Dhabi'],
+  br: ['São Paulo','Rio de Janeiro'],
+  nl: ['Amsterdam','Rotterdam'],
+};
+
+function _matchLocationSuggestions(query) {
+  const list = LOCATION_DATA[_selectedCountry] || [];
+  const q = query.trim().toLowerCase();
+  const filtered = q ? list.filter(l => l.toLowerCase().includes(q)) : list;
+  return filtered.slice(0, 8).map(l => ({ label: l, value: l }));
+}
+
+function updateLocationFieldState() {
+  const inp = g('locInp');
+  if (!inp) return;
+  const hasData = _selectedCountry && _selectedCountry !== 'worldwide' && LOCATION_DATA[_selectedCountry];
+  inp.disabled = !hasData;
+  inp.placeholder = hasData ? `e.g. ${LOCATION_DATA[_selectedCountry][0]}…` : 'Pick a country to search by city…';
+}
+
+function clearLocation() {
+  _selectedLocation = '';
+  const inp = g('locInp');
+  if (inp) inp.value = '';
+  g('locClearBtn').style.display = 'none';
+  g('locSuggest')?.classList.remove('open');
+  const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
+  if (q) loadJobs(q, true);
+}
+
+let _locDebounce;
+g('locInp')?.addEventListener('input', e => {
+  clearTimeout(_locDebounce);
+  const val = e.target.value;
+  _locDebounce = setTimeout(() => {
+    const matches = _matchLocationSuggestions(val);
+    const re = val.trim() ? new RegExp('(' + val.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig') : null;
+    _renderSuggestDropdown(g('locSuggest'), matches, item => {
+      g('locInp').value = item.value;
+      _selectedLocation = item.value;
+      g('locClearBtn').style.display = '';
+      g('locSuggest').classList.remove('open');
+      const q = g('searchInp')?.value?.trim() || getCurrentProfQuery();
+      if (q) loadJobs(q, true);
+    }, re);
+  }, 120);
+});
+g('locInp')?.addEventListener('blur', () => setTimeout(() => g('locSuggest')?.classList.remove('open'), 120));
+g('locInp')?.addEventListener('focus', e => { if (!e.target.disabled) e.target.dispatchEvent(new Event('input')); });
+
 // ── Search ────────────────────────────────────────────────────────────────────
 function doSearch() {
   const q = g('searchInp')?.value?.trim();
@@ -1070,7 +1282,7 @@ function doSearch() {
   loadJobs(q, true); // force=true — user typed a new query, always fresh fetch
 }
 
-g('searchInp')?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+g('searchInp')?.addEventListener('keydown', e => { if (e.key === 'Enter') { g('titleSuggest')?.classList.remove('open'); doSearch(); } });
 
 // ── Profession modal ──────────────────────────────────────────────────────────
 function openProfModal() {
@@ -1096,6 +1308,7 @@ g('profModal')?.addEventListener('click', e => { if (e.target === g('profModal')
 window.__onFindJobsAuthReady = async function() {
   // Detect country first, then load jobs so the first search is already localised
   await detectAndSetCountry();
+  updateLocationFieldState(); // covers the case where detection stayed at "worldwide"
   const hasProfession = renderProfBar();
   if (hasProfession) {
     const prof = getProfession();
