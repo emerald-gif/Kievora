@@ -410,8 +410,9 @@ module.exports = function registerToolsRoutes(app) {
     }
   });
 
-  // ─── POST /api/find-jobs — Merges JSearch + Adzuna + Remotive ─────────────────
-  // Env vars: JSEARCH_API_KEY (rapidapi.com), ADZUNA_APP_ID, ADZUNA_APP_KEY (adzuna.com/developers)
+  // ─── POST /api/find-jobs — Merges JSearch + Adzuna + Remotive + Jooble ────────
+  // Env vars: JSEARCH_API_KEY (rapidapi.com), ADZUNA_APP_ID, ADZUNA_APP_KEY (adzuna.com/developers),
+  //           JOOBLE_API_KEY (jooble.org/api/about — free tier, default 500 req limit)
   // Remotive is always on (free, no key needed)
 
   // ─── Country → Adzuna country code map ───────────────────────────────────────
@@ -585,6 +586,47 @@ module.exports = function registerToolsRoutes(app) {
     } catch { return []; }
   }
 
+  // ─── Jooble — POST https://jooble.org/api/{key}, real local-board coverage ────
+  // (Jobberman/MyJobMag-style listings) for markets Adzuna doesn't support, e.g.
+  // Nigeria, Ghana, Kenya. Free tier default limit is 500 requests — the client
+  // already caches results (session cache on find-jobs, 10-min cache on the
+  // dashboard swiper) so normal usage should stay well under that.
+  async function _fetchJooble(query, limit, countryCode, countryName) {
+    const KEY = process.env.JOOBLE_API_KEY;
+    if (!KEY) return [];
+    const isLocal = countryCode && countryCode !== 'worldwide';
+    try {
+      const res = await fetch(`https://jooble.org/api/${KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keywords: query,
+          location: isLocal ? countryName : '',
+          page: '1',
+        }),
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data.jobs || []).slice(0, limit).map(j => ({
+        id:       String(j.id),
+        title:    j.title,
+        company:  j.company || '',
+        logo:     '',
+        location: j.location || (isLocal ? countryName : ''),
+        country:  isLocal ? countryCode.toUpperCase() : '',
+        remote:   /remote/i.test((j.title||'') + ' ' + (j.snippet||'')),
+        salary:   j.salary || '',
+        type:     j.type || '',
+        url:      j.link,
+        source:   'Jooble',
+        posted:   j.updated || '',
+        snippet:  (j.snippet || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
+        description: (j.snippet || '').replace(/<[^>]+>/g,'').slice(0, 3000),
+        requirements: '',
+      }));
+    } catch { return []; }
+  }
+
   // Detects the user's country from their IP and saves it to Firestore — called
   // once on first job search (or anytime the Firestore field is missing). Cached
   // in-memory so repeat requests don't hit ip-api.com.
@@ -612,16 +654,21 @@ module.exports = function registerToolsRoutes(app) {
     const { query, limit = 20, countryCode = 'worldwide' } = req.body;
     if (!query) return res.status(400).json({ error: 'query is required' });
 
-    const [r1, r2, r3] = await Promise.allSettled([
+    const isLocal = countryCode && countryCode !== 'worldwide';
+    const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
+
+    const [r1, r2, r3, r4] = await Promise.allSettled([
       _fetchJSearch(query, limit, countryCode),
       _fetchAdzuna(query, limit, countryCode),
       _fetchRemotive(query, 10, countryCode),
+      _fetchJooble(query, limit, countryCode, countryName),
     ]);
 
     let jobs = [
       ...(r1.status === 'fulfilled' ? r1.value : []),
       ...(r2.status === 'fulfilled' ? r2.value : []),
       ...(r3.status === 'fulfilled' ? r3.value : []),
+      ...(r4.status === 'fulfilled' ? r4.value : []),
     ];
 
     // Deduplicate by normalized title + company
