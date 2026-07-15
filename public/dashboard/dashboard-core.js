@@ -3845,11 +3845,11 @@
           <div class="kie-code-card" id="${cardId}">
             <div class="kie-code-card-hdr">
               <span class="kie-code-card-label">
-                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>
+                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>
                 ${label || 'Content'}
               </span>
               <button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 Copy
               </button>
             </div>
@@ -3862,6 +3862,26 @@
       return w;
     }
 
+    window._copyTableCard = function(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const table = card.querySelector('.kie-table');
+      if (!table) return;
+      const rows = [...table.querySelectorAll('tr')].map(tr =>
+        [...tr.children].map(c => c.textContent.trim()).join('\t')
+      );
+      const text = rows.join('\n');
+      const copyBtn = card.querySelector('.kie-table-card-copy');
+      navigator.clipboard?.writeText(text).then(() => {
+        if (!copyBtn) return;
+        const orig = copyBtn.innerHTML;
+        copyBtn.innerHTML = `<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Copied!`;
+        copyBtn.style.color = '#16a34a';
+        copyBtn.style.background = 'rgba(22,163,74,.1)';
+        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.color = ''; copyBtn.style.background = ''; }, 1500);
+      }).catch(() => {});
+    };
+
     window._copyCodeCard = function(cardId) {
       const card = document.getElementById(cardId);
       if (!card) return;
@@ -3870,10 +3890,10 @@
       const copyBtn = card.querySelector('.kie-code-card-copy');
       navigator.clipboard?.writeText(text).then(() => {
         const orig = copyBtn.innerHTML;
-        copyBtn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Copied!`;
+        copyBtn.innerHTML = `<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Copied!`;
         copyBtn.style.color = '#16a34a';
-        copyBtn.style.borderColor = '#bbf7d0';
-        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.color = ''; copyBtn.style.borderColor = ''; }, 1500);
+        copyBtn.style.background = 'rgba(22,163,74,.1)';
+        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.color = ''; copyBtn.style.background = ''; }, 1500);
       }).catch(() => {});
     };
 
@@ -5603,41 +5623,98 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // ── LIVE PROGRESSIVE FORMATTER ────────────────────────────────────────────
     // Called on every streaming frame — formats partial text including live code
     // blocks and strips internal markers ([SEND_PDF], [GMAIL_CTA]).
+    // Parses [TABLE] block content into rows of cells. Splits on '|', trims
+    // each cell, drops empty lines and markdown-style separator rows (e.g.
+    // "---|---|---") in case the model slips into raw-markdown habits. While
+    // still streaming (not closed), the last line may be a row mid-typing —
+    // drop it so a half-typed row never flashes on screen as broken cells.
+    function _parseTableRows(content, closed) {
+      const lines = content.split('\n').map(l => l.trim());
+      const usable = closed ? lines : lines.slice(0, -1);
+      return usable
+        .filter(l => l && l.includes('|'))
+        .map(line => line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()))
+        .filter(cells => !cells.every(c => /^:?-{2,}:?$/.test(c)));
+    }
+
+    // Builds a styled comparison-table card from parsed rows — first row is
+    // the header. Rendered as a real HTML table (never raw pipes on screen).
+    function _buildTableCard(label, content, closed, cardId) {
+      const allRows = _parseTableRows(content, closed);
+      const tableIcon = '<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M9 4v16"/></svg>';
+      const writing = closed
+        ? ''
+        : `<div class="kie-table-writing"><span class="kie-typing-dot-sm"></span>writing…</div>`;
+
+      if (!allRows.length) {
+        return `<div class="kie-table-card" id="${cardId}">
+          <div class="kie-table-card-hdr"><span class="kie-table-card-label">${tableIcon}${esc(label)}</span></div>
+          ${writing}
+        </div>`;
+      }
+
+      const header = allRows[0];
+      const bodyRows = allRows.slice(1);
+      const thead = '<tr>' + header.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>';
+      const tbody = bodyRows.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('');
+
+      const copyBtn = closed
+        ? `<button class="kie-table-card-copy" onclick="_copyTableCard('${cardId}')" title="Copy">
+            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+           </button>`
+        : '';
+
+      return `<div class="kie-table-card" id="${cardId}">
+        <div class="kie-table-card-hdr"><span class="kie-table-card-label">${tableIcon}${esc(label)}</span>${copyBtn}</div>
+        <div class="kie-table-scroll"><table class="kie-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>
+        ${writing}
+      </div>`;
+    }
+
     function _formatKieLive(partial, isFinal) {
       let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').trim();
 
-      // Detect code blocks — handles MULTIPLE blocks in the same message
-      // (previously only the first was ever found; a second block's raw
-      // [CODEBLOCK]/[/CODEBLOCK] tags would show up as literal, unrendered
-      // text). The currently-streaming block (no closing tag yet, mid-typing)
-      // still renders live with a "writing…" label, same as before.
-      const cbRe = /\[CODEBLOCK(?::([^\]]*))?\]([\s\S]*?)(\[\/CODEBLOCK\]|$)/gi;
+      // Detect code blocks AND table blocks — handles MULTIPLE blocks of
+      // either kind in the same message (previously only the first was ever
+      // found; a second block's raw tags would show up as literal,
+      // unrendered text). The currently-streaming block (no closing tag yet,
+      // mid-typing) still renders live — code blocks show a "writing…" label
+      // on raw text, table blocks render as a real table from whatever
+      // complete rows have arrived so far, never raw pipe text.
+      const blockRe = /\[(CODEBLOCK|TABLE)(?::([^\]]*))?\]([\s\S]*?)(\[\/\1\]|$)/gi;
       let html = '', lastIndex = 0, blockIdx = 0, found = false, match;
-      while ((match = cbRe.exec(text)) !== null) {
+      while ((match = blockRe.exec(text)) !== null) {
         found = true;
         const before = text.slice(lastIndex, match.index).trim();
         if (before) html += formatKieText(before);
 
-        const label   = (match[1] || 'content').trim();
-        const content  = match[2];
-        const closed   = match[3] === '[/CODEBLOCK]';
-        const cardId   = 'kcc-live-' + label.replace(/\s+/g,'_') + '_' + blockIdx;
-        const docIcon  = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>';
+        const kind    = match[1].toUpperCase();
+        const label   = (match[2] || (kind === 'TABLE' ? 'Comparison' : 'content')).trim();
+        const content = match[3];
+        const closed  = !!match[4];
+        const cardId  = (kind === 'TABLE' ? 'kct-live-' : 'kcc-live-') + label.replace(/\s+/g,'_') + '_' + blockIdx;
 
-        const copyBtn = (closed || isFinal)
-          ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
-              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              Copy
-             </button>`
-          : `<span style="color:#a855f7;font-size:10.5px;font-weight:700;display:flex;align-items:center;gap:5px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
+        if (kind === 'TABLE') {
+          html += _buildTableCard(label, content, closed, cardId);
+        } else {
+          const docIcon  = '<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>';
 
-        html += `<div class="kie-code-card" id="${cardId}">
-          <div class="kie-code-card-hdr">
-            <span class="kie-code-card-label">${docIcon}${esc(label)}</span>
-            ${copyBtn}
-          </div>
-          <div class="kie-code-card-body">${esc(content.trim())}</div>
-        </div>`;
+          const copyBtn = (closed || isFinal)
+            ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
+                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy
+               </button>`
+            : `<span style="color:#a855f7;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
+
+          html += `<div class="kie-code-card" id="${cardId}">
+            <div class="kie-code-card-hdr">
+              <span class="kie-code-card-label">${docIcon}${esc(label)}</span>
+              ${copyBtn}
+            </div>
+            <div class="kie-code-card-body">${esc(content.trim())}</div>
+          </div>`;
+        }
 
         lastIndex = match.index + match[0].length;
         blockIdx++;
@@ -5658,6 +5735,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // Expose for the history-restore system (lives in a different scope)
     window.appendKMsg = appendKMsg;
     window.formatKieText = formatKieText;
+    window._formatKieLive = _formatKieLive;
 
     // ── Advisory Deep Think nudge ─────────────────────────────────────────────
     // Shown when the server flags a question as the strategic/weighing-trade-offs

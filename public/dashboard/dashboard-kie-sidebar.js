@@ -506,7 +506,9 @@
         const isUser = m.role === 'user';
         const formatted = isUser
           ? m.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-          : (typeof window.formatKieText === 'function' ? window.formatKieText(m.content) : m.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'));
+          : (typeof window._formatKieLive === 'function' ? window._formatKieLive(m.content, true)
+             : typeof window.formatKieText === 'function' ? window.formatKieText(m.content)
+             : m.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'));
         const div = document.createElement('div');
         if (isUser) {
           div.className = 'km km-user';
