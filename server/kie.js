@@ -299,7 +299,7 @@ module.exports = function registerKieRoutes(app) {
   //           "mode":"default","fallback":false}
   //   data: {"t":"err","v":"message"}      ← unrecoverable error
   app.post('/api/kie', authenticate, async (req, res) => {
-    const { messages, mode = 'default', model = 'spark', resumeContext = '', userCategory = '' } = req.body;
+    const { messages, mode = 'default', model = 'spark', resumeContext = '', docContext = '', userCategory = '' } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages array is required.' });
     }
@@ -442,6 +442,18 @@ module.exports = function registerKieRoutes(app) {
 
     if (userCategory) {
       systemContent += `\n\nUSER CONTEXT: This user's professional field is "${userCategory}". Don't announce that you know this — just let it shape your answer naturally.`;
+    }
+
+    // Generic uploaded document that hasn't been confirmed as a resume (e.g.
+    // a book excerpt, career-roadmap notes, a biography, or anything the user
+    // dropped into chat that turned out not to be a CV). Given as plain
+    // background, NOT labeled a resume, so KIE doesn't force resume-coaching
+    // onto content that isn't one — it should read it, follow the actual
+    // conversation, answer whatever the user is asking (including declining
+    // anything outside Kievora's scope or privacy rules, same as any other
+    // message), and only treat it as a resume if the user explicitly says so.
+    if (docContext && docContext.trim().length > 20) {
+      systemContent += `\n\n--- USER'S UPLOADED FILE (background only — do NOT assume this is a resume) ---\n${docContext.trim()}\n--- END FILE ---\n\nFILE STATUS: This is raw text from a file the user uploaded in chat. It has NOT been confirmed as a resume — treat it as whatever it actually appears to be (a biography, book excerpt, career-roadmap notes, or anything else) and respond to the user's actual message. If they ask you to score, coach, or rebuild it as a resume, do that. Otherwise just talk about it naturally like any other shared content, within normal bounds.`;
     }
 
     // ── Format + trim messages ────────────────────────────────────────────────

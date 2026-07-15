@@ -278,15 +278,31 @@ module.exports = function registerToolsRoutes(app) {
     const planCfg = getPlanConfig(planKey);
     const isFreePlan = planKey === 'free';
 
-    const { resumeText } = req.body;
+    const { resumeText, forceResume } = req.body;
     if (!resumeText || resumeText.trim().length < 30) {
       return res.status(400).json({ error: 'Resume content is too short to analyze.' });
     }
 
-    const prompt = `You are an expert ATS resume analyst and career coach. Analyze the resume text below and return ONLY a valid JSON object — no markdown, no code fences, no explanation before or after.
+    // forceResume=true is sent by the dedicated "Upload & Analyze" tool and the
+    // job-matching upload flow — the user explicitly opened those specifically
+    // to analyze a resume, so there's nothing to classify, treat it as one.
+    // Plain KIE chat attachments (forceResume unset) get honestly classified
+    // first, since a random PDF dropped into chat is often NOT a resume —
+    // forcing an ATS score onto a biography, book excerpt, or roadmap request
+    // is actively wrong and confusing.
+    const classificationInstruction = forceResume
+      ? `The user uploaded this through the resume-analysis tool, so treat it as a resume/CV and analyze it fully even if formatting is unusual. Set "isResume": true.`
+      : `First, honestly judge whether this document actually IS a resume/CV. Plenty of uploads are not — a personal biography, a book or article excerpt, notes for a career roadmap, a cover letter, or something with nothing to do with careers at all. Set "isResume" to true only if it genuinely is a resume or CV. If it is not: set "isResume": false, fill "docType" with one short label (e.g. "personal biography", "book excerpt", "career roadmap notes", "cover letter", "unrelated document"), and fill "docNote" with one warm, specific sentence telling the user what you actually see in it. When isResume is false you may leave every resume-scoring field (atsScore, grade, strengths, weaknesses, suggestions, missingItems, workExperience, education, skills) empty or zero — do NOT invent a fake ATS score or fake resume content for something that isn't a resume.`;
+
+    const prompt = `You are an expert ATS resume analyst and career coach. Analyze the document text below and return ONLY a valid JSON object — no markdown, no code fences, no explanation before or after.
+
+  ${classificationInstruction}
 
   Return this exact JSON structure (fill every field, never leave arrays empty if data exists):
   {
+    "isResume": true,
+    "docType": "",
+    "docNote": "",
     "fullName": "",
     "jobTitle": "",
     "email": "",
@@ -304,7 +320,7 @@ module.exports = function registerToolsRoutes(app) {
     "missingItems": []
   }
 
-  Scoring rules — atsScore must be an integer 0–100:
+  Scoring rules — atsScore must be an integer 0–100, only meaningful when isResume is true:
   - Contact info (15 pts): name(5) + email(5) + phone(3) + location(2)
   - Professional summary (15 pts): present(8) + 40+ words(4) + role-specific(3)
   - Work experience (30 pts): has entries(10) + descriptions present(8) + quantified result/metric(8) + action verbs(4)
@@ -317,7 +333,7 @@ module.exports = function registerToolsRoutes(app) {
   - suggestions: 3–5 CONCRETE fixes with exact guidance (e.g. "Turn 'managed team' into 'Managed a team of [X], delivering [result]'")
   - missingItems: only genuinely absent sections that would strengthen the resume
 
-  RESUME TEXT:
+  DOCUMENT TEXT:
   ${resumeText.slice(0, 7000)}`;
 
     try {
@@ -360,7 +376,20 @@ module.exports = function registerToolsRoutes(app) {
         return res.status(500).json({ error: 'Could not parse resume analysis — please try again.' });
       }
 
-      console.log(`POST /api/analyze-resume — score:${analysis.atsScore} grade:${analysis.grade} plan:${planKey} uid:${req.user.uid}`);
+      console.log(`POST /api/analyze-resume — isResume:${analysis.isResume !== false} score:${analysis.atsScore} grade:${analysis.grade} plan:${planKey} uid:${req.user.uid}`);
+
+      // Not a resume — nothing to score or gate. Hand back the classification
+      // so the frontend can respond naturally about the actual content instead
+      // of forcing a fake ATS report onto a biography, book, or random file.
+      if (!forceResume && analysis.isResume === false) {
+        return res.json({
+          isResume: false,
+          docType:  analysis.docType || 'document',
+          docNote:  analysis.docNote || "This doesn't look like a resume.",
+          fullName: analysis.fullName || null,
+        });
+      }
+
       // Free plan: strip explanation fields and return an upgrade gate flag.
       // The score number is intentionally omitted too — they see "analyzed" but
       // must upgrade to see it. This creates the "show the wound, sell the cure" moment.
