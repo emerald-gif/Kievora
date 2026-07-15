@@ -458,14 +458,17 @@ module.exports = function registerToolsRoutes(app) {
     } catch { return null; }
   }
 
-  async function _fetchJSearch(query, limit, countryCode) {
+  async function _fetchJSearch(query, limit, countryCode, locationOverride) {
     const KEY = process.env.JSEARCH_API_KEY;
     if (!KEY) return [];
     const isLocal = countryCode && countryCode !== 'worldwide';
     // JSearch strictly filters by the `country` param, but also recommends
     // including the location in the query text for best matching — so we do both.
+    // A specific city/region from the location-suggestion dropdown beats the
+    // generic country name for match quality.
     const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
-    const q = isLocal ? `${query} in ${countryName}` : query;
+    const locText = (locationOverride && locationOverride.trim()) || countryName;
+    const q = isLocal ? `${query} in ${locText}` : query;
     const countryParam = isLocal ? `&country=${encodeURIComponent(countryCode)}` : '';
     try {
       const res = await fetch(
@@ -591,28 +594,42 @@ module.exports = function registerToolsRoutes(app) {
   // Nigeria, Ghana, Kenya. Free tier default limit is 500 requests — the client
   // already caches results (session cache on find-jobs, 10-min cache on the
   // dashboard swiper) so normal usage should stay well under that.
-  async function _fetchJooble(query, limit, countryCode, countryName) {
+  async function _fetchJooble(query, limit, countryCode, countryName, locationOverride) {
     const KEY = process.env.JOOBLE_API_KEY;
-    if (!KEY) return [];
-    const isLocal = countryCode && countryCode !== 'worldwide';
+    if (!KEY) {
+      console.warn('_fetchJooble — JOOBLE_API_KEY is not set in env vars, skipping Jooble.');
+      return [];
+    }
+    const isLocal  = countryCode && countryCode !== 'worldwide';
+    // A specific city/region picked from the location-suggestion dropdown beats
+    // the generic country name — Jooble matches much better on "Lekki, Lagos"
+    // than on just "Nigeria".
+    const location = (locationOverride && locationOverride.trim()) || (isLocal ? countryName : '');
     try {
       const res = await fetch(`https://jooble.org/api/${KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           keywords: query,
-          location: isLocal ? countryName : '',
+          location,
           page: '1',
         }),
       });
-      if (!res.ok) return [];
+      if (!res.ok) {
+        // Previously this failed completely silently, so a bad/expired key or a
+        // malformed request looked identical to "no jobs" from the outside.
+        const bodyText = await res.text().catch(() => '');
+        console.error(`_fetchJooble — Jooble API returned ${res.status} ${res.statusText} for query:"${query}" location:"${location}" — body: ${bodyText.slice(0, 300)}`);
+        return [];
+      }
       const data = await res.json();
+      console.log(`_fetchJooble — "${query}" location:"${location}" → ${(data.jobs||[]).length} jobs (totalCount:${data.totalCount ?? 'n/a'})`);
       return (data.jobs || []).slice(0, limit).map(j => ({
         id:       String(j.id),
         title:    j.title,
         company:  j.company || '',
         logo:     '',
-        location: j.location || (isLocal ? countryName : ''),
+        location: j.location || location || '',
         country:  isLocal ? countryCode.toUpperCase() : '',
         remote:   /remote/i.test((j.title||'') + ' ' + (j.snippet||'')),
         salary:   j.salary || '',
@@ -624,7 +641,10 @@ module.exports = function registerToolsRoutes(app) {
         description: (j.snippet || '').replace(/<[^>]+>/g,'').slice(0, 3000),
         requirements: '',
       }));
-    } catch { return []; }
+    } catch (err) {
+      console.error(`_fetchJooble — request threw for query:"${query}":`, err.message);
+      return [];
+    }
   }
 
   // Detects the user's country from their IP and saves it to Firestore — called
@@ -651,17 +671,17 @@ module.exports = function registerToolsRoutes(app) {
     const planKey = await getUserPlanKey(req.user.uid);
     const canClick = getPlanConfig(planKey).findJobsClick;
 
-    const { query, limit = 20, countryCode = 'worldwide' } = req.body;
+    const { query, limit = 20, countryCode = 'worldwide', location = '' } = req.body;
     if (!query) return res.status(400).json({ error: 'query is required' });
 
     const isLocal = countryCode && countryCode !== 'worldwide';
     const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
 
     const [r1, r2, r3, r4] = await Promise.allSettled([
-      _fetchJSearch(query, limit, countryCode),
+      _fetchJSearch(query, limit, countryCode, location),
       _fetchAdzuna(query, limit, countryCode),
       _fetchRemotive(query, 10, countryCode),
-      _fetchJooble(query, limit, countryCode, countryName),
+      _fetchJooble(query, limit, countryCode, countryName, location),
     ]);
 
     let jobs = [
@@ -681,7 +701,7 @@ module.exports = function registerToolsRoutes(app) {
 
     jobs = jobs.slice(0, limit);
 
-    console.log(`POST /api/find-jobs — "${query}" [${countryCode}] → ${jobs.length} jobs`);
+    console.log(`POST /api/find-jobs — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'})`);
 
     if (!canClick) {
       const gatedJobs = jobs.map(({ url, description, ...rest }) => rest);
