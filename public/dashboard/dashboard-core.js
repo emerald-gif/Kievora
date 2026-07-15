@@ -66,6 +66,14 @@
     let kieMode  = 'default'; // active KIE mode
     let kieModel = 'spark';   // active KIE model (spark | core | nova) — ultra removed from frontend for now
     let kieResumeContext = ''; // text context for AI coaching
+    // Text of a file uploaded in chat that KIE has NOT confirmed is a resume
+    // yet (e.g. a biography, book excerpt, roadmap notes). Kept available so
+    // the conversation can carry on referencing it naturally; only promoted
+    // into kieResumeContext + the "Uploaded Resume" pill once the user
+    // actually confirms it's their resume.
+    let kieDocContext = '';
+    let _kiePendingFileText = '';
+    let _kiePendingFileName = '';
     let kieSelectedResume = null; // actual resume object for PDF generation + template changes
     let _stagedKieAttachment = null; // { type:'image'|'pdf'|'txt', file, dataUrl, mimeType, name, size }
     let builderStep = 1; // 1=Personal, 2=Work+Edu, 3=Skills
@@ -2609,6 +2617,7 @@
     window.dismissKieResume = function() {
       kieSelectedResume = null;
       kieResumeContext  = resumes?.length ? 'HAS_RESUMES_UNSELECTED' : 'NO_RESUME_YET';
+      kieDocContext     = '';
       document.querySelectorAll('.kie-rpill:not(.kie-rpill-uploaded)').forEach(p => {
         p.classList.remove('active');
         const x = p.querySelector('.kie-rpill-dismiss');
@@ -2951,6 +2960,110 @@
       if (thumb) { thumb.src = ''; thumb.style.display = 'none'; }
     };
 
+    // Applies a confirmed resume analysis: tags the "Uploaded Resume" pill,
+    // sets kieResumeContext, and renders the ATS report message. Shared by
+    // the normal upload path and the "yes, score it as my resume" promotion
+    // path (kieConfirmPendingResume) so both end up in the exact same state.
+    function _applyResumeAnalysisResult(analysis, resumeText, userPrompt) {
+      if (analysis.jobTitle) setJobProfession(analysis.jobTitle, 'kie');
+      kieResumeContext  = resumeText.slice(0, 5000);
+      kieDocContext     = ''; // promoted — no longer "pending", it's the resume now
+      kieSelectedResume = null;
+      const btn = g('kieAttachBtn');
+      if (btn) btn.classList.add('has-resume');
+
+      // Activate uploaded pill
+      const picker  = g('kieResumePicker');
+      const pillsEl = g('kieResumePills');
+      if (picker && pillsEl) {
+        pillsEl.querySelector('#kieRpillEmpty')?.remove();
+        document.querySelectorAll('.kie-rpill').forEach(p => {
+          p.classList.remove('active');
+          const x = p.querySelector('.kie-rpill-dismiss'); if (x) x.remove();
+        });
+        let uPill = pillsEl.querySelector('.kie-rpill-uploaded');
+        if (!uPill) {
+          uPill = document.createElement('button');
+          uPill.className = 'kie-rpill kie-rpill-uploaded';
+          setKieRpillLabel(uPill, '📎 Uploaded Resume');
+          pillsEl.prepend(uPill);
+        }
+        uPill.classList.add('active');
+        let xBtn = uPill.querySelector('.kie-rpill-dismiss');
+        if (!xBtn) {
+          xBtn = document.createElement('span');
+          xBtn.className = 'kie-rpill-dismiss';
+          xBtn.textContent = '×';
+          xBtn.onclick = e => { e.stopPropagation(); dismissKieResume(); };
+          uPill.appendChild(xBtn);
+        }
+        updateKieTplIndicator();
+      }
+
+      const grade = analysis.grade || '—';
+      const score = analysis.atsScore ?? '—';
+      const name  = analysis.fullName ? `**${analysis.fullName}**` : 'your resume';
+      let msg;
+      if (analysis.gateLocked) {
+        msg = userPrompt
+          ? `Got it — I've read your file. ${analysis.upgradeMessage || 'Upgrade to see your full ATS score and breakdown.'}\n\n`
+          : `Alright, I've gone through ${name}. ${analysis.upgradeMessage || 'Upgrade to see your full ATS score and breakdown.'}\n\n`;
+        msg += `In the meantime, tell me what you'd like help with and I'll work with you on it directly.`;
+      } else {
+        msg = userPrompt
+          ? `Got it — I've read your file. Here's a quick take:\n\n`
+          : `Alright, I've gone through ${name}. Here's my honest read:\n\n`;
+        msg += `**ATS Score: ${score}/100 · Grade: ${grade}**\n\n`;
+        if (analysis.strengths?.length)
+          msg += `**What's working:**\n${analysis.strengths.map(s => `✓ ${s}`).join('\n')}\n\n`;
+        if (analysis.weaknesses?.length)
+          msg += `**What needs fixing:**\n${analysis.weaknesses.map(w => `⚠ ${w}`).join('\n')}\n\n`;
+        if (userPrompt)
+          msg += `You also said: "${userPrompt}" — `;
+        msg += `**Want a real downloadable PDF?** Say "build me a resume" and I'll turn this into a full Kievora resume — pick from 13 templates and download it anytime. 📄\n\nOr tell me which area above to fix first.`;
+      }
+
+      appendKMsg('ai', msg, true);
+      kieHist.push({ role: 'assistant', content: msg });
+      saveKieHistory();
+    }
+
+    // Promotes a pending (not-yet-confirmed) uploaded file into a full resume
+    // analysis — triggered by the "Yes, score it as my resume" button that
+    // shows up when KIE reads a file it doesn't recognize as a resume but the
+    // user then says otherwise.
+    window.kieConfirmPendingResume = async function() {
+      if (!_kiePendingFileText) return;
+      const text = _kiePendingFileText;
+      g('kieTyp').style.display = 'flex';
+      _setKieStatusCustom(['Scoring it as a resume…']);
+      scrollKie();
+      try {
+        try { tok = await usr.getIdToken(); } catch (_) { /* use existing */ }
+        const res = await fetch('/api/analyze-resume', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+          body:    JSON.stringify({ resumeText: text, forceResume: true }),
+        });
+        const analysis = await res.json();
+        g('kieTyp').style.display = 'none'; hideKieStatus();
+        if (analysis.error) {
+          const errMsg = `Trouble analysing that file. ${analysis.error}`;
+          appendKMsg('ai', errMsg, true);
+          kieHist.push({ role: 'assistant', content: errMsg });
+          saveKieHistory();
+          return;
+        }
+        _applyResumeAnalysisResult(analysis, text, '');
+      } catch (err) {
+        g('kieTyp').style.display = 'none'; hideKieStatus();
+        const failMsg = 'Had a problem scoring that file — try again in a moment.';
+        appendKMsg('ai', failMsg, true);
+        kieHist.push({ role: 'assistant', content: failMsg });
+        saveKieHistory();
+      }
+    };
+
     // ── PROCESS PDF/TXT ATTACHMENT (called from sendKie after staging) ────────
     async function _processKieFileAttachment(att, userPrompt) {
       if (_kieGenerating) stopKieGeneration();
@@ -2988,6 +3101,10 @@
         // Refresh auth token before API call (Bug #3 fix — tokens expire after 1hr)
         try { tok = await usr.getIdToken(); } catch (_) { /* use existing */ }
 
+        // forceResume is deliberately omitted here — this is a plain KIE chat
+        // attachment, not the dedicated Upload & Analyze tool, so the server
+        // honestly classifies what the file actually is first instead of
+        // assuming every upload is a resume.
         const analysisRes = await fetch('/api/analyze-resume', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
@@ -3006,66 +3123,30 @@
           return;
         }
 
-        if (analysis.jobTitle) setJobProfession(analysis.jobTitle, 'kie');
-        kieResumeContext  = resumeText.slice(0, 5000);
-        kieSelectedResume = null;
-        const btn = g('kieAttachBtn');
-        if (btn) btn.classList.add('has-resume');
+        // Not a resume — keep the file's text on hand as background context
+        // (so the conversation can keep referencing it) without tagging it
+        // "Uploaded Resume" or forcing an ATS score onto content that was
+        // never a resume in the first place. If the user confirms afterward
+        // that it IS their resume, [CONFIRM_RESUME_CTA] promotes it.
+        if (analysis.isResume === false) {
+          _kiePendingFileText = resumeText;
+          _kiePendingFileName = att.name || 'your file';
+          kieDocContext = resumeText.slice(0, 5000);
 
-        // Activate uploaded pill
-        const picker  = g('kieResumePicker');
-        const pillsEl = g('kieResumePills');
-        if (picker && pillsEl) {
-          pillsEl.querySelector('#kieRpillEmpty')?.remove();
-          document.querySelectorAll('.kie-rpill').forEach(p => {
-            p.classList.remove('active');
-            const x = p.querySelector('.kie-rpill-dismiss'); if (x) x.remove();
-          });
-          let uPill = pillsEl.querySelector('.kie-rpill-uploaded');
-          if (!uPill) {
-            uPill = document.createElement('button');
-            uPill.className = 'kie-rpill kie-rpill-uploaded';
-            setKieRpillLabel(uPill, '📎 Uploaded Resume');
-            pillsEl.prepend(uPill);
-          }
-          uPill.classList.add('active');
-          let xBtn = uPill.querySelector('.kie-rpill-dismiss');
-          if (!xBtn) {
-            xBtn = document.createElement('span');
-            xBtn.className = 'kie-rpill-dismiss';
-            xBtn.textContent = '×';
-            xBtn.onclick = e => { e.stopPropagation(); dismissKieResume(); };
-            uPill.appendChild(xBtn);
-          }
-          updateKieTplIndicator();
+          const docType = analysis.docType || 'document';
+          const note    = analysis.docNote || `This looks like a ${docType}, not a resume.`;
+          let msg = userPrompt
+            ? `Got it — I've read your file. ${note}\n\n`
+            : `Alright, I've gone through it. ${note}\n\n`;
+          msg += `Happy to talk it through, help with whatever you're actually after, or if I've got it wrong and this is meant to be your resume, just say so.\n\n[CONFIRM_RESUME_CTA]`;
+
+          appendKMsg('ai', msg, true);
+          kieHist.push({ role: 'assistant', content: msg });
+          saveKieHistory();
+          return;
         }
 
-        const grade = analysis.grade || '—';
-        const score = analysis.atsScore ?? '—';
-        const name  = analysis.fullName ? `**${analysis.fullName}**` : 'your resume';
-        let msg;
-        if (analysis.gateLocked) {
-          msg = userPrompt
-            ? `Got it — I've read your file. ${analysis.upgradeMessage || 'Upgrade to see your full ATS score and breakdown.'}\n\n`
-            : `Alright, I've gone through ${name}. ${analysis.upgradeMessage || 'Upgrade to see your full ATS score and breakdown.'}\n\n`;
-          msg += `In the meantime, tell me what you'd like help with and I'll work with you on it directly.`;
-        } else {
-          msg = userPrompt
-            ? `Got it — I've read your file. Here's a quick take:\n\n`
-            : `Alright, I've gone through ${name}. Here's my honest read:\n\n`;
-          msg += `**ATS Score: ${score}/100 · Grade: ${grade}**\n\n`;
-          if (analysis.strengths?.length)
-            msg += `**What's working:**\n${analysis.strengths.map(s => `✓ ${s}`).join('\n')}\n\n`;
-          if (analysis.weaknesses?.length)
-            msg += `**What needs fixing:**\n${analysis.weaknesses.map(w => `⚠ ${w}`).join('\n')}\n\n`;
-          if (userPrompt)
-            msg += `You also said: "${userPrompt}" — `;
-          msg += `**Want a real downloadable PDF?** Say "build me a resume" and I'll turn this into a full Kievora resume — pick from 13 templates and download it anytime. 📄\n\nOr tell me which area above to fix first.`;
-        }
-
-        appendKMsg('ai', msg, true);
-        kieHist.push({ role: 'assistant', content: msg });
-        saveKieHistory();
+        _applyResumeAnalysisResult(analysis, resumeText, userPrompt);
       } catch (err) {
         if (err.name === 'AbortError') {
           // The user's file message is already in kieHist (pushed by sendKie()
@@ -4210,6 +4291,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
             mode:          kieMode,
             model:         kieModel,
             resumeContext: kieResumeContext,
+            docContext:    kieDocContext,
             userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
             convId:        (typeof _activeId !== 'undefined' ? _activeId : null),
           }),
@@ -5124,6 +5206,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             mode:          kieMode,
             model:         kieModel,
             resumeContext: kieResumeContext,
+            docContext:    kieDocContext,
             userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
           }),
           signal: _kieAbort.signal,
@@ -5405,7 +5488,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // Called on every streaming frame — formats partial text including live code
     // blocks and strips internal markers ([SEND_PDF], [GMAIL_CTA]).
     function _formatKieLive(partial, isFinal) {
-      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').trim();
+      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').trim();
 
       // Detect code blocks — handles MULTIPLE blocks in the same message
       // (previously only the first was ever found; a second block's raw
@@ -5572,6 +5655,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         mBtn.onclick = function () { window.openModelDrawer(); };
         mRow.appendChild(mBtn);
         schedule(mRow);
+        return; // don't also run [FU]/fallback chip logic on the same message
+      }
+
+      // [CONFIRM_RESUME_CTA] — shown when KIE read an uploaded file and
+      // classified it as NOT a resume (a biography, book excerpt, etc). Gives
+      // the user a one-tap way to correct that instead of having to explain
+      // it in words — tapping runs the full ATS analysis on the same file.
+      if (/\[CONFIRM_RESUME_CTA\]/i.test(text)) {
+        var rRow = document.createElement('div');
+        rRow.className = 'kie-suggest-row';
+        var rBtn = document.createElement('button');
+        rBtn.className = 'kie-gmail-cta-btn';
+        rBtn.innerHTML = 'Yes, score it as my resume <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>';
+        rBtn.onclick = function () { window.kieConfirmPendingResume(); };
+        rRow.appendChild(rBtn);
+        schedule(rRow);
         return; // don't also run [FU]/fallback chip logic on the same message
       }
 
@@ -6446,7 +6545,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           toast('Upload a file or paste your resume text', 'err'); throw new Error('no input');
         }
         uploadedText = text;
-        const result = await api('POST', '/api/analyze-resume', { resumeText: text });
+        const result = await api('POST', '/api/analyze-resume', { resumeText: text, forceResume: true });
         analysisResult = result;
         window.renderAnalysis(result);  // calls patched version so cache write fires
         showView('analysis');
