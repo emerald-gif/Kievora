@@ -2731,11 +2731,29 @@
     // category greetings, resume-edit PDF regeneration, and confirmation
     // scanning never actually produced real AI output — they always failed and
     // fell back.
+    // ── USER NAME — for KIE to address the person naturally, not on every ──
+    // message (see system prompt instructions server-side for when to use it).
+    // Prefers Firebase displayName's first token; falls back to the email
+    // local-part, capitalized. Never sends "undefined" or an empty string.
+    function getKieUserName() {
+      try {
+        const u = window._currentUser;
+        if (!u) return null;
+        let name = (u.displayName || '').trim();
+        if (!name && u.email) name = u.email.split('@')[0];
+        if (!name) return null;
+        // Take just the first word/token as the first name
+        const first = name.split(/[\s._-]+/)[0];
+        if (!first) return null;
+        return first.charAt(0).toUpperCase() + first.slice(1);
+      } catch { return null; }
+    }
+
     async function _kieCallSilent(payload, signal) {
       const res = await fetch('/api/kie', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-        body:    JSON.stringify(payload),
+        body:    JSON.stringify({ userName: getKieUserName(), ...payload }),
         signal,
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -4349,6 +4367,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
             resumeContext: kieResumeContext,
             docContext:    kieDocContext,
             userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
+            userName:      getKieUserName(),
             convId:        (typeof _activeId !== 'undefined' ? _activeId : null),
           }),
           signal: _kieAbort?.signal,
@@ -5317,6 +5336,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             resumeContext: kieResumeContext,
             docContext:    kieDocContext,
             userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
+            userName:      getKieUserName(),
           }),
           signal: _kieAbort.signal,
         });
