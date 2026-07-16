@@ -5638,37 +5638,46 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // Called on every streaming frame — formats partial text including live code
     // blocks and strips internal markers ([SEND_PDF], [GMAIL_CTA]).
     // Parses [TABLE] block content into rows of cells. Splits on '|', trims
-    // each cell, drops empty lines and markdown-style separator rows (e.g.
-    // "---|---|---") in case the model slips into raw-markdown habits. While
-    // still streaming (not closed), the last line may be a row mid-typing —
-    // drop it so a half-typed row never flashes on screen as broken cells.
+    // each cell, drops empty lines, markdown-style separator rows (e.g.
+    // "---|---|---"), and rows where every cell is blank — all cases where
+    // a model habit or stray formatting could otherwise leave an empty
+    // header/row rendering as a blank strip. While still streaming (not
+    // closed), the last line may be a row mid-typing — drop it so a
+    // half-typed row never flashes on screen as broken cells.
     function _parseTableRows(content, closed) {
       const lines = content.split('\n').map(l => l.trim());
       const usable = closed ? lines : lines.slice(0, -1);
       return usable
         .filter(l => l && l.includes('|'))
         .map(line => line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()))
-        .filter(cells => !cells.every(c => /^:?-{2,}:?$/.test(c)));
+        .filter(cells => !cells.every(c => !c || /^:?-{2,}:?$/.test(c)));
     }
 
     // Builds a clean comparison-table card from parsed rows — first row is
     // the header. Rendered as a real HTML table (never raw pipes on screen).
     // No label/title bar — the table itself is the card, same as a plain
     // rendered markdown table would look, just styled and never broken.
+    // Returns '' (renders nothing at all) once closed with no real rows —
+    // this is what stops a stray/duplicate empty [TABLE][/TABLE] pair from
+    // ever showing up as a blank floating box.
     function _buildTableCard(label, content, closed, cardId) {
       const allRows = _parseTableRows(content, closed);
-      const writing = closed
-        ? ''
-        : `<div class="kie-table-writing"><span class="kie-typing-dot-sm"></span>writing…</div>`;
 
       if (!allRows.length) {
-        return `<div class="kie-table-card" id="${cardId}">${writing}</div>`;
+        if (closed) return ''; // nothing real ever arrived — render nothing
+        // Still streaming and no complete row yet — a plain unboxed line,
+        // no border/shadow/card chrome, so there's never an empty box on
+        // screen while the first row is still being typed out.
+        return `<div class="kie-table-writing" id="${cardId}"><span class="kie-typing-dot-sm"></span>writing…</div>`;
       }
 
       const header = allRows[0];
       const bodyRows = allRows.slice(1);
       const thead = '<tr>' + header.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>';
       const tbody = bodyRows.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('');
+      const writing = closed
+        ? ''
+        : `<div class="kie-table-writing"><span class="kie-typing-dot-sm"></span>writing…</div>`;
 
       return `<div class="kie-table-card" id="${cardId}">
         <div class="kie-table-scroll"><table class="kie-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>
@@ -5701,6 +5710,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
         if (kind === 'TABLE') {
           html += _buildTableCard(label, content, closed, cardId);
+        } else if (closed && !content.trim()) {
+          // Empty closed code block (e.g. a stray duplicate tag pair) — skip
+          // entirely rather than rendering a blank card.
         } else {
           const docIcon  = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 8l3 4-3 4"/></svg>';
 
