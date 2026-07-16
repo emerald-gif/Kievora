@@ -954,7 +954,7 @@
 
 
     /* Mode pills bar — compact, above input */
-    .kie-modes{display:flex;align-items:center;gap:5px;padding:8px 16px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0;background:#fff}
+    .kie-modes{display:flex;align-items:center;gap:5px;padding:8px 16px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0;background:transparent}
     .kie-modes::-webkit-scrollbar{display:none}
     .kie-mode-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid #e8e8ec;background:#fff;color:#8b8b9e;cursor:pointer;transition:all .18s;white-space:nowrap;font-family:inherit;flex-shrink:0}
     .kie-mode-pill:hover{border-color:#c4b5fd;color:#7c3aed;background:#faf5ff}
@@ -966,7 +966,7 @@
     /* kdot kept for other uses */
 
     /* Input bar — Claude-style, sticky bottom, never scrolls away */
-    .kie-input-wrap{padding:10px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));background:#fff;flex-shrink:0;border-top:1px solid #f0f0f4;position:sticky;bottom:0}
+    .kie-input-wrap{padding:10px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));background:rgba(255,255,255,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);flex-shrink:0;border-top:none;position:sticky;bottom:0}
     /* Resume/template picker — icon-triggered dropdown (was an always-on bar).
        Icon is always visible now (not just when a resume exists), so KIE
        always has an entry point to create/upload/pick a resume. */
@@ -1214,8 +1214,8 @@
     .opt-sec-arrow{font-size:11px;color:#a78bfa;transition:transform .2s}
     .opt-sec-body{padding:16px;border-top:1px solid #ede9fe;display:none}
     .opt-sec-body.open{display:block}
-    .kie-input-row{display:flex;flex-direction:column;gap:6px;background:#f7f7fb;border:1.5px solid #e8e8ec;border-radius:20px;padding:10px 10px 8px;transition:border-color .2s,box-shadow .2s}
-    .kie-input-row:focus-within{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.08);background:#fff}
+    .kie-input-row{display:flex;flex-direction:column;gap:6px;background:#f7f7fb;border:1.5px solid #e8e8ec;border-radius:20px;padding:10px 10px 8px;transition:border-color .2s,box-shadow .2s;box-shadow:0 6px 24px rgba(15,14,23,.08)}
+    .kie-input-row:focus-within{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.08),0 6px 24px rgba(15,14,23,.08);background:#fff}
     .kie-input-toolrow{display:flex;align-items:center;gap:2px}
     .kie-toolrow-spacer{flex:1}
     .kie-attach{width:32px;height:32px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#c0b8d8;border-radius:10px;transition:all .2s;margin-right:4px;padding:0}

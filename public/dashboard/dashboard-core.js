@@ -63,7 +63,13 @@
     // in the same session include the image; cross-session refs show as missing.
     const _kieImageStore = new Map();
     const _kieFileStore  = new Map(); // fileRef -> { base64, mimeType, name, ext } — uploaded PDFs/TXT for preview
-    let kieMode  = 'default'; // active KIE mode
+    // active KIE mode. NOTE: 'default' is displayed to the user as the
+    // "Quick Answer" pill (see dashboard.html mode-pills comment) — it is
+    // NOT the old terse 'quick' mode, which still exists in KIE_MODES on the
+    // backend but no longer has a visible pill. Don't rename this value to
+    // 'quick' — resolveMode()'s casual-message downgrade and sendChip()'s
+    // Web→Default revert (both in server/kie.js / below) key off 'default'.
+    let kieMode  = 'default';
     let kieModel = 'spark';   // active KIE model (spark | core | nova) — ultra removed from frontend for now
     let kieResumeContext = ''; // text context for AI coaching
     // Text of a file uploaded in chat that KIE has NOT confirmed is a resume
@@ -3966,6 +3972,11 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       let raw = '{}';
       try {
         raw = await _kieCallSilent(
+          // mode:'quick' here is intentional and unrelated to the chat pills — this
+          // is a silent internal patch-classification call that wants KIE_MODES.quick's
+          // terse 400-token behavior specifically. That mode has no visible UI pill
+          // anymore (see dashboard.html mode-pills comment), but the backend config
+          // still exists for exactly this kind of programmatic call. Don't touch.
           { messages: [{ role: 'user', content: patchPrompt }], mode: 'quick', model: kieModel, resumeContext: '' },
           _kieAbort?.signal
         ) || '{}';
@@ -4698,6 +4709,8 @@ Rules:
 Return ONLY valid JSON, no markdown, no explanation.`;
 
       try {
+        // Same as the other patch-prompt call earlier in this file — intentional
+        // internal use of KIE_MODES.quick (no visible UI pill), not a bug. Don't touch.
         const raw = await _kieCallSilent(
           { messages: [{ role: 'user', content: patchPrompt }], mode: 'quick', model: kieModel, resumeContext: '' }
         ) || '{}';
@@ -5548,6 +5561,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // If web-search mode is currently active, the chip was tapped in a career
       // context (not a raw search query), so switch back to default mode first
       // to avoid treating "Add relevant keywords" as a web search term.
+      // NOTE: this looks up data-mode="default" — that pill now displays
+      // "Quick Answer" text, but the data-mode attribute is unchanged, so
+      // this lookup still works. If that attribute is ever renamed, this
+      // breaks silently (the `if (defaultPill)` guard just no-ops instead
+      // of throwing) and kieMode gets stuck on 'web' after a chip tap.
       if (kieMode === 'web') {
         const defaultPill = document.querySelector('.kie-mode-pill[data-mode="default"]');
         if (defaultPill) setKieMode('default', defaultPill);
@@ -5700,10 +5718,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         ? ''
         : `<div class="kie-table-writing"><span class="kie-typing-dot-sm"></span>writing…</div>`;
 
-      return `<div class="kie-table-card" id="${cardId}">
-        <div class="kie-table-scroll"><table class="kie-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>
-        ${writing}
-      </div>`;
+      return `<div class="kie-table-card" id="${cardId}"><div class="kie-table-scroll"><table class="kie-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>${writing}</div>`;
     }
 
     function _formatKieLive(partial, isFinal) {
@@ -5738,18 +5753,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           const docIcon  = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 8l3 4-3 4"/></svg>';
 
           const copyBtn = (closed || isFinal)
-            ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-               </button>`
+            ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>`
             : `<span style="color:#a855f7;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
 
-          html += `<div class="kie-code-card" id="${cardId}">
-            <div class="kie-code-card-hdr">
-              <span class="kie-code-card-label">${docIcon}${esc(label)}</span>
-              ${copyBtn}
-            </div>
-            <div class="kie-code-card-body">${esc(content.trim())}</div>
-          </div>`;
+          html += `<div class="kie-code-card" id="${cardId}"><div class="kie-code-card-hdr"><span class="kie-code-card-label">${docIcon}${esc(label)}</span>${copyBtn}</div><div class="kie-code-card-body">${esc(content.trim())}</div></div>`;
         }
 
         lastIndex = match.index + match[0].length;

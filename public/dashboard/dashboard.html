@@ -1551,11 +1551,28 @@
         </div>
       </div>
 
-    <!-- Mode pills -->
+    <!-- Mode pills — 4 visible, but 5 modes exist on the backend (server/kie.js
+         KIE_MODES). Read this before touching data-mode values:
+
+         - data-mode="default" is INTENTIONALLY labeled "Quick Answer" below.
+           This is not the old "quick" mode — it's the original Default
+           persona (1100 tokens, full coaching depth) just renamed in the UI.
+           Backend key stays 'default' so resolveMode()'s casual-message
+           downgrade and sendChip()'s Web→Default revert keep working
+           untouched. Do not rename this button's data-mode to "quick".
+         - The OLD "quick" mode (400 tokens, terse "2-3 sentences only" style)
+           has NO visible pill anymore — it was removed from the UI on
+           purpose (was confusingly similar to Default). Its backend config
+           (KIE_MODES.quick) is still alive and still used internally by a
+           couple of one-off programmatic AI calls (patch-prompt requests in
+           dashboard-core.js) that intentionally want a terse reply — leave
+           KIE_MODES.quick in server/kie.js alone; do not delete it. -->
     <div class="kie-modes" id="kieModes">
+      <!-- data-mode="default" — see note above: this is Default renamed to
+           "Quick Answer" in the UI, NOT the old terse quick mode. -->
       <button class="kie-mode-pill active" data-mode="default" onclick="setKieMode('default',this)">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z"/></svg>
-        Default
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Quick Answer
       </button>
       <button class="kie-mode-pill" data-mode="deep" onclick="setKieMode('deep',this)">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707M12 21v-1m-6.364-1.636l.707-.707M9 12a3 3 0 106 0 3 3 0 00-6 0z"/></svg>
@@ -1565,10 +1582,6 @@
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
         Web Search
       </button>
-      <button class="kie-mode-pill" data-mode="quick" onclick="setKieMode('quick',this)">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Quick Answer
-      </button>
       <button class="kie-mode-pill" data-mode="creative" onclick="setKieMode('creative',this)">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8l5 4-3 4z"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9.5 9.5C11 7 15 7.5 15 10.5c0 2-1.5 3-2.5 4"/></svg>
         Creative
@@ -1577,7 +1590,7 @@
 
     <!-- Input — sticky at bottom -->
     <!-- Gmail floating alert bar above input -->
-    <div id="kieFloatAlert" style="display:none;padding:0 14px 8px;background:#fff">
+    <div id="kieFloatAlert" style="display:none;padding:0 14px 8px;background:transparent">
       <div style="background:linear-gradient(135deg,#faf5ff,#f3ecff);border:1.5px solid #ddd6fe;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="kieFloatAlertTap()">
         <div style="width:26px;height:26px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#fff"/></svg></div>
         <div style="flex:1;min-width:0">
@@ -1608,7 +1621,6 @@
           </button>
         </div>
       </div>
-      <div class="kie-footer">📎 Images · PDFs · Resumes · Career questions · Built by Kievora</div>
     </div>
 
     </div>
