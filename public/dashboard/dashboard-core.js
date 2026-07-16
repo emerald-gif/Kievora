@@ -6221,12 +6221,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     (function initKieLiveVoice() {
       const LiveSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-      let liveOn           = false;  // overlay open / session active
-      let liveRec          = null;   // current SpeechRecognition instance
-      let liveMicMuted     = false;
-      let liveSpeakerMuted = false;
-      let liveBusy         = false;  // true while KIE is thinking or speaking
-      let silenceTimer     = null;
+      let liveOn         = false;  // overlay open / session active
+      let liveRec         = null;   // current SpeechRecognition instance
+      let liveMicMuted    = false;
+      let liveShowCaption = true;   // whether the live transcript/reply text is shown on screen
+      let liveBusy        = false;  // true while KIE is thinking or speaking
+      let silenceTimer    = null;
 
       function ov()      { return g('kieLiveOverlay'); }
       function orbEl()    { return g('kieLiveOrb'); }
@@ -6234,6 +6234,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function capEl()    { return g('kieLiveCaption'); }
 
       function setLiveState(state, caption) {
+        currentOrbState = state;
         const o = orbEl();
         if (o) o.className = 'kie-live-orb' + (state ? ' ' + state : '') + (liveMicMuted && state === 'listening' ? ' muted' : '');
         const s = statusEl();
@@ -6241,7 +6242,87 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           state === 'listening' ? (liveMicMuted ? 'Mic muted' : 'Listening…') :
           state === 'thinking'  ? 'Thinking…' :
           state === 'speaking'  ? 'Speaking…' : '';
-        if (caption !== undefined) { const c = capEl(); if (c) c.textContent = caption; }
+        if (caption !== undefined) { const c = capEl(); if (c) c.textContent = liveShowCaption ? caption : ''; }
+      }
+
+      // ── Organic orb engine ────────────────────────────────────────────────
+      // Instead of fixed CSS keyframes, the orb's scale is a spring physics
+      // simulation (mass/stiffness/damping) chasing a target driven by real
+      // mic loudness while listening, and a synthetic speech envelope while
+      // speaking — plus a slow blob-morph on border-radius. That's what
+      // gives it weight/gravity instead of a mechanical pulse.
+      let audioCtx = null, analyser = null, micSource = null, micStream = null, freqData = null;
+      let rafId = null;
+      let orbScale = 1, orbScaleVel = 0;
+      let orbWobble = 0;
+      let speakPhase = 0;
+      let currentOrbState = '';
+
+      function getAmplitude() {
+        if (currentOrbState === 'listening' && analyser && freqData && !liveMicMuted) {
+          analyser.getByteFrequencyData(freqData);
+          let sum = 0;
+          for (let i = 0; i < freqData.length; i++) sum += freqData[i];
+          const avg = sum / freqData.length / 255;
+          return Math.min(1, avg * 2.6);
+        }
+        if (currentOrbState === 'speaking') {
+          speakPhase += 0.14;
+          const wave = Math.sin(speakPhase) * 0.5 + Math.sin(speakPhase * 2.3 + 1) * 0.3 + Math.sin(speakPhase * 0.7 + 2) * 0.2;
+          return Math.max(0, wave * 0.55 + 0.35);
+        }
+        return 0.08;
+      }
+
+      function orbLoop() {
+        rafId = requestAnimationFrame(orbLoop);
+        const o = orbEl();
+        if (!o) return;
+        if (currentOrbState === 'thinking') {
+          // Pure-CSS spin/pulse handles this state — clear any inline overrides
+          o.style.transform = '';
+          o.style.borderRadius = '';
+          return;
+        }
+        const amp = getAmplitude();
+        const target = 1 + amp * 0.32;
+        const stiffness = 0.18, damping = 0.72;
+        orbScaleVel = (orbScaleVel + (target - orbScale) * stiffness) * damping;
+        orbScale += orbScaleVel;
+
+        orbWobble += 0.045 + amp * 0.05;
+        const w = amp * 14;
+        const r1 = 50 + Math.sin(orbWobble) * w;
+        const r2 = 50 + Math.sin(orbWobble * 1.3 + 1.4) * w;
+        const r3 = 50 + Math.sin(orbWobble * 0.8 + 2.6) * w;
+        const r4 = 50 + Math.sin(orbWobble * 1.6 + 0.8) * w;
+
+        o.style.transform = `scale(${orbScale.toFixed(3)})`;
+        o.style.borderRadius = `${r1}% ${100 - r1}% ${r2}% ${100 - r2}% / ${r3}% ${r4}% ${100 - r4}% ${100 - r3}%`;
+      }
+
+      async function startAudioEngine() {
+        if (audioCtx) return;
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.6;
+          freqData = new Uint8Array(analyser.frequencyBinCount);
+          micSource = audioCtx.createMediaStreamSource(micStream);
+          micSource.connect(analyser);
+        } catch (_) {
+          // Amplitude-reactive motion is a nice-to-have — voice chat still
+          // works via SpeechRecognition even if this mic tap fails/denied.
+        }
+      }
+
+      function stopAudioEngine() {
+        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+        if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
+        analyser = null; micSource = null; freqData = null;
       }
 
       function stopRec() {
@@ -6320,7 +6401,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
 
       function speakLiveReply(text) {
-        if (!text || liveSpeakerMuted || !window.speechSynthesis) {
+        if (!text || !window.speechSynthesis) {
           liveBusy = false;
           if (liveOn) startListening();
           return;
@@ -6344,19 +6425,26 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         liveBusy = false;
         stopRec();
         window.speechSynthesis?.cancel();
-        const o = ov();
-        if (o) o.classList.remove('open');
+        stopAudioEngine();
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        const o = orbEl();
+        if (o) { o.style.transform = ''; o.style.borderRadius = ''; }
+        orbScale = 1; orbScaleVel = 0; orbWobble = 0; speakPhase = 0;
+        const ovEl = ov();
+        if (ovEl) ovEl.classList.remove('open');
       }
 
-      window.openKieLive = function () {
+      window.openKieLive = async function () {
         if (!LiveSpeechRecognition) { toast('Voice chat needs a browser with speech recognition support (try Chrome).', 'err'); return; }
-        liveOn = true; liveBusy = false;
-        liveMicMuted = false; liveSpeakerMuted = false;
+        liveOn = true; liveBusy = false; liveMicMuted = false;
         const mBtn = g('kieLiveMuteBtn'); if (mBtn) mBtn.classList.remove('active');
-        const sBtn = g('kieLiveSpeakerBtn'); if (sBtn) sBtn.classList.remove('active');
-        const o = ov(); if (o) o.classList.add('open');
+        const cBtn = g('kieLiveCaptionBtn'); if (cBtn) cBtn.classList.toggle('active', liveShowCaption);
+        const ovEl = ov();
+        if (ovEl) { ovEl.classList.add('open'); ovEl.classList.toggle('no-caption', !liveShowCaption); }
         window.speechSynthesis?.cancel();
         setLiveState('listening', '');
+        if (!rafId) orbLoop();
+        await startAudioEngine();
         setTimeout(startListening, 200);
       };
       window.closeKieLive = closeLive;
@@ -6366,7 +6454,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (!LiveSpeechRecognition) { if (trigger) trigger.style.display = 'none'; return; }
         if (trigger) trigger.onclick = window.openKieLive;
         const endBtn = g('kieLiveEndBtn'); if (endBtn) endBtn.onclick = closeLive;
-        const kbBtn  = g('kieLiveKeyboardBtn'); if (kbBtn) kbBtn.onclick = closeLive;
         const mBtn = g('kieLiveMuteBtn');
         if (mBtn) mBtn.onclick = () => {
           liveMicMuted = !liveMicMuted;
@@ -6374,12 +6461,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (liveMicMuted) { stopRec(); setLiveState('listening', ''); }
           else if (liveOn && !liveBusy) startListening();
         };
-        const sBtn = g('kieLiveSpeakerBtn');
-        if (sBtn) sBtn.onclick = () => {
-          liveSpeakerMuted = !liveSpeakerMuted;
-          sBtn.classList.toggle('active', liveSpeakerMuted);
-          if (liveSpeakerMuted) window.speechSynthesis?.cancel();
-        };
+        const cBtn = g('kieLiveCaptionBtn');
+        if (cBtn) {
+          cBtn.classList.toggle('active', liveShowCaption);
+          cBtn.onclick = () => {
+            liveShowCaption = !liveShowCaption;
+            cBtn.classList.toggle('active', liveShowCaption);
+            cBtn.title = liveShowCaption ? 'Hide captions' : 'Show captions';
+            const ovEl = ov();
+            if (ovEl) ovEl.classList.toggle('no-caption', !liveShowCaption);
+          };
+        }
       });
     })();
 
