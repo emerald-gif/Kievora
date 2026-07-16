@@ -810,6 +810,47 @@ async function sendOtpEmail(email, name, otp) {
   }
 }
 
+// ─── Brevo Support Ticket Confirmation Email (templateId 3) ───────────────────
+// Fired once, right after a visitor submits a support request. Uses the ticket
+// itself (looked up server-side by ID) as the source of truth rather than
+// trusting whatever the client posts, so this can stay a public endpoint.
+async function sendTicketConfirmationEmail(email, name, ticketId, subject) {
+  const brevoKey = process.env.BREVO_API_KEY;
+  if (!brevoKey) {
+    console.warn('⚠️  BREVO_API_KEY not set — skipping ticket confirmation email for', email);
+    return false;
+  }
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': brevoKey,
+      },
+      body: JSON.stringify({
+        sender:     { email: 'support@kievora.app', name: 'Kievora Support' },
+        to:         [{ email, name: name || 'there' }],
+        templateId: 3,
+        params:     { name: name || 'there', ticketId, subject: subject || '' },
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error('❌ Brevo ticket confirmation email failed:', res.status, errBody);
+      return false;
+    }
+    console.log(`✅ Ticket confirmation email sent → ${email} (${ticketId})`);
+    db.collection('emailLogs').add({
+      email, name: name || '', type: 'support_ticket', ticketId, success: true,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+    return true;
+  } catch (err) {
+    console.error('❌ Brevo sendTicketConfirmationEmail error:', err.message);
+    return false;
+  }
+}
+
 // ─── Brevo Welcome Email ───────────────────────────────────────────────────────
 async function sendWelcomeEmail(email, name) {
   const brevoKey = process.env.BREVO_API_KEY;
@@ -1340,7 +1381,7 @@ module.exports = {
   UPGRADE_MESSAGES, TOPUP_MESSAGES,
   callKieAI, callKieAIStream, callKieAIJson, parseAIJson, fetchWithRetry,
   performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
-  sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest,
+  sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest, sendTicketConfirmationEmail,
   classifyCareerEmail, extractEmailEntities, extractInterviewDateTime, normaliseStr, isSameApplication,
   syncUserGmail, buildApplicationList, generateInsights, computeNextAction, attachStaleFlags, computePipelineStats,
   getWeekKey, recordPipelineTrend, getTrendComparison, detectGhostingPattern, buildKieBrainBlock,

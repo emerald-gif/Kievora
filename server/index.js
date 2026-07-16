@@ -12,7 +12,7 @@ const crypto  = require('crypto'); // Paystack webhook signature verification
 const {
   admin, db, authenticate, upload, cloudinary,
   callKieAI, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
-  KIE_MODELS, USERS, sendWelcomeEmail, sendOtpEmail, applyPaystackMetadata, PLANS,
+  KIE_MODELS, USERS, sendWelcomeEmail, sendOtpEmail, sendTicketConfirmationEmail, applyPaystackMetadata, PLANS,
   serviceAccount,
 } = require('./lib');
 
@@ -177,7 +177,39 @@ app.post('/api/register-user', authenticate, async (req, res) => {
   }
 });
 
-// ─── Email/Password Signup Verification (OTP via Brevo templateId 2) ──────────
+// ─── POST /api/support-ticket-email ────────────────────────────────────────────
+// Called by support.html right after it writes a ticket to Firestore
+// (support_requests/{ticketId} has "allow create: if true" — visitors submit
+// without being signed in, so this endpoint stays public too). It looks the
+// ticket up server-side by ID rather than trusting the posted email/name, so
+// it can't be used to spam arbitrary addresses. Idempotent: a ticket only
+// ever gets one confirmation email even if the client calls this twice.
+app.post('/api/support-ticket-email', async (req, res) => {
+  const ticketId = String(req.body.ticketId || '').trim().toUpperCase();
+  if (!/^KVR-\d{4}-[A-Z0-9]{5}$/.test(ticketId)) {
+    return res.status(400).json({ error: 'Invalid ticket ID.' });
+  }
+  try {
+    const ref  = db.collection('support_requests').doc(ticketId);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ error: 'Ticket not found.' });
+
+    const data = snap.data();
+    if (data.confirmationEmailSent) {
+      return res.json({ success: true, alreadySent: true });
+    }
+    const sent = await sendTicketConfirmationEmail(data.email, data.name, ticketId, data.subject);
+    if (!sent) return res.status(502).json({ error: 'Could not send confirmation email.' });
+
+    await ref.update({ confirmationEmailSent: true });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('POST /api/support-ticket-email ERROR:', err.message);
+    res.status(500).json({ error: 'Failed to send confirmation email: ' + err.message });
+  }
+});
+
+
 // Google signups already arrive with emailVerified:true from Firebase (Google
 // already verified that email), so this whole flow is skipped for them —
 // signup.html only calls these for the email/password path.
