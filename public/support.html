@@ -1696,8 +1696,30 @@
   };
 
   const fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
-  const db    = firebase.firestore(fbApp, 'default');
   const auth  = firebase.auth(fbApp);
+
+  // NOTE: the namespaced/compat firebase.firestore(app, 'default') call does NOT
+  // reliably route to a named database (our DB's ID is literally "default", not
+  // the reserved "(default)") — it silently falls back to "(default)", which
+  // doesn't exist in this project, so every request just hangs forever.
+  // The modular SDK's initializeFirestore(app, settings, databaseId) is the
+  // supported way to target a named database, so we pull that in separately
+  // and expose it on window for the rest of this (compat-style) script to use.
+  window.__kieDbReady = (async () => {
+    const { initializeApp, getApps, getApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const { initializeFirestore, doc, getDoc, setDoc, runTransaction, increment, serverTimestamp } =
+      await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const modularApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const db = initializeFirestore(modularApp, {}, 'default');
+    window.db = db;
+    window.fsDoc = doc;
+    window.fsGetDoc = getDoc;
+    window.fsSetDoc = setDoc;
+    window.fsRunTransaction = runTransaction;
+    window.fsIncrement = increment;
+    window.fsServerTimestamp = serverTimestamp;
+    return db;
+  })();
 
   // ── SUBMIT REQUEST ──
   function genTicketId() {
@@ -1741,9 +1763,10 @@
       if (!auth.currentUser) {
         try { await auth.signInAnonymously(); } catch(authErr) { /* anonymous auth disabled — attempt write regardless */ }
       }
-      const writePromise = db.collection('support_requests').doc(ticketId).set({
+      const db = await window.__kieDbReady;
+      const writePromise = window.fsSetDoc(window.fsDoc(db, 'support_requests', ticketId), {
         ticketId, name, email, category, subject, message,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        timestamp: window.fsServerTimestamp(),
         status: 'pending',
         source: 'support_page'
       });
@@ -1847,14 +1870,15 @@
     btn.textContent = 'Checking…';
 
     try {
-      const doc = await db.collection('support_requests').doc(raw).get();
-      if (!doc.exists) {
+      const db = await window.__kieDbReady;
+      const snap = await window.fsGetDoc(window.fsDoc(db, 'support_requests', raw));
+      if (!snap.exists()) {
         errEl.textContent = 'No ticket found with that ID. Please check and try again.';
         errEl.classList.add('show');
         btn.disabled = false; btn.textContent = 'Check';
         return;
       }
-      const d = doc.data();
+      const d = snap.data();
       const statusIdx = STATUS_STEPS.findIndex(s => s.key === (d.status || 'pending'));
       const activeIdx = statusIdx < 0 ? 0 : statusIdx;
       const submitted = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'}) : 'Recently';
@@ -2194,11 +2218,12 @@
       el.innerHTML = '<span class="faq-helpful-done">✅ Thanks for your feedback!</span>';
     }, 400);
     try {
-      const ref = db.collection('faq_votes').doc(String(idx));
-      await db.runTransaction(async t => {
+      const db = await window.__kieDbReady;
+      const ref = window.fsDoc(db, 'faq_votes', String(idx));
+      await window.fsRunTransaction(db, async t => {
         const snap = await t.get(ref);
-        if (snap.exists) {
-          t.update(ref, { [isYes?'yes':'no']: firebase.firestore.FieldValue.increment(1) });
+        if (snap.exists()) {
+          t.update(ref, { [isYes?'yes':'no']: window.fsIncrement(1) });
         } else {
           t.set(ref, { yes: isYes?1:0, no: isYes?0:1, question: FAQS[idx]?.q || '' });
         }
