@@ -1696,7 +1696,7 @@
   };
 
   const fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
-  const db    = firebase.firestore(fbApp, 'default');
+  const db    = firebase.firestore(fbApp);
   const auth  = firebase.auth(fbApp);
 
   // ── SUBMIT REQUEST ──
