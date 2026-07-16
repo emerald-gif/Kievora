@@ -6001,14 +6001,33 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
     function pickMaleVoice() {
       const voices = window.speechSynthesis.getVoices();
-      // Priority: Google UK English Male → Microsoft David/Mark/Guy → any male-labelled → first English
-      const maleKeywords = ['male', 'david', 'mark', 'guy', 'james', 'daniel', 'matthew', 'ryan', 'alex', 'fred', 'tom', 'oliver', 'george', 'arthur'];
-      for (const kw of maleKeywords) {
-        const v = voices.find(v => v.name.toLowerCase().includes(kw) && v.lang.startsWith('en'));
+      if (!voices.length) return null;
+      const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+      const pool = englishVoices.length ? englishVoices : voices;
+
+      // Tier 1 — genuinely high-quality engines, wherever the OS/browser
+      // exposes them: Apple's own Enhanced/Siri voices on iOS Safari, Edge's
+      // "X Online (Natural)" voices, Google's Wavenet/Neural voices on
+      // Android Chrome. These sound dramatically better than a default
+      // system voice and are worth prioritizing over anything below,
+      // regardless of gender.
+      const qualityKeywords = ['premium', 'enhanced', 'neural', 'natural', 'siri', 'wavenet'];
+      for (const kw of qualityKeywords) {
+        const v = pool.find(v => v.name.toLowerCase().includes(kw));
         if (v) return v;
       }
-      // Fallback: first English voice
-      return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+
+      // Tier 2 — known warm, natural-sounding voices even without an
+      // explicit quality tag (Apple's stock Daniel/Aaron are genuinely good;
+      // Edge's Guy/Ryan are its natural voices without the "(Natural)" suffix
+      // on some builds). Ordered by how natural they tend to sound.
+      const goodNames = ['daniel', 'aaron', 'guy', 'ryan', 'nicky', 'matthew', 'samuel', 'david', 'mark', 'james', 'george', 'oliver', 'arthur', 'tom', 'fred', 'alex'];
+      for (const name of goodNames) {
+        const v = pool.find(v => v.name.toLowerCase().includes(name));
+        if (v) return v;
+      }
+
+      return pool[0] || voices[0] || null;
     }
 
     function resetSpeakBtn(btn) {
@@ -6137,8 +6156,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       btn.title = 'Stop';
 
       const utter = new SpeechSynthesisUtterance(txt);
-      utter.rate  = 0.97;
-      utter.pitch = 0.95;
+      // No pitch-shift: pitch=1 is critical here — shifting pitch on a
+      // genuinely good voice (Apple Enhanced/Siri, Edge Natural, Wavenet) is
+      // what makes it sound artificial and robotic again. A slightly slower
+      // rate reads as calmer and more natural without distorting the voice.
+      utter.rate  = 0.98;
+      utter.pitch = 1;
       utter.volume = 1;
       const voice = pickMaleVoice();
       if (voice) utter.voice = voice;
