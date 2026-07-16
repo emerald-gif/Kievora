@@ -7,7 +7,6 @@
 <meta name="description" content="Read Kievora's Privacy Policy to understand how we collect, use, and protect your data."/>
 <link rel="canonical" href="https://kievora.app/privacy.html"/>
 <meta property="og:title" content="Privacy Policy — Kievora"/>
-<meta property="og:site_name" content="Kievora"/>
 <meta property="og:description" content="Read Kievora's Privacy Policy to understand how we collect, use, and protect your data."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://kievora.app/privacy.html"/>
@@ -87,7 +86,7 @@ footer{background:var(--light);border-top:1px solid var(--border);padding:36px 2
   <div class="doc-header">
     <div class="doc-badge">Legal</div>
     <h1>Privacy Policy</h1>
-    <p class="doc-meta">Effective date: <span>June 1, 2026</span> &nbsp;·&nbsp; Last updated: <span>June 1, 2026</span></p>
+    <p class="doc-meta">Effective date: <span>July 16, 2026</span> &nbsp;·&nbsp; Last updated: <span>July 16, 2026</span></p>
   </div>
 
   <div class="section">
@@ -101,11 +100,13 @@ footer{background:var(--light);border-top:1px solid var(--border);padding:36px 2
     <div class="table-wrap">
       <table>
         <tr><th>Type</th><th>What we collect</th><th>Why</th></tr>
-        <tr><td><strong>Account info</strong></td><td>Name, email address, profile photo (if using Google Sign-In)</td><td>To create and manage your account</td></tr>
-        <tr><td><strong>Resume data</strong></td><td>Work history, education, skills, personal summary, contact details you enter</td><td>To build and store your resumes</td></tr>
+        <tr><td><strong>Account info</strong></td><td>Name, email address, and password, or your Google account info and profile photo if using Google Sign-In</td><td>To create and manage your account</td></tr>
+        <tr><td><strong>Career &amp; resume data</strong></td><td>Work history, education, skills, personal summary, job title, professional category, contact details you enter</td><td>To build your resumes and personalise KIE's coaching and job matches</td></tr>
+        <tr><td><strong>Uploaded files</strong></td><td>Resumes you upload for analysis</td><td>To perform resume analysis, ATS scoring, and Recruiter View feedback</td></tr>
+        <tr><td><strong>AI interactions</strong></td><td>Prompts and messages sent to KIE and our other AI tools</td><td>To generate responses and improve AI quality</td></tr>
+        <tr><td><strong>Gmail data</strong> <em style="font-weight:400;font-style:italic">(Premier, opt-in only)</em></td><td>Job-search-related email details (sender, subject, dates, and — only when you request a drafted reply — the relevant message content) from a connected Gmail account</td><td>To track applications, flag interview replies, and draft follow-up suggestions — see Section 4</td></tr>
+        <tr><td><strong>Payment &amp; subscription info</strong></td><td>Your selected plan and subscription status</td><td>To manage billing and plan access — card details are handled directly by Paystack and never touch our servers</td></tr>
         <tr><td><strong>Usage data</strong></td><td>Pages visited, features used, session duration, device type, browser</td><td>To improve the platform and fix issues</td></tr>
-        <tr><td><strong>AI interactions</strong></td><td>Prompts and messages sent to KIE AI</td><td>To generate responses and improve AI quality</td></tr>
-        <tr><td><strong>Uploaded files</strong></td><td>Resumes you upload for analysis</td><td>To perform resume analysis and scoring</td></tr>
       </table>
     </div>
   </div>
@@ -116,8 +117,11 @@ footer{background:var(--light);border-top:1px solid var(--border);padding:36px 2
     <ul>
       <li>Provide, maintain, and improve the Kievora platform</li>
       <li>Authenticate your identity and secure your account</li>
-      <li>Generate AI-powered resume suggestions and career coaching via KIE</li>
-      <li>Send transactional emails such as account confirmations and welcome messages</li>
+      <li>Generate AI-powered resume suggestions, cover letters, and career coaching via KIE and our other AI tools</li>
+      <li>Power the optional Gmail AI feature for Premier users, including application tracking and draft follow-up or reply suggestions</li>
+      <li>Match you with relevant listings through Find Jobs</li>
+      <li>Process payments and manage your subscription plan</li>
+      <li>Send transactional emails such as account confirmations, verification codes, and welcome messages</li>
       <li>Respond to your support requests and communications</li>
       <li>Analyse usage patterns to improve features and fix bugs</li>
       <li>Comply with legal obligations</li>
@@ -127,26 +131,47 @@ footer{background:var(--light);border-top:1px solid var(--border);padding:36px 2
 
   <div class="section">
     <h2><span class="num">3</span> Data Storage &amp; Security</h2>
-    <p>Your data is stored securely using <strong>Google Firebase (Firestore)</strong>, a cloud database service with enterprise-grade security. Resume data is stored per user account and is only accessible to you when authenticated.</p>
+    <p>Your data is stored securely using <strong>Google Firebase (Firestore)</strong>, a cloud database service with enterprise-grade security. Profile photos are stored via <strong>Cloudinary</strong>, a secure media hosting provider. Your data is stored per account and is only accessible to you when authenticated.</p>
     <p>We implement reasonable technical and organisational measures to protect your data including encrypted connections (HTTPS), Firebase Authentication for secure sign-in, and access controls that restrict data to the authenticated user only.</p>
     <p>While we take security seriously, no system is 100% secure. If you believe your account has been compromised, contact us immediately.</p>
   </div>
 
   <div class="section">
-    <h2><span class="num">4</span> Third-Party Services</h2>
-    <p>Kievora uses trusted third-party services to operate. Each handles data according to their own privacy policies</p>
-
-    <p>We do not share identifiable personal data with these services beyond what is necessary to provide the service.</p>
+    <h2><span class="num">4</span> Gmail Integration &amp; Data (Premier Feature)</h2>
+    <p>If you're on the Premier plan and choose to connect your Gmail account, Kievora's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener" style="color:var(--p);font-weight:600;text-decoration:none">Google API Services User Data Policy</a>, including its Limited Use requirements.</p>
+    <ul>
+      <li>Access is read-only in practice — Kievora does not send, delete, or modify anything in your mailbox on your behalf</li>
+      <li>We only scan for job-search-related emails (e.g. application confirmations, recruiter replies, interview invitations); personal or financial emails are not processed or used</li>
+      <li>Relevant email details are processed by our AI providers solely to classify messages and generate the application-tracking and draft suggestions described in Section 2 — never for advertising, and never shared beyond what's necessary to provide these features</li>
+      <li>You can disconnect Gmail AI at any time from Settings, which clears your Gmail-derived data (tokens, synced applications, and insights) from our systems within 24 hours — or you can revoke Kievora's access directly from your Google Account's third-party permissions</li>
+    </ul>
   </div>
 
   <div class="section">
-    <h2 id="cookies"><span class="num">5</span> Cookies &amp; Tracking</h2>
+    <h2><span class="num">5</span> Third-Party Services</h2>
+    <p>Kievora relies on the following trusted third-party services to operate. Each handles data according to its own privacy policy, and we only share what's necessary for it to perform its function:</p>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Service</th><th>Purpose</th></tr>
+        <tr><td><strong>Google Firebase</strong></td><td>Account authentication and database storage</td></tr>
+        <tr><td><strong>Cloudinary</strong></td><td>Profile photo storage</td></tr>
+        <tr><td><strong>AI model providers</strong></td><td>Process your prompts and messages to generate KIE's responses and power our AI career tools</td></tr>
+        <tr><td><strong>Google Gmail API</strong></td><td>Powers the optional Gmail AI feature (Premier plan only, opt-in — see Section 4)</td></tr>
+        <tr><td><strong>Paystack</strong></td><td>Payment processing for paid plans; Kievora never receives or stores your card details</td></tr>
+        <tr><td><strong>Brevo</strong></td><td>Transactional emails — welcome messages, verification codes, and account notifications</td></tr>
+        <tr><td><strong>JSearch, Adzuna &amp; Remotive</strong></td><td>Job listing sources for the Find Jobs feature</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 id="cookies"><span class="num">6</span> Cookies &amp; Tracking</h2>
     <p>Kievora uses minimal cookies and local storage to keep you logged in and remember your preferences. We do not use third-party advertising cookies or tracking pixels.</p>
     <p>Firebase Authentication uses browser storage to maintain your session. You can clear this by logging out or clearing your browser data.</p>
   </div>
 
   <div class="section">
-    <h2><span class="num">6</span> Your Rights</h2>
+    <h2><span class="num">7</span> Your Rights</h2>
     <p>You have the following rights regarding your personal data:</p>
     <ul>
       <li><strong>Access</strong> — Request a copy of the data we hold about you</li>
@@ -159,24 +184,25 @@ footer{background:var(--light);border-top:1px solid var(--border);padding:36px 2
   </div>
 
   <div class="section">
-    <h2><span class="num">7</span> Data Retention</h2>
+    <h2><span class="num">8</span> Data Retention</h2>
     <p>We retain your data for as long as your account is active or as needed to provide the service. If you delete your account, we will delete your personal data and resumes within 30 days, except where we are required to retain it by law.</p>
+    <p>If you disconnect Gmail AI without deleting your whole account, your Gmail-derived data is cleared within 24 hours, as described in Section 4.</p>
     <p>Anonymous, aggregated usage data (with no personally identifiable information) may be retained indefinitely for platform improvement purposes.</p>
   </div>
 
   <div class="section">
-    <h2><span class="num">8</span> Children's Privacy</h2>
+    <h2><span class="num">9</span> Children's Privacy</h2>
     <p>Kievora is not directed at children under the age of 16. We do not knowingly collect personal information from children under 16. If you believe a child has provided us with personal information, please contact us and we will delete it promptly.</p>
   </div>
 
   <div class="section">
-    <h2><span class="num">9</span> Changes to This Policy</h2>
+    <h2><span class="num">10</span> Changes to This Policy</h2>
     <p>We may update this Privacy Policy from time to time. When we make significant changes, we will notify you by email or with a notice on the platform. The "Last updated" date at the top of this page will always reflect the most recent revision.</p>
     <p>Continued use of Kievora after changes take effect constitutes your acceptance of the updated policy.</p>
   </div>
 
   <div class="section">
-    <h2><span class="num">10</span> Contact Us</h2>
+    <h2><span class="num">11</span> Contact Us</h2>
     <p>If you have any questions, concerns, or requests about this Privacy Policy or how we handle your data, please contact us:</p>
     <div class="contact-box">
       <p>📧 Email: <a href="mailto:support@kievora.app">support@kievora.app</a></p>
