@@ -8,6 +8,7 @@ module.exports = function registerKieRoutes(app) {
     admin, db, authenticate,
     KIE_MODELS, KIE_TIERS, PLANS, getPlanConfig, getUserPlanKey,
     checkAndIncrementKieUsage, UPGRADE_MESSAGES, TOPUP_MESSAGES,
+    getCycleAnchorDate, getCycleStart,
     callKieAI, callKieAIStream, fetchWithRetry,
     performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
     getGmailCareerBrain,
@@ -22,6 +23,24 @@ module.exports = function registerKieRoutes(app) {
     generateConvSummary(messages).then(sum=>saveConvSummary(req.user.uid,convId,sum)).catch(e=>console.error('[summarize]:',e.message));
   });
 
+  // ── KIE_MODES — 5 backend personas, only 4 have a visible UI pill ─────────
+  // IMPORTANT naming note (read before touching 'default' or 'quick'):
+  //   - 'default' below is what the frontend mode-pill row now DISPLAYS as
+  //     "Quick Answer" (dashboard.html, data-mode="default"). It is the
+  //     original full-depth persona (1100 tokens) — nothing about its
+  //     behavior changed, only its on-screen label. Its own `label:` field
+  //     here still says 'Default' — that's just this internal config
+  //     object's name, it's not shown to users anywhere, so it's fine to
+  //     leave as-is; don't "fix" it into 'Quick Answer' and don't rename the
+  //     object key — resolveMode()'s casual-message downgrade and the
+  //     frontend's Web→Default revert (sendChip()) both key off 'default'.
+  //   - 'quick' below is the OLD terse mode (400 tokens, "2-3 sentences
+  //     only") that used to have its own pill. That pill was removed from
+  //     the UI on purpose (too similar to Default). This config is still
+  //     alive and still used — a couple of internal one-off programmatic
+  //     calls in dashboard-core.js (patch-prompt classification) explicitly
+  //     request mode:'quick' because they want that terse behavior. Do not
+  //     delete this entry.
   const KIE_MODES = {
 
     default: {
@@ -202,7 +221,7 @@ module.exports = function registerKieRoutes(app) {
 
   STRUCTURED OUTPUT — CODE BLOCKS: When you produce a standalone document meant to be copied (a message, bio, letter, plan) wrap it in [CODEBLOCK:label]...[/CODEBLOCK]. Regular chat replies never get code blocks. NEVER use CODEBLOCK for a user's actual resume content — that's handled by the PDF trigger below, and the two are never used together.
 
-  STRUCTURED OUTPUT — COMPARISON TABLES: If (and only if) they're weighing two or more real options — offers, companies, paths — against shared criteria, wrap it in [TABLE:Title]...[/TABLE]: header row first, then "value | value | value" rows, short cells, no markdown dashes. Otherwise skip it — Quick Answer mode means most replies stay plain text.
+  STRUCTURED OUTPUT — COMPARISON TABLES: If (and only if) they're weighing two or more real options — offers, companies, paths — against shared criteria, wrap it in [TABLE:Title]...[/TABLE]: header row first, then "value | value | value" rows, short cells, no markdown dashes. Otherwise skip it — Quick Answer mode means most replies stay plain text. EXCEPTION: plan/billing/renewal/usage questions always use the [TABLE:Your Plan] card per the PRESENTATION RULE below, even in Quick Answer mode — that rule is not a comparison and is not optional here.
 
   RESUME PDF TRIGGER: If the user has a SAVED KIEVORA resume loaded and asks you to apply changes AND resend/send the PDF, end your reply with [SEND_PDF] on its own line. Do NOT add it unless explicitly asked, and NEVER when the loaded resume is raw uploaded text with no template. [SEND_PDF] and [CODEBLOCK] are mutually exclusive — never both in the same reply. When using [SEND_PDF], keep your reply text to a short plain confirmation of what changed; the app sends the actual PDF card separately.
 
@@ -448,6 +467,23 @@ module.exports = function registerKieRoutes(app) {
 - ENGINES YOU MAY NAME: only Spark, Core, and Nova. There is a fourth internal tier that is NOT available to any user yet and NOT part of any plan — never name it, confirm it, or hint at it, even if asked directly "is there anything above Nova/Core?" or similar. If asked, say Core and Nova are the top engines available right now.
 - "WHO ARE YOU" / "WHAT CAN YOU DO" / "WHAT ARE YOUR FEATURES": never give a vague generic-AI non-answer. Give a short, real, confident list pulled from the capabilities above — grounded in what you actually do for this user on Kievora right now.`;
 
+    // ── Plan & feature-lock self-knowledge — accurate per THIS user's plan ───
+    // Without this, KIE has no idea what plan the user is on or what's
+    // actually locked for them — "why is Core/Nova locked" or "why is web
+    // search locked" got a generic "I'm not aware of Kievora's current
+    // status" non-answer, or worse, got misrouted into unrelated topics
+    // (see TEMPLATE NAME LOCK note below — "Nova" is both a model tier and
+    // a template name, so lock questions about one used to get answered as
+    // if they were about the other). planCfg is already computed above for
+    // this request — this is just telling KIE what it means.
+    const lockedModels = ['spark', 'core', 'nova'].filter(mk => !planCfg.models.includes(mk));
+    systemContent += `\n\nYOUR PLAN & FEATURE-LOCK STATUS FOR THIS USER — answer lock questions from this, never with "I'm not aware of Kievora's status":
+- CURRENT PLAN: ${planCfg.label} (${planCfg.priceUSD === 0 ? 'free' : '$' + planCfg.priceUSD + '/mo'}).
+- MODEL ACCESS: ${planCfg.models.map(mk => KIE_MODELS[mk]?.label || mk).join(', ')} ${lockedModels.length ? `unlocked. LOCKED for this user: ${lockedModels.map(mk => KIE_MODELS[mk]?.label || mk).join(', ')} — these need a higher plan (Pro $7 or Premier $15).` : '— this user already has every available engine unlocked.'}
+- WEB SEARCH MODE: ${planCfg.kieWebSearch ? 'UNLOCKED for this user.' : 'LOCKED for this user — needs Pro ($7) or Premier ($15).'}
+- CREATIVE MODE: ${planCfg.kieCreativeMode ? 'UNLOCKED for this user.' : 'LOCKED for this user — needs Pro ($7) or Premier ($15).'}
+- If asked "why is [a model or mode] locked", answer directly and accurately using the status above — name the specific thing they asked about, say plainly whether it's locked or unlocked for them, and if locked, name the plan that unlocks it. Never deflect this into an unrelated topic (like templates) just because a name sounds similar to something else in Kievora.`;
+
     systemContent += `\n\nTEMPLATE NAME LOCK: Kievora has EXACTLY 13 templates and no others: Classic, Modern, Bold, Minimal, Vivid, Elegant, Slate, Coral, Split, Ink, Executive, Nova, Tribune. Never invent, guess, or reference any template name outside this exact list — there is no "Onyx" or any other name. A "template" is a visual layout applied to a saved Kievora resume file; it is NOT something you can apply by formatting text in chat. If you don't know which template (if any) is active, don't name one — just don't mention a template name at all.`;
 
     if (resumeContext === 'NO_RESUME_YET') {
@@ -545,6 +581,47 @@ module.exports = function registerKieRoutes(app) {
       systemContent += `\nCONNECTED (${gmailEmailAddr}) and actively tracking — full pipeline detail below.`;
     }
     systemContent += `\n[GMAIL_CTA] TAG: put it alone on its own line at the end of a reply to show a real, tappable "Open Gmail Intelligence" (or "Connect Gmail") button. Only include it when Gmail genuinely came up — never as a default add-on.`;
+
+    // ── Plan & Billing snapshot — real account data, real format ─────────────
+    // Reuses the userDoc already fetched above (no extra Firestore read).
+    // Gives KIE the exact same numbers billing.html shows via /api/billing/me
+    // (plan, last payment/plan-change date, next renewal, usage this cycle,
+    // top-up balance) so "what's my plan" / "when does it renew" / "what did
+    // I last pay" get real answers instead of guesses or deflections — and
+    // tells KIE to present it as a [TABLE] card, not a wall of chat prose.
+    {
+      const uData = userDoc.data() || {};
+      const usageData = uData.usage || {};
+      const cycleAnchor = getCycleAnchorDate(uData);
+      const cycleStart = getCycleStart(cycleAnchor, new Date());
+      const cycleStartKey = cycleStart.toISOString();
+      const inSameCycle = usageData.kieCycleStart === cycleStartKey;
+      const usedThisCycle = inSameCycle ? (usageData.kieCount || 0) : 0;
+      const topupLeft = inSameCycle ? (usageData.kieTopupRemaining || 0) : 0;
+      const nextRenewal = getCycleStart(cycleAnchor, new Date(cycleStart.getTime() + 32 * 24 * 60 * 60 * 1000));
+      const fmtDate = (d) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const lastPaymentRaw = uData.planUpdatedAt;
+      const lastPaymentDate = lastPaymentRaw && typeof lastPaymentRaw.toDate === 'function'
+        ? fmtDate(lastPaymentRaw.toDate())
+        : (planKey === 'free' ? 'Never — still on the Free plan' : 'Not recorded');
+
+      systemContent += `\n\nYOUR PLAN & BILLING SNAPSHOT FOR THIS USER — real account data, use it exactly, never invent or round numbers:
+- Plan: ${planCfg.label} (${planKey})${planCfg.priceUSD ? ` — $${planCfg.priceUSD}/month` : ' — free, $0/month'}
+- Last payment / plan change: ${lastPaymentDate}
+- Next renewal date: ${fmtDate(nextRenewal)}
+- KIE messages used this cycle: ${usedThisCycle} of ${planCfg.kieMonthlyLimit}
+- Top-up messages remaining: ${topupLeft}
+- Web Search mode: ${planCfg.kieWebSearch ? 'unlocked' : 'locked'}
+- Creative mode: ${planCfg.kieCreativeMode ? 'unlocked' : 'locked'}
+- Models unlocked: ${planCfg.models.map(mk => KIE_MODELS[mk]?.label || mk).join(', ')}
+PRESENTATION RULE: if the user asks about their plan, billing, subscription, renewal/expiry date, last payment, or usage — don't answer in a normal paragraph. Wrap the relevant facts in a real card using:
+[TABLE:Your Plan]
+Field | Detail
+Plan | ${planCfg.label}
+...
+[/TABLE]
+One row per fact, only the facts relevant to what they actually asked (don't dump all 7 rows for a narrow question like "when do I renew"). Follow the card with at most one short sentence — never repeat the card's numbers back in prose. If they ask to upgrade or something is locked, end with [BILLING_CTA] on its own line.`;
+    }
 
     // ── Conversation understanding ───────────────────────────────────────────
     if (convSummary) {
