@@ -752,6 +752,48 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;b
 .reveal.v{opacity:1;transform:none}
 .d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
 </style>
+
+<!-- Structured data — feeds Google's organic sitelinks algorithm. Does not
+     guarantee sitelinks appear (still algorithmic, based on traffic/CTR too
+     over time), but sites without this essentially never get them. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://kievora.app/#organization",
+  "name": "Kievora",
+  "url": "https://kievora.app/",
+  "logo": "https://kievora.app/logo.jpg",
+  "description": "Kievora is the AI-powered career platform for African professionals — build your profile, get AI career coaching, find jobs, and get hired.",
+  "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://kievora.app/#website",
+  "url": "https://kievora.app/",
+  "name": "Kievora",
+  "description": "Build. Connect. Get Hired. — AI resume builder, career coach, and job discovery, 100% free.",
+  "publisher": { "@id": "https://kievora.app/#organization" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Kievora Navigation",
+  "itemListElement": [
+    { "@type": "SiteNavigationElement", "position": 1, "name": "Find Jobs", "description": "Thousands of opportunities updated hourly. Filter by role, location, or salary.", "url": "https://kievora.app/find-jobs" },
+    { "@type": "SiteNavigationElement", "position": 2, "name": "Get Started Free", "description": "Build an ATS-proof resume and get hired faster. 100% free, no credit card.", "url": "https://kievora.app/signup" },
+    { "@type": "SiteNavigationElement", "position": 3, "name": "Pricing", "description": "See Kievora's plans and what's included free vs premium.", "url": "https://kievora.app/pricing" },
+    { "@type": "SiteNavigationElement", "position": 4, "name": "Gmail AI", "description": "Connect Gmail and let KIE auto-track applications and interview invites.", "url": "https://kievora.app/gmail-ai.html" },
+    { "@type": "SiteNavigationElement", "position": 5, "name": "About Kievora", "description": "Learn more about the Kievora career platform.", "url": "https://kievora.app/about" },
+    { "@type": "SiteNavigationElement", "position": 6, "name": "Sign In", "description": "Access your Kievora dashboard.", "url": "https://kievora.app/login" }
+  ]
+}
+</script>
 </head>
 <body>
 
