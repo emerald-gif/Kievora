@@ -5592,8 +5592,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           let i = 0;
           // Strip [FU] tags from what gets typed out — they appear as chips, not text
           const typeText = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-          // 15 chars per RAF frame ≈ 900 chars/sec at 60 fps — fast Claude-like stream
-          const CHUNK = 15;
+          // 3 chars per RAF frame ≈ 180 chars/sec at 60 fps — readable, deliberate
+          // pace (was 15 chars/frame ≈ 900 chars/sec, way too fast to actually read)
+          const CHUNK = 3;
           let rafId;
           function typeFrame() {
             if (_kieStopTyping) {
