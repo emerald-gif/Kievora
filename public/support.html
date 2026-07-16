@@ -1871,7 +1871,14 @@
 
     try {
       if (!auth.currentUser) {
-        try { await auth.signInAnonymously(); } catch(authErr) { /* anonymous auth disabled — attempt read regardless */ }
+        try {
+          await auth.signInAnonymously();
+          console.log('Anonymous sign-in succeeded, uid:', auth.currentUser?.uid);
+        } catch(authErr) {
+          console.error('Anonymous sign-in FAILED:', authErr.code, authErr.message);
+        }
+      } else {
+        console.log('Already signed in, uid:', auth.currentUser.uid);
       }
       const db = await window.__kieDbReady;
       const snap = await window.fsGetDoc(window.fsDoc(db, 'support_requests', raw));
