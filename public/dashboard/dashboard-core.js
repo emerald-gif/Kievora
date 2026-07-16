@@ -4331,12 +4331,18 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
                  imageType: m.imageType, imageName: m.imageName };
       });
 
-      // Build the streaming bubble
-      const bubbleW = document.createElement('div');
-      bubbleW.className = 'km km-ai';
+      // Build the streaming bubble lazily — only once the first token exists,
+      // same as the main text-send path, so only the Thinking panel shows
+      // until there's a real answer to display.
+      let bubbleW = null, bubble = null, actionsEl = null;
       const msgId  = 'kb-' + Date.now();
       const tStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      bubbleW.innerHTML = `
+
+      function _ensureImageBubble() {
+        if (bubbleW) return;
+        bubbleW = document.createElement('div');
+        bubbleW.className = 'km km-ai';
+        bubbleW.innerHTML = `
         <div class="km-ai-body">
           <div class="km-bubble" id="${msgId}"></div>
           <div class="km-actions" id="kact-${msgId}">
@@ -4355,16 +4361,18 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           </div>
           <div class="km-meta">${tStamp}</div>
         </div>`;
-      msgsEl.insertBefore(bubbleW, typEl);
-      const bubble    = bubbleW.querySelector('.km-bubble');
-      const actionsEl = bubbleW.querySelector('.km-actions');
-      bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
-      scrollKie(true);
+        msgsEl.insertBefore(bubbleW, typEl);
+        bubble    = bubbleW.querySelector('.km-bubble');
+        actionsEl = bubbleW.querySelector('.km-actions');
+        bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
+        scrollKie(true);
+      }
 
       let streamedText = '';
       let firstToken   = false;
 
       function _finishImageBubble(text) {
+        _ensureImageBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
         bubble.innerHTML = _formatKieLive(display, true);
         if (actionsEl) actionsEl.classList.add('visible');
@@ -4415,7 +4423,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
             try { chunk = JSON.parse(line.slice(6)); } catch { continue; }
 
             if (chunk.t === 'd') {
-              if (!firstToken) { typEl.style.display = 'none'; hideKieStatus(); firstToken = true; }
+              if (!firstToken) { typEl.style.display = 'none'; hideKieStatus(); _ensureImageBubble(); firstToken = true; }
               streamedText += chunk.v;
               const live = streamedText.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
               bubble.innerHTML = _formatKieLive(live, false) + '<span class="kie-stream-cursor">▌</span>';
@@ -4444,13 +4452,14 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
             saveKieHistory();
             _finishImageBubble(streamedText);
           } else {
-            if (bubbleW.parentNode) bubbleW.parentNode.removeChild(bubbleW);
+            if (bubbleW && bubbleW.parentNode) bubbleW.parentNode.removeChild(bubbleW);
             if (kieHist.length && kieHist[kieHist.length-1].role === 'user') { kieHist.pop(); saveKieHistory(); }
             _kieGenerating = false; _kieStopTyping = false;
             inp.disabled = false; setKieSendMode('send');
           }
           return;
         }
+        _ensureImageBubble();
         bubble.innerHTML = `<span style="opacity:.8">I had trouble reading that image. Try again! 🙏</span>`;
         if (actionsEl) actionsEl.style.display = 'none';
         if (kieHist.length && kieHist[kieHist.length-1].role === 'user') { kieHist.pop(); saveKieHistory(); }
@@ -5287,15 +5296,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
                  imageType: m.imageType, imageName: m.imageName };
       });
 
-      // ── Create AI bubble immediately — streaming text writes into it live ────
+      // ── AI bubble is created lazily — only once the first real token (or
+      // an error/fallback message) actually exists. Until then, the Thinking
+      // panel is the only thing on screen — no empty placeholder bubble with
+      // a lone blinking cursor sitting above/alongside it.
       const msgsEl = g('kieMsgs');
       msgsEl.style.display = 'flex';
       if (g('kieWelcome')) g('kieWelcome').style.display = 'none';
 
-      const bubbleW = document.createElement('div');
-      bubbleW.className = 'km km-ai';
-      const msgId = 'kb-' + Date.now();
+      let bubbleW = null, bubble = null, actionsEl = null;
+      const msgId  = 'kb-' + Date.now();
       const tStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      function _ensureBubble() {
+        if (bubbleW) return;
+        bubbleW = document.createElement('div');
+        bubbleW.className = 'km km-ai';
       bubbleW.innerHTML = `
         <div class="km-ai-body">
           <div class="km-bubble" id="${msgId}"></div>
@@ -5315,12 +5331,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           </div>
           <div class="km-meta">${tStamp}</div>
         </div>`;
-      msgsEl.insertBefore(bubbleW, typEl);
-      const bubble    = bubbleW.querySelector('.km-bubble');
-      const actionsEl = bubbleW.querySelector('.km-actions');
-      // Blinking cursor shows while waiting for the first token
-      bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
-      scrollKie(true);
+        msgsEl.insertBefore(bubbleW, typEl);
+        bubble    = bubbleW.querySelector('.km-bubble');
+        actionsEl = bubbleW.querySelector('.km-actions');
+        bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
+        scrollKie(true);
+      }
 
       let streamedText = '';
       let firstToken   = false;
@@ -5331,6 +5347,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       // Applies final formatting, shows action buttons, re-enables input
       function _finishBubble(text) {
+        _ensureBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
         bubble.innerHTML = _formatKieLive(display, true);
         // Sources button — injected into the actions bar (after regen), like ChatGPT
@@ -5385,10 +5402,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             try { chunk = JSON.parse(line.slice(6)); } catch { continue; }
 
             if (chunk.t === 'd') {
-              // Hide typing indicator on first token — text is live in the bubble
+              // First real token — thinking panel hides, answer bubble appears
               if (!firstToken) {
                 typEl.style.display = 'none';
                 hideKieStatus();
+                _ensureBubble();
                 firstToken = true;
               }
               streamedText += chunk.v;
@@ -5493,8 +5511,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             saveKieHistory();
             _finishBubble(streamedText);
           } else {
-            // Nothing streamed yet — remove the empty bubble and clean up
-            if (bubbleW.parentNode) bubbleW.parentNode.removeChild(bubbleW);
+            // Nothing streamed yet — bubble may never have been created; if it
+            // was, remove it, then clean up either way
+            if (bubbleW && bubbleW.parentNode) bubbleW.parentNode.removeChild(bubbleW);
             // Also pop the dangling user message from history
             if (kieHist.length && kieHist[kieHist.length - 1].role === 'user') {
               kieHist.pop(); saveKieHistory();
@@ -5507,7 +5526,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           return;
         }
 
-        // Actual error — show message inside the streaming bubble
+        // Actual error — show message inside the streaming bubble (create it
+        // now if the thinking panel was still showing when this failed)
+        _ensureBubble();
         bubble.innerHTML = `<span style="opacity:.8">I'm having trouble connecting right now. Please try again! 🙏</span>`;
         if (actionsEl) actionsEl.style.display = 'none';
         // Pop the unanswered user message so history stays clean
