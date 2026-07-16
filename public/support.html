@@ -1709,8 +1709,17 @@
     const { initializeApp, getApps, getApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
     const { initializeFirestore, doc, getDoc, setDoc, runTransaction, increment, serverTimestamp } =
       await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const { getAuth, signInAnonymously, onAuthStateChanged } =
+      await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
     const modularApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db = initializeFirestore(modularApp, {}, 'default');
+    const mAuth = getAuth(modularApp);
+
+    // Use the MODULAR auth instance (not the compat one) for anything that
+    // needs to read from Firestore. Compat auth-compat.js and this ESM import
+    // are technically separate SDK instances — mixing them meant the client
+    // showed "signed in" locally while Firestore requests still went out
+    // unauthenticated, causing permission-denied even with correct rules.
     window.db = db;
     window.fsDoc = doc;
     window.fsGetDoc = getDoc;
@@ -1718,6 +1727,17 @@
     window.fsRunTransaction = runTransaction;
     window.fsIncrement = increment;
     window.fsServerTimestamp = serverTimestamp;
+    window.mAuth = mAuth;
+    window.fsEnsureSignedIn = async () => {
+      if (mAuth.currentUser) return mAuth.currentUser;
+      try {
+        const cred = await signInAnonymously(mAuth);
+        return cred.user;
+      } catch (e) {
+        console.error('Modular anonymous sign-in FAILED:', e.code, e.message);
+        return null;
+      }
+    };
     return db;
   })();
 
@@ -1870,17 +1890,9 @@
     btn.textContent = 'Checking…';
 
     try {
-      if (!auth.currentUser) {
-        try {
-          await auth.signInAnonymously();
-          console.log('Anonymous sign-in succeeded, uid:', auth.currentUser?.uid);
-        } catch(authErr) {
-          console.error('Anonymous sign-in FAILED:', authErr.code, authErr.message);
-        }
-      } else {
-        console.log('Already signed in, uid:', auth.currentUser.uid);
-      }
       const db = await window.__kieDbReady;
+      const user = await window.fsEnsureSignedIn();
+      console.log('Reading ticket as uid:', user?.uid || '(no auth)');
       const snap = await window.fsGetDoc(window.fsDoc(db, 'support_requests', raw));
       if (!snap.exists()) {
         errEl.textContent = 'No ticket found with that ID. Please check and try again.';
@@ -2230,6 +2242,7 @@
     }, 400);
     try {
       const db = await window.__kieDbReady;
+      await window.fsEnsureSignedIn();
       const ref = window.fsDoc(db, 'faq_votes', String(idx));
       await window.fsRunTransaction(db, async t => {
         const snap = await t.get(ref);
