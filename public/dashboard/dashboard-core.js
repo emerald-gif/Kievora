@@ -3567,32 +3567,81 @@
 
     let _statusTimer = null;
 
+    // ── THINKING TRACE ────────────────────────────────────────────────────
+    // Drives the collapsible "Thinking for Ns" panel: a live elapsed-time
+    // header plus a step-by-step list that fills in as work happens (each
+    // step appears once — never a repeating/looping fake list). On
+    // completion the header freezes to "Thought for Ns" and the panel
+    // auto-collapses, but stays tappable so the person can re-open it and
+    // review the trace, same as Claude/ChatGPT's reasoning UI.
+    let _thinkStartTs = null;
+    let _thinkTickTimer = null;
+
+    function _thinkStart() {
+      clearInterval(_thinkTickTimer);
+      _thinkStartTs = Date.now();
+      const panel = g('kieThink');
+      const body  = g('kieThinkBody');
+      const title = g('kieThinkTitle');
+      if (panel) panel.classList.remove('collapsed');
+      if (body)  body.innerHTML = '';
+      if (title) title.textContent = 'Thinking for 0s';
+      _thinkTickTimer = setInterval(() => {
+        if (!title || !_thinkStartTs) return;
+        const secs = Math.max(0, Math.round((Date.now() - _thinkStartTs) / 1000));
+        title.textContent = `Thinking for ${secs}s`;
+      }, 1000);
+    }
+
+    function _thinkPushStep(text) {
+      if (!text) return;
+      const body = g('kieThinkBody');
+      if (!body) return;
+      const last = body.lastElementChild;
+      if (last && last.textContent === text) return; // no consecutive dupes
+      if (last) last.classList.remove('current');
+      const row = document.createElement('div');
+      row.className = 'kie-think-step current';
+      row.textContent = text;
+      body.appendChild(row);
+    }
+
+    function _thinkFinish() {
+      clearInterval(_thinkTickTimer);
+      const secs = _thinkStartTs ? Math.max(1, Math.round((Date.now() - _thinkStartTs) / 1000)) : 0;
+      const title = g('kieThinkTitle');
+      const panel = g('kieThink');
+      const body  = g('kieThinkBody');
+      if (title) title.textContent = `Thought for ${secs}s`;
+      const cur = body?.querySelector('.kie-think-step.current');
+      if (cur) cur.classList.remove('current');
+      if (panel) panel.classList.add('collapsed');
+      _thinkStartTs = null;
+    }
+
+    window.toggleKieThink = function() {
+      const panel = g('kieThink');
+      if (panel) panel.classList.toggle('collapsed');
+    };
+
     function showKieStatus(mode) {
       const statuses = KIE_MODE_CFG[mode]?.status || ['Thinking…'];
-      const txtEl = g('kieTypTxt');
-      if (!txtEl) return;
-      // Set first status immediately
-      txtEl.style.opacity = '1';
-      txtEl.textContent = statuses[0];
-      clearInterval(_statusTimer);
+      _thinkStart();
       let idx = 0;
-      _statusTimer = setInterval(() => {
-        idx = (idx + 1) % statuses.length;
-        // Fade out → swap text → fade in
-        txtEl.style.opacity = '0';
-        setTimeout(() => {
-          txtEl.textContent = statuses[idx];
-          txtEl.style.opacity = '1';
-        }, 180);
-      }, 2400);
+      _thinkPushStep(statuses[idx]);
+      clearInterval(_statusTimer);
+      if (statuses.length > 1) {
+        _statusTimer = setInterval(() => {
+          idx++;
+          if (idx >= statuses.length) { clearInterval(_statusTimer); return; }
+          _thinkPushStep(statuses[idx]);
+        }, 2400);
+      }
     }
     function hideKieStatus() {
       clearInterval(_statusTimer);
       _statusTimer = null;
-      const txtEl = g('kieTypTxt');
-      const bubble = g('kieStatusBubble');
-      if (bubble) bubble.classList.remove('searching');
-      if (txtEl) { txtEl.style.opacity = '1'; txtEl.textContent = 'Thinking…'; }
+      _thinkFinish();
     }
 
     // ── REAL web-search status (driven by actual SSE events from the server,
@@ -3600,42 +3649,28 @@
     // genuine Tavily search request is in flight.
     function _kieShowRealSearch(query) {
       clearInterval(_statusTimer);
-      const bubble = g('kieStatusBubble');
-      const txtEl  = g('kieTypTxt');
-      if (bubble) bubble.classList.add('searching');
-      if (txtEl) {
-        const q = (query || '').trim();
-        txtEl.style.opacity = '1';
-        txtEl.textContent = q ? `Searching the web for "${q.slice(0, 40)}${q.length > 40 ? '…' : ''}"` : 'Searching the web…';
-      }
+      const q = (query || '').trim();
+      _thinkPushStep(q ? `Searching the web for "${q.slice(0, 40)}${q.length > 40 ? '…' : ''}"` : 'Searching the web…');
     }
     function _kieEndRealSearch(count) {
-      const bubble = g('kieStatusBubble');
-      const txtEl  = g('kieTypTxt');
-      if (bubble) bubble.classList.remove('searching');
-      if (txtEl) {
-        txtEl.style.opacity = '0';
-        setTimeout(() => {
-          txtEl.textContent = count > 0
-            ? `Found ${count} source${count === 1 ? '' : 's'} — writing your answer…`
-            : "Couldn't find live results — answering from what I know…";
-          txtEl.style.opacity = '1';
-        }, 180);
-      }
+      _thinkPushStep(count > 0
+        ? `Found ${count} source${count === 1 ? '' : 's'} — writing your answer…`
+        : "Couldn't find live results — answering from what I know…");
     }
 
     // Custom multi-step status (for PDF gen / file processing)
     function _setKieStatusCustom(steps) {
-      const txtEl = g('kieTypTxt');
-      if (!txtEl) return;
       clearInterval(_statusTimer);
-      txtEl.textContent = steps[0]; txtEl.style.opacity = '1';
+      _thinkStart();
       let idx = 0;
-      _statusTimer = setInterval(() => {
-        idx = (idx + 1) % steps.length;
-        txtEl.style.opacity = '0';
-        setTimeout(() => { txtEl.textContent = steps[idx]; txtEl.style.opacity = '1'; }, 180);
-      }, 2200);
+      _thinkPushStep(steps[idx]);
+      if (steps.length > 1) {
+        _statusTimer = setInterval(() => {
+          idx++;
+          if (idx >= steps.length) { clearInterval(_statusTimer); return; }
+          _thinkPushStep(steps[idx]);
+        }, 2200);
+      }
     }
 
     // ── APPEND IMAGE IN USER BUBBLE ─────────────────────────────────────────
@@ -3845,12 +3880,11 @@
           <div class="kie-code-card" id="${cardId}">
             <div class="kie-code-card-hdr">
               <span class="kie-code-card-label">
-                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 8l3 4-3 4"/></svg>
                 ${label || 'Content'}
               </span>
               <button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
-                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                Copy
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
             </div>
             <div class="kie-code-card-body">${content.replace(/</g,'&lt;')}</div>
@@ -3862,26 +3896,6 @@
       return w;
     }
 
-    window._copyTableCard = function(cardId) {
-      const card = document.getElementById(cardId);
-      if (!card) return;
-      const table = card.querySelector('.kie-table');
-      if (!table) return;
-      const rows = [...table.querySelectorAll('tr')].map(tr =>
-        [...tr.children].map(c => c.textContent.trim()).join('\t')
-      );
-      const text = rows.join('\n');
-      const copyBtn = card.querySelector('.kie-table-card-copy');
-      navigator.clipboard?.writeText(text).then(() => {
-        if (!copyBtn) return;
-        const orig = copyBtn.innerHTML;
-        copyBtn.innerHTML = `<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Copied!`;
-        copyBtn.style.color = '#16a34a';
-        copyBtn.style.background = 'rgba(22,163,74,.1)';
-        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.color = ''; copyBtn.style.background = ''; }, 1500);
-      }).catch(() => {});
-    };
-
     window._copyCodeCard = function(cardId) {
       const card = document.getElementById(cardId);
       if (!card) return;
@@ -3890,10 +3904,9 @@
       const copyBtn = card.querySelector('.kie-code-card-copy');
       navigator.clipboard?.writeText(text).then(() => {
         const orig = copyBtn.innerHTML;
-        copyBtn.innerHTML = `<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Copied!`;
+        copyBtn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
         copyBtn.style.color = '#16a34a';
-        copyBtn.style.background = 'rgba(22,163,74,.1)';
-        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.color = ''; copyBtn.style.background = ''; }, 1500);
+        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.color = ''; }, 1500);
       }).catch(() => {});
     };
 
@@ -5637,20 +5650,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         .filter(cells => !cells.every(c => /^:?-{2,}:?$/.test(c)));
     }
 
-    // Builds a styled comparison-table card from parsed rows — first row is
+    // Builds a clean comparison-table card from parsed rows — first row is
     // the header. Rendered as a real HTML table (never raw pipes on screen).
+    // No label/title bar — the table itself is the card, same as a plain
+    // rendered markdown table would look, just styled and never broken.
     function _buildTableCard(label, content, closed, cardId) {
       const allRows = _parseTableRows(content, closed);
-      const tableIcon = '<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M9 4v16"/></svg>';
       const writing = closed
         ? ''
         : `<div class="kie-table-writing"><span class="kie-typing-dot-sm"></span>writing…</div>`;
 
       if (!allRows.length) {
-        return `<div class="kie-table-card" id="${cardId}">
-          <div class="kie-table-card-hdr"><span class="kie-table-card-label">${tableIcon}${esc(label)}</span></div>
-          ${writing}
-        </div>`;
+        return `<div class="kie-table-card" id="${cardId}">${writing}</div>`;
       }
 
       const header = allRows[0];
@@ -5658,15 +5669,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const thead = '<tr>' + header.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>';
       const tbody = bodyRows.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('');
 
-      const copyBtn = closed
-        ? `<button class="kie-table-card-copy" onclick="_copyTableCard('${cardId}')" title="Copy">
-            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            Copy
-           </button>`
-        : '';
-
       return `<div class="kie-table-card" id="${cardId}">
-        <div class="kie-table-card-hdr"><span class="kie-table-card-label">${tableIcon}${esc(label)}</span>${copyBtn}</div>
         <div class="kie-table-scroll"><table class="kie-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>
         ${writing}
       </div>`;
@@ -5698,12 +5701,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (kind === 'TABLE') {
           html += _buildTableCard(label, content, closed, cardId);
         } else {
-          const docIcon  = '<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>';
+          const docIcon  = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 8l3 4-3 4"/></svg>';
 
           const copyBtn = (closed || isFinal)
             ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
-                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                Copy
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                </button>`
             : `<span style="color:#a855f7;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
 

@@ -1520,10 +1520,13 @@
     <!-- Messages -->
     <div id="kieMsgs" class="kie-msgs" style="display:none">
       <div id="kieTyp" class="kie-typing">
-        <div class="kie-status-bubble" id="kieStatusBubble">
-          <div class="kie-status-pulse"></div>
-          <svg class="kie-status-globe" id="kieStatusGlobe" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#7c3aed" stroke-width="2"/><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" d="M3 12h18M12 3a13.7 13.7 0 010 18M12 3a13.7 13.7 0 000 18"/></svg>
-          <span class="kie-status-label" id="kieTypTxt">Thinking…</span>
+        <div class="kie-think" id="kieThink" onclick="toggleKieThink()">
+          <div class="kie-think-hdr">
+            <svg class="kie-think-bulb" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18h6M10 22h4M12 2a6.5 6.5 0 00-3.5 12c.7.55 1 1.32 1 2.15V17h5v-.85c0-.83.3-1.6 1-2.15A6.5 6.5 0 0012 2z"/></svg>
+            <span class="kie-think-title" id="kieThinkTitle">Thinking for 0s</span>
+            <svg class="kie-think-chevron" id="kieThinkChevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="kie-think-body" id="kieThinkBody"></div>
         </div>
       </div>
     </div>
