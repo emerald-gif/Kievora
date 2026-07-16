@@ -1870,6 +1870,9 @@
     btn.textContent = 'Checking…';
 
     try {
+      if (!auth.currentUser) {
+        try { await auth.signInAnonymously(); } catch(authErr) { /* anonymous auth disabled — attempt read regardless */ }
+      }
       const db = await window.__kieDbReady;
       const snap = await window.fsGetDoc(window.fsDoc(db, 'support_requests', raw));
       if (!snap.exists()) {
@@ -1901,6 +1904,7 @@
 
       resultEl.classList.add('show');
     } catch(e) {
+      console.error('checkTicketStatus failed:', e);
       errEl.textContent = 'Could not fetch ticket. Please try again.';
       errEl.classList.add('show');
     }
