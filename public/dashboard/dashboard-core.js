@@ -3231,6 +3231,19 @@
       }
     }
 
+    // Re-focusing the input after every KIE reply is nice on desktop (cursor
+    // ready to type) but on touch devices it force-opens the on-screen
+    // keyboard right after a reply finishes, covering half the screen while
+    // the person is just trying to read. Only auto-focus on non-touch input,
+    // and never while the live voice overlay is open.
+    function _kieSafeFocusInput(inp) {
+      if (!inp) return;
+      const isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      const liveOpen = document.getElementById('kieLiveOverlay')?.classList.contains('open');
+      if (isTouch || liveOpen) return;
+      inp.focus();
+    }
+
     function openKie() {
       loadKieHistory();
       _kieReturnView = document.querySelector('.view.active')?.id?.replace('v-','') || 'home';
@@ -4391,7 +4404,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         _kieGenerating = false;
         _kieStopTyping = false;
         inp.disabled = false;
-        inp.focus();
+        _kieSafeFocusInput(inp);
         setKieSendMode('send');
         scrollKie();
       }
@@ -4948,7 +4961,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       _kieGenerating = false;
       _kieStopTyping = false;
       const inp = g('kieInp');
-      if (inp) { inp.disabled = false; inp.focus(); }
+      if (inp) { inp.disabled = false; _kieSafeFocusInput(inp); }
       setKieSendMode('send');
     }
 
@@ -4990,7 +5003,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       _kieGenerating = false;
       _kieStopTyping = false;
       const inp = g('kieInp');
-      if (inp) { inp.disabled = false; inp.focus(); }
+      if (inp) { inp.disabled = false; _kieSafeFocusInput(inp); }
       setKieSendMode('send');
     }
 
@@ -5370,7 +5383,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _kieGenerating = false;
         _kieStopTyping = false;
         inp.disabled = false;
-        inp.focus();
+        _kieSafeFocusInput(inp);
         setKieSendMode('send');
         scrollKie();
       }
