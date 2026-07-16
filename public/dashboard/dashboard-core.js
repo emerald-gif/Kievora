@@ -6211,6 +6211,178 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
     };
 
+    // ══ LIVE VOICE CHAT — full-screen hands-free conversation with KIE ═══════
+    // Tap the waveform icon in the KIE input bar → overlay opens, mic starts
+    // listening automatically. On a pause in speech, the transcript is sent
+    // through the normal sendKie() pipeline; once KIE's reply has finished
+    // rendering, it's read aloud, then the mic re-opens for the next turn —
+    // a turn-based loop (listen → think → speak → listen) similar to
+    // ChatGPT/Gemini/Grok's voice mode, built entirely on the Web Speech API.
+    (function initKieLiveVoice() {
+      const LiveSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      let liveOn           = false;  // overlay open / session active
+      let liveRec          = null;   // current SpeechRecognition instance
+      let liveMicMuted     = false;
+      let liveSpeakerMuted = false;
+      let liveBusy         = false;  // true while KIE is thinking or speaking
+      let silenceTimer     = null;
+
+      function ov()      { return g('kieLiveOverlay'); }
+      function orbEl()    { return g('kieLiveOrb'); }
+      function statusEl() { return g('kieLiveStatus'); }
+      function capEl()    { return g('kieLiveCaption'); }
+
+      function setLiveState(state, caption) {
+        const o = orbEl();
+        if (o) o.className = 'kie-live-orb' + (state ? ' ' + state : '') + (liveMicMuted && state === 'listening' ? ' muted' : '');
+        const s = statusEl();
+        if (s) s.textContent =
+          state === 'listening' ? (liveMicMuted ? 'Mic muted' : 'Listening…') :
+          state === 'thinking'  ? 'Thinking…' :
+          state === 'speaking'  ? 'Speaking…' : '';
+        if (caption !== undefined) { const c = capEl(); if (c) c.textContent = caption; }
+      }
+
+      function stopRec() {
+        clearTimeout(silenceTimer);
+        if (liveRec) {
+          liveRec.onend = null; liveRec.onresult = null; liveRec.onerror = null;
+          try { liveRec.stop(); } catch (_) {}
+          liveRec = null;
+        }
+      }
+
+      function startListening() {
+        if (!liveOn || liveBusy || liveMicMuted) return;
+        if (!LiveSpeechRecognition) return;
+        stopRec();
+        liveRec = new LiveSpeechRecognition();
+        liveRec.lang = 'en-US';
+        liveRec.continuous = true;
+        liveRec.interimResults = true;
+        liveRec.maxAlternatives = 1;
+        let finalTxt = '';
+        liveRec.onstart = () => setLiveState('listening', '');
+        liveRec.onresult = (e) => {
+          let interim = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) finalTxt += t; else interim += t;
+          }
+          setLiveState('listening', (finalTxt + interim).trim());
+          // End-of-turn is detected by ~1s of silence after the last result,
+          // rather than waiting on the browser's own (inconsistent) cutoff.
+          clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(() => { try { liveRec && liveRec.stop(); } catch (_) {} }, 1000);
+        };
+        liveRec.onerror = (e) => {
+          if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+            toast('Mic access denied — allow microphone permission to use voice chat.', 'err');
+            closeLive();
+          }
+          // 'no-speech' / 'aborted' fall through to onend, which restarts listening
+        };
+        liveRec.onend = () => {
+          clearTimeout(silenceTimer);
+          const text = finalTxt.trim();
+          if (!liveOn) return;
+          if (text) handleLiveTurn(text);
+          else if (!liveBusy && !liveMicMuted) startListening();
+        };
+        try { liveRec.start(); } catch (_) {}
+      }
+
+      async function handleLiveTurn(text) {
+        liveBusy = true;
+        stopRec();
+        setLiveState('thinking', text);
+        const inp = g('kieInp');
+        if (!inp) { liveBusy = false; return; }
+        inp.value = text;
+        inp.style.height = 'auto';
+        try { sendKie(); } catch (_) {}
+
+        // sendKie() streams its own reply into the DOM; wait for the shared
+        // _kieGenerating flag to clear (with a safety timeout) rather than
+        // trying to intercept every branch of sendKie individually.
+        await new Promise(r => setTimeout(r, 150));
+        const waitStart = Date.now();
+        while (liveOn && typeof _kieGenerating !== 'undefined' && _kieGenerating && Date.now() - waitStart < 60000) {
+          await new Promise(r => setTimeout(r, 250));
+        }
+        if (!liveOn) { liveBusy = false; return; }
+
+        const bubbles = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble');
+        const last = bubbles[bubbles.length - 1];
+        const replyTxt = last ? (last.innerText || last.textContent || '').trim() : '';
+        speakLiveReply(replyTxt);
+      }
+
+      function speakLiveReply(text) {
+        if (!text || liveSpeakerMuted || !window.speechSynthesis) {
+          liveBusy = false;
+          if (liveOn) startListening();
+          return;
+        }
+        setLiveState('speaking', text);
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.98; utter.pitch = 1; utter.volume = 1;
+        const voice = (typeof pickMaleVoice === 'function') ? pickMaleVoice() : null;
+        if (voice) utter.voice = voice;
+        utter.onend = utter.onerror = () => {
+          liveBusy = false;
+          if (!liveOn) return;
+          startListening();
+        };
+        window.speechSynthesis.speak(utter);
+      }
+
+      function closeLive() {
+        liveOn = false;
+        liveBusy = false;
+        stopRec();
+        window.speechSynthesis?.cancel();
+        const o = ov();
+        if (o) o.classList.remove('open');
+      }
+
+      window.openKieLive = function () {
+        if (!LiveSpeechRecognition) { toast('Voice chat needs a browser with speech recognition support (try Chrome).', 'err'); return; }
+        liveOn = true; liveBusy = false;
+        liveMicMuted = false; liveSpeakerMuted = false;
+        const mBtn = g('kieLiveMuteBtn'); if (mBtn) mBtn.classList.remove('active');
+        const sBtn = g('kieLiveSpeakerBtn'); if (sBtn) sBtn.classList.remove('active');
+        const o = ov(); if (o) o.classList.add('open');
+        window.speechSynthesis?.cancel();
+        setLiveState('listening', '');
+        setTimeout(startListening, 200);
+      };
+      window.closeKieLive = closeLive;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const trigger = g('kieVoiceChatBtn');
+        if (!LiveSpeechRecognition) { if (trigger) trigger.style.display = 'none'; return; }
+        if (trigger) trigger.onclick = window.openKieLive;
+        const endBtn = g('kieLiveEndBtn'); if (endBtn) endBtn.onclick = closeLive;
+        const kbBtn  = g('kieLiveKeyboardBtn'); if (kbBtn) kbBtn.onclick = closeLive;
+        const mBtn = g('kieLiveMuteBtn');
+        if (mBtn) mBtn.onclick = () => {
+          liveMicMuted = !liveMicMuted;
+          mBtn.classList.toggle('active', liveMicMuted);
+          if (liveMicMuted) { stopRec(); setLiveState('listening', ''); }
+          else if (liveOn && !liveBusy) startListening();
+        };
+        const sBtn = g('kieLiveSpeakerBtn');
+        if (sBtn) sBtn.onclick = () => {
+          liveSpeakerMuted = !liveSpeakerMuted;
+          sBtn.classList.toggle('active', liveSpeakerMuted);
+          if (liveSpeakerMuted) window.speechSynthesis?.cancel();
+        };
+      });
+    })();
+
     // ══ JOBS PROFESSION TRACKING ══════════════════════════════════════════════
     // PROF_KEY is uid-scoped at runtime via usr.uid to prevent cross-account leakage
     function getProfKey() { return `kievora_jobs_prof_${usr?.uid || 'anon'}`; }
