@@ -396,8 +396,20 @@
     .ticket-check-btn{background:var(--g);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:opacity .2s}
     .ticket-check-btn:hover{opacity:.88}
     .ticket-check-btn:disabled{opacity:.5;cursor:default}
-    .ticket-result{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:22px 20px;width:100%;max-width:480px;display:none}
+    .ticket-result{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:22px 20px;width:100%;max-width:480px;display:none;box-shadow:0 4px 20px rgba(91,33,182,.06)}
     .ticket-result.show{display:block;animation:fadeIn .2s ease}
+    .tr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+    .tr-id-chip-row{display:flex;align-items:center;gap:4px}
+    .tr-id-chip{font-size:12px;font-weight:800;color:var(--p);background:#F5F0FF;border:1px solid #EDE9FE;border-radius:8px;padding:5px 10px;font-family:monospace;letter-spacing:.5px}
+    .tr-copy-btn{background:none;border:none;cursor:pointer;color:var(--p2);font-size:13px;padding:5px 6px;border-radius:6px;transition:background .15s;line-height:1}
+    .tr-copy-btn:hover{background:#EDE9FE}
+    .tr-status-pill{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:6px 11px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+    .tr-status-pill.pending{background:#FEF3C7;color:#92400E}
+    .tr-status-pill.review{background:#DBEAFE;color:#1E40AF}
+    .tr-status-pill.resolved{background:#D1FAE5;color:#065F46}
+    .tr-msg-preview{background:#FAFAFC;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--sub);line-height:1.6;margin:16px 0 4px;max-height:72px;overflow:hidden;position:relative}
+    .tr-msg-preview::after{content:'';position:absolute;left:0;right:0;bottom:0;height:26px;background:linear-gradient(transparent,#FAFAFC)}
+    .tr-msg-lbl{font-size:10px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px;display:block}
     .ticket-result-id{font-size:11px;font-weight:700;color:var(--p2);letter-spacing:.5px;margin-bottom:4px}
     .ticket-result-subject{font-size:16px;font-weight:800;color:var(--txt);margin-bottom:4px}
     .ticket-result-meta{font-size:12px;color:var(--mute);font-weight:500;margin-bottom:20px}
@@ -1359,10 +1371,18 @@
         <div class="ticket-err" id="ticketErr"></div>
       </div>
       <div class="ticket-result" id="ticketResult" style="max-width:100%;margin-top:14px">
-        <div class="ticket-result-id" id="trId"></div>
+        <div class="tr-head">
+          <div class="tr-id-chip-row">
+            <span class="tr-id-chip" id="trId"></span>
+            <button class="tr-copy-btn" onclick="copyTrackedTicketId()" title="Copy ticket ID">📋</button>
+          </div>
+          <span class="tr-status-pill" id="trStatusPill"></span>
+        </div>
         <div class="ticket-result-subject" id="trSubject"></div>
         <div class="ticket-result-meta" id="trMeta"></div>
         <div class="ticket-timeline" id="trTimeline"></div>
+        <span class="tr-msg-lbl" id="trMsgLbl" style="display:none">Your message</span>
+        <div class="tr-msg-preview" id="trMsgPreview" style="display:none"></div>
       </div>
     </div>
 
@@ -1795,6 +1815,15 @@
       );
       await Promise.race([writePromise, timeout]);
 
+      // Fire-and-forget — don't let a slow/failed email hold up the success
+      // screen. The server looks the ticket up by ID itself, so this call
+      // only ever needs the ID, nothing else.
+      fetch('/api/support-ticket-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId })
+      }).catch(() => { /* non-critical — ticket is already saved either way */ });
+
       _lastTicketId = ticketId;
       document.getElementById('successTicketId').textContent = ticketId;
       document.getElementById('requestForm').style.display = 'none';
@@ -1904,8 +1933,13 @@
       const statusIdx = STATUS_STEPS.findIndex(s => s.key === (d.status || 'pending'));
       const activeIdx = statusIdx < 0 ? 0 : statusIdx;
       const submitted = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'}) : 'Recently';
+      const statusKey = d.status || 'pending';
+      const statusLabels = { pending: 'Pending', review: 'In Review', resolved: 'Resolved' };
 
       document.getElementById('trId').textContent = raw;
+      const pill = document.getElementById('trStatusPill');
+      pill.textContent = statusLabels[statusKey] || 'Pending';
+      pill.className = 'tr-status-pill ' + statusKey;
       document.getElementById('trSubject').textContent = d.subject || '—';
       document.getElementById('trMeta').textContent = `${d.category ? d.category.charAt(0).toUpperCase()+d.category.slice(1) : 'General'} · Submitted ${submitted}`;
       document.getElementById('trTimeline').innerHTML = STATUS_STEPS.map((s, i) => {
@@ -1921,6 +1955,17 @@
         </div>`;
       }).join('');
 
+      const msgLbl = document.getElementById('trMsgLbl');
+      const msgPreview = document.getElementById('trMsgPreview');
+      if (d.message) {
+        msgLbl.style.display = 'block';
+        msgPreview.style.display = 'block';
+        msgPreview.textContent = d.message;
+      } else {
+        msgLbl.style.display = 'none';
+        msgPreview.style.display = 'none';
+      }
+
       resultEl.classList.add('show');
     } catch(e) {
       console.error('checkTicketStatus failed:', e);
@@ -1928,6 +1973,17 @@
       errEl.classList.add('show');
     }
     btn.disabled = false; btn.textContent = 'Check';
+  }
+
+  function copyTrackedTicketId() {
+    const id = document.getElementById('trId').textContent;
+    if (!id) return;
+    navigator.clipboard.writeText(id).then(() => {
+      const btn = document.querySelector('.tr-copy-btn');
+      const original = btn.textContent;
+      btn.textContent = '✅';
+      setTimeout(() => btn.textContent = original, 1500);
+    });
   }
 
   // ── GUIDE TABS ──
