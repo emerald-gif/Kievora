@@ -729,9 +729,32 @@ function buildSearchContextBlock(query, results, configured) {
 // anything time-anchored. If this fires, a real search runs even outside Web mode.
 const LIVE_INFO_PATTERN = /\b(salary|salaries|pay range|compensation|market rate|hiring trends?|in[\s-]?demand skills?|layoffs?|is\s+\w+\s+still\s+(hiring|around|in business)|currently hiring|right now|this year|latest|trending|2026|2027|industry report|glassdoor|h1b|visa sponsorship|job market)\b/i;
 
+// Short confirmations/continuations that carry no real query of their own —
+// "okay let's do it", "sure", "go ahead", "sounds good", "yes please". These
+// used to fall through to a literal Tavily search in Web Search mode (mode
+// alone used to be enough to force a search on every message), which returns
+// whatever "okay let's do it" happens to match on the open web — garbage
+// that has nothing to do with the actual conversation. A filler reply like
+// this should just continue the existing thread using conversation context,
+// never spawn a brand-new out-of-context search.
+const FILLER_REPLY_PATTERN = /^(ok(ay)?|sure|yes|yeah|yep|yup|no|nope|alright|fine|cool|nice|great|perfect|awesome|got ?it|sounds good|makes sense|thanks?( you)?|thank you|please( do)?|go ahead|do it|let'?s do (it|this)|continue|proceed)[\s!.,]*$/i;
+
 function shouldSearchWeb(mode, lastUserMessage) {
+  const msg = (lastUserMessage || '').trim();
+  // A short filler/continuation reply never triggers a fresh search, in ANY
+  // mode — including Web Search mode. There's no independent query buried in
+  // "okay let's do it"; searching it literally just breaks the reply with
+  // unrelated results. The model still has the full conversation history to
+  // work with, so it can carry on the actual thread instead.
+  if (msg.length < 40 && FILLER_REPLY_PATTERN.test(msg)) return false;
+  // Web Search mode: the user explicitly asked for live browsing, so search
+  // on every real message (anything past the filler check above).
   if (mode === 'web') return true;
-  return LIVE_INFO_PATTERN.test(lastUserMessage || '');
+  // Every other mode (Default, Deep Think, Quick Answer, Creative): stay
+  // selective — only reach for a live search when the message actually needs
+  // current/time-sensitive data. Most replies in these modes should NOT
+  // search; this pattern is the "only when it genuinely needs it" gate.
+  return LIVE_INFO_PATTERN.test(msg);
 }
 
 // ─── Detect career-strategy questions that would benefit from Deep Think ──────
