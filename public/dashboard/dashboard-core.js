@@ -6259,18 +6259,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       let lastResultTs    = 0;      // last time SpeechRecognition reported anything — drives the "listening" wave
       let turnId          = 0;      // invalidates a stale in-flight turn when barge-in supersedes it
       let speakToken      = 0;      // invalidates a stale utterance's onend/onerror after cancel()
+      let emptyRestarts   = 0;      // consecutive restarts with nothing heard — backs off instead of hammering .start()/.stop()
 
       function ov()      { return g('kieLiveOverlay'); }
       function orbEl()    { return g('kieLiveOrb'); }
       function statusEl() { return g('kieLiveStatus'); }
-      function hintEl()   { return g('kieLiveHint'); }
       function capEl()    { return g('kieLiveCaption'); }
-
-      const HINTS = {
-        listening: "I'm listening. You can speak now.",
-        thinking:  'Let me think about that…',
-        speaking:  "Here's what I found.",
-      };
 
       function setLiveState(state) {
         currentOrbState = state;
@@ -6281,8 +6275,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           state === 'listening' ? (liveMicMuted ? 'Mic muted' : 'Listening…') :
           state === 'thinking'  ? 'Thinking…' :
           state === 'speaking'  ? 'Speaking…' : '';
-        const h = hintEl();
-        if (h) h.textContent = liveMicMuted && state === 'listening' ? 'Tap the mic to unmute.' : (HINTS[state] || '');
       }
 
       // ── Transcript log ("Me: … / KIE: …") ────────────────────────────────────
@@ -6342,11 +6334,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // ── Waveform orb engine ─────────────────────────────────────────────────
       // Draws an audio-style bar visualizer onto a canvas inside the orb, driven
       // by how recently SpeechRecognition itself reported activity (no second
-      // mic stream — that used to starve the recognizer on some phones).
+      // mic stream — that used to starve the recognizer on some phones). Bars
+      // move on a spring (not a straight lerp) so they overshoot and settle
+      // instead of snapping — plus a drift of little dust particles peeling
+      // off the tall bars and floating upward, for a weightless, anti-gravity
+      // feel rather than a rigid, gravity-bound bar chart.
       let rafId = null;
       let speakPhase = 0, thinkPhase = 0;
       let currentOrbState = '';
       let smoothedBars = new Array(BAR_COUNT).fill(0.05);
+      let barVel       = new Array(BAR_COUNT).fill(0);
+      let dustParticles = [];
 
       function computeBars() {
         const bars = new Array(BAR_COUNT);
@@ -6367,8 +6365,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             bars[i] = Math.max(0.04, v * 0.5 + 0.4);
           }
         } else if (currentOrbState === 'thinking') {
-          thinkPhase += 0.09;
-          for (let i = 0; i < BAR_COUNT; i++) bars[i] = 0.1 + Math.abs(Math.sin(thinkPhase + i * 0.45)) * 0.09;
+          thinkPhase += 0.1;
+          for (let i = 0; i < BAR_COUNT; i++) {
+            const t = thinkPhase + i * 0.35;
+            const v = Math.sin(t) * 0.5 + Math.sin(t * 1.9 + 1) * 0.3 + Math.sin(t * 0.6 + 2) * 0.2;
+            bars[i] = Math.max(0.04, (v * 0.5 + 0.4) * 0.6);
+          }
         } else {
           for (let i = 0; i < BAR_COUNT; i++) bars[i] = 0.05;
         }
@@ -6390,28 +6392,95 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
         ctx.clearRect(0, 0, w, h);
         const raw = computeBars();
-        for (let i = 0; i < BAR_COUNT; i++) smoothedBars[i] += (raw[i] - smoothedBars[i]) * 0.35;
-
-        const gap = w / BAR_COUNT;
+        const gap  = w / BAR_COUNT;
         const barW = Math.max(1.4, gap * 0.55);
+        const cy   = h / 2;
+
+        // Spring toward each target instead of a straight lerp — stiffness
+        // pulls it in, damping bleeds energy, but it's loose enough to
+        // overshoot and gently bounce back rather than settling flat.
+        const stiffness = 0.22, damping = 0.76;
+        for (let i = 0; i < BAR_COUNT; i++) {
+          barVel[i] = (barVel[i] + (raw[i] - smoothedBars[i]) * stiffness) * damping;
+          smoothedBars[i] += barVel[i];
+          if (smoothedBars[i] < 0) { smoothedBars[i] = 0; barVel[i] *= -0.35; }
+        }
+
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
         for (let i = 0; i < BAR_COUNT; i++) {
           const envelope = Math.sin(((i + 0.5) / BAR_COUNT) * Math.PI);
           const bh = Math.max(2.5, smoothedBars[i] * h * 0.44 * envelope);
           const x = i * gap + (gap - barW) / 2;
-          const y = (h - bh) / 2;
+          const y = cy - bh / 2;
           if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, barW, bh, barW / 2); ctx.fill(); }
           else ctx.fillRect(x, y, barW, bh);
+
+          // Tall, lively bars occasionally shed a fleck of dust that drifts
+          // upward off the top and fades — the "anti-gravity" touch.
+          if (smoothedBars[i] > 0.4 && dustParticles.length < 70 && Math.random() < smoothedBars[i] * 0.045) {
+            dustParticles.push({
+              x: x + barW / 2 + (Math.random() - 0.5) * barW * 1.4,
+              y: y + (Math.random() < 0.5 ? 0 : bh),
+              vy: -(0.25 + Math.random() * 0.35),
+              vx: (Math.random() - 0.5) * 0.14,
+              life: 0,
+              maxLife: 32 + Math.random() * 30,
+              size: 0.6 + Math.random() * 1.1,
+            });
+          }
+        }
+
+        for (let i = dustParticles.length - 1; i >= 0; i--) {
+          const p = dustParticles[i];
+          p.life++;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy *= 0.985; // keeps easing off, never "falls" back down — reads as floating away
+          if (p.life >= p.maxLife || p.y < -6 || p.y > h + 6) { dustParticles.splice(i, 1); continue; }
+          const alpha = (1 - p.life / p.maxLife) * 0.75;
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
       function orbLoop() {
         rafId = requestAnimationFrame(orbLoop);
-        if (currentOrbState === 'thinking') return;
-        drawWave();
+        drawWave(); // same pulse in every state now — no separate spin animation for "thinking"
       }
 
       // ── Main turn-taking recognizer ──────────────────────────────────────────
+      // ── Chime ─────────────────────────────────────────────────────────────
+      // The little "beep" when a mic starts/stops on Android is generated by
+      // the OS/browser itself (Chrome's SpeechRecognition implementation) —
+      // there's no JS API to silence or replace that specific sound. What we
+      // CAN control is our own audio cue at the moments that actually matter
+      // (opening/closing the call), and — more importantly — how often we
+      // force a restart mid-conversation, since every unnecessary restart is
+      // another one of those OS beeps. See emptyRestarts backoff below.
+      let chimeCtx = null;
+      function playChime(kind) {
+        try {
+          if (!chimeCtx) chimeCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (chimeCtx.state === 'suspended') chimeCtx.resume().catch(() => {});
+          const now = chimeCtx.currentTime;
+          const notes = kind === 'open' ? [660, 880] : [740, 560]; // soft rise on open, soft fall on close
+          notes.forEach((freq, i) => {
+            const osc = chimeCtx.createOscillator();
+            const gain = chimeCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            const t = now + i * 0.09;
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(0.15, t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.17);
+            osc.connect(gain); gain.connect(chimeCtx.destination);
+            osc.start(t); osc.stop(t + 0.19);
+          });
+        } catch (_) {}
+      }
+
       function stopRec() {
         clearTimeout(silenceTimer);
         if (liveRec) {
@@ -6467,8 +6536,20 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           clearTimeout(silenceTimer);
           const text = finalChunks.filter(Boolean).join(' ').trim();
           if (!liveOn) return;
-          if (text) handleLiveTurn(text);
-          else if (!liveBusy && !liveMicMuted) startListening();
+          if (text) {
+            emptyRestarts = 0;
+            handleLiveTurn(text);
+            return;
+          }
+          if (liveBusy || liveMicMuted) return;
+          // Nothing was heard — this is almost always Android auto-cutting the
+          // recognizer after a stretch of silence, not a real turn ending.
+          // Restarting instantly every time is what makes the mic-toggle sound
+          // repeat rapidly; back off a little more each consecutive empty cycle
+          // instead, and reset the moment real speech comes back.
+          emptyRestarts++;
+          const backoff = Math.min(350 + emptyRestarts * 300, 2000);
+          setTimeout(() => { if (liveOn && !liveBusy && !liveMicMuted) startListening(); }, backoff);
         };
         try { liveRec.start(); } catch (_) { setTimeout(() => { if (liveOn && !liveBusy) startListening(carryText); }, 400); }
       }
@@ -6603,16 +6684,19 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         speakToken++;
         if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
         smoothedBars = new Array(BAR_COUNT).fill(0.05);
-        speakPhase = 0; thinkPhase = 0; lastResultTs = 0;
+        barVel = new Array(BAR_COUNT).fill(0);
+        dustParticles = [];
+        speakPhase = 0; thinkPhase = 0; lastResultTs = 0; emptyRestarts = 0;
         clearInterval(typeTimer); typeTimer = null; curMeLineEl = null;
         window._kieVoiceModeActive = false;
         const ovEl = ov();
         if (ovEl) ovEl.classList.remove('open');
+        playChime('close');
       }
 
       window.openKieLive = function () {
         if (!LiveSpeechRecognition) { toast('Voice chat needs a browser with speech recognition support (try Chrome).', 'err'); return; }
-        liveOn = true; liveBusy = false; liveMicMuted = false;
+        liveOn = true; liveBusy = false; liveMicMuted = false; emptyRestarts = 0;
         window._kieVoiceModeActive = true; // tells the backend to write for the ear, not the eye
         const mBtn = g('kieLiveMuteBtn'); if (mBtn) mBtn.classList.remove('active');
         const cBtn = g('kieLiveCaptionBtn'); if (cBtn) cBtn.classList.toggle('active', liveShowCaption);
@@ -6622,6 +6706,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         resetTranscript();
         setLiveState('listening');
         if (!rafId) orbLoop();
+        playChime('open');
         setTimeout(startListening, 200);
       };
       window.closeKieLive = closeLive;
