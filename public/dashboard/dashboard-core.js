@@ -7687,6 +7687,38 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         closeKieResumeDropdown();
       };
 
+      // ── KIE CODE/TABLE CARD SWIPE ─────────────────────────────────────────
+      // Code cards (ASCII trees/timelines) and comparison tables can be wider
+      // than the chat panel. Native touch scrolling already swipes on mobile
+      // (-webkit-overflow-scrolling:touch + overflow-x:auto in CSS); this adds
+      // the same left-right swipe via mouse drag for desktop. Delegated at the
+      // message-list level so it works on cards created after the fact by the
+      // live streaming formatter, without needing per-card re-initialization.
+      (function initKieCardSwipe() {
+        const msgs = g('kieMsgs');
+        if (!msgs) return;
+        let dragEl = null, startX = 0, startScroll = 0;
+
+        function scrollable(target) {
+          return target.closest && target.closest('.kie-table-scroll, .kie-code-card-body');
+        }
+        msgs.addEventListener('mousedown', (e) => {
+          const el = scrollable(e.target);
+          if (!el || el.scrollWidth <= el.clientWidth) return;
+          dragEl = el; startX = e.pageX; startScroll = el.scrollLeft;
+          el.classList.add('kie-dragging');
+          e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e) => {
+          if (!dragEl) return;
+          dragEl.scrollLeft = startScroll - (e.pageX - startX);
+        });
+        window.addEventListener('mouseup', () => {
+          if (dragEl) dragEl.classList.remove('kie-dragging');
+          dragEl = null;
+        });
+      })();
+
       // ── KIE SWIPER ──────────────────────────────────────────────────────────
       (function initKieSwiper() {
         // NOTE: the element has id="kieSwiper", not "kieSwiperOuter"
