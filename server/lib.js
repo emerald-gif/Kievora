@@ -688,17 +688,30 @@ async function performWebSearch(query, maxResults = 5) {
     const res = await fetchWithRetry('https://api.tavily.com/search', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ query, search_depth: 'basic', max_results: maxResults, include_answer: false }),
+      body: JSON.stringify({ query, search_depth: 'basic', max_results: maxResults, include_answer: false, include_images: true }),
       signal: controller.signal,
     }, 1);
     clearTimeout(killTimer);
     if (!res.ok) { const e = await res.text(); throw new Error('Tavily error: ' + e); }
     const data = await res.json();
-    return (data.results || []).slice(0, maxResults).map(r => ({
-      title:   r.title   || 'Untitled',
-      url:     r.url      || '',
-      snippet: (r.content || '').replace(/\s+/g, ' ').slice(0, 500),
+    const results = (data.results || []).slice(0, maxResults).map(r => ({
+      title:         r.title         || 'Untitled',
+      url:           r.url            || '',
+      snippet:       (r.content || '').replace(/\s+/g, ' ').slice(0, 500),
+      publishedDate: r.published_date || null,
     }));
+    // Tavily's include_images returns a general "related images for this
+    // query" list, NOT a guaranteed one-to-one thumbnail per result. Best we
+    // can do is pair an image to a result when they share the same domain —
+    // some cards simply won't get a match, and the frontend falls back to a
+    // branded favicon card in that case. That's expected, not a bug.
+    const images = (data.images || []).map(img => (typeof img === 'string' ? img : img.url)).filter(Boolean);
+    const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return null; } };
+    return results.map(r => {
+      const host = hostOf(r.url);
+      const image = host ? (images.find(imgUrl => hostOf(imgUrl) === host) || null) : null;
+      return { ...r, image };
+    });
   } catch (err) {
     console.error('[webSearch] failed:', err.message);
     return null; // caller treats null same as "not configured" — degrade honestly, never fake it
@@ -1002,24 +1015,61 @@ const CAREER_QUERY = 'subject:(application OR applied OR interview OR offer OR r
 
 async function classifyCareerEmail(subject, snippet) {
   const s = (subject + ' ' + snippet).toLowerCase();
+  // Only an instant regex fast-path for the one category that's genuinely
+  // unambiguous — a purely administrative "your application was received"
+  // auto-reply never overlaps with offer/rejection/interview language, so
+  // there's no real risk in shortcutting it.
+  //
+  // BUG FIX: this function used to also keyword-shortcut offer/rejection/
+  // interview/assessment/recruiter/post_offer BEFORE ever calling the AI —
+  // and critically, OFFER was checked before REJECTION, with bare
+  // "congratulations" as one of the offer triggers. A real, common rejection
+  // template — "Congratulations on reaching our final round, but we've
+  // decided to move forward with other candidates" — matches "congratulations"
+  // first and got shown to the user as a job offer. That's about the worst
+  // false positive this feature could produce (celebration banner + "let's
+  // negotiate" prompts on an actual rejection). Every category except the
+  // safe one above now goes through the real AI classifier, which reads the
+  // whole message's actual outcome instead of pattern-matching one word.
   if (/thank you for apply|application received|we received your|successfully applied/.test(s)) return 'application_confirmation';
-  if (/pleased to offer|congratulations|offer letter|job offer|we.d like to offer/.test(s)) return 'offer';
-  if (/unfortunately|regret to inform|not moving forward|other candidates|position.*(has been )?filled/.test(s)) return 'rejection';
+
+  try {
+    const groqKey = (process.env.GROQ_API_KEY || '').split(',')[0].trim();
+    if (!groqKey) return _classifyCareerEmailFallback(s);
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+      body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 15, temperature: 0,
+        messages: [{ role: 'user', content: `Classify this career email into ONE category: application_confirmation, interview_invite, assessment, recruiter_outreach, rejection, offer, post_offer, general_update
+
+IMPORTANT: some rejection emails open with a polite or even congratulatory line ("Congratulations on reaching our final round...") before delivering the actual outcome later in the same message. Judge the WHOLE email's real outcome, not just the opening tone — a polite opener followed by "we've decided to move forward with other candidates" (or similar) is a REJECTION, not an offer, no matter how it starts.
+
+Subject: ${subject}
+Preview: ${snippet}
+Reply with ONLY the category, nothing else.` }] })
+    });
+    const d = await r.json();
+    const cat = (d.choices?.[0]?.message?.content || '').trim().toLowerCase();
+    const VALID_CATEGORIES = ['application_confirmation', 'interview_invite', 'assessment', 'recruiter_outreach', 'rejection', 'offer', 'post_offer', 'general_update'];
+    return VALID_CATEGORIES.includes(cat) ? cat : _classifyCareerEmailFallback(s);
+  } catch {
+    return _classifyCareerEmailFallback(s);
+  }
+}
+
+// Degraded-but-safer keyword fallback — used ONLY when the AI classifier is
+// unavailable (no Groq key configured, the API call failed, or it returned
+// something unrecognized). REJECTION is checked before OFFER here on purpose,
+// and bare "congratulations" is deliberately NOT an offer trigger — it's the
+// exact word that caused the false-positive bug above. This path is the last
+// resort, never the primary decision-maker.
+function _classifyCareerEmailFallback(s) {
+  if (/unfortunately|regret to inform|not moving forward|other candidates|position.*(has been )?filled|will not be moving forward|not selected|decided not to proceed/.test(s)) return 'rejection';
+  if (/pleased to offer|offer letter|job offer|we.d like to offer|excited to extend|extend (you |to you )?an offer/.test(s)) return 'offer';
   if (/interview|schedule|calendly|meet with|video call|phone screen|zoom link/.test(s)) return 'interview_invite';
   if (/assessment|test|coding challenge|take-home|hackerrank/.test(s)) return 'assessment';
   if (/opportunity|reaching out|your profile|your background|open role|we.re hiring/.test(s)) return 'recruiter_outreach';
   if (/background check|reference|onboarding|start date|paperwork/.test(s)) return 'post_offer';
-  try {
-    const groqKey = (process.env.GROQ_API_KEY || '').split(',')[0].trim();
-    if (!groqKey) return 'general_update';
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
-      body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 15, temperature: 0,
-        messages: [{ role: 'user', content: `Classify this career email into ONE: application_confirmation, interview_invite, assessment, recruiter_outreach, rejection, offer, post_offer, general_update\nSubject: ${subject}\nPreview: ${snippet}\nReply with ONLY the category.` }] })
-    });
-    const d = await r.json();
-    return (d.choices?.[0]?.message?.content || 'general_update').trim().toLowerCase();
-  } catch { return 'general_update'; }
+  return 'general_update';
 }
 
 async function extractEmailEntities(subject, snippet) {
@@ -1327,15 +1377,23 @@ async function syncGmailForUser(uid) {
 }
 
 // ─── Conversation Intelligence ────────────────────────────────────────────────
-async function generateConvSummary(messages) {
+async function generateConvSummary(messages, priorSummary) {
   try {
     const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
     if (!groqKey||messages.length<2) return null;
     const recent = messages.slice(-10).map(m=>`${m.role==='user'?'User':'KIE'}: ${(typeof m.content==='string'?m.content:'').slice(0,400)}`).join('\n');
+    // Hand the LLM whatever was captured before, if anything, so it can
+    // carry forward facts/advice that are still relevant, resolve ones the
+    // new messages show got acted on, and only add what's genuinely new —
+    // rather than the summary quietly resetting to a blank slate every time
+    // it regenerates on just the newest slice of messages.
+    const priorBlock = priorSummary
+      ? `\n\nEXISTING SUMMARY FROM EARLIER IN THIS RELATIONSHIP (carry forward anything still true/relevant, mark advice as resolved in "unresolved" if the new messages show the user acted on it, drop anything genuinely stale, add new facts — don't just discard this):\n${JSON.stringify(priorSummary)}`
+      : '';
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
-      body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:200, temperature:0.1,
-        messages:[{ role:'user', content:`Summarize this career coaching conversation. Return ONLY valid JSON:\n{"topic":"one sentence what user is dealing with","userSituation":"their specific situation 1-2 sentences","emotionalState":"one word: frustrated/anxious/excited/confused/hopeful/determined/stressed/confident","keyFacts":["fact1","fact2"],"unresolved":"what they still need or null","urgency":"high/medium/low"}\n\nConversation:\n${recent}` }]
+      body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:280, temperature:0.1,
+        messages:[{ role:'user', content:`Summarize this career coaching conversation. Return ONLY valid JSON:\n{"topic":"one sentence what user is dealing with","userSituation":"their specific situation 1-2 sentences","emotionalState":"one word: frustrated/anxious/excited/confused/hopeful/determined/stressed/confident","keyFacts":["fact1","fact2"],"adviceGiven":["specific advice KIE gave that the user hasn't yet confirmed acting on, e.g. 'Suggested adding a quantified metric to the marketing manager bullet'"],"unresolved":"what they still need or null","urgency":"high/medium/low"}\n\nkeyFacts should persist real, still-relevant details about the user (role, goals, constraints) across the whole relationship, not just this snippet. adviceGiven should carry forward from the existing summary below unless the new messages show the user actually did it or it's no longer relevant — this is what lets a future reply say "last time I suggested X — did that help?" instead of repeating the same advice cold.${priorBlock}\n\nMOST RECENT MESSAGES:\n${recent}` }]
       })
     });
     const d = await r.json();

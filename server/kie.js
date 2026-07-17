@@ -20,7 +20,21 @@ module.exports = function registerKieRoutes(app) {
     const { messages, convId } = req.body;
     if (!Array.isArray(messages)||!convId) return res.status(400).json({ error:'messages and convId required' });
     res.json({ accepted:true });
-    generateConvSummary(messages).then(sum=>saveConvSummary(req.user.uid,convId,sum)).catch(e=>console.error('[summarize]:',e.message));
+    // BUG FIX: this used to regenerate the summary from ONLY the last ~10
+    // messages every time, with nothing carried forward — so saveConvSummary
+    // straight-up overwrote whatever was there. A keyFact or a piece of
+    // advice from three summary-cycles ago (e.g. "told user to add metrics
+    // to the marketing bullet, hadn't confirmed they did") would silently
+    // vanish the moment it scrolled out of the trailing 10-message window,
+    // even though the relationship with this user might be weeks long.
+    // Now the prior summary is fetched first and handed to the generator so
+    // it can be merged forward — carried facts stay, resolved advice gets
+    // marked resolved, and genuinely new facts get added — instead of the
+    // whole memory resetting to whatever's visible in the last few messages.
+    getConvSummary(req.user.uid, convId)
+      .then(prior => generateConvSummary(messages, prior))
+      .then(sum => saveConvSummary(req.user.uid, convId, sum))
+      .catch(e => console.error('[summarize]:', e.message));
   });
 
   // ── KIE_MODES — 5 backend personas, only 4 have a visible UI pill ─────────
@@ -88,6 +102,7 @@ module.exports = function registerKieRoutes(app) {
 
   RESUME PDF TRIGGER:
   If the user has a SAVED KIEVORA resume loaded (per the FILE STATUS note below, when present) and asks you to apply changes AND resend/send the PDF, end your reply with [SEND_PDF] on its own line. Do NOT add [SEND_PDF] unless the user has explicitly asked for the PDF to be resent, and NEVER add it when the loaded resume is raw uploaded text with no template — there's no real PDF to send in that case.
+  PROACTIVE REBUILD AFTER FEEDBACK: this also covers the common real case where [SEND_PDF] never gets typed literally. If you (or an earlier turn) just gave resume feedback/analysis, and the user then clearly signals they want you to act on it — "yes do that", "fix it then", "make it better", "go ahead", "okay let's do it", or similar agreement — that IS a request to apply the changes and deliver the updated resume, exactly the same as an explicit "resend the PDF". In that case, open your reply with something like "Creating a better version for you now — give me a moment." (not a generic "sure!"), then end it with [SEND_PDF] on its own line, same rules as above.
   [SEND_PDF] and [CODEBLOCK] are MUTUALLY EXCLUSIVE — never use both in the same reply. If you're using [SEND_PDF], your reply text is just a short, plain confirmation of what changed ("Updated your summary and added the new role — here's your resume 📄") — never restate or preview the resume content itself in a code block. The PDF card the app generates IS the deliverable; describing it a second time in a CODEBLOCK duplicates it and looks broken.
 
   CORE COACHING INTELLIGENCE — non-negotiable on every substantive reply:
@@ -168,6 +183,7 @@ module.exports = function registerKieRoutes(app) {
   RESUME CONTEXT RULES — when resume is loaded: You have it. Never ask them to share it. Use the real content — their exact words, their specific roles, their actual skills — as the foundation of every analysis. Rewrite requests get rewrites. Don't describe, do.
 
   RESUME PDF TRIGGER: If the user has a SAVED KIEVORA resume loaded and asks you to apply changes AND resend/send the PDF, end your reply with [SEND_PDF] on its own line. Do NOT add [SEND_PDF] unless the user has explicitly asked for the PDF to be resent, and NEVER add it when the loaded resume is raw uploaded text with no template. [SEND_PDF] and [CODEBLOCK] are mutually exclusive — never both in the same reply. When you use [SEND_PDF], your reply text is a short plain confirmation of what changed — never restate the resume content itself, the app generates and sends the actual PDF card separately.
+  This also fires on a clear agreement after feedback ("yes do that", "fix it then", "go ahead") even without the words "send"/"PDF" literally — that agreement means apply it and deliver the updated resume. Open with "Creating a better version for you now — give me a moment." in that case, then end with [SEND_PDF].
 
   FOLLOW-UP CHIPS — use sparingly: only when the discussion genuinely opens into clear next directions, never as a default habit. 1–2 max, tied to the topic just discussed, phrased as something the user could tap to ask you next: [FU]chip text[/FU]. One short line each, 3–7 words, no line breaks inside the tags. Never on greetings, short replies, or when ending with a question.`,
     },
@@ -192,6 +208,7 @@ module.exports = function registerKieRoutes(app) {
   STRUCTURED OUTPUT — COMPARISON TABLES: When comparing companies, job offers, career paths, or candidates against shared criteria, wrap the data in [TABLE:Title]...[/TABLE] — first line is the header row, then "value | value | value" rows (no markdown dash separators, no bold inside cells, short cells). Use live search results to fill it when relevant. Only for genuine multi-item comparisons, never a single list. Close with your actual take on which option wins.
 
   RESUME PDF TRIGGER: If the user has a SAVED KIEVORA resume loaded and asks you to apply changes AND resend/send the PDF, end your reply with [SEND_PDF] on its own line. Do NOT add it unless explicitly asked, and NEVER when the loaded resume is raw uploaded text with no template. [SEND_PDF] and [CODEBLOCK] are mutually exclusive — never both in the same reply. When using [SEND_PDF], keep your reply text to a short plain confirmation of what changed; the app sends the actual PDF card separately.
+  This also fires on a clear agreement after feedback ("yes do that", "fix it then", "go ahead") even without the words "send"/"PDF" literally. Open with "Creating a better version for you now — give me a moment." in that case, then end with [SEND_PDF].
 
   MARKET INTEL COACHING BEHAVIORS (every substantive reply):
   1. CAPTURE THEIR CONTEXT — Role, industry, location, experience level shapes every insight.
@@ -226,6 +243,7 @@ module.exports = function registerKieRoutes(app) {
   STRUCTURED OUTPUT — COMPARISON TABLES: If (and only if) they're weighing two or more real options — offers, companies, paths — against shared criteria, wrap it in [TABLE:Title]...[/TABLE]: header row first, then "value | value | value" rows, short cells, no markdown dashes. Otherwise skip it — Quick Answer mode means most replies stay plain text. EXCEPTION: plan/billing/renewal/usage questions always use the [TABLE:Your Plan] card per the PRESENTATION RULE below, even in Quick Answer mode — that rule is not a comparison and is not optional here.
 
   RESUME PDF TRIGGER: If the user has a SAVED KIEVORA resume loaded and asks you to apply changes AND resend/send the PDF, end your reply with [SEND_PDF] on its own line. Do NOT add it unless explicitly asked, and NEVER when the loaded resume is raw uploaded text with no template. [SEND_PDF] and [CODEBLOCK] are mutually exclusive — never both in the same reply. When using [SEND_PDF], keep your reply text to a short plain confirmation of what changed; the app sends the actual PDF card separately.
+  Also fires on a clear "yes/go ahead/fix it" agreement after feedback, even without "send"/"PDF" said literally — open with "Creating a better version for you now." then end with [SEND_PDF].
 
   QUICK ANSWER RULES — zero exceptions:
   - Greetings: ONE warm sentence. Done.
@@ -259,6 +277,7 @@ module.exports = function registerKieRoutes(app) {
   STRUCTURED OUTPUT — COMPARISON TABLES: When weighing real options against each other — companies, paths, offers, candidates — wrap the data in [TABLE:Title]...[/TABLE]: header row first, then "value | value | value" rows, short punchy cells, no markdown dashes. Then land your boldest take on which one actually wins.
 
   RESUME PDF TRIGGER: If the user has a SAVED KIEVORA resume loaded and asks you to apply changes AND resend/send the PDF, end your reply with [SEND_PDF] on its own line. Do NOT add it unless explicitly asked, and NEVER when the loaded resume is raw uploaded text with no template. [SEND_PDF] and [CODEBLOCK] are mutually exclusive — never both in the same reply. When using [SEND_PDF], keep your reply text to a short plain confirmation of what changed; the app sends the actual PDF card separately.
+  Also fires on a clear "yes/go ahead/fix it" agreement after feedback, even without "send"/"PDF" said literally — open with "Creating a better version for you now." then end with [SEND_PDF].
 
   CREATIVE COACHING BEHAVIORS (every substantive reply):
   1. AMPLIFY EVERYTHING — Their background, interests, throwaway comments — all creative material. Turn gaps into differentiators.
@@ -632,6 +651,10 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
       if (convSummary.userSituation)  sb += `\nSituation: ${convSummary.userSituation}`;
       if (convSummary.emotionalState) sb += `\nEmotional state: ${convSummary.emotionalState}`;
       if (convSummary.keyFacts?.length) sb += `\nKey facts: ${convSummary.keyFacts.join(', ')}`;
+      if (convSummary.adviceGiven?.length) {
+        sb += `\nAdvice already given, not yet confirmed acted on: ${convSummary.adviceGiven.join('; ')}`;
+        sb += `\n→ If it's natural given what they just said, follow up on this ("did you get a chance to add that metric to the marketing bullet?") instead of repeating the same suggestion cold as if this were the first time. Don't force it into every reply — only when it's actually relevant to the current message.`;
+      }
       if (convSummary.unresolved) sb += `\nUnresolved: ${convSummary.unresolved}`;
       systemContent += sb;
     } else {
@@ -709,7 +732,7 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
         sendSSE({ t: 'search', v: searchQuery });
         const searchResults = await performWebSearch(searchQuery);
         const sourcesList = searchResults
-          ? searchResults.map(r => ({ title: r.title, url: r.url }))
+          ? searchResults.map(r => ({ title: r.title, url: r.url, image: r.image || null, publishedDate: r.publishedDate || null }))
           : [];
         sendSSE({ t: 'searchdone', count: sourcesList.length, sources: sourcesList });
         systemContent += buildSearchContextBlock(searchQuery, searchResults, true);

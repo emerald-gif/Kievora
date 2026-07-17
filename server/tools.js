@@ -855,13 +855,14 @@ module.exports = function registerToolsRoutes(app) {
   {"fullName":"","jobTitle":"","email":"","phone":"","location":"","summary":"","workExperience":[{"position":"","company":"","startDate":"","endDate":"","description":""}],"education":[{"degree":"","field":"","school":"","graduationDate":""}],"skills":[],"templateSuggestion":""}
 
   Rules:
-  - fullName: a realistic name (e.g. "Alex Johnson")
-  - email/phone/location: realistic examples (e.g. "alex@gmail.com", "+1 (555) 234-5678", "San Francisco, CA")
+  - fullName/email: if a REAL full name and/or email is given in the input (e.g. "Full name: ..." / "Email: ..."), use it EXACTLY — never invent a different one when a real one is provided. Only invent a realistic placeholder (e.g. "Alex Johnson") when truly nothing was given.
+  - phone/location: use real ones if given; otherwise realistic examples (e.g. "+1 (555) 234-5678", "San Francisco, CA")
   - summary: compelling 2-3 sentences, achievement-focused, tailored to the role
   - workExperience: 2-3 entries with realistic companies, strong bullet points with action verbs and real metrics, separated by newlines. Most recent first.
   - education: 1-2 entries appropriate to the seniority level requested
   - skills: 10-14 relevant skills mixing technical and soft skills
   - templateSuggestion: one of [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split
+  - SPEED OVER INTERROGATION: the person asking for this resume wants it built now, not a back-and-forth. Never leave a field blank or generic waiting for "more details" — where something concrete (years of experience, past employers, specific skills) wasn't given, generate strong, industry-standard content that fits the stated role convincingly. Confident, specific invented content beats a hedge every time.
 
 STRICTNESS RULES — apply to every field, not just the summary ones:
 - Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
