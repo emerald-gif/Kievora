@@ -6233,18 +6233,26 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // ChatGPT/Gemini/Grok's voice mode, built entirely on the Web Speech API.
     (function initKieLiveVoice() {
       const LiveSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const BAR_COUNT = 40;
 
       let liveOn         = false;  // overlay open / session active
       let liveRec         = null;   // current SpeechRecognition instance
       let liveMicMuted    = false;
-      let liveShowCaption = true;   // whether the live transcript/reply text is shown on screen
+      let liveShowCaption = false;  // whether the live transcript/reply text is shown on screen
       let liveBusy        = false;  // true while KIE is thinking or speaking
       let silenceTimer    = null;
 
       function ov()      { return g('kieLiveOverlay'); }
       function orbEl()    { return g('kieLiveOrb'); }
       function statusEl() { return g('kieLiveStatus'); }
+      function hintEl()   { return g('kieLiveHint'); }
       function capEl()    { return g('kieLiveCaption'); }
+
+      const HINTS = {
+        listening: "I'm listening. You can speak now.",
+        thinking:  'Let me think about that…',
+        speaking:  "Here's what I found.",
+      };
 
       function setLiveState(state, caption) {
         currentOrbState = state;
@@ -6255,63 +6263,80 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           state === 'listening' ? (liveMicMuted ? 'Mic muted' : 'Listening…') :
           state === 'thinking'  ? 'Thinking…' :
           state === 'speaking'  ? 'Speaking…' : '';
+        const h = hintEl();
+        if (h) h.textContent = liveMicMuted && state === 'listening' ? 'Tap the mic to unmute.' : (HINTS[state] || '');
         if (caption !== undefined) { const c = capEl(); if (c) c.textContent = liveShowCaption ? caption : ''; }
       }
 
-      // ── Organic orb engine ────────────────────────────────────────────────
-      // Instead of fixed CSS keyframes, the orb's scale is a spring physics
-      // simulation (mass/stiffness/damping) chasing a target driven by real
-      // mic loudness while listening, and a synthetic speech envelope while
-      // speaking — plus a slow blob-morph on border-radius. That's what
-      // gives it weight/gravity instead of a mechanical pulse.
+      // ── Waveform orb engine ─────────────────────────────────────────────────
+      // Draws a real audio-style bar visualizer onto a canvas inside the orb,
+      // driven by real mic loudness (FFT bins) while listening, and a layered
+      // synthetic envelope while speaking — instead of a fixed CSS pulse.
       let audioCtx = null, analyser = null, micSource = null, micStream = null, freqData = null;
       let rafId = null;
-      let orbScale = 1, orbScaleVel = 0;
-      let orbWobble = 0;
-      let speakPhase = 0;
+      let speakPhase = 0, thinkPhase = 0;
       let currentOrbState = '';
+      let smoothedBars = new Array(BAR_COUNT).fill(0.05);
 
-      function getAmplitude() {
+      function computeBars() {
+        const bars = new Array(BAR_COUNT);
         if (currentOrbState === 'listening' && analyser && freqData && !liveMicMuted) {
           analyser.getByteFrequencyData(freqData);
-          let sum = 0;
-          for (let i = 0; i < freqData.length; i++) sum += freqData[i];
-          const avg = sum / freqData.length / 255;
-          return Math.min(1, avg * 2.6);
+          const usableBins = Math.floor(freqData.length * 0.55); // voice lives in low/mid bins
+          for (let i = 0; i < BAR_COUNT; i++) {
+            const idx = Math.min(usableBins - 1, Math.floor((i / BAR_COUNT) * usableBins));
+            bars[i] = Math.min(1, (freqData[idx] / 255) * 1.9);
+          }
+        } else if (currentOrbState === 'speaking') {
+          speakPhase += 0.16;
+          for (let i = 0; i < BAR_COUNT; i++) {
+            const t = speakPhase + i * 0.35;
+            const v = Math.sin(t) * 0.5 + Math.sin(t * 1.9 + 1) * 0.3 + Math.sin(t * 0.6 + 2) * 0.2;
+            bars[i] = Math.max(0.04, v * 0.5 + 0.4);
+          }
+        } else if (currentOrbState === 'thinking') {
+          thinkPhase += 0.09;
+          for (let i = 0; i < BAR_COUNT; i++) bars[i] = 0.1 + Math.abs(Math.sin(thinkPhase + i * 0.45)) * 0.09;
+        } else {
+          for (let i = 0; i < BAR_COUNT; i++) bars[i] = 0.05;
         }
-        if (currentOrbState === 'speaking') {
-          speakPhase += 0.14;
-          const wave = Math.sin(speakPhase) * 0.5 + Math.sin(speakPhase * 2.3 + 1) * 0.3 + Math.sin(speakPhase * 0.7 + 2) * 0.2;
-          return Math.max(0, wave * 0.55 + 0.35);
+        return bars;
+      }
+
+      function drawWave() {
+        const canvas = g('kieLiveWave');
+        const o = orbEl();
+        if (!canvas || !o) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const w = o.clientWidth, h = o.clientHeight;
+        if (!w || !h) return;
+        if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+          canvas.width = Math.round(w * dpr);
+          canvas.height = Math.round(h * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
-        return 0.08;
+        ctx.clearRect(0, 0, w, h);
+        const raw = computeBars();
+        for (let i = 0; i < BAR_COUNT; i++) smoothedBars[i] += (raw[i] - smoothedBars[i]) * 0.35;
+
+        const gap = w / BAR_COUNT;
+        const barW = Math.max(1.4, gap * 0.55);
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        for (let i = 0; i < BAR_COUNT; i++) {
+          const envelope = Math.sin(((i + 0.5) / BAR_COUNT) * Math.PI); // taper toward the edges
+          const bh = Math.max(2.5, smoothedBars[i] * h * 0.44 * envelope);
+          const x = i * gap + (gap - barW) / 2;
+          const y = (h - bh) / 2;
+          if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, barW, bh, barW / 2); ctx.fill(); }
+          else ctx.fillRect(x, y, barW, bh);
+        }
       }
 
       function orbLoop() {
         rafId = requestAnimationFrame(orbLoop);
-        const o = orbEl();
-        if (!o) return;
-        if (currentOrbState === 'thinking') {
-          // Pure-CSS spin/pulse handles this state — clear any inline overrides
-          o.style.transform = '';
-          o.style.borderRadius = '';
-          return;
-        }
-        const amp = getAmplitude();
-        const target = 1 + amp * 0.32;
-        const stiffness = 0.18, damping = 0.72;
-        orbScaleVel = (orbScaleVel + (target - orbScale) * stiffness) * damping;
-        orbScale += orbScaleVel;
-
-        orbWobble += 0.045 + amp * 0.05;
-        const w = amp * 14;
-        const r1 = 50 + Math.sin(orbWobble) * w;
-        const r2 = 50 + Math.sin(orbWobble * 1.3 + 1.4) * w;
-        const r3 = 50 + Math.sin(orbWobble * 0.8 + 2.6) * w;
-        const r4 = 50 + Math.sin(orbWobble * 1.6 + 0.8) * w;
-
-        o.style.transform = `scale(${orbScale.toFixed(3)})`;
-        o.style.borderRadius = `${r1}% ${100 - r1}% ${r2}% ${100 - r2}% / ${r3}% ${r4}% ${100 - r4}% ${100 - r3}%`;
+        if (currentOrbState === 'thinking') return; // CSS spin animation handles this state
+        drawWave();
       }
 
       async function startAudioEngine() {
@@ -6393,17 +6418,23 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         setLiveState('thinking', text);
         const inp = g('kieInp');
         if (!inp) { liveBusy = false; return; }
+        const bubblesBefore = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble').length;
         inp.value = text;
         inp.style.height = 'auto';
         try { sendKie(); } catch (_) {}
 
-        // sendKie() streams its own reply into the DOM; wait for the shared
-        // _kieGenerating flag to clear (with a safety timeout) rather than
-        // trying to intercept every branch of sendKie individually.
-        await new Promise(r => setTimeout(r, 150));
+        // sendKie() streams its own reply into the DOM. Some of its branches
+        // (intent classification, file actions) don't flip _kieGenerating
+        // true until after their own network round-trip, so racing that flag
+        // alone can resolve before any reply exists. Instead, wait for BOTH
+        // a new assistant bubble to actually appear AND generation to be
+        // done — that's correct regardless of which branch sendKie() takes.
         const waitStart = Date.now();
-        while (liveOn && typeof _kieGenerating !== 'undefined' && _kieGenerating && Date.now() - waitStart < 60000) {
-          await new Promise(r => setTimeout(r, 250));
+        while (liveOn && Date.now() - waitStart < 60000) {
+          const count = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble').length;
+          const stillGenerating = typeof _kieGenerating !== 'undefined' && _kieGenerating;
+          if (count > bubblesBefore && !stillGenerating) break;
+          await new Promise(r => setTimeout(r, 200));
         }
         if (!liveOn) { liveBusy = false; return; }
 
@@ -6440,9 +6471,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         window.speechSynthesis?.cancel();
         stopAudioEngine();
         if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-        const o = orbEl();
-        if (o) { o.style.transform = ''; o.style.borderRadius = ''; }
-        orbScale = 1; orbScaleVel = 0; orbWobble = 0; speakPhase = 0;
+        smoothedBars = new Array(BAR_COUNT).fill(0.05);
+        speakPhase = 0; thinkPhase = 0;
         const ovEl = ov();
         if (ovEl) ovEl.classList.remove('open');
       }
@@ -6480,7 +6510,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           cBtn.onclick = () => {
             liveShowCaption = !liveShowCaption;
             cBtn.classList.toggle('active', liveShowCaption);
-            cBtn.title = liveShowCaption ? 'Hide captions' : 'Show captions';
+            cBtn.title = liveShowCaption ? 'Hide transcript' : 'Show transcript';
             const ovEl = ov();
             if (ovEl) ovEl.classList.toggle('no-caption', !liveShowCaption);
           };
