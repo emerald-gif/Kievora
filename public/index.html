@@ -355,6 +355,16 @@ nav.scrolled{box-shadow:0 1px 24px rgba(0,0,0,.07)}
 .car-item.pos-left{transform:translate(-50%,-50%) translateX(-76%) scale(.72);z-index:2;opacity:.45}
 .car-item.pos-hidden{transform:translate(-50%,-50%) scale(.4);z-index:1;opacity:0;pointer-events:none}
 
+/* Labeled mockup slides (no external screenshots needed) */
+.cs-slide{width:100%;height:100%;display:flex;flex-direction:column;background:#fff}
+.cs-banner{flex:0 0 36%;display:flex;align-items:center;justify-content:center;padding:16px}
+.cs-title{font-family:'Sora',sans-serif;font-size:clamp(18px,2.6vw,24px);font-weight:900;letter-spacing:-.6px;color:#0F0E2A;text-align:center}
+.cs-body{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#fff}
+.cs-browserbar{height:28px;background:#F2F3F5;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:5px;flex-shrink:0}
+.cs-browserbar .bd{width:7px;height:7px}
+.cs-url{flex:1;background:#fff;border:1px solid var(--border);border-radius:5px;height:15px;margin-left:6px;font-size:8px;color:var(--sub);display:flex;align-items:center;padding:0 8px;max-width:220px}
+.cs-content{flex:1;padding:16px;overflow:hidden;background:#FAFAFB}
+
 /* control bar: small nav buttons either side of a pill (play/pause + pagination) */
 .car-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:32px}
 .car-nav-btn{
@@ -1663,12 +1673,68 @@ const revObs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isInter
 document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
 
 // ─── SHOWCASE CAROUSEL ───
-// Swap these src values for your real screenshots / clips. type: 'image' | 'video'.
-// imgDuration only applies to images (ms before auto-advancing). Videos auto-advance on 'ended'.
+// No real screenshots yet, so each slide is a live CSS mockup (same technique
+// as the hero browser mockup) with a labeled banner on top — swap `html` for
+// a real <img>/<video> once you have actual product screenshots.
 const SHOWCASE_ITEMS=[
-  {type:'image',src:'showcase-resume.jpg',alt:'Resume Builder',imgDuration:6000},
-  {type:'video',src:'showcase-kie.mp4'},
-  {type:'image',src:'showcase-dashboard.jpg',alt:'Dashboard',imgDuration:6000}
+  {type:'html',imgDuration:6000,html:`
+    <div class="cs-slide">
+      <div class="cs-banner" style="background:linear-gradient(120deg,#DCE9FF,#EDE9FE);flex-direction:column;gap:6px"><span class="cs-title">AI Resume Builder</span><span style="font-size:11px;font-weight:700;color:var(--p);background:rgba(124,58,237,.12);padding:3px 12px;border-radius:99px">13 ATS-tested templates</span></div>
+      <div class="cs-body">
+        <div class="cs-browserbar"><span class="bd r"></span><span class="bd y"></span><span class="bd g"></span><div class="cs-url">kievora.app/resume-builder</div></div>
+        <div class="cs-content">
+          <div class="resume-card">
+            <div class="rc-header"></div>
+            <div class="rc-body">
+              <div class="rc-name"></div><div class="rc-title"></div>
+              <div class="rc-row"><div class="rc-pill"></div><div class="rc-pill"></div><div class="rc-pill"></div></div>
+              <div class="rc-div"></div>
+              <div class="rc-sh"></div>
+              <div class="rc-line w100"></div><div class="rc-line w80"></div><div class="rc-line w60"></div>
+              <div class="rc-div" style="margin-top:9px"></div>
+              <div class="rc-sh"></div>
+              <div class="rc-line w100"></div><div class="rc-line w45"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`},
+  {type:'html',imgDuration:6000,html:`
+    <div class="cs-slide">
+      <div class="cs-banner" style="background:linear-gradient(120deg,#F5F3FF,#FCE7F3)"><span class="cs-title">KIE — AI Career Coach</span></div>
+      <div class="cs-body">
+        <div class="cs-browserbar"><span class="bd r"></span><span class="bd y"></span><span class="bd g"></span><div class="cs-url">kievora.app/kie</div></div>
+        <div class="cs-content">
+          <div class="kie-chat-card" style="height:100%">
+            <div class="kc-hd"><div class="kc-av">K</div><div class="kc-name">KIE</div><div class="kc-badge">AI Coach</div></div>
+            <div class="kc-msg">"Responsible for managing a team" reads weak for ATS. Try this instead:</div>
+            <div class="kc-msg">"<b>Managed a team of 6</b>, cutting onboarding time by 35%" — same job, stronger signal.</div>
+            <div class="kc-input"><span class="kc-placeholder">Ask KIE anything…</span><div class="kc-send"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>`},
+  {type:'html',imgDuration:6000,html:`
+    <div class="cs-slide">
+      <div class="cs-banner" style="background:linear-gradient(120deg,#FEF9C3,#FFEDD5)"><span class="cs-title">ATS Score Checker</span></div>
+      <div class="cs-body">
+        <div class="cs-browserbar"><span class="bd r"></span><span class="bd y"></span><span class="bd g"></span><div class="cs-url">kievora.app/ats-checker</div></div>
+        <div class="cs-content" style="display:flex;flex-direction:column;gap:10px">
+          <div class="score-card">
+            <div class="score-label">ATS Compatibility</div>
+            <div class="score-row">
+              <div class="score-ring"><div class="score-num">87%</div></div>
+              <div><div class="score-title">Strong — keep going 🔥</div><div class="score-sub">Add skills to reach 95%</div></div>
+            </div>
+          </div>
+          <div class="score-card" style="padding:11px 13px;display:flex;flex-direction:column;gap:7px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text);font-weight:600">Work Experience<span style="color:#16A34A">22/30</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text);font-weight:600">Summary<span style="color:#16A34A">15/15</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text);font-weight:600">Skills<span style="color:#A16207">10/15</span></div>
+          </div>
+        </div>
+      </div>
+    </div>`}
 ];
 
 (function(){
@@ -1688,6 +1754,8 @@ const SHOWCASE_ITEMS=[
     el.dataset.index=i;
     el.innerHTML = item.type==='video'
       ? `<video src="${item.src}" muted playsinline preload="metadata"></video>`
+      : item.type==='html'
+      ? item.html
       : `<img src="${item.src}" alt="${item.alt||''}" loading="lazy"/>`;
     el.addEventListener('click',()=>{ if(Number(el.dataset.index)!==current) goTo(Number(el.dataset.index)); });
     track.appendChild(el);
