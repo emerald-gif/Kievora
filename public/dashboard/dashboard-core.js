@@ -2501,7 +2501,7 @@
             }
             _appendKieFileMsg(m.fileRef, m.fileName || 'File', m.fileExt || 'file', m.content);
           } else {
-            appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null, m.mode || null);
+            appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null, m.mode || null, m.images || null);
           }
         });
         scrollKie();
@@ -4421,12 +4421,14 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       let streamedText = '';
       let firstToken   = false;
       let turnSources  = null;
+      let turnImages   = null;
 
       function _finishImageBubble(text) {
         _ensureImageBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-        bubble.innerHTML = _formatKieLive(display, true);
+        bubble.innerHTML = _formatKieLive(display, true, turnSources);
         _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
+        _kieInsertImageGallery(bubbleW.querySelector('.km-ai-body'), turnImages, kieMode);
         if (actionsEl) actionsEl.classList.add('visible');
         maybeShowKieSuggestions(text, bubbleW);
         _kieGenerating = false;
@@ -4478,13 +4480,14 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
               if (!firstToken) { typEl.style.display = 'none'; hideKieStatus(); _ensureImageBubble(); firstToken = true; }
               streamedText += chunk.v;
               const live = streamedText.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-              bubble.innerHTML = _formatKieLive(live, false) + '<span class="kie-stream-cursor">▌</span>';
+              bubble.innerHTML = _formatKieLive(live, false, turnSources) + '<span class="kie-stream-cursor">▌</span>';
               scrollKie();
             } else if (chunk.t === 'search') {
               _kieShowRealSearch(chunk.v);
             } else if (chunk.t === 'searchdone') {
               _kieEndRealSearch(chunk.count);
               if (chunk.sources?.length) turnSources = chunk.sources;
+              if (chunk.images?.length) turnImages = chunk.images;
             } else if (chunk.t === 'err') {
               throw new Error(chunk.v || 'KIE error');
             }
@@ -4493,7 +4496,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
         typEl.style.display = 'none'; hideKieStatus();
         const finalText = streamedText || "I couldn't analyse that image right now. Try again! 🙏";
-        kieHist.push({ role:'assistant', content: finalText, sources: turnSources || undefined, mode: kieMode });
+        kieHist.push({ role:'assistant', content: finalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
         saveKieHistory();
         _finishImageBubble(finalText);
 
@@ -5433,15 +5436,20 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       let wasFallback  = false;
       let modeSuggested = null;
       let turnSources  = null;
+      let turnImages   = null;
 
       // Applies final formatting, shows action buttons, re-enables input
       function _finishBubble(text) {
         _ensureBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-        bubble.innerHTML = _formatKieLive(display, true);
+        bubble.innerHTML = _formatKieLive(display, true, turnSources);
         // Rich source-card row (Deep Think / Web Search / Creative only) — inserted
         // right after the text, before the actions row and Sources pill below it.
         _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
+        // Plain, un-linked reference images — no card, no click-through, just a
+        // bigger illustrative photo dropped into the answer (the ChatGPT-style
+        // inline image Tomiwa referenced, as opposed to the clickable source cards).
+        _kieInsertImageGallery(bubbleW.querySelector('.km-ai-body'), turnImages, kieMode);
         // Sources button — injected into the actions bar (after regen), like ChatGPT
         _kieAttachSources(actionsEl, turnSources);
         if (actionsEl) actionsEl.classList.add('visible');
@@ -5504,7 +5512,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
               }
               streamedText += chunk.v;
               const live = streamedText.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-              bubble.innerHTML = _formatKieLive(live, false) + '<span class="kie-stream-cursor">▌</span>';
+              bubble.innerHTML = _formatKieLive(live, false, turnSources) + '<span class="kie-stream-cursor">▌</span>';
               scrollKie();
             } else if (chunk.t === 'search') {
               // Real search in flight — rolling globe icon, driven by the server
@@ -5512,6 +5520,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             } else if (chunk.t === 'searchdone') {
               _kieEndRealSearch(chunk.count);
               if (chunk.sources?.length) turnSources = chunk.sources;
+              if (chunk.images?.length) turnImages = chunk.images;
             } else if (chunk.t === 'done') {
               finalModel    = chunk.model   || finalModel;
               wasFallback   = chunk.fallback || false;
@@ -5541,7 +5550,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             .replace(/\n{3,}/g, '\n\n').trim();
         }
 
-        kieHist.push({ role:'assistant', content: cleanedFinalText, sources: turnSources || undefined, mode: kieMode });
+        kieHist.push({ role:'assistant', content: cleanedFinalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
         saveKieHistory();
 
         // Final render on the streaming bubble (already visible to user)
@@ -5600,7 +5609,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (e.name === 'AbortError' || _kieStopTyping) {
           // User hit Stop — preserve whatever was already streamed into the bubble
           if (streamedText) {
-            kieHist.push({ role:'assistant', content: streamedText, sources: turnSources || undefined, mode: kieMode });
+            kieHist.push({ role:'assistant', content: streamedText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
             saveKieHistory();
             _finishBubble(streamedText);
           } else {
@@ -5656,7 +5665,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       sendKie();
     };
 
-    function appendKMsg(role, text, animate, onDone, sources, msgMode) {
+    function appendKMsg(role, text, animate, onDone, sources, msgMode, images) {
       const msgs = g('kieMsgs');
       msgs.style.display = 'flex';
       const welcome = g('kieWelcome');
@@ -5695,9 +5704,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         function finishMsg() {
           // Strip [FU]...[/FU] tags from visible text (they render as chips, not prose)
           const displayText = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-          bubble.innerHTML = _formatKieLive(displayText, true);
+          bubble.innerHTML = _formatKieLive(displayText, true, sources);
           // Rich source-card row (Deep Think / Web Search / Creative only)
           _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
+          // Plain un-linked reference images, dropped in alongside the cards
+          _kieInsertImageGallery(w.querySelector('.km-ai-body'), images, msgMode || kieMode);
           // Re-inject Sources button if this message had web search
           _kieAttachSources(actionsEl, sources);
           if (actionsEl) actionsEl.classList.add('visible');
@@ -5726,7 +5737,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             }
             i = Math.min(i + CHUNK, typeText.length);
             // Format live on every frame — formatting appears as text streams in
-            bubble.innerHTML = _formatKieLive(typeText.slice(0, i), false);
+            bubble.innerHTML = _formatKieLive(typeText.slice(0, i), false, sources);
             scrollKie();
             if (i < typeText.length) {
               rafId = requestAnimationFrame(typeFrame);
@@ -5741,8 +5752,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // same as a live response does. Skipping any of these is what caused
           // chips/sources to vanish and raw [FU]...[/FU] text to leak on revisit.
           const restoredDisplay = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-          bubble.innerHTML = _formatKieLive(restoredDisplay, true);
+          bubble.innerHTML = _formatKieLive(restoredDisplay, true, sources);
           _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
+          _kieInsertImageGallery(w.querySelector('.km-ai-body'), images, msgMode || kieMode);
           _kieAttachSources(actionsEl, sources);
           if (actionsEl) actionsEl.classList.add('visible');
           maybeShowKieSuggestions(text, w, true);
@@ -5804,7 +5816,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       return `<div class="kie-table-card" id="${cardId}"><div class="kie-table-scroll"><table class="kie-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>${writing}</div>`;
     }
 
-    function _formatKieLive(partial, isFinal) {
+    function _formatKieLive(partial, isFinal, sources) {
       let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').trim();
 
       // Detect code blocks AND table blocks — handles MULTIPLE blocks of
@@ -5819,7 +5831,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       while ((match = blockRe.exec(text)) !== null) {
         found = true;
         const before = text.slice(lastIndex, match.index).trim();
-        if (before) html += formatKieText(before);
+        if (before) html += formatKieText(before, sources);
 
         const kind    = match[1].toUpperCase();
         const label   = (match[2] || (kind === 'TABLE' ? 'Comparison' : 'content')).trim();
@@ -5851,11 +5863,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       if (found) {
         const remaining = text.slice(lastIndex).trim();
-        if (remaining) html += formatKieText(remaining);
+        if (remaining) html += formatKieText(remaining, sources);
         return html;
       }
 
-      return formatKieText(text);
+      return formatKieText(text, sources);
     }
 
     // Expose for the history-restore system (lives in a different scope)
@@ -5903,9 +5915,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
     window._kieSrcImgErr = _kieSrcImgErr;
 
-    function _kieBuildSourceCardsHtml(sources, mode) {
-      if (!sources || !sources.length || !KIE_SOURCE_CARD_MODES.includes(mode)) return '';
-      const cards = sources.slice(0, 6).map(s => {
+    // Builds the inner <a class="kie-source-card"> markup for one group of
+    // sources (no wrapping row div — caller decides how to mount that).
+    function _kieCardsInnerHtml(list) {
+      return list.map(s => {
         let domain = '';
         try { domain = new URL(s.url).hostname.replace(/^www\./, ''); } catch { return ''; }
         if (!domain) return '';
@@ -5929,23 +5942,119 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             </div>
           </a>`;
       }).filter(Boolean).join('');
-      return cards ? `<div class="kie-source-cards">${cards}</div>` : '';
     }
 
-    // Inserts the card row right after the message text (before the
-    // copy/speak/share/regen actions row) — only for the three modes above,
-    // and only when there's actually something to show.
+    // Wraps one group of sources into a mountable row element, or null if
+    // the group produced no valid cards (bad/missing domains etc).
+    function _kieCardRow(list, extraClass) {
+      const inner = _kieCardsInnerHtml(list);
+      if (!inner) return null;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `<div class="kie-source-cards${extraClass ? ' ' + extraClass : ''}">${inner}</div>`;
+      return wrap.firstElementChild;
+    }
+
+    // Spreads the search-result cards across the answer — beginning, middle,
+    // and end, like Google's "Latest Coverage" rows — instead of dumping
+    // everything in one row after the text. Falls back to a single closing
+    // row when the reply is too short to have real "beginning/middle/end"
+    // sections, or when there aren't enough sources to make three groups
+    // worth showing. Only fires for Deep Think / Web Search / Creative.
     function _kieInsertSourceCards(bodyEl, sources, mode) {
       if (!bodyEl) return;
-      bodyEl.querySelector('.kie-source-cards')?.remove();
-      const html = _kieBuildSourceCardsHtml(sources, mode);
-      if (!html) return;
+      bodyEl.querySelectorAll('.kie-source-cards').forEach(el => el.remove());
+      if (!sources || !sources.length || !KIE_SOURCE_CARD_MODES.includes(mode)) return;
+
       const bubbleEl = bodyEl.querySelector('.km-bubble');
-      const wrap = document.createElement('div');
-      wrap.innerHTML = html;
-      const row = wrap.firstElementChild;
-      if (bubbleEl && bubbleEl.nextSibling) bodyEl.insertBefore(row, bubbleEl.nextSibling);
-      else bodyEl.appendChild(row);
+      if (!bubbleEl) return;
+
+      const list = sources.slice(0, 6);
+      // Top-level rendered blocks (<p>, <h3>, <ul>, code/table cards, etc.)
+      // — these are the seams we can slot a card row between.
+      const blocks = Array.from(bubbleEl.children);
+
+      // Short answer or too few sources — one row at the end, same as before.
+      if (list.length <= 2 || blocks.length < 4) {
+        const row = _kieCardRow(list);
+        if (row) bubbleEl.appendChild(row);
+        return;
+      }
+
+      // Deal sources round-robin into 3 groups so the strongest results
+      // aren't all clustered at the top — beginning/middle/end each get a mix.
+      const groups = [[], [], []];
+      list.forEach((s, i) => groups[i % 3].push(s));
+
+      const beginIdx = 1;
+      const midIdx = Math.max(2, Math.floor(blocks.length / 2));
+
+      // Mount end row first, then middle, then beginning — all three use
+      // direct DOM node references so insertion order doesn't matter, but
+      // going back-to-front keeps this readable top-to-bottom.
+      const endRow = _kieCardRow(groups[2]);
+      if (endRow) bubbleEl.appendChild(endRow);
+
+      const midRow = _kieCardRow(groups[1], 'kie-source-cards-inline');
+      if (midRow) {
+        if (blocks[midIdx]) bubbleEl.insertBefore(midRow, blocks[midIdx]);
+        else bubbleEl.appendChild(midRow);
+      }
+
+      const beginRow = _kieCardRow(groups[0], 'kie-source-cards-inline');
+      if (beginRow) {
+        if (blocks[beginIdx]) bubbleEl.insertBefore(beginRow, blocks[beginIdx]);
+        else bubbleEl.appendChild(beginRow);
+      }
+    }
+
+    // Plain, un-linked reference images — no card chrome, no click-through,
+    // just a bigger illustrative photo dropped into the answer (the
+    // ChatGPT-style inline image Tomiwa pointed at, as opposed to the
+    // clickable "Latest Coverage"-style source cards above). Sourced from
+    // Tavily's leftover general-image results that didn't get paired to a
+    // specific source card (see server images gallery in the searchdone
+    // payload).
+    function _kieInsertImageGallery(bodyEl, images, mode) {
+      if (!bodyEl) return;
+      bodyEl.querySelectorAll('.kie-inline-image-wrap').forEach(el => el.remove());
+      if (!images || !images.length || !KIE_SOURCE_CARD_MODES.includes(mode)) return;
+
+      const bubbleEl = bodyEl.querySelector('.km-bubble');
+      if (!bubbleEl) return;
+
+      const pics = images.slice(0, 2); // keep it light — one or two plain photos, not a wall of images
+
+      const mkImgEl = (url) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'kie-inline-image-wrap';
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'kie-inline-image';
+        img.loading = 'lazy';
+        img.alt = '';
+        img.onerror = () => wrap.remove(); // bad/broken URL — just drop it silently, never show a broken-image icon
+        wrap.appendChild(img);
+        return wrap;
+      };
+
+      // Seams to drop the image into — same block list the source cards use,
+      // minus any card rows already inserted this render.
+      const blocks = Array.from(bubbleEl.children).filter(el => !el.classList.contains('kie-source-cards'));
+
+      if (pics.length === 1 || blocks.length < 4) {
+        const img = mkImgEl(pics[0]);
+        if (blocks[1]) bubbleEl.insertBefore(img, blocks[1]);
+        else bubbleEl.appendChild(img);
+        return;
+      }
+
+      // Two images — one near the top, one near the close.
+      const endImg = mkImgEl(pics[1]);
+      bubbleEl.appendChild(endImg);
+
+      const beginImg = mkImgEl(pics[0]);
+      if (blocks[1]) bubbleEl.insertBefore(beginImg, blocks[1]);
+      else bubbleEl.appendChild(beginImg);
     }
 
     function _kieAttachSources(actionsEl, sources) {
@@ -7319,7 +7428,34 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function kieCloser() { return KIE_CLOSERS[Math.floor(Math.random() * KIE_CLOSERS.length)]; }
     // Render KIE's reply text into structured HTML — paragraphs, bullet/numbered lists,
     // and bold mini-headings — instead of one clumped block with raw <br>s.
-    function formatKieText(text) {
+    // Turns "[C:2]" / "[C:2,4]" markers the model drops after a grounded
+    // claim into small tappable pills (the inline "wikipedia +1" style chips
+    // Tomiwa referenced) — resolved against that turn's numbered source list,
+    // n matching the 1-indexed LIVE WEB SEARCH RESULTS list the model saw.
+    // Runs as a final pass over the assembled HTML so it works whether the
+    // tag landed inside a <p>, <li>, or heading.
+    function _kieApplyCitePills(html, sources) {
+      if (!sources || !sources.length) return html.replace(/\[C:\s*[\d,\s]+\]/g, '');
+      return html.replace(/\[C:\s*([\d,\s]+)\]/g, (m, idxStr) => {
+        const idxs = idxStr.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        const list = idxs.map(n => sources[n - 1]).filter(Boolean);
+        if (!list.length) return '';
+        let domain = '';
+        try { domain = new URL(list[0].url).hostname.replace(/^www\./, ''); } catch { domain = (list[0].title || 'source').slice(0, 20); }
+        const extra = list.length > 1 ? ` +${list.length - 1}` : '';
+        const dataAttr = esc(JSON.stringify(list));
+        return `<button type="button" class="kie-cite-pill" data-cite="${dataAttr}" onclick="_kieCitePillClick(this)">${esc(domain)}${extra}</button>`;
+      });
+    }
+    function _kieCitePillClick(btn) {
+      try {
+        const list = JSON.parse(btn.getAttribute('data-cite') || '[]');
+        if (list.length && typeof window._openSourcesDrawer === 'function') window._openSourcesDrawer(list);
+      } catch { /* malformed data-cite — just no-op rather than throw */ }
+    }
+    window._kieCitePillClick = _kieCitePillClick;
+
+    function formatKieText(text, sources) {
       let t = esc(String(text || '')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       const lines = t.split('\n');
       const out = [];
@@ -7366,7 +7502,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         i++;
       }
       flush();
-      return out.join('');
+      return _kieApplyCitePills(out.join(''), sources);
     }
     function toast(msg, type = 'ok') {
       const t = g('toast');
