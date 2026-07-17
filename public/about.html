@@ -516,6 +516,15 @@ form.addEventListener('submit', async (e) => {
       });
       showMsg("You're in! Check your inbox soon.", 'success');
       emailInput.value = '';
+
+      // Fire-and-forget — don't let a slow/failed email hold up the success
+      // message. The server looks the subscriber up by the same deterministic
+      // doc ID, so this call only ever needs the email, nothing else.
+      fetch('/api/newsletter-confirmation-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      }).catch(() => { /* non-critical — subscription is already saved either way */ });
     }
   } catch(err){
     console.error('Newsletter subscribe error:', err);

@@ -219,7 +219,7 @@ footer{background:var(--light);border-top:1px solid var(--border);padding:64px 2
       <div class="plan-feats-lbl">Everything in Free, plus</div>
       <ul class="plan-feats">
         <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>All resume templates</li>
-        <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>AI Image Analyzer — Upload & Analyze</li>
+        <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Standard Image Analyzer — Upload & Analyze</li>
         <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>5 AI Tools: AI Resume, Health Score, Roadmap, LinkedIn AI, Pro Message</li>
         <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>KIE Spark + Core · more messages per month</li>
         <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Full ATS score breakdown — why you scored what you scored</li>
@@ -243,6 +243,7 @@ footer{background:var(--light);border-top:1px solid var(--border);padding:64px 2
       <div class="plan-div"></div>
       <div class="plan-feats-lbl">Everything in Pro, plus</div>
       <ul class="plan-feats">
+        <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Advanced Image Analyzer — deeper visual breakdown & sharper suggestions</li>
         <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Gmail Intelligence — auto-tracks applications, flags interviews & drafts follow-ups</li>
         <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>All 10 AI Tools incl. Salary Intel, Mock Interview, Promotion Ready</li>
         <li><span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>KIE Spark, Core & Nova · highest message allocation</li>
@@ -430,6 +431,15 @@ form.addEventListener('submit', async (e) => {
       });
       showMsg("You're in! Check your inbox soon.", 'success');
       emailInput.value = '';
+
+      // Fire-and-forget — don't let a slow/failed email hold up the success
+      // message. The server looks the subscriber up by the same deterministic
+      // doc ID, so this call only ever needs the email, nothing else.
+      fetch('/api/newsletter-confirmation-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      }).catch(() => { /* non-critical — subscription is already saved either way */ });
     }
   } catch(err){
     console.error('Newsletter subscribe error:', err);

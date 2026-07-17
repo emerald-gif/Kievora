@@ -67,6 +67,32 @@ nav.scrolled{box-shadow:0 1px 24px rgba(0,0,0,.07)}
   transition:all .15s;
 }
 .nav-cta:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(108,71,255,.35),0 8px 24px rgba(124,58,237,.38)}
+
+/* ─── MOBILE NAV (hamburger + slide-down panel) ─── */
+.nav-burger{
+  display:none;flex-direction:column;justify-content:center;align-items:center;gap:4px;
+  width:40px;height:40px;border-radius:10px;border:1.5px solid var(--border);background:#fff;
+  cursor:pointer;flex-shrink:0;padding:0;
+}
+.nav-burger span{display:block;width:17px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
+.nav-burger.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.nav-burger.open span:nth-child(2){opacity:0}
+.nav-burger.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.mobile-menu{
+  position:fixed;top:68px;left:0;right:0;z-index:998;background:#fff;
+  border-bottom:1px solid var(--border);box-shadow:0 20px 40px rgba(17,24,39,.1);
+  max-height:0;overflow:hidden;transition:max-height .3s ease;
+}
+.mobile-menu.open{max-height:560px}
+.mobile-menu-inner{padding:8px 20px 24px;display:flex;flex-direction:column}
+.mobile-menu a{display:block;padding:15px 6px;font-size:15.5px;font-weight:600;color:var(--text);text-decoration:none;border-bottom:1px solid var(--light)}
+.mobile-menu-inner>a:last-of-type{border-bottom:none}
+.mm-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.mm-actions a{border-bottom:none!important;padding:15px!important;border-radius:12px;text-align:center}
+.mm-actions .nav-login{background:var(--light);color:var(--text)}
+.mm-actions .nav-cta{background:linear-gradient(135deg,var(--p),var(--p-neon));color:#fff}
+@media(max-width:768px){.nav-burger{display:flex}}
+@media(max-width:420px){.nav-login{display:none}}
 @media(max-width:768px){.nav-links{display:none}nav{padding:0 20px}}
 
 /* ─── HERO ─── */
@@ -752,6 +778,53 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;b
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
 .reveal.v{opacity:1;transform:none}
 .d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+
+/* ─── ACCESSIBILITY: visible focus state on interactive elements ─── */
+a:focus-visible,button:focus-visible,.btn-p:focus-visible,.btn-g:focus-visible{
+  outline:2.5px solid var(--p);outline-offset:2px;border-radius:8px;
+}
+
+/* ─── GLOBAL MOBILE POLISH ─── */
+@media(max-width:768px){
+  /* Comfortable, consistent section spacing instead of the desktop 100px everywhere */
+  .features,.templates,.kie-section,.tools,.gmail-section,.community,.reviews,.newsletter-section{padding-top:64px;padding-bottom:64px}
+  footer{padding:48px 20px 28px}
+
+  /* Buttons: full-width, clearly tappable, evenly spaced */
+  .hero-actions{flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:360px;margin-left:auto;margin-right:auto}
+  .btn-p,.btn-g{width:100%;justify-content:center;padding:15px 22px;min-height:50px}
+
+  /* Bento cards: tighter, more even padding + gap on small screens */
+  .bento{gap:12px}
+  .bc{padding:22px 20px;border-radius:16px}
+  .bc-title{font-size:15px}
+  .bc-desc{font-size:13px}
+
+  /* Section titles/eyebrows: keep alignment centered and consistent */
+  .center{padding-left:20px;padding-right:20px}
+}
+
+@media(max-width:480px){
+  .hero{padding-left:18px;padding-right:18px}
+  .hero-actions{max-width:100%}
+  .hero-social{gap:8px}
+  .trust-chip{padding:6px 12px;font-size:11.5px}
+
+  /* Nav: tighten padding so logo + CTA + burger fit comfortably */
+  nav{padding:0 16px}
+  .nav-cta{padding:9px 16px;font-size:13.5px}
+
+  /* Newsletter / forms: stack input and button for easy tapping */
+  .newsletter-form{flex-direction:column;align-items:stretch}
+  .newsletter-form input,.newsletter-form button{width:100%}
+
+  /* Footer: single column, roomier tap targets for links */
+  .footer-grid{grid-template-columns:1fr!important}
+  .footer-grid>*:first-child{grid-column:span 1!important}
+  .footer-links{gap:13px}
+  .footer-links a{display:inline-block;padding:2px 0}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:16px}
+}
 </style>
 
 <!-- Structured data — feeds Google's organic sitelinks algorithm. Does not
@@ -814,8 +887,24 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;b
   <div class="nav-actions">
     <a href="/login" class="nav-login">Sign In</a>
     <a href="/signup" class="nav-cta">Get Started Free</a>
+    <button type="button" class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-inner">
+    <a href="#features">Features</a>
+    <a href="#templates">Templates</a>
+    <a href="#kie">KIE AI</a>
+    <a href="#gmailai">Gmail AI</a>
+    <a href="/find-jobs">Find Jobs</a>
+    <div class="mm-actions">
+      <a href="/login" class="nav-login">Sign In</a>
+      <a href="/signup" class="nav-cta">Get Started Free</a>
+    </div>
+  </div>
+</div>
 
 <!-- ─── HERO ─── -->
 <section class="hero">
@@ -1415,6 +1504,22 @@ setTimeout(type,700);
 // ─── NAV SCROLL ───
 window.addEventListener('scroll',()=>{document.getElementById('main-nav').classList.toggle('scrolled',window.scrollY>10);},{passive:true});
 
+// ─── MOBILE MENU ───
+function toggleMobileMenu(){
+  const menu = document.getElementById('mobileMenu');
+  const btn  = document.getElementById('navBurger');
+  const isOpen = menu.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+document.querySelectorAll('.mobile-menu a').forEach(a => a.addEventListener('click', () => {
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.getElementById('navBurger').classList.remove('open');
+  document.getElementById('navBurger').setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}));
+
 // ─── COMPANY LOGOS ───
 const companies=[
   {name:'Google',svg:`<svg viewBox="0 0 74 24" width="74" height="24"><text y="18" font-family="Arial,sans-serif" font-size="18" font-weight="700"><tspan fill="#4285F4">G</tspan><tspan fill="#EA4335">o</tspan><tspan fill="#FBBC05">o</tspan><tspan fill="#4285F4">g</tspan><tspan fill="#34A853">l</tspan><tspan fill="#EA4335">e</tspan></text></svg>`},
@@ -1779,6 +1884,15 @@ form.addEventListener('submit', async (e) => {
       });
       showMsg("You're in! Check your inbox soon.", 'success');
       emailInput.value = '';
+
+      // Fire-and-forget — don't let a slow/failed email hold up the success
+      // message. The server looks the subscriber up by the same deterministic
+      // doc ID, so this call only ever needs the email, nothing else.
+      fetch('/api/newsletter-confirmation-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      }).catch(() => { /* non-critical — subscription is already saved either way */ });
     }
   } catch(err){
     console.error('Newsletter subscribe error:', err);
