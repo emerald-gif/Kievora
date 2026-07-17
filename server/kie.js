@@ -731,11 +731,13 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
         const searchQuery = buildSearchQuery(lastUserMessage);
         sendSSE({ t: 'search', v: searchQuery });
         const searchResults = await performWebSearch(searchQuery);
-        const sourcesList = searchResults
-          ? searchResults.map(r => ({ title: r.title, url: r.url, image: r.image || null, publishedDate: r.publishedDate || null }))
+        const resultsList = searchResults?.results || null;
+        const sourcesList = resultsList
+          ? resultsList.map(r => ({ title: r.title, url: r.url, image: r.image || null, publishedDate: r.publishedDate || null }))
           : [];
-        sendSSE({ t: 'searchdone', count: sourcesList.length, sources: sourcesList });
-        systemContent += buildSearchContextBlock(searchQuery, searchResults, true);
+        const imageGallery = searchResults?.images || [];
+        sendSSE({ t: 'searchdone', count: sourcesList.length, sources: sourcesList, images: imageGallery });
+        systemContent += buildSearchContextBlock(searchQuery, resultsList, true);
       } else {
         systemContent += buildSearchContextBlock('', null, false);
       }

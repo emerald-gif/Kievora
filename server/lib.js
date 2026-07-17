@@ -707,11 +707,19 @@ async function performWebSearch(query, maxResults = 5) {
     // branded favicon card in that case. That's expected, not a bug.
     const images = (data.images || []).map(img => (typeof img === 'string' ? img : img.url)).filter(Boolean);
     const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return null; } };
-    return results.map(r => {
+    const paired = results.map(r => {
       const host = hostOf(r.url);
       const image = host ? (images.find(imgUrl => hostOf(imgUrl) === host) || null) : null;
       return { ...r, image };
     });
+    // Leftover images Tavily returned for the query but that didn't match any
+    // result's domain — these are the ones we can drop into an answer as a
+    // plain, un-linked illustrative image (no card, no click-through), the
+    // way a normal reference photo shows up mid-answer rather than every
+    // image being tied to a specific source.
+    const usedUrls = new Set(paired.map(r => r.image).filter(Boolean));
+    const gallery = images.filter(u => !usedUrls.has(u)).slice(0, 4);
+    return { results: paired, images: gallery };
   } catch (err) {
     console.error('[webSearch] failed:', err.message);
     return null; // caller treats null same as "not configured" — degrade honestly, never fake it
@@ -733,7 +741,7 @@ function buildSearchContextBlock(query, results, configured) {
     return `\n\nLIVE WEB SEARCH: A real-time search was just run for "${query}" but returned nothing usable. Say so plainly — don't invent data to fill the gap.`;
   }
   const lines = results.map((r, i) => `${i + 1}. ${r.title} — ${r.snippet} (source: ${r.url})`).join('\n');
-  return `\n\nLIVE WEB SEARCH RESULTS for "${query}" (fetched just now — this is REAL current data, not training knowledge):\n${lines}\n\nGround your answer in this. Reference sources naturally by name (e.g. "LinkedIn's data shows…", "a recent Glassdoor report found…") — never say you can't access the internet, you just did. If these results don't actually answer the question, say so honestly rather than inventing numbers.`;
+  return `\n\nLIVE WEB SEARCH RESULTS for "${query}" (fetched just now — this is REAL current data, not training knowledge):\n${lines}\n\nGround your answer in this. Reference sources naturally by name (e.g. "LinkedIn's data shows…", "a recent Glassdoor report found…") — never say you can't access the internet, you just did. If these results don't actually answer the question, say so honestly rather than inventing numbers.\n\nINLINE CITATIONS — CRITICAL: Right after any specific sentence, stat, or bullet that comes directly from one of the numbered results above, tag it with [C:n] using that result's number (e.g. "...grew 18% last quarter[C:2]." or a bullet ending "...adapting to change.[C:3]"). Use [C:2,4] when a claim draws on more than one result. Spread these throughout the WHOLE answer, wherever a grounded claim actually appears — not just one citation dumped at the end. Only tag claims that genuinely come from a numbered result; don't tag general knowledge or your own reasoning. The tag must sit immediately after the sentence/bullet it supports, with no space before it.`;
 }
 
 // ─── Detect when a message needs LIVE data, regardless of which mode is active ─
