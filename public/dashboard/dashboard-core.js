@@ -6241,6 +6241,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       let liveShowCaption = false;  // whether the live transcript/reply text is shown on screen
       let liveBusy        = false;  // true while KIE is thinking or speaking
       let silenceTimer    = null;
+      let lastResultTs    = 0;      // last time SpeechRecognition reported anything — drives the "listening" wave
 
       function ov()      { return g('kieLiveOverlay'); }
       function orbEl()    { return g('kieLiveOrb'); }
@@ -6269,10 +6270,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
 
       // ── Waveform orb engine ─────────────────────────────────────────────────
-      // Draws a real audio-style bar visualizer onto a canvas inside the orb,
-      // driven by real mic loudness (FFT bins) while listening, and a layered
-      // synthetic envelope while speaking — instead of a fixed CSS pulse.
-      let audioCtx = null, analyser = null, micSource = null, micStream = null, freqData = null;
+      // Draws an audio-style bar visualizer onto a canvas inside the orb. This
+      // used to tap a second getUserMedia() mic stream for real amplitude —
+      // but running that alongside SpeechRecognition's own mic capture turned
+      // out to starve the recognizer on some phones (visual reacted to voice,
+      // but no transcript ever came through, so KIE never got a message to
+      // reply to). Instead, the "listening" wave now reacts to how recently
+      // SpeechRecognition itself reported activity — one mic consumer, not two.
       let rafId = null;
       let speakPhase = 0, thinkPhase = 0;
       let currentOrbState = '';
@@ -6280,12 +6284,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       function computeBars() {
         const bars = new Array(BAR_COUNT);
-        if (currentOrbState === 'listening' && analyser && freqData && !liveMicMuted) {
-          analyser.getByteFrequencyData(freqData);
-          const usableBins = Math.floor(freqData.length * 0.55); // voice lives in low/mid bins
+        if (currentOrbState === 'listening' && !liveMicMuted) {
+          const sinceResult = Date.now() - lastResultTs;
+          const activity = Math.max(0, 1 - sinceResult / 700); // fades out over ~700ms of silence
+          speakPhase += 0.14;
           for (let i = 0; i < BAR_COUNT; i++) {
-            const idx = Math.min(usableBins - 1, Math.floor((i / BAR_COUNT) * usableBins));
-            bars[i] = Math.min(1, (freqData[idx] / 255) * 1.9);
+            const t = speakPhase + i * 0.35;
+            const v = Math.sin(t) * 0.5 + Math.sin(t * 1.9 + 1) * 0.3 + Math.sin(t * 0.6 + 2) * 0.2;
+            bars[i] = Math.max(0.04, (v * 0.5 + 0.4) * (0.3 + activity * 0.7));
           }
         } else if (currentOrbState === 'speaking') {
           speakPhase += 0.16;
@@ -6339,30 +6345,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         drawWave();
       }
 
-      async function startAudioEngine() {
-        if (audioCtx) return;
-        try {
-          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          if (audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
-          analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 256;
-          analyser.smoothingTimeConstant = 0.6;
-          freqData = new Uint8Array(analyser.frequencyBinCount);
-          micSource = audioCtx.createMediaStreamSource(micStream);
-          micSource.connect(analyser);
-        } catch (_) {
-          // Amplitude-reactive motion is a nice-to-have — voice chat still
-          // works via SpeechRecognition even if this mic tap fails/denied.
-        }
-      }
-
-      function stopAudioEngine() {
-        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-        if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
-        analyser = null; micSource = null; freqData = null;
-      }
-
       function stopRec() {
         clearTimeout(silenceTimer);
         if (liveRec) {
@@ -6384,6 +6366,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         let finalTxt = '';
         liveRec.onstart = () => setLiveState('listening', '');
         liveRec.onresult = (e) => {
+          lastResultTs = Date.now();
           let interim = '';
           for (let i = e.resultIndex; i < e.results.length; i++) {
             const t = e.results[i][0].transcript;
@@ -6399,8 +6382,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
             toast('Mic access denied — allow microphone permission to use voice chat.', 'err');
             closeLive();
+            return;
           }
-          // 'no-speech' / 'aborted' fall through to onend, which restarts listening
+          // 'no-speech' / 'aborted' / 'network' fall through to onend below,
+          // which restarts listening — don't leave the session hanging.
         };
         liveRec.onend = () => {
           clearTimeout(silenceTimer);
@@ -6409,7 +6394,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (text) handleLiveTurn(text);
           else if (!liveBusy && !liveMicMuted) startListening();
         };
-        try { liveRec.start(); } catch (_) {}
+        try { liveRec.start(); } catch (_) { setTimeout(() => { if (liveOn && !liveBusy) startListening(); }, 400); }
       }
 
       async function handleLiveTurn(text) {
@@ -6418,6 +6403,16 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         setLiveState('thinking', text);
         const inp = g('kieInp');
         if (!inp) { liveBusy = false; return; }
+
+        // Defensive: if a previous turn ever left the shared generation flag
+        // stuck true (e.g. a branch that errored before its own cleanup ran),
+        // sendKie() would just no-op forever on every future turn. Clear it
+        // here so a single bad turn can't permanently kill voice AND text chat.
+        if (typeof _kieGenerating !== 'undefined' && _kieGenerating) {
+          try { inp.disabled = false; } catch (_) {}
+          _kieGenerating = false;
+        }
+
         const bubblesBefore = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble').length;
         inp.value = text;
         inp.style.height = 'auto';
@@ -6430,7 +6425,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         // a new assistant bubble to actually appear AND generation to be
         // done — that's correct regardless of which branch sendKie() takes.
         const waitStart = Date.now();
-        while (liveOn && Date.now() - waitStart < 60000) {
+        while (liveOn && Date.now() - waitStart < 30000) {
           const count = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble').length;
           const stillGenerating = typeof _kieGenerating !== 'undefined' && _kieGenerating;
           if (count > bubblesBefore && !stillGenerating) break;
@@ -6441,6 +6436,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const bubbles = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble');
         const last = bubbles[bubbles.length - 1];
         const replyTxt = last ? (last.innerText || last.textContent || '').trim() : '';
+
+        if (!replyTxt) {
+          // Timed out or nothing rendered — say so instead of going silent,
+          // and force-clear the flag so the next turn isn't blocked either.
+          if (typeof _kieGenerating !== 'undefined') _kieGenerating = false;
+          speakLiveReply("Sorry, I didn't catch a reply there — try asking again.");
+          return;
+        }
         speakLiveReply(replyTxt);
       }
 
@@ -6469,15 +6472,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         liveBusy = false;
         stopRec();
         window.speechSynthesis?.cancel();
-        stopAudioEngine();
         if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
         smoothedBars = new Array(BAR_COUNT).fill(0.05);
-        speakPhase = 0; thinkPhase = 0;
+        speakPhase = 0; thinkPhase = 0; lastResultTs = 0;
         const ovEl = ov();
         if (ovEl) ovEl.classList.remove('open');
       }
 
-      window.openKieLive = async function () {
+      window.openKieLive = function () {
         if (!LiveSpeechRecognition) { toast('Voice chat needs a browser with speech recognition support (try Chrome).', 'err'); return; }
         liveOn = true; liveBusy = false; liveMicMuted = false;
         const mBtn = g('kieLiveMuteBtn'); if (mBtn) mBtn.classList.remove('active');
@@ -6487,7 +6489,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         window.speechSynthesis?.cancel();
         setLiveState('listening', '');
         if (!rafId) orbLoop();
-        await startAudioEngine();
         setTimeout(startListening, 200);
       };
       window.closeKieLive = closeLive;
