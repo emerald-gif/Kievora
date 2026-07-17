@@ -890,6 +890,46 @@ async function sendWelcomeEmail(email, name) {
 
 // Welcome emails are now sent directly via POST /api/register-user (server-side, reliable)
 
+// ─── Brevo Newsletter Subscription Confirmation Email (templateId 4) ──────────
+// Fired from POST /api/newsletter-confirmation-email,
+// right after the client writes to newsletter_subscribers.
+async function sendNewsletterConfirmationEmail(email) {
+  const brevoKey = process.env.BREVO_API_KEY;
+  if (!brevoKey) {
+    console.warn('⚠️  BREVO_API_KEY not set — skipping newsletter confirmation email for', email);
+    return false;
+  }
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': brevoKey,
+      },
+      body: JSON.stringify({
+        sender:     { email: 'support@kievora.app', name: 'Kievora' },
+        to:         [{ email }],
+        templateId: 4,
+        params:     { email },
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error('❌ Brevo newsletter confirmation email failed:', res.status, errBody);
+      return false;
+    }
+    console.log(`✅ Newsletter confirmation email sent → ${email}`);
+    db.collection('emailLogs').add({
+      email, type: 'newsletter_subscription', success: true,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+    return true;
+  } catch (err) {
+    console.error('❌ Brevo sendNewsletterConfirmationEmail error:', err.message);
+    return false;
+  }
+}
+
 // Sunday digest — only sent if there's actually something to report, and only
 // to users who haven't opted out (digestOptOut field, default false/on, since
 // connecting Gmail is itself an opt-in signal they want to be kept posted).
@@ -1381,7 +1421,7 @@ module.exports = {
   UPGRADE_MESSAGES, TOPUP_MESSAGES,
   callKieAI, callKieAIStream, callKieAIJson, parseAIJson, fetchWithRetry,
   performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
-  sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest, sendTicketConfirmationEmail,
+  sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest, sendTicketConfirmationEmail, sendNewsletterConfirmationEmail,
   classifyCareerEmail, extractEmailEntities, extractInterviewDateTime, normaliseStr, isSameApplication,
   syncUserGmail, buildApplicationList, generateInsights, computeNextAction, attachStaleFlags, computePipelineStats,
   getWeekKey, recordPipelineTrend, getTrendComparison, detectGhostingPattern, buildKieBrainBlock,

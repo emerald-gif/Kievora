@@ -12,7 +12,7 @@ const crypto  = require('crypto'); // Paystack webhook signature verification
 const {
   admin, db, authenticate, upload, cloudinary,
   callKieAI, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
-  KIE_MODELS, USERS, sendWelcomeEmail, sendOtpEmail, sendTicketConfirmationEmail, applyPaystackMetadata, PLANS,
+  KIE_MODELS, USERS, sendWelcomeEmail, sendOtpEmail, sendTicketConfirmationEmail, sendNewsletterConfirmationEmail, applyPaystackMetadata, PLANS,
   serviceAccount,
 } = require('./lib');
 
@@ -209,6 +209,38 @@ app.post('/api/support-ticket-email', async (req, res) => {
   }
 });
 
+
+// ─── POST /api/newsletter-confirmation-email ───────────────────────────────────
+// Called by about.html / index.html / pricing.html right after they write to
+// newsletter_subscribers (Firestore). Recomputes the same deterministic doc ID
+// from the email server-side rather than trusting a client-supplied ID, so this
+// can only ever fire for an email that's already actually subscribed. Idempotent:
+// a subscriber only ever gets one confirmation email even if called twice.
+app.post('/api/newsletter-confirmation-email', async (req, res) => {
+  const email = String(req.body.email || '').toLowerCase().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Valid email required.' });
+  }
+  const docId = email.replace(/[.#$\[\]\/]/g, '_');
+  try {
+    const ref  = db.collection('newsletter_subscribers').doc(docId);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ error: 'No subscription found for this email.' });
+
+    const data = snap.data();
+    if (data.confirmationEmailSent) {
+      return res.json({ success: true, alreadySent: true });
+    }
+    const sent = await sendNewsletterConfirmationEmail(data.email || email);
+    if (!sent) return res.status(502).json({ error: 'Could not send confirmation email.' });
+
+    await ref.update({ confirmationEmailSent: true });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('POST /api/newsletter-confirmation-email ERROR:', err.message);
+    res.status(500).json({ error: 'Failed to send confirmation email: ' + err.message });
+  }
+});
 
 // Google signups already arrive with emailVerified:true from Firebase (Google
 // already verified that email), so this whole flow is skipped for them —
