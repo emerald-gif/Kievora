@@ -6015,24 +6015,44 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // ── Speech engine pre-warm ──────────────────────────────────────────────
     // Chrome (especially on Android) has a real cold-start delay the first
     // time speechSynthesis.speak() is ever called in a page — the native TTS
-    // engine has to spin up. Firing one silent, instantly-cancelled utterance
-    // on the user's very first tap anywhere "wakes it up" long before they
-    // can possibly reach the Listen-aloud button (they have to send a message
-    // and get a reply first), so the real tap has no cold-start lag left.
-    // Also kicks off voice loading early so pickMaleVoice() isn't guessing.
+    // engine has to spin up. Firing one silent utterance on the user's very
+    // first tap anywhere "wakes it up" long before they can possibly reach
+    // the Listen-aloud button (they have to send a message and get a reply
+    // first) or hear Live Voice's first reply, so the real moment has no
+    // cold-start lag left. Also kicks off voice loading early so
+    // pickMaleVoice() isn't guessing.
     let _kieSpeechPrimed = false;
     function _kiePrimeSpeech() {
       if (_kieSpeechPrimed || !window.speechSynthesis) return;
       _kieSpeechPrimed = true;
       try {
         window.speechSynthesis.getVoices();
-        const warm = new SpeechSynthesisUtterance(' ');
+        const warm = new SpeechSynthesisUtterance('hi');
         warm.volume = 0;
         window.speechSynthesis.speak(warm);
-        window.speechSynthesis.cancel();
+        // No cancel() here — that was the bug. Calling cancel() on the very
+        // next line was killing the native engine before it had actually
+        // finished spinning up, so this "warm-up" never did its job and the
+        // real cold-start delay still landed on whichever button (chat's
+        // Listen-aloud, or Live Voice's first spoken reply) fired the first
+        // genuine utterance. It's silent and two letters, so it finishes on
+        // its own in a fraction of a second — nothing left to clean up, and
+        // there's no risk of it colliding with a real utterance since a
+        // message still has to be sent and replied to (or, for Live Voice,
+        // the whole listen→think round trip) before either surface can
+        // possibly speak for real.
       } catch {}
     }
     document.addEventListener('pointerdown', _kiePrimeSpeech, { once: true, passive: true });
+
+    // Some browsers populate the voice list asynchronously after page load —
+    // getVoices() can still return [] at the moment priming runs above. This
+    // re-syncs once the real list lands, so pickMaleVoice() finds the actual
+    // best voice on the very first real tap instead of quietly falling back
+    // to a browser default while voices were still loading.
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+    }
 
     function pickMaleVoice() {
       const voices = window.speechSynthesis.getVoices();
@@ -6574,10 +6594,37 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // ── Barge-in listener ─────────────────────────────────────────────────
       // Runs alongside the "thinking" and "speaking" states so the person can
       // interrupt KIE mid-reply ("hold on, let me finish" / jumping in with a
-      // new question) instead of being forced to wait it out. Note: without a
-      // headset, this is picking up whatever the phone's mic hears while KIE's
-      // own voice is coming out of the speaker, so it's tuned to require a few
-      // real words before triggering rather than any noise.
+      // new question) instead of being forced to wait it out. Without a
+      // headset, this mic also picks up whatever comes out of the same
+      // phone's speaker — including KIE's own TTS voice — on top of ordinary
+      // room noise. Neither of those means "the person wants to interrupt,"
+      // so a transcript alone isn't trusted: it has to (a) not just be KIE
+      // hearing itself, and (b) show up on more than one tick in a row,
+      // before it counts as a real barge-in.
+      const INTERRUPT_MIN_CHARS      = 6;    // one-off noise/echo blips rarely clear this alone
+      const INTERRUPT_CONFIRM_GAP_MS = 1200; // two qualifying hits must land close together to count as one sustained voice
+
+      function normalizeForCompare(s) {
+        return (s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      // True if "heard" looks like it's just KIE's own voice bleeding back
+      // into the mic rather than the person saying something new — i.e. it's
+      // a chunk of (or heavily overlaps with) the line KIE is currently
+      // speaking, rather than unrelated speech.
+      function looksLikeOwnEcho(heard, aiText) {
+        if (!aiText) return false;
+        const h = normalizeForCompare(heard);
+        const a = normalizeForCompare(aiText);
+        if (!h || !a) return false;
+        if (a.includes(h)) return true;
+        const hWords = h.split(' ').filter(w => w.length > 2);
+        if (!hWords.length) return false;
+        const aWords = new Set(a.split(' '));
+        const overlap = hWords.filter(w => aWords.has(w)).length;
+        return overlap / hWords.length >= 0.7;
+      }
+
       let interruptRec = null;
 
       function stopInterruptListener() {
@@ -6588,7 +6635,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
       }
 
-      function startInterruptListener(carryText) {
+      // aiText: the line KIE is currently speaking, passed in only while this
+      // listener runs alongside TTS playback — used to filter out KIE
+      // hearing itself. Left blank during "thinking," when no audio is
+      // playing and the only real risk is ambient noise, not echo.
+      function startInterruptListener(carryText, aiText) {
         if (!liveOn || liveMicMuted || !LiveSpeechRecognition) return;
         stopInterruptListener();
         interruptRec = new LiveSpeechRecognition();
@@ -6596,12 +6647,24 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         interruptRec.continuous = true;
         interruptRec.interimResults = true;
         interruptRec.maxAlternatives = 1;
-        let triggered = false;
+        let triggered   = false;
+        let confirmHits = 0;
+        let lastHitTs   = 0;
         interruptRec.onresult = (e) => {
           if (triggered) return;
           let heard = '';
           for (let i = e.resultIndex; i < e.results.length; i++) heard += e.results[i][0].transcript;
-          if (heard.trim().length >= 4) { triggered = true; handleBargeIn(carryText); }
+          heard = heard.trim();
+          if (!heard || heard.length < INTERRUPT_MIN_CHARS || looksLikeOwnEcho(heard, aiText)) {
+            confirmHits = 0;
+            return;
+          }
+          const now = Date.now();
+          confirmHits = (now - lastHitTs <= INTERRUPT_CONFIRM_GAP_MS) ? confirmHits + 1 : 1;
+          lastHitTs = now;
+          if (confirmHits < 2) return; // must persist across two ticks, not just one blip
+          triggered = true;
+          handleBargeIn(carryText);
         };
         interruptRec.onerror = () => {};
         interruptRec.onend = () => {}; // the owning state (thinking/speaking) restarts this if still relevant
@@ -6688,7 +6751,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           startListening();
         };
         window.speechSynthesis.speak(utter);
-        startInterruptListener(''); // let the person cut in while KIE is talking
+        startInterruptListener('', text); // let the person cut in while KIE is talking — "text" lets it ignore KIE's own echo
       }
 
       function closeLive() {
