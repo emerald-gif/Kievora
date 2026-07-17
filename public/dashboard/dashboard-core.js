@@ -5015,7 +5015,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
     const SEND_ICON = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>`;
     const STOP_ICON_BTN = `<svg width="13" height="13" viewBox="0 0 13 13" fill="#fff"><rect x="0" y="0" width="13" height="13" rx="2"/></svg>`;
+    const WAVE_ICON_BTN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="10" x2="4" y2="14"/><line x1="8" y1="6" x2="8" y2="18"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="16" y1="7" x2="16" y2="17"/><line x1="20" y1="10" x2="20" y2="14"/></svg>`;
 
+    // Same pattern as this chat's own composer: one button does double duty.
+    // Empty input → it's KIE's live-voice-chat trigger. Start typing → it
+    // becomes send. Mid-reply → it's the stop button. Every existing call
+    // site in the file just passes 'send' or 'stop' as before — this
+    // function decides voice-vs-send on its own based on the input's
+    // current content, so nothing else needed to change.
     function setKieSendMode(mode) {
       const btn = g('kieSend');
       if (!btn) return;
@@ -5024,11 +5031,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         btn.classList.add('kie-stop');
         btn.disabled = false;
         btn.title = 'Stop generating';
-      } else {
+        return;
+      }
+      btn.classList.remove('kie-stop');
+      btn.disabled = false;
+      const inp = g('kieInp');
+      const hasText = !!(inp && inp.value.trim().length);
+      if (hasText) {
         btn.innerHTML = SEND_ICON;
-        btn.classList.remove('kie-stop');
-        btn.disabled = false;
         btn.title = 'Send';
+      } else {
+        btn.innerHTML = WAVE_ICON_BTN;
+        btn.title = 'Talk live with KIE';
       }
     }
 
@@ -6258,7 +6272,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         speaking:  "Here's what I found.",
       };
 
-      function setLiveState(state, caption) {
+      function setLiveState(state) {
         currentOrbState = state;
         const o = orbEl();
         if (o) o.className = 'kie-live-orb' + (state ? ' ' + state : '') + (liveMicMuted && state === 'listening' ? ' muted' : '');
@@ -6269,7 +6283,60 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           state === 'speaking'  ? 'Speaking…' : '';
         const h = hintEl();
         if (h) h.textContent = liveMicMuted && state === 'listening' ? 'Tap the mic to unmute.' : (HINTS[state] || '');
-        if (caption !== undefined) { const c = capEl(); if (c) c.textContent = liveShowCaption ? caption : ''; }
+      }
+
+      // ── Transcript log ("Me: … / KIE: …") ────────────────────────────────────
+      // Only touches the .kie-live-caption element — the orb/waveform above is
+      // untouched. Each turn appends a labeled line; KIE's line fills in with a
+      // typewriter effect instead of appearing all at once.
+      let curMeLineEl = null; // the in-progress "Me:" line's text span, while listening
+      let typeTimer   = null;
+
+      function resetTranscript() {
+        clearInterval(typeTimer); typeTimer = null;
+        curMeLineEl = null;
+        const c = capEl();
+        if (c) c.innerHTML = '';
+      }
+
+      function addTranscriptLine(role) {
+        const c = capEl();
+        if (!c) return null;
+        const row = document.createElement('div');
+        row.className = 'kie-live-tline kie-live-tline-' + role;
+        row.innerHTML = '<span class="kie-live-tlabel">' + (role === 'me' ? 'Me: ' : 'KIE: ') + '</span><span class="kie-live-ttext"></span>';
+        c.appendChild(row);
+        c.scrollTop = c.scrollHeight;
+        return row.querySelector('.kie-live-ttext');
+      }
+
+      function updateMeLine(text) {
+        if (!liveShowCaption) return;
+        if (!curMeLineEl) curMeLineEl = addTranscriptLine('me');
+        if (curMeLineEl) curMeLineEl.textContent = text;
+        const c = capEl(); if (c) c.scrollTop = c.scrollHeight;
+      }
+
+      function finalizeMeLine(text) {
+        if (liveShowCaption) {
+          if (!curMeLineEl) curMeLineEl = addTranscriptLine('me');
+          if (curMeLineEl) curMeLineEl.textContent = text;
+        }
+        curMeLineEl = null; // next turn starts a fresh "Me:" line
+      }
+
+      function typeKieLine(text) {
+        clearInterval(typeTimer); typeTimer = null;
+        if (!liveShowCaption) return;
+        const body = addTranscriptLine('kie');
+        if (!body) return;
+        let i = 0;
+        typeTimer = setInterval(() => {
+          i += 2; // couple characters per tick — snappy but still visibly "typed"
+          body.textContent = text.slice(0, i);
+          const c = capEl(); if (c) c.scrollTop = c.scrollHeight;
+          if (i >= text.length) { body.textContent = text; clearInterval(typeTimer); typeTimer = null; }
+        }, 18);
       }
 
       // ── Waveform orb engine ─────────────────────────────────────────────────
@@ -6373,7 +6440,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         // caused the transcript to duplicate itself ("let's talk about
         // football, let's talk about football, ...").
         const finalChunks = carryText ? [carryText] : [];
-        liveRec.onstart = () => setLiveState('listening', carryText || '');
+        liveRec.onstart = () => { setLiveState('listening'); if (carryText) updateMeLine(carryText); };
         liveRec.onresult = (e) => {
           lastResultTs = Date.now();
           let interim = '';
@@ -6383,7 +6450,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             if (e.results[i].isFinal) finalChunks[idx] = t; else interim += t;
           }
           const finalTxt = finalChunks.filter(Boolean).join(' ');
-          setLiveState('listening', (finalTxt + ' ' + interim).trim());
+          setLiveState('listening');
+          updateMeLine((finalTxt + ' ' + interim).trim());
           clearTimeout(silenceTimer);
           silenceTimer = setTimeout(() => { try { liveRec && liveRec.stop(); } catch (_) {} }, 1000);
         };
@@ -6460,7 +6528,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const myTurn = ++turnId;
         liveBusy = true;
         stopRec();
-        setLiveState('thinking', text);
+        setLiveState('thinking');
+        finalizeMeLine(text);
         startInterruptListener(text); // "wait, let me finish" — resumes listening with this carried forward
         const inp = g('kieInp');
         if (!inp) { liveBusy = false; return; }
@@ -6505,7 +6574,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (liveOn) startListening();
           return;
         }
-        setLiveState('speaking', text);
+        setLiveState('speaking');
+        typeKieLine(text);
         window.speechSynthesis.cancel();
         const myTok = ++speakToken;
         const utter = new SpeechSynthesisUtterance(text);
@@ -6534,6 +6604,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
         smoothedBars = new Array(BAR_COUNT).fill(0.05);
         speakPhase = 0; thinkPhase = 0; lastResultTs = 0;
+        clearInterval(typeTimer); typeTimer = null; curMeLineEl = null;
         window._kieVoiceModeActive = false;
         const ovEl = ov();
         if (ovEl) ovEl.classList.remove('open');
@@ -6548,22 +6619,21 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const ovEl = ov();
         if (ovEl) { ovEl.classList.add('open'); ovEl.classList.toggle('no-caption', !liveShowCaption); }
         window.speechSynthesis?.cancel();
-        setLiveState('listening', '');
+        resetTranscript();
+        setLiveState('listening');
         if (!rafId) orbLoop();
         setTimeout(startListening, 200);
       };
       window.closeKieLive = closeLive;
 
       document.addEventListener('DOMContentLoaded', () => {
-        const trigger = g('kieVoiceChatBtn');
-        if (!LiveSpeechRecognition) { if (trigger) trigger.style.display = 'none'; return; }
-        if (trigger) trigger.onclick = window.openKieLive;
+        if (!LiveSpeechRecognition) return; // kieSend just behaves as send-only; openKieLive() itself also guards this
         const endBtn = g('kieLiveEndBtn'); if (endBtn) endBtn.onclick = closeLive;
         const mBtn = g('kieLiveMuteBtn');
         if (mBtn) mBtn.onclick = () => {
           liveMicMuted = !liveMicMuted;
           mBtn.classList.toggle('active', liveMicMuted);
-          if (liveMicMuted) { stopRec(); stopInterruptListener(); setLiveState('listening', ''); }
+          if (liveMicMuted) { stopRec(); stopInterruptListener(); setLiveState('listening'); }
           else if (liveOn && !liveBusy) startListening();
         };
         const cBtn = g('kieLiveCaptionBtn');
@@ -7369,9 +7439,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // KIE
       g('kieFab').onclick    = openKie;
       g('kieCloseBtn').onclick = () => { if (_kieGenerating) stopKieGeneration(); showView('home'); };
-      g('kieSend').onclick     = sendKie;   // sendKie handles stop when _kieGenerating
+      g('kieSend').onclick     = () => {
+        const inp = g('kieInp');
+        const hasText = !!(inp && inp.value.trim().length);
+        if (!_kieGenerating && !hasText) { if (typeof window.openKieLive === 'function') window.openKieLive(); return; }
+        sendKie(); // sendKie handles stop when _kieGenerating
+      };
       g('kieInp').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendKie(); } });
-      g('kieInp').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
+      g('kieInp').addEventListener('input', function() {
+        this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        if (!_kieGenerating) setKieSendMode('send'); // re-picks voice-vs-send icon based on new content
+      });
+      setKieSendMode('send'); // initial icon — starts on the voice-chat trigger since the input is empty
 
       // ── Mic init (must run here so kieMicBtn element exists) ────────────────
       (function initKieMic() {
@@ -7399,6 +7478,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
             const inp = g('kieInp');
             if (inp) { inp.value = transcript; inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 120) + 'px'; }
+            if (!_kieGenerating) setKieSendMode('send');
           };
           recognition.onend = () => {
             isListening = false;

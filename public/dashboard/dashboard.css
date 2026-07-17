@@ -1227,9 +1227,7 @@
     .kie-mic.listening{color:#e11d48;background:#fff1f2;animation:micPulse 1s ease infinite}
     @keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(225,29,72,.25)}50%{box-shadow:0 0 0 6px rgba(225,29,72,0)}}
 
-    /* ── Live voice chat trigger + full-screen overlay ─────────────────────── */
-    .kie-voicechat-btn{width:32px;height:32px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#c0b8d8;border-radius:10px;transition:all .2s;margin-right:2px;padding:0}
-    .kie-voicechat-btn:hover{background:#f0ecff;color:#7c3aed}
+    /* ── Live voice chat trigger — merged into kieSend button, see JS ──────── */
 
     .kie-live-overlay{
       position:fixed;inset:0;z-index:10000;
@@ -1276,8 +1274,19 @@
 
     .kie-live-status{font-size:19px;font-weight:800;color:#1a1625;letter-spacing:-.3px;text-align:center}
     .kie-live-hint{font-size:13.5px;color:#8b84a0;text-align:center;max-width:340px}
-    .kie-live-caption{font-size:13px;color:#5b5568;line-height:1.55;text-align:center;max-width:340px;min-height:0;font-style:italic;transition:opacity .15s;margin-top:2px}
+    .kie-live-caption{
+      font-size:13.5px;line-height:1.55;text-align:left;width:100%;max-width:340px;
+      max-height:130px;overflow-y:auto;transition:opacity .15s;margin-top:2px;
+      display:flex;flex-direction:column;gap:6px;scrollbar-width:none;
+    }
+    .kie-live-caption::-webkit-scrollbar{display:none}
     .kie-live-overlay.no-caption .kie-live-caption{opacity:0;pointer-events:none;height:0;overflow:hidden}
+    .kie-live-tline{word-wrap:break-word}
+    .kie-live-tlabel{font-weight:800}
+    .kie-live-tline-me .kie-live-tlabel{color:#7c3aed}
+    .kie-live-tline-me .kie-live-ttext{color:#4b4560}
+    .kie-live-tline-kie .kie-live-tlabel{color:#1a1625}
+    .kie-live-tline-kie .kie-live-ttext{color:#5b5568}
 
     .kie-live-bottom{display:flex;align-items:flex-start;justify-content:center;gap:34px;padding:16px 24px calc(28px + env(safe-area-inset-bottom));flex-shrink:0}
     .kie-live-ctrl-wrap{display:flex;flex-direction:column;align-items:center;gap:7px}
