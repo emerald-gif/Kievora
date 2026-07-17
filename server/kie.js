@@ -342,7 +342,7 @@ module.exports = function registerKieRoutes(app) {
   //           "mode":"default","fallback":false}
   //   data: {"t":"err","v":"message"}      ← unrecoverable error
   app.post('/api/kie', authenticate, async (req, res) => {
-    const { messages, mode = 'default', model = 'spark', resumeContext = '', docContext = '', userCategory = '', userName = '' } = req.body;
+    const { messages, mode = 'default', model = 'spark', resumeContext = '', docContext = '', userCategory = '', userName = '', voiceMode = false } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages array is required.' });
     }
@@ -718,6 +718,21 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
 
     // Advisory-only nudge — never silently switches mode. See suggestDeepMode().
     const modeSuggestion = suggestDeepMode(effectiveMode, lastUserMessage) ? 'deep' : null;
+
+    // ── Live voice chat — this reply gets read aloud by TTS, not read on a
+    // screen. Same coaching substance, but written the way a mentor actually
+    // talks in person: short natural sentences, real warmth, a brief human
+    // reaction to what they said before jumping to advice — not a wall of
+    // text with headers and bullets that sounds robotic out loud.
+    if (voiceMode) {
+      systemContent += `\n\nVOICE MODE — this response is being spoken aloud by text-to-speech in a live back-and-forth conversation, not displayed as text on a screen. Write for the ear, not the eye:
+- No markdown at all: no headers, no bold/italic asterisks, no bullet points or numbered lists, no code blocks. If you'd normally list three things, just say them in a flowing sentence ("first... then... and finally...") the way you'd say it out loud.
+- Open with a brief, real, natural reaction to what they just said before giving advice — the way a coach sitting across from them would ("Oof, that's rough" / "Okay, that actually makes sense" / "Love that") — not a scripted acknowledgment formula, and not every single time if it would feel repetitive turn after turn.
+- Keep it conversational-length, like one natural turn of speech — a few sentences for a normal exchange, more only if they're asking for something that genuinely needs depth. Don't pad it out to sound thorough; say what's actually useful and stop.
+- It's fine to end with a short, genuine follow-up question sometimes, the way a real conversation naturally continues — but don't tack one onto every single reply, that reads as scripted too.
+- No [FU] follow-up suggestion chips, no [GMAIL_CTA] tags, no template names in brackets, nothing meant to be tapped or clicked — there's nothing on screen to tap right now, only a voice to listen to.
+- Never say things like "I've written this below" or "as you can see" or reference anything visual — everything you say is the only thing they're getting.`;
+    }
 
     let fullReply     = '';
     let streamStarted = false;
