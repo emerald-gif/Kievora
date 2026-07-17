@@ -2501,7 +2501,7 @@
             }
             _appendKieFileMsg(m.fileRef, m.fileName || 'File', m.fileExt || 'file', m.content);
           } else {
-            appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null);
+            appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null, m.mode || null);
           }
         });
         scrollKie();
@@ -3692,6 +3692,21 @@
       }
     }
 
+    // BUG FIX: the staged "Analysing…" / "Adding experience…" / "Packaging…"
+    // steps above were purely cosmetic — the actual work (a Groq/Spark call)
+    // usually finishes in 1-3 seconds, so hideKieStatus() fired almost
+    // immediately and cut the animation off after just the first step. It
+    // never actually read as "the AI is doing real, careful work" the way it
+    // was designed to. This enforces a real minimum floor: whatever the
+    // resume build/update flow is timing itself against, the visible
+    // thinking state won't disappear before at least this long has passed,
+    // so the full sequence of steps actually gets seen.
+    function _kieSleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    async function _kieEnforceMinThinkTime(startedAt, minMs = 11000) {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minMs) await _kieSleep(minMs - elapsed);
+    }
+
     // ── APPEND IMAGE IN USER BUBBLE ─────────────────────────────────────────
     function _appendKieImageMsg(dataUrl, caption) {
       const msgs = g('kieMsgs');
@@ -4058,12 +4073,13 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
       const pdfSteps = [
         'Analysing your resume…',
-        'Getting the changes together…',
+        'Adding the relevant experience…',
+        'Applying industry-standard improvements…',
         'Selecting the best content…',
-        'Building your PDF…',
-        'Almost ready…',
+        'Packaging your file…',
       ];
       _setKieStatusCustom(pdfSteps);
+      const _startedAt = Date.now();
       scrollKie();
 
       try {
@@ -4090,6 +4106,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const idx = resumes.findIndex(r => r.id === updatedResume.id);
         if (idx >= 0) resumes[idx] = updatedResume;
 
+        await _kieEnforceMinThinkTime(_startedAt);
         g('kieTyp').style.display = 'none'; hideKieStatus();
 
         const changedKeys = Object.keys(patchFields);
@@ -4155,7 +4172,8 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       if (g('kieWelcome')) g('kieWelcome').style.display = 'none';
       if (g('kieMsgs'))   g('kieMsgs').style.display    = 'flex';
       g('kieTyp').style.display = 'flex';
-      _setKieStatusCustom(['Analysing your resume…', 'Getting the changes together…', 'Applying the new template…', 'Building your PDF…', 'Almost ready…']);
+      _setKieStatusCustom(['Analysing your resume…', 'Adding the relevant experience…', 'Applying the new template…', 'Applying industry-standard improvements…', 'Packaging your file…']);
+      const _startedAt = Date.now();
       scrollKie();
 
       try {
@@ -4183,6 +4201,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const name = updatedResume.resumeName || d.fullName || 'Resume';
         const html = buildPrevHTML(d, templateId, tplObj.bg, 'rf-sans');
 
+        await _kieEnforceMinThinkTime(_startedAt);
         g('kieTyp').style.display = 'none'; hideKieStatus();
 
         const changedKeys = Object.keys(patchFields);
@@ -4237,20 +4256,25 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         return;
       }
 
-      // GATE: need real personal details before generating — without them the
-      // server invents a placeholder name ("Emily Thompson" etc.) and saves it
-      // as if it's the user's real resume, which is confusing and wrong.
-      // Check for a Proper-Noun name, a self-intro phrase, or a real email.
-      const hasRealName = /\b[A-Z][a-z]+ [A-Z][a-z]+\b/.test(brief);
-      const hasSelfRef  = /\b(my name is|i('m| am) [a-zA-Z]|i have \d+\s*years?)/i.test(brief);
-      const hasContact  = /[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i.test(brief);
+      // BUG FIX: this used to hard-block generation entirely unless the message
+      // itself contained a Proper-Noun name, a self-intro phrase, or a literal
+      // email — then dumped a 4-item questionnaire (name, title, years, skills,
+      // location) on the user before it would build anything. That's exactly
+      // backwards: the account already has the user's real name and email, so
+      // asking for them in chat is pure friction, and the resume generator
+      // below (see server/tools.js /api/prompt-resume) is already built to
+      // invent strong, realistic content for anything else that's missing —
+      // it just never got the chance because this gate stopped it first.
+      // Real name/email come straight from the signed-in account now; nothing
+      // else is asked for. If the account has no display name yet (email/
+      // password signup with no name set), the generator falls back to its
+      // own realistic placeholder rather than blocking on a question.
+      const enrichedBrief = [
+        brief,
+        usr?.displayName ? `Full name: ${usr.displayName}.` : '',
+        usr?.email ? `Email: ${usr.email}.` : '',
+      ].filter(Boolean).join(' ');
 
-      if (!hasRealName && !hasSelfRef && !hasContact) {
-        appendKMsg('ai',
-          "I can build that right now — I just need a few real details so the resume is actually yours:\n\n- **Full name**\n- **Target job title** and industry\n- **Years of experience** + 2–3 key skills\n- **Location** (city is fine)\n\nSend those and I'll generate the full resume with the right template and download it for you. 🚀",
-          true);
-        return;
-      }
       _kieGenerating = true;
       _kieStopTyping = false;
       _kieAbort = new AbortController();
@@ -4260,7 +4284,8 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       if (g('kieWelcome')) g('kieWelcome').style.display = 'none';
       if (g('kieMsgs'))   g('kieMsgs').style.display    = 'flex';
       g('kieTyp').style.display = 'flex';
-      _setKieStatusCustom(['Building your resume…', 'Crafting the experience section…', 'Adding skills & education…', 'Polishing the final details…', 'Saving it to your account…']);
+      _setKieStatusCustom(['Analyzing your background…', 'Adding relevant experience…', 'Applying industry-standard formatting…', 'Polishing the final details…', 'Packaging your resume…']);
+      const _startedAt = Date.now();
       scrollKie();
 
       try {
@@ -4268,7 +4293,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const r = await fetch('/api/prompt-resume', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-          body:    JSON.stringify({ prompt: brief, model: kieModel }),
+          body:    JSON.stringify({ prompt: enrichedBrief, model: kieModel }),
         });
         if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Resume generation failed.');
         const data = await r.json();
@@ -4292,6 +4317,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         kieResumeContext  = buildResumeContext(saved);
         resumes.push(saved);
 
+        await _kieEnforceMinThinkTime(_startedAt);
         g('kieTyp').style.display = 'none'; hideKieStatus();
 
         const html  = buildPrevHTML(resumeData, tplId, tplObj.bg, 'rf-sans');
@@ -4394,11 +4420,13 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
       let streamedText = '';
       let firstToken   = false;
+      let turnSources  = null;
 
       function _finishImageBubble(text) {
         _ensureImageBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
         bubble.innerHTML = _formatKieLive(display, true);
+        _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
         if (actionsEl) actionsEl.classList.add('visible');
         maybeShowKieSuggestions(text, bubbleW);
         _kieGenerating = false;
@@ -4456,6 +4484,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
               _kieShowRealSearch(chunk.v);
             } else if (chunk.t === 'searchdone') {
               _kieEndRealSearch(chunk.count);
+              if (chunk.sources?.length) turnSources = chunk.sources;
             } else if (chunk.t === 'err') {
               throw new Error(chunk.v || 'KIE error');
             }
@@ -4464,7 +4493,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
         typEl.style.display = 'none'; hideKieStatus();
         const finalText = streamedText || "I couldn't analyse that image right now. Try again! 🙏";
-        kieHist.push({ role:'assistant', content: finalText });
+        kieHist.push({ role:'assistant', content: finalText, sources: turnSources || undefined, mode: kieMode });
         saveKieHistory();
         _finishImageBubble(finalText);
 
@@ -4494,6 +4523,12 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
     }
 
     // ── KIE INTENT DETECTION ─────────────────────────────────────────────────
+    // Hoisted out of detectKieIntent so the smart-classifier gate further down
+    // can reuse the same "this looks like a resume edit" signal instead of
+    // needing its own separate (and inevitably narrower) keyword list.
+    const UPDATE_VERBS = /\b(add|change|update|rewrite|improve|fix|edit|revise|rework|redo|include|re[\s-]?structure|reorgani[sz]e|reformat|revamp|redesign|overhaul|tailor|polish|refine|reflect)\b/i;
+    const UPDATE_NOUNS = /\b(summary|headline|bio|objective|experience|skills?|bullet|educat\w*|degree|school|university|college|certificat\w*|qualification|name|email|phone|location|contact|address|title|role|resume|cv)\b/i;
+
     function detectKieIntent(msg) {
       const m = msg.toLowerCase();
 
@@ -4514,8 +4549,6 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       // fragile order-dependent regex (verb...noun in that exact sequence) to
       // independent presence checks, so "resend my resume, restructured" and
       // "restructure the resume and resend" both work regardless of word order.
-      const UPDATE_VERBS = /\b(add|change|update|rewrite|improve|fix|edit|revise|rework|redo|include|re[\s-]?structure|reorgani[sz]e|reformat|revamp|redesign|overhaul|tailor|polish|refine)\b/i;
-      const UPDATE_NOUNS = /\b(summary|headline|bio|objective|experience|skills?|bullet|educat\w*|degree|school|university|college|certificat\w*|qualification|name|email|phone|location|contact|address|title|role|resume|cv)\b/i;
       const RESEND_SIGNAL = /\b(and\s+(re)?send|resend|send\s+(it|the\s+(pdf|resume))|give\s+me\s+the\s+pdf|as\s+a?\s*file)\b/i;
       const hasContentUpdateSignal = UPDATE_VERBS.test(msg) && UPDATE_NOUNS.test(msg);
 
@@ -5250,13 +5283,29 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // ── SMART INTENT SAFETY NET (layer 2) ───────────────────────────────────
       // The regex patterns above are instant and catch the obvious phrasings
       // with zero added latency — that stays the fast path for most messages.
-      // For the messages that mention resume/file/template/pdf but don't cleanly
-      // match any pattern (paraphrased, oddly worded, multi-part), this runs one
-      // fast classification call on KIE Spark before falling through to plain
-      // chat. Ordinary career questions never hit this — only ones that mention
-      // something file/resume-shaped do, so normal chat speed is unaffected.
-      const ACTION_HINT = /\b(resume|cv|pdf|file|document|template)\b/i;
-      if (!intent && ACTION_HINT.test(msg) && !_kieIntentClassifying) {
+      // For the messages that don't cleanly match any pattern (paraphrased,
+      // oddly worded, multi-part), this runs one fast classification call on
+      // KIE Spark before falling through to plain chat.
+      //
+      // BUG FIX: this used to gate on ONLY a hard six-word literal list
+      // (resume|cv|pdf|file|document|template) — so "update my experience
+      // with what I learned getting that certification" never even reached
+      // the classifier below, because none of those exact words appear in
+      // it. That's the "you're just keyword-matching" problem: a real edit
+      // request with zero listed keywords silently fell through to plain
+      // chat instead of actually editing the resume. Fixed two ways:
+      //   1. ACTION_HINT now also covers the resume SECTION nouns (experience,
+      //      certificate, education, skills, etc.), not just the file-shaped
+      //      words.
+      //   2. When the user actually has a resume in play this session, ANY
+      //      edit-shaped verb (add/change/update/reflect/etc.) is enough to
+      //      run the classifier — no noun needed at all — because there's
+      //      almost nothing else "update this" could mean in that context.
+      const ACTION_HINT = /\b(resume|cv|pdf|file|document|template|summary|headline|bio|objective|experience|skills?|bullet|educat\w*|degree|school|university|college|certificat\w*|qualification)\b/i;
+      const hasActiveResumeSession = (kieSelectedResume && kieSelectedResume.resumeData) ||
+        (!!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED');
+      const looksLikeEditInContext = hasActiveResumeSession && UPDATE_VERBS.test(msg);
+      if (!intent && (ACTION_HINT.test(msg) || looksLikeEditInContext) && !_kieIntentClassifying) {
         _kieIntentClassifying = true;
         let classified = null;
         try { classified = await _kieClassifyIntent(msg); }
@@ -5390,6 +5439,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _ensureBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
         bubble.innerHTML = _formatKieLive(display, true);
+        // Rich source-card row (Deep Think / Web Search / Creative only) — inserted
+        // right after the text, before the actions row and Sources pill below it.
+        _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
         // Sources button — injected into the actions bar (after regen), like ChatGPT
         _kieAttachSources(actionsEl, turnSources);
         if (actionsEl) actionsEl.classList.add('visible');
@@ -5489,7 +5541,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             .replace(/\n{3,}/g, '\n\n').trim();
         }
 
-        kieHist.push({ role:'assistant', content: cleanedFinalText, sources: turnSources || undefined });
+        kieHist.push({ role:'assistant', content: cleanedFinalText, sources: turnSources || undefined, mode: kieMode });
         saveKieHistory();
 
         // Final render on the streaming bubble (already visible to user)
@@ -5548,7 +5600,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (e.name === 'AbortError' || _kieStopTyping) {
           // User hit Stop — preserve whatever was already streamed into the bubble
           if (streamedText) {
-            kieHist.push({ role:'assistant', content: streamedText, sources: turnSources || undefined });
+            kieHist.push({ role:'assistant', content: streamedText, sources: turnSources || undefined, mode: kieMode });
             saveKieHistory();
             _finishBubble(streamedText);
           } else {
@@ -5604,7 +5656,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       sendKie();
     };
 
-    function appendKMsg(role, text, animate, onDone, sources) {
+    function appendKMsg(role, text, animate, onDone, sources, msgMode) {
       const msgs = g('kieMsgs');
       msgs.style.display = 'flex';
       const welcome = g('kieWelcome');
@@ -5644,6 +5696,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // Strip [FU]...[/FU] tags from visible text (they render as chips, not prose)
           const displayText = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
           bubble.innerHTML = _formatKieLive(displayText, true);
+          // Rich source-card row (Deep Think / Web Search / Creative only)
+          _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
           // Re-inject Sources button if this message had web search
           _kieAttachSources(actionsEl, sources);
           if (actionsEl) actionsEl.classList.add('visible');
@@ -5688,6 +5742,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // chips/sources to vanish and raw [FU]...[/FU] text to leak on revisit.
           const restoredDisplay = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
           bubble.innerHTML = _formatKieLive(restoredDisplay, true);
+          _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
           _kieAttachSources(actionsEl, sources);
           if (actionsEl) actionsEl.classList.add('visible');
           maybeShowKieSuggestions(text, w, true);
@@ -5834,6 +5889,65 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // by the live streaming finish, and history restore — previously this
     // logic only lived inside the live-stream path, so the pill vanished
     // whenever a message was redrawn from saved history (nav away + back).
+    // Modes where the rich, image-forward source-card row appears (the
+    // ChatGPT-style row Tomiwa referenced). Default and Quick Answer keep the
+    // plain "Sources" pill only — those replies are meant to stay short, and
+    // a full card row would feel heavy bolted onto a quick answer.
+    const KIE_SOURCE_CARD_MODES = ['deep', 'web', 'creative'];
+
+    function _kieSrcImgErr(imgEl, favUrl) {
+      const div = document.createElement('div');
+      div.className = 'kie-source-card-img-fallback';
+      div.innerHTML = `<img src="${favUrl}" onerror="this.style.display='none'">`;
+      imgEl.replaceWith(div);
+    }
+    window._kieSrcImgErr = _kieSrcImgErr;
+
+    function _kieBuildSourceCardsHtml(sources, mode) {
+      if (!sources || !sources.length || !KIE_SOURCE_CARD_MODES.includes(mode)) return '';
+      const cards = sources.slice(0, 6).map(s => {
+        let domain = '';
+        try { domain = new URL(s.url).hostname.replace(/^www\./, ''); } catch { return ''; }
+        if (!domain) return '';
+        const favUrl  = `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`;
+        const safeUrl = esc(s.url);
+        // Real thumbnail when Tavily's image search matched one to this
+        // domain; otherwise a branded favicon card — some gaps are expected
+        // here since Tavily returns a general related-images list, not a
+        // guaranteed one-to-one thumbnail per result.
+        const media = s.image
+          ? `<img src="${esc(s.image)}" class="kie-source-card-img" loading="lazy" onerror="_kieSrcImgErr(this,'${favUrl}')">`
+          : `<div class="kie-source-card-img-fallback"><img src="${favUrl}" onerror="this.style.display='none'"></div>`;
+        const dateHtml = s.publishedDate ? `<div class="kie-source-card-date">${esc(s.publishedDate)}</div>` : '';
+        return `
+          <a class="kie-source-card" href="${safeUrl}" target="_blank" rel="noopener noreferrer">
+            ${media}
+            <div class="kie-source-card-body">
+              <div class="kie-source-card-pub"><img src="${favUrl}" onerror="this.style.display='none'">${esc(domain)}</div>
+              <div class="kie-source-card-title">${esc(s.title || domain)}</div>
+              ${dateHtml}
+            </div>
+          </a>`;
+      }).filter(Boolean).join('');
+      return cards ? `<div class="kie-source-cards">${cards}</div>` : '';
+    }
+
+    // Inserts the card row right after the message text (before the
+    // copy/speak/share/regen actions row) — only for the three modes above,
+    // and only when there's actually something to show.
+    function _kieInsertSourceCards(bodyEl, sources, mode) {
+      if (!bodyEl) return;
+      bodyEl.querySelector('.kie-source-cards')?.remove();
+      const html = _kieBuildSourceCardsHtml(sources, mode);
+      if (!html) return;
+      const bubbleEl = bodyEl.querySelector('.km-bubble');
+      const wrap = document.createElement('div');
+      wrap.innerHTML = html;
+      const row = wrap.firstElementChild;
+      if (bubbleEl && bubbleEl.nextSibling) bodyEl.insertBefore(row, bubbleEl.nextSibling);
+      else bodyEl.appendChild(row);
+    }
+
     function _kieAttachSources(actionsEl, sources) {
       if (!sources || !sources.length || !actionsEl) return;
       actionsEl.querySelector('.kie-sources-btn')?.remove();
@@ -7700,7 +7814,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         let dragEl = null, startX = 0, startScroll = 0;
 
         function scrollable(target) {
-          return target.closest && target.closest('.kie-table-scroll, .kie-code-card-body');
+          return target.closest && target.closest('.kie-table-scroll, .kie-code-card-body, .kie-source-cards');
         }
         msgs.addEventListener('mousedown', (e) => {
           const el = scrollable(e.target);
