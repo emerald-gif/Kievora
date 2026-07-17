@@ -6249,6 +6249,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     (function initKieLiveVoice() {
       const LiveSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const BAR_COUNT = 40;
+      // Two-tier silence timeout for the main turn-taking recognizer. A single
+      // flat window doesn't work: on Android, cloud STT delivers *interim*
+      // results in bursts, with natural gaps of 1-2s+ even while the person
+      // is still actively mid-sentence — that gap is a batching artifact, not
+      // real silence. So while only interim text has landed, stay patient.
+      // Once a *final* chunk arrives with nothing interim trailing it, the
+      // engine itself just drew a phrase boundary — that's a much stronger
+      // "they paused for real" signal, so a short confirm window is enough
+      // and keeps the back-and-forth feeling responsive.
+      const SILENCE_MS_INTERIM = 2400;
+      const SILENCE_MS_FINAL   = 1100;
 
       let liveOn         = false;  // overlay open / session active
       let liveRec         = null;   // current SpeechRecognition instance (main turn-taking loop)
@@ -6513,16 +6524,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         liveRec.onresult = (e) => {
           lastResultTs = Date.now();
           let interim = '';
+          let sawFinal = false;
           for (let i = e.resultIndex; i < e.results.length; i++) {
             const t = e.results[i][0].transcript;
             const idx = carryText ? i + 1 : i; // keep carried text pinned at slot 0
-            if (e.results[i].isFinal) finalChunks[idx] = t; else interim += t;
+            if (e.results[i].isFinal) { finalChunks[idx] = t; sawFinal = true; } else interim += t;
           }
           const finalTxt = finalChunks.filter(Boolean).join(' ');
           setLiveState('listening');
           updateMeLine((finalTxt + ' ' + interim).trim());
           clearTimeout(silenceTimer);
-          silenceTimer = setTimeout(() => { try { liveRec && liveRec.stop(); } catch (_) {} }, 1000);
+          // Only "final chunk with nothing interim behind it" is a confident
+          // end-of-phrase signal. Pure interim, or a final that still has
+          // interim trailing it, stays on the longer window — Android may
+          // just be mid-batch, not actually silent.
+          const wait = (sawFinal && !interim) ? SILENCE_MS_FINAL : SILENCE_MS_INTERIM;
+          silenceTimer = setTimeout(() => { try { liveRec && liveRec.stop(); } catch (_) {} }, wait);
         };
         liveRec.onerror = (e) => {
           if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
