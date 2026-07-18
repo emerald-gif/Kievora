@@ -3590,13 +3590,13 @@
         }
       });
       // Same treatment for the full-page "More Tools" overlay cards — different
-      // markup (.mto-card / openKieTool(...)) but the same lock logic applies.
-      document.querySelectorAll('.mto-card').forEach(card => {
+      // markup (.mto-tile / openKieTool(...)) but the same lock logic applies.
+      document.querySelectorAll('.mto-tile').forEach(card => {
         const m = (card.getAttribute('onclick') || '').match(/openKieTool\('(\w+)'\)/);
         const key = m && m[1];
         if (!key) return;
         const locked = !isToolUnlocked(key);
-        card.classList.toggle('mto-card-locked', locked);
+        card.classList.toggle('mto-tile-locked', locked);
         card.style.position = card.style.position || 'relative';
         let badge = card.querySelector('.premium-lock-corner');
         if (locked && !badge) {

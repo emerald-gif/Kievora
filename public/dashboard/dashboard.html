@@ -1726,7 +1726,6 @@
 <div id="moreToolsOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:#0a011f;overflow-y:auto">
   <!-- Header with banner.jpg background -->
   <div class="mto-hero">
-    <img src="/banner.jpg" alt="" class="mto-banner-img" onerror="this.style.display='none'"/>
     <div class="mto-hero-overlay">
       <div class="mto-hero-nav">
         <button class="mto-back" onclick="closeMoreTools()">
@@ -1748,6 +1747,7 @@
 
   <!-- Tools grid -->
   <div class="mto-body">
+    <div class="mto-tile-grid">
     <!-- Section: Build & Analyze -->
     <div class="mto-section-label">
       <div class="mto-section-line"></div>
@@ -1755,69 +1755,74 @@
       <div class="mto-section-line"></div>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('aibuild')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#f5f3ff">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">AI Resume Builder</div>
-          <div class="mto-card-desc">Describe yourself in a sentence — KIE writes a full, ATS-ready resume in seconds. No blank page, no guesswork.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('aibuild')" style="--tile-c:#7c3aed">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">AI Resume Builder</div>
+        <div class="mto-tile-desc">Describe yourself in a sentence — KIE writes a full, ATS-ready resume in seconds. No blank page, no guesswork.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#7c3aed22;color:#a78bfa;border-color:#7c3aed44">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('careerhealth')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#f0fdf4">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Career Health Score</div>
-          <div class="mto-card-desc">Get an honest score of how your career is tracking — skills, growth, visibility — with an action plan to improve it.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('careerhealth')" style="--tile-c:#059669">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Career Health Score</div>
+        <div class="mto-tile-desc">Get an honest score of how your career is tracking — skills, growth, visibility — with an action plan to improve it.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#05966922;color:#059669;border-color:#05966944">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('roadmap')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#eff6ff">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Career Roadmap</div>
-          <div class="mto-card-desc">Get a personalised 30, 90, or 365-day plan with milestones, skills to acquire, and steps that actually move the needle.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('roadmap')" style="--tile-c:#2563eb">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Career Roadmap</div>
+        <div class="mto-tile-desc">Get a personalised 30, 90, or 365-day plan with milestones, skills to acquire, and steps that actually move the needle.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#2563eb22;color:#2563eb;border-color:#2563eb44">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('salary')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#fffbeb">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Salary Intel</div>
-          <div class="mto-card-desc">Find out what your role pays in your market — by city, industry, and experience — so you never undersell yourself again.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('salary')" style="--tile-c:#d97706">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Salary Intel</div>
+        <div class="mto-tile-desc">Find out what your role pays in your market — by city, industry, and experience — so you never undersell yourself again.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#d9770622;color:#d97706;border-color:#d9770644">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('industry')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#eef2ff">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="15" y="3" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="2" y="14" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="15" y="14" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Industry Intel</div>
-          <div class="mto-card-desc">Spot hiring trends, in-demand skills, and emerging roles in your industry before everyone else catches on.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('industry')" style="--tile-c:#4f46e5">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="15" y="3" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="2" y="14" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="15" y="14" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Industry Intel</div>
+        <div class="mto-tile-desc">Spot hiring trends, in-demand skills, and emerging roles in your industry before everyone else catches on.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#4f46e522;color:#4f46e5;border-color:#4f46e544">Use Tool</button>
     </div>
 
     <!-- Section: Coach & Grow -->
@@ -1827,69 +1832,74 @@
       <div class="mto-section-line"></div>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('linkedin')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#ecfeff">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#0891b2" stroke-width="2"/><path stroke="#0891b2" stroke-width="2" stroke-linecap="round" d="M7 10v7M7 7v.01M12 17v-4a2 2 0 014 0v4M12 13v4"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">LinkedIn Optimizer</div>
-          <div class="mto-card-desc">Rewrite your headline, summary, and experience for maximum visibility to recruiters and LinkedIn's algorithm.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('linkedin')" style="--tile-c:#0891b2">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#0891b2" stroke-width="2"/><path stroke="#0891b2" stroke-width="2" stroke-linecap="round" d="M7 10v7M7 7v.01M12 17v-4a2 2 0 014 0v4M12 13v4"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">LinkedIn Optimizer</div>
+        <div class="mto-tile-desc">Rewrite your headline, summary, and experience for maximum visibility to recruiters and LinkedIn's algorithm.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#0891b222;color:#0891b2;border-color:#0891b244">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('interview')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#fff7ed">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 10v2a7 7 0 01-14 0v-2"/><line stroke="#ea580c" stroke-width="2" stroke-linecap="round" x1="12" y1="19" x2="12" y2="23"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Mock Interview</div>
-          <div class="mto-card-desc">Practice real interview questions for your target role and get instant feedback on your answers — before the real thing.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('interview')" style="--tile-c:#ea580c">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 10v2a7 7 0 01-14 0v-2"/><line stroke="#ea580c" stroke-width="2" stroke-linecap="round" x1="12" y1="19" x2="12" y2="23"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Mock Interview</div>
+        <div class="mto-tile-desc">Practice real interview questions for your target role and get instant feedback on your answers — before the real thing.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#ea580c22;color:#ea580c;border-color:#ea580c44">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('branding')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#fdf4ff">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path fill="#a21caf" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm6 10.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Personal Brand</div>
-          <div class="mto-card-desc">Build your professional story — a memorable bio, elevator pitch, and personal tagline that makes people remember you.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('branding')" style="--tile-c:#a21caf">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path fill="#a21caf" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm6 10.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Personal Brand</div>
+        <div class="mto-tile-desc">Build your professional story — a memorable bio, elevator pitch, and personal tagline that makes people remember you.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#a21caf22;color:#a21caf;border-color:#a21caf44">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('messaging')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#f0fdfa">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Pro Messaging</div>
-          <div class="mto-card-desc">Write standout cold messages, follow-ups, and networking notes that actually get replies from hiring managers.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('messaging')" style="--tile-c:#0d9488">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Pro Messaging</div>
+        <div class="mto-tile-desc">Write standout cold messages, follow-ups, and networking notes that actually get replies from hiring managers.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#0d948822;color:#0d9488;border-color:#0d948844">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('promotion')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#fefce8">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 21l4-4 4 4M12 3v14M5 7l7-4 7 4"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Promotion Ready</div>
-          <div class="mto-card-desc">Find out if you're on track for a promotion — get a concrete action plan to make the strongest case to your manager.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('promotion')" style="--tile-c:#ca8a04">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 21l4-4 4 4M12 3v14M5 7l7-4 7 4"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Promotion Ready</div>
+        <div class="mto-tile-desc">Find out if you're on track for a promotion — get a concrete action plan to make the strongest case to your manager.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#ca8a0422;color:#ca8a04;border-color:#ca8a0444">Use Tool</button>
     </div>
 
     <!-- Section: Smart Match & Write -->
@@ -1899,46 +1909,50 @@
       <div class="mto-section-line"></div>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('jobmatch')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#f0fdf4">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Job Match Analyzer</div>
-          <div class="mto-card-desc">Paste any job posting and instantly see how well your resume matches — with a score, gaps to fill, and keywords to add.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('jobmatch')" style="--tile-c:#16a34a">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Job Match Analyzer</div>
+        <div class="mto-tile-desc">Paste any job posting and instantly see how well your resume matches — with a score, gaps to fill, and keywords to add.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#16a34a22;color:#16a34a;border-color:#16a34a44">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('coverletter')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#fdf4ff">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Cover Letter Writer</div>
-          <div class="mto-card-desc">Generate a tailored, compelling cover letter from your resume in seconds — matched to the specific role and company you're targeting.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('coverletter')" style="--tile-c:#9333ea">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Cover Letter Writer</div>
+        <div class="mto-tile-desc">Generate a tailored, compelling cover letter from your resume in seconds — matched to the specific role and company you're targeting.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#9333ea22;color:#9333ea;border-color:#9333ea44">Use Tool</button>
     </div>
 
-    <div class="mto-card" onclick="closeMoreTools();openKieTool('resignation')">
-      <div class="mto-card-left">
-        <div class="mto-card-ico" style="background:#fff1f2">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 19H6a2 2 0 01-2-2V7a2 2 0 012-2h5m8 10l-4-4m0 0l4-4m-4 4H9"/></svg>
-        </div>
-        <div class="mto-card-info">
-          <div class="mto-card-name">Resignation Letter</div>
-          <div class="mto-card-desc">Write a professional, graceful resignation letter that keeps bridges intact — tailored to your notice period and next move.</div>
+    <div class="mto-tile" onclick="closeMoreTools();openKieTool('resignation')" style="--tile-c:#e11d48">
+      <div class="mto-tile-top">
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 19H6a2 2 0 01-2-2V7a2 2 0 012-2h5m8 10l-4-4m0 0l4-4m-4 4H9"/></svg></div>
+      </div>
+      <div class="mto-tile-body">
+        <div class="mto-tile-name">Resignation Letter</div>
+        <div class="mto-tile-desc">Write a professional, graceful resignation letter that keeps bridges intact — tailored to your notice period and next move.</div>
+        <div class="mto-tile-foot">
+          <span class="mto-tile-tag"><span style="font-size:8px">✦</span> KIE</span>
+          <span class="mto-tile-use">Use Tool <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></span>
         </div>
       </div>
-      <button class="mto-use-btn" style="background:#e11d4822;color:#e11d48;border-color:#e11d4844">Use Tool</button>
     </div>
 
     <div style="height:32px"></div>
+    </div>
   </div>
 </div>
 
