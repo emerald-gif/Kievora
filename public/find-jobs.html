@@ -51,13 +51,12 @@
     display: flex; align-items: center; gap: 12px;
   }
   .back-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: 700; color: var(--sub);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; flex-shrink: 0;
     background: none; border: 1.5px solid var(--border);
-    border-radius: 99px; padding: 6px 14px;
-    cursor: pointer; text-decoration: none;
+    border-radius: 99px;
+    cursor: pointer; text-decoration: none; color: var(--sub);
     transition: all .15s; font-family: inherit;
-    flex-shrink: 0;
   }
   .back-btn:hover { border-color: var(--p); color: var(--p); }
   .hdr-title {
@@ -65,6 +64,20 @@
     display: flex; align-items: center; gap: 8px;
   }
   .hdr-title span { color: var(--p); }
+  .hdr-bookmark-btn {
+    position: relative; flex-shrink: 0;
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border); border-radius: 99px;
+    background: #fff; color: var(--sub); cursor: pointer; transition: all .15s;
+  }
+  .hdr-bookmark-btn:hover { border-color: var(--p); color: var(--p); }
+  .hdr-bookmark-btn.has-saved { color: var(--p); border-color: rgba(124,58,237,.3); background: rgba(124,58,237,.05); }
+  .hdr-bookmark-count {
+    position: absolute; top: -4px; right: -4px;
+    background: var(--g); color: #fff; font-size: 9.5px; font-weight: 800;
+    min-width: 16px; height: 16px; border-radius: 99px; display: flex; align-items: center; justify-content: center;
+    padding: 0 3px; box-shadow: 0 0 0 2px #fff; line-height: 1;
+  }
 
   /* ── MAIN LAYOUT ── */
   .page { max-width: 1100px; margin: 0 auto; padding: 80px 20px 60px; }
@@ -228,7 +241,7 @@
   }
 
   /* ── JOB DETAIL SCREEN (slides in from right, full page) ── */
-  #fjDetailScreen {
+  #fjDetailScreen, #fjSavedScreen, #fjCompanyScreen {
     position: fixed; inset: 0; z-index: 200;
     background: #f8f7ff;
     transform: translateX(100%);
@@ -236,7 +249,10 @@
     overflow-y: auto;
     display: flex; flex-direction: column;
   }
-  #fjDetailScreen.open { transform: translateX(0); }
+  #fjSavedScreen { z-index: 200; } /* same layer as the header (which it must fully cover) and the detail screen */
+  #fjDetailScreen { z-index: 201; } /* opens on top of Saved Jobs when you tap into a saved job */
+  #fjCompanyScreen { z-index: 202; } /* can be opened from a card OR from inside the detail screen, so it always sits highest */
+  #fjDetailScreen.open, #fjSavedScreen.open, #fjCompanyScreen.open { transform: translateX(0); }
   .fjd-hdr {
     position: sticky; top: 0; z-index: 10;
     background: #fff; border-bottom: 1.5px solid #ede9fe;
@@ -249,6 +265,14 @@
     cursor: pointer; flex-shrink: 0; color: #7c3aed;
   }
   .fjd-hdr-title { font-size: 15px; font-weight: 800; color: #0f0e17; letter-spacing: -.2px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fjd-bookmark-btn {
+    width: 36px; height: 36px; border: 1.5px solid #ede9fe;
+    background: #f5f3ff; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; color: #7c3aed;
+    transition: all .15s;
+  }
+  .fjd-bookmark-btn.active { background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-color: transparent; }
   .fjd-body { padding: 20px 18px 40px; flex: 1; }
   .fjd-hero { background: #fff; border: 1.5px solid #ede9fe; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(124,58,237,.05); }
   .fjd-logo { width: 54px; height: 54px; border-radius: 15px; border: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc; flex-shrink: 0; }
@@ -317,6 +341,17 @@
     color: #fff; background: linear-gradient(135deg,#7c3aed,#a855f7);
     padding: 4px 9px; border-radius: 99px; z-index: 2; box-shadow: 0 2px 8px rgba(124,58,237,.35);
   }
+  .job-bookmark-btn {
+    position: absolute; top: 12px; right: 12px; z-index: 3;
+    width: 30px; height: 30px; border-radius: 99px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.92); border: 1.5px solid var(--border);
+    color: #9ca3af; cursor: pointer; transition: all .15s;
+    backdrop-filter: blur(4px);
+  }
+  .job-bookmark-btn:hover { border-color: var(--p); color: var(--p); }
+  .job-bookmark-btn.active { color: #fff; background: var(--g); border-color: transparent; }
+  .job-bookmark-btn.shifted { top: 46px; }
 
   .job-card-top { display: flex; align-items: flex-start; gap: 12px; }
   .job-logo {
@@ -417,6 +452,66 @@
   .modal-cancel { flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: 99px; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; color: var(--sub); }
   .modal-save   { flex: 2; padding: 12px; background: var(--g); color: #fff; border: none; border-radius: 99px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 
+  /* ── RESULTS HEADER: sort + filters trigger ── */
+  .sec-hdr-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .filters-trigger-btn {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--border); background: #fff;
+    border-radius: 99px; padding: 6px 13px;
+    font-size: 12px; font-weight: 700; color: var(--sub);
+    cursor: pointer; transition: all .15s; font-family: inherit;
+  }
+  .filters-trigger-btn:hover { border-color: var(--p); color: var(--p); }
+  .filters-trigger-btn.has-active { border-color: var(--p); color: var(--p); background: rgba(124,58,237,.05); }
+  .filters-badge {
+    background: var(--g); color: #fff; font-size: 9.5px; font-weight: 800;
+    min-width: 15px; height: 15px; border-radius: 99px; display: inline-flex;
+    align-items: center; justify-content: center; padding: 0 3px;
+  }
+  .sort-select {
+    border: 1.5px solid var(--border); background: #fff; border-radius: 99px;
+    padding: 6px 12px; font-size: 12px; font-weight: 700; color: var(--sub);
+    font-family: inherit; cursor: pointer; outline: none;
+  }
+  .sort-select:hover { border-color: var(--p); color: var(--p); }
+  .tag-level { background: #f8fafc; color: #475569; }
+
+  /* ── ADVANCED FILTERS MODAL ── */
+  .filter-section { margin-bottom: 20px; }
+  .filter-section:last-child { margin-bottom: 0; }
+  .filter-section-title { font-size: 11px; font-weight: 800; color: var(--sub); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .filter-chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .salary-range-row { display: flex; align-items: center; gap: 12px; }
+  .salary-range-row input[type="range"] { flex: 1; accent-color: var(--p); }
+  .salary-range-label { font-size: 13px; font-weight: 800; color: var(--p); min-width: 64px; text-align: right; }
+  .filter-hint { font-size: 11px; color: var(--sub); font-weight: 500; margin-top: 8px; line-height: 1.5; }
+  .filter-checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12.5px; font-weight: 600; color: var(--txt); }
+  .filter-checkbox-row input { accent-color: var(--p); width: 16px; height: 16px; }
+  .filter-clear-btn { flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: 99px; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; color: var(--sub); }
+  .filter-done-btn  { flex: 2; padding: 12px; background: var(--g); color: #fff; border: none; border-radius: 99px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+  /* ── COMPANY LINK (used inside job cards + job detail hero) ── */
+  .company-link { background: none; border: none; padding: 0; margin: 0; display: block; width: 100%; text-align: left; cursor: pointer; font-family: inherit; }
+  .company-link:hover { color: var(--p); text-decoration: underline; }
+
+  /* ── STICKY APPLY/SAVE FOOTER on job detail ── */
+  .fjd-footer {
+    position: sticky; bottom: 0; z-index: 10;
+    background: #fff; border-top: 1.5px solid #ede9fe;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+    display: flex; align-items: center; gap: 10px;
+  }
+  .fjd-save-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    flex-shrink: 0; height: 52px; padding: 0 18px;
+    border: 1.5px solid #ede9fe; background: #f5f3ff; color: #7c3aed;
+    border-radius: 14px; font-size: 13px; font-weight: 800; font-family: inherit;
+    cursor: pointer; transition: all .15s;
+  }
+  .fjd-save-btn.active { background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-color: transparent; }
+  .fjd-footer .fjd-apply { flex: 1; padding: 15px; margin: 0; }
+
   /* ── TOAST ── */
   .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
   .toast-item { background: #1a1a2e; color: #fff; border-radius: 12px; padding: 11px 18px; font-size: 13px; font-weight: 600; white-space: nowrap; animation: toastIn .25s ease; }
@@ -432,14 +527,17 @@
 <!-- ── HEADER ── -->
 <header class="hdr">
   <div class="hdr-inner">
-    <a href="/dashboard" class="back-btn">
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Dashboard
+    <a href="/dashboard" class="back-btn" aria-label="Back to Dashboard" title="Dashboard">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </a>
     <div class="hdr-title">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
       Find a <span>Job</span>
     </div>
+    <button class="hdr-bookmark-btn" id="hdrBookmarkBtn" onclick="openSavedJobs()" title="Saved jobs" aria-label="Saved jobs">
+      <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <span class="hdr-bookmark-count" id="hdrBookmarkCount" style="display:none">0</span>
+    </button>
   </div>
 </header>
 
@@ -536,7 +634,19 @@
     <!-- Results header -->
     <div class="sec-hdr">
       <div class="sec-title">Recommended Jobs</div>
-      <div class="sec-count" id="jobCount"></div>
+      <div class="sec-hdr-right">
+        <div class="sec-count" id="jobCount"></div>
+        <button class="filters-trigger-btn" id="filtersTriggerBtn" onclick="openFiltersModal()">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M7 12h10M10 18h4"/></svg>
+          Filters
+          <span class="filters-badge" id="filtersBadgeCount" style="display:none">0</span>
+        </button>
+        <select class="sort-select" id="sortSelect" onchange="onSortChange()" aria-label="Sort jobs">
+          <option value="relevance">Sort: Relevance</option>
+          <option value="newest">Sort: Newest</option>
+          <option value="salary">Sort: Salary</option>
+        </select>
+      </div>
     </div>
 
     <!-- Jobs grid -->
@@ -572,6 +682,53 @@
   </div>
 </div>
 
+<!-- ── ADVANCED FILTERS MODAL ── -->
+<div class="modal-overlay" id="filtersModal">
+  <div class="modal-sheet">
+    <div class="modal-title">Filter jobs</div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Date posted</div>
+      <div class="filter-chip-row" id="filterDateChips">
+        <button class="chip active" onclick="setDateFilter(this,'any')">Any time</button>
+        <button class="chip" onclick="setDateFilter(this,'24h')">Past 24h</button>
+        <button class="chip" onclick="setDateFilter(this,'week')">Past week</button>
+        <button class="chip" onclick="setDateFilter(this,'month')">Past month</button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Experience level</div>
+      <div class="filter-chip-row" id="filterLevelChips">
+        <button class="chip active" onclick="setLevelFilter(this,'any')">Any</button>
+        <button class="chip" onclick="setLevelFilter(this,'entry')">Entry</button>
+        <button class="chip" onclick="setLevelFilter(this,'mid')">Mid</button>
+        <button class="chip" onclick="setLevelFilter(this,'senior')">Senior</button>
+        <button class="chip" onclick="setLevelFilter(this,'lead')">Lead / Mgmt</button>
+      </div>
+      <div class="filter-hint">Estimated from each job title — not every listing states a level explicitly.</div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Minimum salary</div>
+      <div class="salary-range-row">
+        <input type="range" id="salaryRangeInput" min="0" max="200000" step="5000" value="0" oninput="onSalaryRangeInput(this)">
+        <span class="salary-range-label" id="salaryRangeLabel">Any</span>
+      </div>
+      <label class="filter-checkbox-row">
+        <input type="checkbox" id="includeNoSalaryChk" checked onchange="onIncludeNoSalaryToggle(this)">
+        Include jobs without a listed salary
+      </label>
+      <div class="filter-hint">Estimated from the salary text on each listing — some postings don't parse cleanly.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="filter-clear-btn" onclick="clearAdvancedFilters()">Clear all</button>
+      <button class="filter-done-btn" onclick="closeFiltersModal()">Show results</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── TOAST CONTAINER ── -->
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -585,6 +742,9 @@
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </button>
     <div class="fjd-hdr-title" id="fjdHdrTitle">Job Details</div>
+    <button class="fjd-bookmark-btn" id="fjdBookmarkBtn" data-jkey="" onclick="toggleBookmark(event, this.dataset.jkey)" title="Save job" aria-label="Save job">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    </button>
   </div>
 
   <div class="fjd-body">
@@ -593,7 +753,7 @@
       <div style="display:flex;align-items:center;gap:14px">
         <div class="fjd-logo" id="fjdLogo"></div>
         <div style="flex:1;min-width:0">
-          <div class="fjd-company-name" id="fjdCompany"></div>
+          <button class="fjd-company-name company-link" id="fjdCompany" onclick="openCompanyFromDetail()"></button>
         </div>
       </div>
       <div class="fjd-job-title" id="fjdTitle"></div>
@@ -612,13 +772,54 @@
       <div class="fjd-desc" id="fjdReqBody"></div>
     </div>
 
-    <!-- Apply -->
-    <div style="margin-top:4px">
-      <a id="fjdApplyBtn" class="fjd-apply" target="_blank" rel="noopener">Apply for this role →</a>
-      <div class="fjd-listed-via">
-        Curated by Kievora · <span class="fjd-listed-badge" id="fjdBadge">Listed via —</span>
-      </div>
+    <div class="fjd-listed-via" style="margin-top:4px">
+      Curated by Kievora · <span class="fjd-listed-badge" id="fjdBadge">Listed via —</span>
     </div>
+  </div>
+
+  <!-- Sticky action bar -->
+  <div class="fjd-footer">
+    <button class="fjd-save-btn" id="fjdSaveBtnFooter" data-jkey="" onclick="toggleBookmark(event, this.dataset.jkey)" aria-label="Save job">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <span class="fjd-save-lbl">Save</span>
+    </button>
+    <a id="fjdApplyBtn" class="fjd-apply" target="_blank" rel="noopener">Apply for this role →</a>
+  </div>
+</div>
+
+<!-- ── SAVED JOBS SCREEN — full page list of bookmarked jobs ── -->
+<div id="fjSavedScreen">
+  <div class="fjd-hdr">
+    <button class="fjd-back" onclick="closeSavedJobs()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="fjd-hdr-title">Saved Jobs</div>
+  </div>
+  <div class="fjd-body">
+    <div class="jobs-grid" id="savedJobsGrid"></div>
+    <div class="empty-state" id="savedEmptyState" style="display:none">
+      <svg width="44" height="44" fill="none" viewBox="0 0 24 24" stroke="#d1d5db" stroke-width="1.5" style="margin:0 auto 14px;display:block"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <h3>No saved jobs yet</h3>
+      <p>Tap the bookmark icon on any job to save it here for later.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMPANY SCREEN — other roles from the same company found this session ── -->
+<div id="fjCompanyScreen">
+  <div class="fjd-hdr">
+    <button class="fjd-back" onclick="closeCompany()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="fjd-hdr-title" id="companyHdrTitle">Company</div>
+  </div>
+  <div class="fjd-body">
+    <div class="fjd-hero" style="text-align:center">
+      <div class="fjd-logo" id="companyLogo" style="margin:0 auto"></div>
+      <div class="fjd-job-title" id="companyName" style="margin-top:12px"></div>
+      <div class="fjd-company-name" id="companyRoleCount" style="text-transform:none;letter-spacing:normal;margin-top:6px"></div>
+    </div>
+    <div class="jobs-grid" id="companyJobsGrid"></div>
   </div>
 </div>
 
@@ -665,6 +866,102 @@ let currentFilter  = 'all';
 let allJobs        = [];
 let page           = 1;
 const PAGE_SIZE    = 12;
+
+// ── Advanced filters + sort (client-side, applied on top of the quick chips) ──
+let filters = { datePosted: 'any', level: 'any', salaryMin: 0, includeNoSalary: true };
+let sortBy  = 'relevance';
+
+// Best-effort parse of a listing's free-text salary into an estimated annual
+// figure, so "minimum salary" filtering and "sort by salary" have something
+// to compare. Listings that don't parse cleanly return null and are handled
+// by the "include jobs without a listed salary" toggle instead of guessed at.
+function parseSalaryValue(str) {
+  if (!str) return null;
+  const s = str.toLowerCase().replace(/,/g, '');
+  const nums = [...s.matchAll(/(\d+(?:\.\d+)?)\s*(k)?/g)]
+    .map(m => parseFloat(m[1]) * (m[2] ? 1000 : 1))
+    .filter(n => n > 0);
+  if (!nums.length) return null;
+  let val = nums.length > 1 ? (nums[0] + nums[1]) / 2 : nums[0];
+  if (/\/\s*hr|per\s*hour|hourly/.test(s))       val *= 2080;
+  else if (/\/\s*mo|per\s*month|monthly/.test(s)) val *= 12;
+  else if (val < 1000)                            val *= 2080; // bare small numbers usually mean an hourly rate
+  return Math.round(val);
+}
+
+// Experience level isn't provided by any of the job sources, so this is an
+// estimate from keywords in the title only — surfaced in the UI as such.
+const LEVEL_LABELS = { entry: 'Entry-level', mid: 'Mid-level', senior: 'Senior', lead: 'Lead / Management' };
+function inferExperienceLevel(title) {
+  const t = (title || '').toLowerCase();
+  if (/\b(intern|internship|trainee|apprentice|junior|jr\.?|entry[- ]level|graduate|associate)\b/.test(t)) return 'entry';
+  if (/\b(senior|sr\.?|staff|principal|expert)\b/.test(t)) return 'senior';
+  if (/\b(lead|head of|director|vp|vice president|chief|manager|executive)\b/.test(t)) return 'lead';
+  return 'mid';
+}
+
+// ── Bookmarks (localStorage for now — swap for Firestore later without touching UI code) ──
+// Registry so any bookmark button, regardless of which screen rendered it, can
+// look up the full job object it belongs to by its stable key.
+window._fjJobIndex = window._fjJobIndex || {};
+
+// A stable identity for a job that survives across sources/sessions. Prefers the
+// posting URL (unique per listing); falls back to source+id+company+title for
+// locked/premium jobs that don't carry a url.
+function jobKey(j) {
+  return (j.url || `${j.source||''}|${j.id||''}|${j.company||''}|${j.title||''}`).toString();
+}
+function getSavedJobsKey() { return `kievora_saved_jobs_${window.__fjUid || 'anon'}`; }
+function getSavedJobs() {
+  try { return JSON.parse(localStorage.getItem(getSavedJobsKey()) || '[]'); } catch { return []; }
+}
+function setSavedJobs(arr) {
+  try { localStorage.setItem(getSavedJobsKey(), JSON.stringify(arr)); } catch {}
+}
+function isSavedKey(encKey) {
+  if (!encKey) return false;
+  const key = decodeURIComponent(encKey);
+  return getSavedJobs().some(j => jobKey(j) === key);
+}
+function updateSavedCountBadge() {
+  const n     = getSavedJobs().length;
+  const badge = g('hdrBookmarkCount');
+  const btn   = g('hdrBookmarkBtn');
+  if (badge) { badge.style.display = n ? '' : 'none'; badge.textContent = n > 99 ? '99+' : n; }
+  if (btn) btn.classList.toggle('has-saved', n > 0);
+}
+
+// Toggles a job's saved state and keeps every bookmark button currently on
+// screen (card grid, saved grid, detail header) visually in sync — no full
+// re-render needed except for the Saved Jobs screen when something leaves it.
+window.toggleBookmark = function(e, encKey) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (!encKey) return;
+  const key = decodeURIComponent(encKey);
+  const job = window._fjJobIndex[encKey];
+  if (!job) return;
+
+  let saved = getSavedJobs();
+  const idx = saved.findIndex(j => jobKey(j) === key);
+  let nowSaved;
+  if (idx >= 0) { saved.splice(idx, 1); nowSaved = false; }
+  else          { saved.unshift(job);   nowSaved = true;  }
+  setSavedJobs(saved);
+
+  document.querySelectorAll(`[data-jkey="${CSS.escape(encKey)}"]`).forEach(btn => {
+    btn.classList.toggle('active', nowSaved);
+    const svg = btn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', nowSaved ? 'currentColor' : 'none');
+    btn.title = nowSaved ? 'Remove from saved' : 'Save job';
+    const lbl = btn.querySelector('.fjd-save-lbl');
+    if (lbl) lbl.textContent = nowSaved ? 'Saved' : 'Save';
+  });
+
+  toast(nowSaved ? '📌 Job saved' : 'Removed from saved jobs');
+  updateSavedCountBadge();
+
+  if (g('fjSavedScreen')?.classList.contains('open')) renderSavedJobs();
+};
 let _selectedCountry = 'worldwide';
 let _countryName     = 'Worldwide';
 let _selectedLocation = ''; // precise city/region picked from the location suggestion dropdown
@@ -950,41 +1247,55 @@ function timeSince(dateStr) {
 }
 
 function matchFilter(j) {
-  if (currentFilter === 'all') return true;
-  if (currentFilter === 'remote') return j.remote;
-  if (currentFilter === 'full')   return (j.type || '').toLowerCase().includes('full');
-  if (currentFilter === 'part')   return (j.type || '').toLowerCase().includes('part');
-  if (currentFilter === 'contract') return (j.type || '').toLowerCase().includes('contract');
+  if (currentFilter === 'remote'   && !j.remote) return false;
+  if (currentFilter === 'full'     && !(j.type || '').toLowerCase().includes('full')) return false;
+  if (currentFilter === 'part'     && !(j.type || '').toLowerCase().includes('part')) return false;
+  if (currentFilter === 'contract' && !(j.type || '').toLowerCase().includes('contract')) return false;
+
+  if (filters.datePosted !== 'any') {
+    if (!j.posted) return false;
+    const days = (Date.now() - new Date(j.posted).getTime()) / 86400000;
+    if (filters.datePosted === '24h'   && days > 1)  return false;
+    if (filters.datePosted === 'week'  && days > 7)  return false;
+    if (filters.datePosted === 'month' && days > 30) return false;
+  }
+
+  if (filters.level !== 'any' && inferExperienceLevel(j.title) !== filters.level) return false;
+
+  if (filters.salaryMin > 0) {
+    const val = parseSalaryValue(j.salary);
+    if (val === null) { if (!filters.includeNoSalary) return false; }
+    else if (val < filters.salaryMin) return false;
+  }
+
   return true;
 }
 
-function renderJobs() {
-  const grid     = g('jobsGrid');
-  const empty    = g('emptyState');
-  const countEl  = g('jobCount');
-  const loadWrap = g('loadMoreWrap');
-
-  const filtered = allJobs.filter(matchFilter);
-  const visible  = filtered.slice(0, page * PAGE_SIZE);
-
-  g('jobCount').textContent = filtered.length ? `${filtered.length} jobs found` : '';
-
-  if (!filtered.length) {
-    grid.innerHTML = '';
-    if (empty) empty.style.display = '';
-    if (loadWrap) loadWrap.style.display = 'none';
-    return;
+function sortJobs(list) {
+  if (sortBy === 'newest') {
+    return [...list].sort((a, b) => new Date(b.posted || 0) - new Date(a.posted || 0));
   }
-  if (empty) empty.style.display = 'none';
+  if (sortBy === 'salary') {
+    return [...list].sort((a, b) => {
+      const av = parseSalaryValue(a.salary), bv = parseSalaryValue(b.salary);
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return bv - av;
+    });
+  }
+  return list; // relevance = source order
+}
 
-  grid.innerHTML = visible.map((j, i) => {
-    const locked    = !j.url;
-    const globalIdx = allJobs.indexOf(j);
-    const openAttr  = locked
-      ? `onclick="lockTapped()" style="cursor:pointer"`
-      : `onclick="openJobDetail(${globalIdx})" style="cursor:pointer"`;
-    return `
+// Shared card markup — used by both the main results grid and the Saved Jobs
+// screen so bookmarking behaves identically everywhere.
+function buildJobCardHTML(j, openAttr, encKey, locked) {
+  const saved = isSavedKey(encKey);
+  return `
     <div class="job-card${locked?' job-card-locked':''}" ${openAttr}>
+      <button class="job-bookmark-btn${locked?' shifted':''}${saved?' active':''}" data-jkey="${encKey}" onclick="toggleBookmark(event, this.dataset.jkey)" title="${saved?'Remove from saved':'Save job'}" aria-label="Save job">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="${saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      </button>
       ${locked ? '<div class="job-lock-badge">🔒 Premium</div>' : ''}
       <div class="job-card-top">
         <div class="job-logo">
@@ -994,13 +1305,14 @@ function renderJobs() {
           }
         </div>
         <div class="job-meta">
-          <div class="job-company">${j.company}</div>
+          <button class="job-company company-link" onclick="event.stopPropagation(); openCompany('${encodeURIComponent(companyKey(j.company))}')">${j.company}</button>
           <div class="job-title">${j.title}</div>
         </div>
       </div>
       <div class="job-tags">
         ${j.remote   ? `<span class="job-tag tag-remote">🌐 Remote</span>` : ''}
         ${j.type     ? `<span class="job-tag tag-type">${j.type}</span>` : ''}
+        <span class="job-tag tag-level">${LEVEL_LABELS[inferExperienceLevel(j.title)]}</span>
         ${j.salary   ? `<span class="job-tag tag-salary">${j.salary}</span>` : ''}
         ${j.source   ? `<span class="job-tag tag-source">${j.source}</span>` : ''}
       </div>
@@ -1018,11 +1330,191 @@ function renderJobs() {
       </div>
     </div>
   `;
+}
+
+function renderJobs() {
+  const grid     = g('jobsGrid');
+  const empty    = g('emptyState');
+  const countEl  = g('jobCount');
+  const loadWrap = g('loadMoreWrap');
+
+  const filtered = sortJobs(allJobs.filter(matchFilter));
+  const visible  = filtered.slice(0, page * PAGE_SIZE);
+
+  g('jobCount').textContent = filtered.length ? `${filtered.length} jobs found` : '';
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    if (empty) empty.style.display = '';
+    if (loadWrap) loadWrap.style.display = 'none';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  grid.innerHTML = visible.map((j, i) => {
+    const locked    = !j.url;
+    const globalIdx = allJobs.indexOf(j);
+    const encKey    = encodeURIComponent(jobKey(j));
+    window._fjJobIndex[encKey] = j;
+    const openAttr  = locked
+      ? `onclick="lockTapped()" style="cursor:pointer"`
+      : `onclick="openJobDetail(${globalIdx})" style="cursor:pointer"`;
+    return buildJobCardHTML(j, openAttr, encKey, locked);
   }).join('');
   window._fjJobs = allJobs; // store for the detail drawer
 
   if (loadWrap) loadWrap.style.display = visible.length < filtered.length ? '' : 'none';
 }
+
+// ── Saved Jobs screen ────────────────────────────────────────────────────────
+function renderSavedJobs() {
+  const grid  = g('savedJobsGrid');
+  const empty = g('savedEmptyState');
+  if (!grid) return;
+
+  const saved = getSavedJobs();
+  if (!saved.length) {
+    grid.innerHTML = '';
+    if (empty) empty.style.display = '';
+    updateSavedCountBadge();
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  grid.innerHTML = saved.map(j => {
+    const encKey = encodeURIComponent(jobKey(j));
+    window._fjJobIndex[encKey] = j;
+    const locked = !j.url;
+    const openAttr = locked
+      ? `onclick="lockTapped()" style="cursor:pointer"`
+      : `onclick="openJobDetailByKey('${encKey}')" style="cursor:pointer"`;
+    return buildJobCardHTML(j, openAttr, encKey, locked);
+  }).join('');
+
+  updateSavedCountBadge();
+}
+
+// Any of the full-screen overlays currently open, other than the ones listed —
+// used so closing one panel doesn't unlock body scroll while another is still open.
+function anyPanelOpen(excludeIds) {
+  return ['fjDetailScreen', 'fjSavedScreen', 'fjCompanyScreen']
+    .some(id => !excludeIds.includes(id) && g(id)?.classList.contains('open'));
+}
+
+window.openSavedJobs = function() {
+  renderSavedJobs();
+  g('fjSavedScreen')?.classList.add('open');
+  if (g('fjSavedScreen')) g('fjSavedScreen').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+};
+window.closeSavedJobs = function() {
+  g('fjSavedScreen')?.classList.remove('open');
+  if (!anyPanelOpen(['fjSavedScreen'])) document.body.style.overflow = '';
+};
+
+// ── Company screen ───────────────────────────────────────────────────────────
+// There's no company-directory API — this aggregates whatever jobs from that
+// company have been seen this session (search results, saved jobs, previously
+// opened details), so the "other roles" list is honestly scoped to that.
+function companyKey(name) { return (name || '').trim().toLowerCase(); }
+
+window.openCompany = function(encKey) {
+  const key = decodeURIComponent(encKey || '');
+  if (!key) return;
+  const jobs = Object.values(window._fjJobIndex).filter(j => companyKey(j.company) === key);
+  if (!jobs.length) return;
+  const rep = jobs.find(j => j.logo) || jobs[0];
+
+  const logoEl = g('companyLogo');
+  if (logoEl) {
+    logoEl.innerHTML = rep.logo
+      ? `<img src="${rep.logo}" alt="${rep.company}" style="width:100%;height:100%;object-fit:contain">`
+      : `<svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>`;
+  }
+  if (g('companyName'))      g('companyName').textContent = rep.company || 'Company';
+  if (g('companyHdrTitle'))  g('companyHdrTitle').textContent = rep.company || 'Company';
+  if (g('companyRoleCount')) g('companyRoleCount').textContent =
+    `${jobs.length} role${jobs.length === 1 ? '' : 's'} found in your recent searches`;
+
+  const grid = g('companyJobsGrid');
+  if (grid) {
+    grid.innerHTML = jobs.map(j => {
+      const jEncKey = encodeURIComponent(jobKey(j));
+      window._fjJobIndex[jEncKey] = j;
+      const locked = !j.url;
+      const openAttr = locked
+        ? `onclick="lockTapped()" style="cursor:pointer"`
+        : `onclick="openJobDetailByKey('${jEncKey}')" style="cursor:pointer"`;
+      return buildJobCardHTML(j, openAttr, jEncKey, locked);
+    }).join('');
+  }
+
+  g('fjCompanyScreen')?.classList.add('open');
+  if (g('fjCompanyScreen')) g('fjCompanyScreen').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeCompany = function() {
+  g('fjCompanyScreen')?.classList.remove('open');
+  if (!anyPanelOpen(['fjCompanyScreen'])) document.body.style.overflow = '';
+};
+
+// Called from the company name button inside the job detail screen, which
+// only knows the currently-open job's company key.
+window.openCompanyFromDetail = function() {
+  if (window._fjCurrentCompanyKey) openCompany(window._fjCurrentCompanyKey);
+};
+
+// ── Advanced filters modal ───────────────────────────────────────────────────
+window.openFiltersModal = function() { g('filtersModal')?.classList.add('open'); };
+window.closeFiltersModal = function() { g('filtersModal')?.classList.remove('open'); };
+
+window.setDateFilter = function(el, val) {
+  document.querySelectorAll('#filterDateChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  filters.datePosted = val;
+  page = 1; renderJobs(); updateFiltersBadge();
+};
+window.setLevelFilter = function(el, val) {
+  document.querySelectorAll('#filterLevelChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  filters.level = val;
+  page = 1; renderJobs(); updateFiltersBadge();
+};
+window.onSalaryRangeInput = function(el) {
+  filters.salaryMin = parseInt(el.value, 10) || 0;
+  const lbl = g('salaryRangeLabel');
+  if (lbl) lbl.textContent = filters.salaryMin > 0 ? `$${filters.salaryMin.toLocaleString()}+` : 'Any';
+  page = 1; renderJobs(); updateFiltersBadge();
+};
+window.onIncludeNoSalaryToggle = function(el) {
+  filters.includeNoSalary = el.checked;
+  page = 1; renderJobs(); updateFiltersBadge();
+};
+window.clearAdvancedFilters = function() {
+  filters = { datePosted: 'any', level: 'any', salaryMin: 0, includeNoSalary: true };
+  document.querySelectorAll('#filterDateChips .chip').forEach((c, i) => c.classList.toggle('active', i === 0));
+  document.querySelectorAll('#filterLevelChips .chip').forEach((c, i) => c.classList.toggle('active', i === 0));
+  const range = g('salaryRangeInput'); if (range) range.value = 0;
+  const lbl   = g('salaryRangeLabel'); if (lbl) lbl.textContent = 'Any';
+  const chk   = g('includeNoSalaryChk'); if (chk) chk.checked = true;
+  page = 1; renderJobs(); updateFiltersBadge();
+};
+function updateFiltersBadge() {
+  let n = 0;
+  if (filters.datePosted !== 'any') n++;
+  if (filters.level !== 'any') n++;
+  if (filters.salaryMin > 0) n++;
+  const badge = g('filtersBadgeCount');
+  if (badge) { badge.style.display = n ? '' : 'none'; badge.textContent = n; }
+  g('filtersTriggerBtn')?.classList.toggle('has-active', n > 0);
+}
+
+window.onSortChange = function() {
+  sortBy = g('sortSelect')?.value || 'relevance';
+  page = 1;
+  renderJobs();
+};
 
 function showSkeletons() {
   const grid = g('jobsGrid');
@@ -1312,12 +1804,14 @@ function saveProfModal() {
 }
 g('profModalInp')?.addEventListener('keydown', e => { if (e.key === 'Enter') saveProfModal(); });
 g('profModal')?.addEventListener('click', e => { if (e.target === g('profModal')) closeProfModal(); });
+g('filtersModal')?.addEventListener('click', e => { if (e.target === g('filtersModal')) closeFiltersModal(); });
 
 // ── Init (called by Firebase auth gate above) ─────────────────────────────────
 window.__onFindJobsAuthReady = async function() {
   // Detect country first, then load jobs so the first search is already localised
   await detectAndSetCountry();
   updateLocationFieldState(); // covers the case where detection stayed at "worldwide"
+  updateSavedCountBadge();
   const hasProfession = renderProfBar();
   if (hasProfession) {
     const prof = getProfession();
@@ -1365,9 +1859,7 @@ function fmtDate(iso) {
   try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; }
 }
 
-window.openJobDetail = function(idx) {
-  const j = (window._fjJobs || [])[idx]; if (!j) return;
-
+function populateJobDetail(j) {
   // Header title
   const hdrTitle = g('fjdHdrTitle');
   if (hdrTitle) hdrTitle.textContent = j.company || 'Job Details';
@@ -1379,12 +1871,14 @@ window.openJobDetail = function(idx) {
 
   g('fjdCompany').textContent = j.company || '';
   g('fjdTitle').textContent   = j.title   || '';
+  window._fjCurrentCompanyKey = encodeURIComponent(companyKey(j.company));
 
   // Pills
   const pills = [];
   if (j.location) pills.push(`<span class="fjd-pill blue"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>${j.location}</span>`);
   if (j.remote)   pills.push(`<span class="fjd-pill green">🌐 Remote</span>`);
   if (j.type)     pills.push(`<span class="fjd-pill purple">${j.type}</span>`);
+  pills.push(`<span class="fjd-pill grey" title="Estimated from the job title">🎯 ${LEVEL_LABELS[inferExperienceLevel(j.title)]}</span>`);
   if (j.salary)   pills.push(`<span class="fjd-pill amber">💰 ${j.salary}</span>`);
   if (j.posted)   pills.push(`<span class="fjd-pill grey">📅 ${fmtDate(j.posted)}</span>`);
   g('fjdPills').innerHTML = pills.join('');
@@ -1423,15 +1917,40 @@ window.openJobDetail = function(idx) {
   const badge = g('fjdBadge');
   if (badge) badge.textContent = `Listed via ${j.source || 'Kievora'}`;
 
+  // Bookmark buttons (header + sticky footer) — keep both in sync with this job's saved state
+  const encKey = encodeURIComponent(jobKey(j));
+  window._fjJobIndex[encKey] = j;
+  const saved = isSavedKey(encKey);
+  [g('fjdBookmarkBtn'), g('fjdSaveBtnFooter')].forEach(bmBtn => {
+    if (!bmBtn) return;
+    bmBtn.dataset.jkey = encKey;
+    bmBtn.classList.toggle('active', saved);
+    const svg = bmBtn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', saved ? 'currentColor' : 'none');
+    bmBtn.title = saved ? 'Remove from saved' : 'Save job';
+    const lbl = bmBtn.querySelector('.fjd-save-lbl');
+    if (lbl) lbl.textContent = saved ? 'Saved' : 'Save';
+  });
+
   // Open the screen
   g('fjDetailScreen').classList.add('open');
   g('fjDetailScreen').scrollTop = 0;
   document.body.style.overflow = 'hidden';
+}
+
+window.openJobDetail = function(idx) {
+  const j = (window._fjJobs || [])[idx]; if (!j) return;
+  populateJobDetail(j);
+};
+
+window.openJobDetailByKey = function(encKey) {
+  const j = window._fjJobIndex[encKey]; if (!j) return;
+  populateJobDetail(j);
 };
 
 window.closeJobDetail = function() {
   g('fjDetailScreen').classList.remove('open');
-  document.body.style.overflow = '';
+  if (!anyPanelOpen(['fjDetailScreen'])) document.body.style.overflow = '';
 };
 </script>
 </body>
