@@ -678,6 +678,18 @@ async function fetchWithRetry(url, opts, maxRetries = 1) {
 // Requires TAVILY_API_KEY in env (free tier: 1,000 searches/month at tavily.com).
 // If the key isn't set, performWebSearch() simply isn't called — KIE falls back
 // to honestly saying live search isn't configured, instead of pretending.
+// Video/social platforms almost never pair with a usable thumbnail (Tavily's
+// image list is domain-matched, and these hosts rarely show up there), so
+// every one of them was rendering as the generic purple gradient fallback
+// card — three identical-looking cards with no real preview. They're also
+// weak grounding sources for a coaching answer (you can't cite a video
+// title as a fact the way you'd cite an article). Excluding them steers
+// results toward article/news content that actually has real preview images.
+const SEARCH_EXCLUDED_DOMAINS = [
+  'youtube.com', 'youtu.be', 'tiktok.com', 'vimeo.com',
+  'dailymotion.com', 'twitch.tv', 'instagram.com', 'facebook.com',
+];
+
 async function performWebSearch(query, maxResults = 5) {
   const key = process.env.TAVILY_API_KEY;
   if (!key) return null;
@@ -688,7 +700,7 @@ async function performWebSearch(query, maxResults = 5) {
     const res = await fetchWithRetry('https://api.tavily.com/search', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ query, search_depth: 'basic', max_results: maxResults, include_answer: false, include_images: true }),
+      body: JSON.stringify({ query, search_depth: 'basic', max_results: maxResults, include_answer: false, include_images: true, exclude_domains: SEARCH_EXCLUDED_DOMAINS }),
       signal: controller.signal,
     }, 1);
     clearTimeout(killTimer);
@@ -741,7 +753,7 @@ function buildSearchContextBlock(query, results, configured) {
     return `\n\nLIVE WEB SEARCH: A real-time search was just run for "${query}" but returned nothing usable. Say so plainly — don't invent data to fill the gap.`;
   }
   const lines = results.map((r, i) => `${i + 1}. ${r.title} — ${r.snippet} (source: ${r.url})`).join('\n');
-  return `\n\nLIVE WEB SEARCH RESULTS for "${query}" (fetched just now — this is REAL current data, not training knowledge):\n${lines}\n\nGround your answer in this. Reference sources naturally by name (e.g. "LinkedIn's data shows…", "a recent Glassdoor report found…") — never say you can't access the internet, you just did. If these results don't actually answer the question, say so honestly rather than inventing numbers.\n\nINLINE CITATIONS — CRITICAL: Right after any specific sentence, stat, or bullet that comes directly from one of the numbered results above, tag it with [C:n] using that result's number (e.g. "...grew 18% last quarter[C:2]." or a bullet ending "...adapting to change.[C:3]"). Use [C:2,4] when a claim draws on more than one result. Spread these throughout the WHOLE answer, wherever a grounded claim actually appears — not just one citation dumped at the end. Only tag claims that genuinely come from a numbered result; don't tag general knowledge or your own reasoning. The tag must sit immediately after the sentence/bullet it supports, with no space before it.\n\nREFERENCE PHOTO PLACEMENT: separately, a plain reference photo (no link, just an illustrative image) may be available for this answer. Only if you mention a SPECIFIC concrete thing a photo would genuinely help show — a particular device, gadget, place, or invention, e.g. "a fridge that scans your groceries" or "a flying robot shaped like a bird" — drop a single [IMG] marker on its own line directly under that specific sentence/bullet. Use this rarely and only when it truly adds value; most answers, including most search-grounded ones, should have ZERO [IMG] markers. Never add one for abstract topics, lists of tips, or general commentary. Never add more than one [IMG] marker per answer.`;
+  return `\n\nLIVE WEB SEARCH RESULTS for "${query}" (fetched just now — this is REAL current data, not training knowledge):\n${lines}\n\nGround your answer in this. Reference sources naturally by name (e.g. "LinkedIn's data shows…", "a recent Glassdoor report found…") — never say you can't access the internet, you just did. If these results don't actually answer the question, say so honestly rather than inventing numbers.\n\nINLINE CITATIONS — CRITICAL: Right after any specific sentence, stat, or bullet that comes directly from one of the numbered results above, tag it with [C:n] using that result's number (e.g. "...grew 18% last quarter[C:2]." or a bullet ending "...adapting to change.[C:3]"). Use [C:2,4] when a claim draws on more than one result. Spread these throughout the WHOLE answer, wherever a grounded claim actually appears — not just one citation dumped at the end. Only tag claims that genuinely come from a numbered result; don't tag general knowledge or your own reasoning. The tag must sit immediately after the sentence/bullet it supports, with no space before it.\n\nHERO SOURCE CARD PLACEMENT: separately, up to two of the numbered results can be surfaced as a small visual card row (image, publisher, headline) instead of a plain [C:n] pill. Use this ONCE per answer, at most, right after the single most important or newsworthy point you make — the one moment a reader would actually want to preview the source for, the way you'd feature it if you were the one writing the piece. Drop it on its own line directly under that point, before moving on to supporting detail: [CARDS:2] for one source or [CARDS:2,4] for two. Skip it entirely for routine answers, general advice, or when no single point stands out as the headline — most search-grounded answers should have ZERO [CARDS:] markers, same as [IMG]. Never place it at the very end of the answer (that defeats the point of it being "inline"), and never use it more than once.\n\nREFERENCE PHOTO PLACEMENT: separately, a plain reference photo (no link, just an illustrative image) may be available for this answer. Only if you mention a SPECIFIC concrete thing a photo would genuinely help show — a particular device, gadget, place, or invention, e.g. "a fridge that scans your groceries" or "a flying robot shaped like a bird" — drop a single [IMG] marker on its own line directly under that specific sentence/bullet. Use this rarely and only when it truly adds value; most answers, including most search-grounded ones, should have ZERO [IMG] markers. Never add one for abstract topics, lists of tips, or general commentary. Never add more than one [IMG] marker per answer. Never use [IMG] and [CARDS:] under the same point — pick whichever fits that moment.`;
 }
 
 // ─── Detect when a message needs LIVE data, regardless of which mode is active ─
