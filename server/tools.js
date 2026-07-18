@@ -650,8 +650,13 @@ module.exports = function registerToolsRoutes(app) {
     const isLocal  = countryCode && countryCode !== 'worldwide';
     // A specific city/region picked from the location-suggestion dropdown beats
     // the generic country name — Jooble matches much better on "Lekki, Lagos"
-    // than on just "Nigeria".
-    const location = (locationOverride && locationOverride.trim()) || (isLocal ? countryName : '');
+    // than on just "Nigeria". BUT a bare street/area name alone is ambiguous
+    // globally (e.g. "Allen Avenue" in Lagos vs. Jooble resolving "Allen" to
+    // Allen, TX, USA) — always append the country name to disambiguate.
+    const rawOverride = locationOverride && locationOverride.trim();
+    const location = rawOverride
+      ? (isLocal && countryName && !rawOverride.toLowerCase().includes(countryName.toLowerCase()) ? `${rawOverride}, ${countryName}` : rawOverride)
+      : (isLocal ? countryName : '');
     try {
       const res = await fetch(`https://jooble.org/api/${KEY}`, {
         method: 'POST',
@@ -714,7 +719,12 @@ module.exports = function registerToolsRoutes(app) {
     if (!isLocal) return []; // supplemental local source only — worldwide already has enough supply
     const locale = CAREERJET_LOCALES[countryCode];
     if (!locale) return [];
-    const location = (locationOverride && locationOverride.trim()) || countryName;
+    const rawOverride = locationOverride && locationOverride.trim();
+    // Same ambiguity risk as Jooble — a bare street/area name needs the country
+    // attached or Careerjet's location resolver may fail to match it at all.
+    const location = rawOverride
+      ? (countryName && !rawOverride.toLowerCase().includes(countryName.toLowerCase()) ? `${rawOverride}, ${countryName}` : rawOverride)
+      : countryName;
     const auth = Buffer.from(`${KEY}:`).toString('base64');
     try {
       const params = new URLSearchParams({
@@ -896,7 +906,7 @@ module.exports = function registerToolsRoutes(app) {
       // silently discarding the filter meant the user saw jobs that didn't
       // match what they searched for at all. Better to honestly show fewer
       // (or zero) relevant results than unrelated ones for a specific country.
-      if (relevant.length || !isLocal) jobs = relevant;
+      if (isLocal || relevant.length) jobs = relevant;
     }
 
     jobs = jobs.slice(0, limit);
