@@ -819,9 +819,14 @@ module.exports = function registerToolsRoutes(app) {
         const hay = `${j.title||''} ${j.snippet||''}`.toLowerCase();
         return queryWords.some(w => hay.includes(w) || hay.includes(w.slice(0, -1))); // light stem match (e.g. "pharmacist" ~ "pharmacy")
       });
-      // Only apply the filter if it doesn't wipe out the whole list — better to
-      // show a loosely-related job than an empty page.
-      if (relevant.length) jobs = relevant;
+      // Only fall back to the unfiltered list for worldwide searches, where
+      // supply is broad enough that "loosely related" still beats an empty
+      // page. For a country-scoped search (e.g. Nigeria, where Adzuna isn't
+      // in the mix — see ADZUNA_COUNTRIES above — so supply is thinner),
+      // silently discarding the filter meant the user saw jobs that didn't
+      // match what they searched for at all. Better to honestly show fewer
+      // (or zero) relevant results than unrelated ones for a specific country.
+      if (relevant.length || !isLocal) jobs = relevant;
     }
 
     jobs = jobs.slice(0, limit);
