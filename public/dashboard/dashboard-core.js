@@ -1652,10 +1652,6 @@
       });
       g('stpL1').className = 'stp-line' + (builderStep > 1 ? ' done' : '');
       g('stpL2').className = 'stp-line' + (builderStep > 2 ? ' done' : '');
-      const fillEl = g('bldProgressFill');
-      if (fillEl) fillEl.style.width = (builderStep / 3 * 100) + '%';
-      const labels = ['Personal Info', 'Work & Education', 'Skills & Save'];
-      g('stepLbl').textContent = `Step ${builderStep} of 3 — ${labels[builderStep - 1]}`;
       // Show correct panel
       [1, 2, 3].forEach(s => {
         g('step' + s).classList.toggle('active', s === builderStep);
