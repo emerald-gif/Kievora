@@ -833,13 +833,13 @@
 
     <!-- Step 1: Resume Source -->
     <div id="clStep1" class="cl-step-panel active">
-      <div style="background:#fff;border-radius:18px;border:1.5px solid var(--border2);padding:24px;box-shadow:0 4px 24px rgba(124,58,237,.06)">
+      <div class="cl-panel-card">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
           <div style="width:36px;height:36px;background:linear-gradient(135deg,#0e7490,#06b6d4);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
           </div>
           <div>
-            <div style="font-size:18px;font-weight:900;color:var(--txt);letter-spacing:-.3px">Cover Letter</div>
+            <div style="font-size:16px;font-weight:900;color:var(--txt);letter-spacing:-.3px">Cover Letter</div>
             <div style="font-size:12px;color:var(--sub);margin-top:1px">Choose how you'd like to start</div>
           </div>
         </div>
@@ -910,7 +910,7 @@
         </div>
       </div>
 
-      <div style="margin-top:20px;display:flex;justify-content:flex-end">
+      <div class="cl-step-nav">
         <button id="clNextBtn1" class="btn btn-pri" onclick="clGoStep2()" disabled style="padding:12px 28px;font-size:14px;font-weight:800">
           Choose Template →
         </button>
@@ -919,9 +919,9 @@
 
     <!-- Step 2: Template Picker -->
     <div id="clStep2" class="cl-step-panel">
-      <div style="background:#fff;border-radius:18px;border:1.5px solid var(--border2);padding:24px;box-shadow:0 4px 24px rgba(124,58,237,.06)">
-        <div style="font-size:17px;font-weight:900;color:var(--txt);margin-bottom:4px;letter-spacing:-.3px">Pick a Template</div>
-        <div style="font-size:13px;color:var(--sub);margin-bottom:18px">Choose the style for your cover letter</div>
+      <div class="cl-panel-card">
+        <div style="font-size:16px;font-weight:900;color:var(--txt);margin-bottom:4px;letter-spacing:-.3px">Pick a Template</div>
+        <div style="font-size:12.5px;color:var(--sub);margin-bottom:16px">Choose the style for your cover letter</div>
 
         <div class="cl-tpl-grid" id="clTplGrid">
 
@@ -1052,7 +1052,7 @@
       </div>
 
       <!-- Job Details inputs -->
-      <div style="background:#fff;border-radius:18px;border:1.5px solid var(--border2);padding:20px;box-shadow:0 4px 24px rgba(124,58,237,.06);margin-top:14px">
+      <div class="cl-panel-card" style="padding:20px;margin-top:14px">
         <div style="font-size:14px;font-weight:800;color:var(--txt);margin-bottom:4px;letter-spacing:-.2px">Job Details</div>
         <div style="font-size:12px;color:var(--sub);margin-bottom:16px">Who are you applying to?</div>
         <div style="display:flex;flex-direction:column;gap:12px">
@@ -1071,7 +1071,7 @@
         </div>
       </div>
 
-      <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div class="cl-step-nav" style="justify-content:space-between">
         <button class="btn btn-ghost" onclick="clGoStep1()" style="padding:12px 20px">← Back</button>
         <button id="clNextBtn2" class="btn btn-pri" onclick="clGoStep3()" disabled style="padding:12px 28px;font-size:14px;font-weight:800">
           Generate Letter →

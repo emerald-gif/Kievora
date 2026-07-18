@@ -1433,14 +1433,6 @@
         const isDraft = !!r._isDraft;
         const editAction = isDraft ? `openBuilder('${r.id}', true)` : `openBuilder('${r.id}')`;
         const openAction = isDraft ? editAction : `openDetail('${r.id}')`;
-        const dlBtn = isDraft
-          ? `<button class="rcbtn rcbtn-dl disabled" onclick="event.stopPropagation();toast('Finish & save this draft to download','err')">
-               <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Download
-             </button>`
-          : `<button class="rcbtn rcbtn-dl" onclick="event.stopPropagation();dlResume('${r.id}')">
-               <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Download
-             </button>`;
-        const delAction = isDraft ? `deleteDraft('${r.id}')` : `confirmDel('${r.id}')`;
         return `<div class="rcard" onclick="${openAction}">
           <div class="rcard-thumb" style="background:${t.bg}18">
             <div class="rcard-thumb-scaler">${buildPrevHTML(d, t.id, t.bg, 'rf-sans')}</div>
@@ -1450,39 +1442,80 @@
             <div class="rcard-role">${esc(d.jobTitle || 'No job title')}</div>
             <div class="rcard-date">Modified ${fmtDate(r.updatedAt)}</div>
           </div>
-          <div class="rcard-foot">
-            <button class="rcbtn rcbtn-edit" onclick="event.stopPropagation();${editAction}">Edit</button>
-            ${dlBtn}
-            <button class="rcbtn rcbtn-del" onclick="event.stopPropagation();${delAction}">
-              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16"/></svg>Delete
-            </button>
-          </div>
+          <button class="rcard-more" onclick="event.stopPropagation();openResumeSheet('${r.id}',${isDraft})" title="More options">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
         </div>`;
       }).join('') + `
         <div class="add-card" onclick="showView('tpick')">
           <div class="add-card-ico">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           </div>
-          <p>Create another resume</p>
-          <span>Tailor a new version for your next application</span>
+          <div class="add-card-text">
+            <p>Create another resume</p>
+            <span>Tailor a new version for your next application</span>
+          </div>
         </div>`;
       requestAnimationFrame(scaleRcardThumbs);
     }
-    function scaleRcardThumbs() {
-      document.querySelectorAll('#allGrid .rcard-thumb').forEach(thumb => {
-        const scaler = thumb.querySelector('.rcard-thumb-scaler');
-        if (!scaler) return;
-        const w = thumb.offsetWidth || 64;
-        const scale = w / 600;
-        scaler.style.transform = 'scale(' + scale + ')';
-        // Height is handled by CSS grid stretch (.rcard-thumb{height:100%}) + overflow:hidden —
-        // the thumb naturally fills the row's height and crops the excess, no JS calc needed.
-      });
+    function scaleRcardThumbs() { /* thumb scale is fixed via CSS now — kept as a no-op for any external callers */ }
+
+    // ── Resume card action sheet (Edit / Download / Delete) ────────────────────
+    // Replaces the old 3-button footer, which overflowed on narrow screens.
+    function openResumeSheet(id, isDraft) {
+      const merged = getMergedResumes();
+      const r = merged.find(x => x.id === id);
+      if (!r) return;
+      const d = r.resumeData || {};
+      let overlay = g('rsheetOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'rsheetOverlay';
+        overlay.className = 'rsheet-overlay';
+        overlay.innerHTML = `<div class="rsheet">
+          <div class="rsheet-handle"></div>
+          <div class="rsheet-hdr">
+            <div style="min-width:0">
+              <div class="rsheet-hdr-name" id="rsheetName"></div>
+              <div class="rsheet-hdr-role" id="rsheetRole"></div>
+            </div>
+          </div>
+          <div class="rsheet-item" id="rsheetEdit">
+            <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Edit
+          </div>
+          <div class="rsheet-item" id="rsheetDl">
+            <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download
+          </div>
+          <div class="rsheet-item rsheet-danger" id="rsheetDel">
+            <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16"/></svg>
+            Delete
+          </div>
+          <button class="rsheet-cancel" id="rsheetCancel">Cancel</button>
+        </div>`;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeResumeSheet(); });
+        g('rsheetCancel').onclick = closeResumeSheet;
+      }
+      g('rsheetName').textContent = r.resumeName;
+      g('rsheetRole').textContent = d.jobTitle || 'No job title';
+
+      const editAction = isDraft ? () => openBuilder(id, true) : () => openBuilder(id);
+      const dlBtn = g('rsheetDl');
+      dlBtn.classList.toggle('rsheet-disabled', isDraft);
+      g('rsheetEdit').onclick = () => { closeResumeSheet(); editAction(); };
+      dlBtn.onclick = isDraft
+        ? () => toast('Finish & save this draft to download', 'err')
+        : () => { closeResumeSheet(); dlResume(id); };
+      g('rsheetDel').onclick = () => { closeResumeSheet(); isDraft ? deleteDraft(id) : confirmDel(id); };
+
+      overlay.classList.add('show');
     }
+    function closeResumeSheet() { g('rsheetOverlay')?.classList.remove('show'); }
+    window.openResumeSheet = openResumeSheet;
+    window.closeResumeSheet = closeResumeSheet;
     window.renderAllResumes = renderAllResumes;
-    window.addEventListener('resize', () => {
-      if (g('v-allresumes')?.classList.contains('active')) scaleRcardThumbs();
-    });
     window.deleteDraft = function(id){
       removeDraft(id);
       toast('Draft deleted');
@@ -5938,11 +5971,157 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
       } else {
         const formattedText = text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-        w.innerHTML = `<div class="km-bubble">${formattedText}</div><div class="km-meta">${t}</div>`;
+        w.innerHTML = `<div class="km-bubble"></div><div class="km-meta">${t}</div>`;
+        const uBubble = w.querySelector('.km-bubble');
+        uBubble.innerHTML = formattedText;
+        uBubble.dataset.raw = text; // property assignment — safe regardless of quotes/newlines in text
         msgs.insertBefore(w, g('kieTyp'));
       }
       scrollKie();
     }
+
+    // ══ SENT-MESSAGE LONG-PRESS MENU (Copy / Select Text / Share) ═══════════
+    // Long-pressing a message YOU sent (not KIE's reply — that already has its
+    // own always-visible Copy/Share/Regenerate row) pops a small WhatsApp-style
+    // context menu. "Select Text" opens a bottom sheet with the raw message in
+    // a natively selectable block, so the person can drag-select and copy any
+    // portion of it using the device's own selection handles — full custom
+    // drag-selection UI isn't worth building when the browser already does
+    // this natively once user-select:text is turned on for that block.
+    (function initKieSentMsgLongPress() {
+      let pressTimer = null, startX = 0, startY = 0, pressedEl = null, longPressFired = false;
+      const MOVE_CANCEL_PX = 10;
+      const HOLD_MS = 420;
+
+      function clearPress() {
+        clearTimeout(pressTimer);
+        if (pressedEl) pressedEl.classList.remove('km-pressed');
+        pressedEl = null;
+      }
+
+      document.addEventListener('pointerdown', (e) => {
+        const bubble = e.target.closest?.('.km-user .km-bubble');
+        if (!bubble) return;
+        longPressFired = false;
+        startX = e.clientX; startY = e.clientY;
+        pressedEl = bubble;
+        pressTimer = setTimeout(() => {
+          longPressFired = true;
+          bubble.classList.add('km-pressed');
+          if (navigator.vibrate) { try { navigator.vibrate(12); } catch {} }
+          const raw = bubble.dataset.raw ?? (bubble.innerText || bubble.textContent || '');
+          showKMenu(e.clientX, e.clientY, raw);
+        }, HOLD_MS);
+      }, { passive: true });
+
+      document.addEventListener('pointermove', (e) => {
+        if (!pressTimer) return;
+        if (Math.abs(e.clientX - startX) > MOVE_CANCEL_PX || Math.abs(e.clientY - startY) > MOVE_CANCEL_PX) clearPress();
+      }, { passive: true });
+
+      document.addEventListener('pointerup', () => { if (!longPressFired) clearPress(); });
+      document.addEventListener('pointercancel', clearPress);
+
+      // Suppress the native OS "select/copy" callout on the bubble itself —
+      // our custom menu replaces it — but still allow it inside the sheet.
+      document.addEventListener('contextmenu', (e) => {
+        if (e.target.closest?.('.km-user .km-bubble')) e.preventDefault();
+      });
+    })();
+
+    // Builds (once) and shows the small floating context menu near (x, y).
+    function showKMenu(x, y, rawText) {
+      let overlay = g('kmenuOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'kmenuOverlay';
+        overlay.className = 'kmenu-overlay';
+        overlay.innerHTML = `<div class="kmenu" id="kmenu">
+          <div class="kmenu-item" id="kmenuCopy">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </div>
+          <div class="kmenu-sep"></div>
+          <div class="kmenu-item" id="kmenuSelect">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h16"/></svg>
+            Select Text
+          </div>
+          <div class="kmenu-sep"></div>
+          <div class="kmenu-item" id="kmenuShare">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </div>
+        </div>`;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeKMenu(); });
+      }
+      const menu = g('kmenu');
+      g('kmenuCopy').onclick = () => { kmenuCopyAction(rawText); closeKMenu(); };
+      g('kmenuSelect').onclick = () => { closeKMenu(); openKSelSheet(rawText); };
+      g('kmenuShare').onclick = () => { kmenuShareAction(rawText); closeKMenu(); };
+
+      overlay.classList.add('show');
+      // Position after showing so we can read the menu's real size, then clamp
+      // it to stay fully on-screen near the press point.
+      requestAnimationFrame(() => {
+        const mw = menu.offsetWidth, mh = menu.offsetHeight;
+        let left = Math.min(Math.max(8, x - mw / 2), window.innerWidth - mw - 8);
+        let top = y - mh - 14;
+        if (top < 8) top = Math.min(y + 14, window.innerHeight - mh - 8);
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        menu.classList.add('show');
+      });
+    }
+    function closeKMenu() {
+      const overlay = g('kmenuOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('show');
+      g('kmenu')?.classList.remove('show');
+      document.querySelectorAll('.km-user .km-bubble.km-pressed').forEach(el => el.classList.remove('km-pressed'));
+    }
+    function kmenuCopyAction(rawText) {
+      navigator.clipboard?.writeText(rawText).then(() => toast('Copied to clipboard')).catch(() => toast('Could not copy', 'err'));
+    }
+    function kmenuShareAction(rawText) {
+      if (navigator.share) {
+        navigator.share({ text: rawText }).catch(() => {});
+      } else {
+        navigator.clipboard?.writeText(rawText).then(() => toast('Copied — sharing isn\'t supported here')).catch(() => {});
+      }
+    }
+    window.showKMenu = showKMenu;
+    window.closeKMenu = closeKMenu;
+
+    // ── Select-text bottom sheet ──────────────────────────────────────────────
+    function openKSelSheet(rawText) {
+      let overlay = g('kselOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'kselOverlay';
+        overlay.className = 'ksel-overlay';
+        overlay.innerHTML = `<div class="ksel-sheet">
+          <div class="ksel-handle"></div>
+          <div class="ksel-title">Select any part to copy</div>
+          <div class="ksel-text" id="kselText"></div>
+          <div class="ksel-foot">
+            <button class="ksel-close-btn" id="kselCloseBtn">Close</button>
+            <button class="ksel-copy-all" id="kselCopyAllBtn">Copy All</button>
+          </div>
+        </div>`;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeKSelSheet(); });
+        g('kselCloseBtn').onclick = closeKSelSheet;
+      }
+      g('kselText').textContent = rawText;
+      g('kselCopyAllBtn').onclick = () => {
+        navigator.clipboard?.writeText(rawText).then(() => toast('Copied to clipboard')).catch(() => toast('Could not copy', 'err'));
+      };
+      overlay.classList.add('show');
+    }
+    function closeKSelSheet() { g('kselOverlay')?.classList.remove('show'); }
+    window.openKSelSheet = openKSelSheet;
+    window.closeKSelSheet = closeKSelSheet;
 
     // ── LIVE PROGRESSIVE FORMATTER ────────────────────────────────────────────
     // Called on every streaming frame — formats partial text including live code
