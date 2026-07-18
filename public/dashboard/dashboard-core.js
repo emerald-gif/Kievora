@@ -4606,7 +4606,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       function _finishImageBubble(text) {
         _ensureImageBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-        bubble.innerHTML = _formatKieLive(display, true, turnSources, turnImages);
+        bubble.innerHTML = _formatKieLive(display, true, turnSources, turnImages, kieMode);
         _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
         if (actionsEl) actionsEl.classList.add('visible');
         maybeShowKieSuggestions(text, bubbleW);
@@ -4659,7 +4659,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
               if (!firstToken) { typEl.style.display = 'none'; hideKieStatus(); _ensureImageBubble(); firstToken = true; }
               streamedText += chunk.v;
               const live = streamedText.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-              bubble.innerHTML = _formatKieLive(live, false, turnSources, turnImages) + '<span class="kie-stream-cursor">▌</span>';
+              bubble.innerHTML = _formatKieLive(live, false, turnSources, turnImages, kieMode) + '<span class="kie-stream-cursor">▌</span>';
               scrollKie();
             } else if (chunk.t === 'search') {
               _kieShowRealSearch(chunk.v);
@@ -5625,7 +5625,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function _finishBubble(text) {
         _ensureBubble();
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-        bubble.innerHTML = _formatKieLive(display, true, turnSources, turnImages);
+        bubble.innerHTML = _formatKieLive(display, true, turnSources, turnImages, kieMode);
         // Rich source-card row (Deep Think / Web Search / Creative only) — inserted
         // right after the text, before the actions row and Sources pill below it.
         _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
@@ -5691,7 +5691,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
               }
               streamedText += chunk.v;
               const live = streamedText.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-              bubble.innerHTML = _formatKieLive(live, false, turnSources, turnImages) + '<span class="kie-stream-cursor">▌</span>';
+              bubble.innerHTML = _formatKieLive(live, false, turnSources, turnImages, kieMode) + '<span class="kie-stream-cursor">▌</span>';
               scrollKie();
             } else if (chunk.t === 'search') {
               // Real search in flight — rolling globe icon, driven by the server
@@ -5883,7 +5883,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         function finishMsg() {
           // Strip [FU]...[/FU] tags from visible text (they render as chips, not prose)
           const displayText = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-          bubble.innerHTML = _formatKieLive(displayText, true, sources, images);
+          bubble.innerHTML = _formatKieLive(displayText, true, sources, images, msgMode || kieMode);
           // Rich source-card row (Deep Think / Web Search / Creative only)
           _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
           // Re-inject Sources button if this message had web search
@@ -5914,7 +5914,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             }
             i = Math.min(i + CHUNK, typeText.length);
             // Format live on every frame — formatting appears as text streams in
-            bubble.innerHTML = _formatKieLive(typeText.slice(0, i), false, sources, images);
+            bubble.innerHTML = _formatKieLive(typeText.slice(0, i), false, sources, images, msgMode || kieMode);
             scrollKie();
             if (i < typeText.length) {
               rafId = requestAnimationFrame(typeFrame);
@@ -5929,7 +5929,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // same as a live response does. Skipping any of these is what caused
           // chips/sources to vanish and raw [FU]...[/FU] text to leak on revisit.
           const restoredDisplay = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
-          bubble.innerHTML = _formatKieLive(restoredDisplay, true, sources, images);
+          bubble.innerHTML = _formatKieLive(restoredDisplay, true, sources, images, msgMode || kieMode);
           _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
           _kieAttachSources(actionsEl, sources);
           if (actionsEl) actionsEl.classList.add('visible');
@@ -5992,7 +5992,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       return `<div class="kie-table-card" id="${cardId}"><div class="kie-table-scroll"><table class="kie-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>${writing}</div>`;
     }
 
-    function _formatKieLive(partial, isFinal, sources, images) {
+    function _formatKieLive(partial, isFinal, sources, images, mode) {
       let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').trim();
 
       // Detect code blocks AND table blocks — handles MULTIPLE blocks of
@@ -6007,7 +6007,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       while ((match = blockRe.exec(text)) !== null) {
         found = true;
         const before = text.slice(lastIndex, match.index).trim();
-        if (before) html += formatKieText(before, sources, images);
+        if (before) html += formatKieText(before, sources, images, mode);
 
         const kind    = match[1].toUpperCase();
         const label   = (match[2] || (kind === 'TABLE' ? 'Comparison' : 'content')).trim();
@@ -6039,11 +6039,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       if (found) {
         const remaining = text.slice(lastIndex).trim();
-        if (remaining) html += formatKieText(remaining, sources, images);
+        if (remaining) html += formatKieText(remaining, sources, images, mode);
         return html;
       }
 
-      return formatKieText(text, sources, images);
+      return formatKieText(text, sources, images, mode);
     }
 
     // Expose for the history-restore system (lives in a different scope)
@@ -6130,13 +6130,39 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       return wrap.firstElementChild;
     }
 
-    // Single row of clickable "read more" cards — one place in the answer,
-    // not spread across beginning/middle/end (that looked like two separate
-    // rows fighting for attention, and a thin leftover group could render as
-    // one lone full-width card). Always mounted at the same spot: right
-    // after the text, before the actions row.
+    // Turns a single "[CARDS:n]" / "[CARDS:n,m]" marker the model drops
+    // right under its single most newsworthy grounded point into the same
+    // rich card-row markup as the end-of-message row — but mounted exactly
+    // where the model placed it (the ChatGPT-style "cards sit next to the
+    // point they support" layout Tomiwa referenced), instead of always at
+    // the very end. Everyday [C:n] pills still cover every other citation.
+    // Same shape as _kieApplyImageMarker: matches the marker whether or not
+    // it landed alone in its own <p>, and only ever mounts the first one.
+    function _kieApplyCardMarker(html, sources, mode) {
+      const re = /<p>\s*\[CARDS:\s*([\d,\s]+)\]\s*<\/p>|\[CARDS:\s*([\d,\s]+)\]/g;
+      if (!sources || !sources.length || !KIE_SOURCE_CARD_MODES.includes(mode)) {
+        return html.replace(re, '');
+      }
+      let used = false;
+      return html.replace(re, (m, g1, g2) => {
+        if (used) return ''; // model is told to use this once — never mount a second if it slips up
+        const idxs = (g1 || g2 || '').split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        const list = idxs.map(n => sources[n - 1]).filter(Boolean).slice(0, 2);
+        const inner = _kieCardsInnerHtml(list);
+        if (!inner) return '';
+        used = true;
+        return `<div class="kie-source-cards kie-source-cards-inline">${inner}</div>`;
+      });
+    }
+
+    // Single row of clickable "read more" cards — the end-of-message
+    // fallback for whatever the inline [CARDS:] marker above didn't cover.
+    // If that marker already mounted a row inside the bubble's own HTML,
+    // the sources are already visible in the answer, so this backs off
+    // entirely rather than showing the same 1-2 sources a second time.
     function _kieInsertSourceCards(bodyEl, sources, mode) {
       if (!bodyEl) return;
+      if (bodyEl.querySelector('.kie-source-cards-inline')) return;
       bodyEl.querySelectorAll('.kie-source-cards').forEach(el => el.remove());
       if (!sources || !sources.length || !KIE_SOURCE_CARD_MODES.includes(mode)) return;
 
@@ -7565,7 +7591,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       });
     }
 
-    function formatKieText(text, sources, images) {
+    function formatKieText(text, sources, images, mode) {
       let t = esc(String(text || '')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       const lines = t.split('\n');
       const out = [];
@@ -7612,7 +7638,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         i++;
       }
       flush();
-      return _kieApplyImageMarker(_kieApplyCitePills(out.join(''), sources), images);
+      const withCites = _kieApplyCitePills(out.join(''), sources);
+      const withCards = _kieApplyCardMarker(withCites, sources, mode);
+      return _kieApplyImageMarker(withCards, images);
     }
     function toast(msg, type = 'ok') {
       const t = g('toast');
