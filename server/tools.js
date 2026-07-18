@@ -694,6 +694,71 @@ module.exports = function registerToolsRoutes(app) {
     }
   }
 
+  // ─── Careerjet — v4 API, real Nigeria-indexed coverage (careerjet.com.ng) ─────
+  // Added specifically because Adzuna doesn't support Nigeria at all (see
+  // ADZUNA_COUNTRIES above), which left Nigeria search leaning on JSearch +
+  // Remotive + Jooble alone. Careerjet runs a dedicated Nigeria site
+  // (careerjet.com.ng), so locale_code=en_NG searches that index directly —
+  // real Nigerian listings, not global/worldwide postings passed off as local.
+  // Env var: CAREERJET_API_KEY — free, sign up as a publisher at
+  // careerjet.com/partners/register/as-publisher, no approval wait for the
+  // v4 API. Auth is HTTP Basic: the API key as username, empty password.
+  // Only wired in for countries confirmed to have a Careerjet locale below —
+  // add more once you've verified the locale exists (an unsupported locale
+  // returns a 400, which is caught and just skips this source for that request).
+  const CAREERJET_LOCALES = { ng: 'en_NG', za: 'en_ZA' };
+  async function _fetchCareerjet(query, limit, countryCode, countryName, locationOverride, userIp) {
+    const KEY = process.env.CAREERJET_API_KEY;
+    if (!KEY) return [];
+    const isLocal = countryCode && countryCode !== 'worldwide';
+    if (!isLocal) return []; // supplemental local source only — worldwide already has enough supply
+    const locale = CAREERJET_LOCALES[countryCode];
+    if (!locale) return [];
+    const location = (locationOverride && locationOverride.trim()) || countryName;
+    const auth = Buffer.from(`${KEY}:`).toString('base64');
+    try {
+      const params = new URLSearchParams({
+        locale_code: locale,
+        keywords:    query,
+        location,
+        page_size:   String(Math.min(limit, 100)),
+        user_ip:     userIp || '105.112.0.1',
+        user_agent:  'Mozilla/5.0 (compatible; KievoraJobsBot/1.0)',
+      });
+      const res = await fetch(`https://search.api.careerjet.net/v4/query?${params.toString()}`, {
+        headers: { Authorization: `Basic ${auth}` },
+      });
+      if (!res.ok) {
+        const bodyText = await res.text().catch(() => '');
+        console.error(`_fetchCareerjet — ${res.status} for query:"${query}" locale:"${locale}" — ${bodyText.slice(0, 300)}`);
+        return [];
+      }
+      const data = await res.json();
+      console.log(`_fetchCareerjet — "${query}" locale:"${locale}" → ${data.type === 'JOBS' ? (data.jobs||[]).length : 0} jobs (type:${data.type})`);
+      if (data.type !== 'JOBS') return []; // LOCATIONS response = no confident location match, not real "0 jobs"
+      return (data.jobs || []).slice(0, limit).map(j => ({
+        id:       (j.url || `${j.title}${j.company}`).slice(0, 80),
+        title:    j.title,
+        company:  j.company || '',
+        logo:     '',
+        location: j.locations || location,
+        country:  countryCode.toUpperCase(),
+        remote:   /remote/i.test((j.title||'') + ' ' + (j.description||'')),
+        salary:   j.salary || '',
+        type:     '',
+        url:      j.url,
+        source:   'Careerjet',
+        posted:   j.date || '',
+        snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
+        description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
+        requirements: '',
+      }));
+    } catch (err) {
+      console.error(`_fetchCareerjet — request threw for query:"${query}":`, err.message);
+      return [];
+    }
+  }
+
   // Detects the user's country from their IP and saves it to Firestore — called
   // once on first job search (or anytime the Firestore field is missing). Cached
   // in-memory so repeat requests don't hit ip-api.com.
@@ -784,11 +849,12 @@ module.exports = function registerToolsRoutes(app) {
     const isLocal = countryCode && countryCode !== 'worldwide';
     const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
 
-    const [r1, r2, r3, r4] = await Promise.allSettled([
+    const [r1, r2, r3, r4, r5] = await Promise.allSettled([
       _fetchJSearch(query, limit, countryCode, location),
       _fetchAdzuna(query, limit, countryCode),
       _fetchRemotive(query, 10, countryCode),
       _fetchJooble(query, limit, countryCode, countryName, location),
+      _fetchCareerjet(query, limit, countryCode, countryName, location, req.ip),
     ]);
 
     let jobs = [
@@ -796,6 +862,7 @@ module.exports = function registerToolsRoutes(app) {
       ...(r2.status === 'fulfilled' ? r2.value : []),
       ...(r3.status === 'fulfilled' ? r3.value : []),
       ...(r4.status === 'fulfilled' ? r4.value : []),
+      ...(r5.status === 'fulfilled' ? r5.value : []),
     ];
 
     // Deduplicate by normalized title + company
@@ -831,7 +898,7 @@ module.exports = function registerToolsRoutes(app) {
 
     jobs = jobs.slice(0, limit);
 
-    console.log(`POST /api/find-jobs — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'})`);
+    console.log(`POST /api/find-jobs — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'} Careerjet:${r5.status==='fulfilled'?r5.value.length:'err'})`);
 
     if (!canClick) {
       const gatedJobs = jobs.map(({ url, description, ...rest }) => rest);
