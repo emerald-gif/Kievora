@@ -214,12 +214,12 @@
     body.i-nav-on #clDashBtn { display:none!important }
 
     /* Step wizard bars — sticky sub-header below iNav */
-    body.i-nav-on .bld-hdr{
+    body.i-nav-on .bld-sticky-hdr{
       position:sticky;top:60px;z-index:50;
       background:rgba(248,247,255,.98);
       backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
       border-bottom:1px solid rgba(124,58,237,.08);
-      padding:10px 0;margin:0 0 20px;
+      padding:10px 0 14px;margin:0 0 20px;
     }
     body.i-nav-on .bld{ padding-top:64px }
     body.i-nav-on .cl-step-hdr{
@@ -545,7 +545,7 @@
 
     /* ── BUILDER (step wizard, no preview) ── */
     .bld{max-width:680px;margin:0 auto;padding:100px 20px 32px}
-    .bld-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+    .bld-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px}
     .bld-hdr-l{display:flex;align-items:center;gap:14px;flex:1}
     /* Style the builder back button to match the Instagram-style back */
     #builderBack.back-btn{
@@ -557,13 +557,17 @@
     #builderBack.back-btn:hover{background:rgba(124,58,237,.07);border-color:transparent}
     #builderBack.back-btn svg{stroke:#0f0e17}
     .steps-track{display:flex;align-items:center;gap:4px}
-    .stp{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;transition:all .2s;flex-shrink:0}
-    .stp-done{background:var(--p);color:#fff}
-    .stp-cur{background:#fff;border:2px solid var(--p);color:var(--p)}
-    .stp-idle{background:#fff;border:2px solid #e2e8f0;color:var(--mute)}
-    .stp-line{width:28px;height:2px;background:#e2e8f0;transition:background .2s;flex-shrink:0}
-    .stp-line.done{background:var(--p)}
-    .step-lbl{font-size:13px;color:var(--p);font-weight:700}
+    .stp{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;transition:all .25s cubic-bezier(.4,0,.2,1);flex-shrink:0;position:relative}
+    .stp-done{background:var(--g);color:transparent;box-shadow:0 2px 8px rgba(124,58,237,.35)}
+    .stp-done::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900}
+    .stp-cur{background:var(--g);color:#fff;box-shadow:0 0 0 4px rgba(124,58,237,.16),0 3px 10px rgba(124,58,237,.35);transform:scale(1.08)}
+    .stp-idle{background:#fff;border:2px solid #e5e0f5;color:var(--mute)}
+    .stp-line{width:22px;height:2px;background:#e5e0f5;transition:background .3s;flex-shrink:0;border-radius:2px}
+    .stp-line.done{background:var(--g)}
+    .step-lbl{font-size:12px;color:var(--p);font-weight:700;white-space:nowrap;flex-shrink:0}
+    .bld-progress-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 24px}
+    .bld-progress-track{flex:1 1 0;min-width:0;height:3px;background:#ece7fb;border-radius:99px;overflow:hidden}
+    .bld-progress-fill{height:100%;background:var(--g);border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);width:33.33%}
 
     /* Step panels */
     .step-panel{display:none}
@@ -620,7 +624,9 @@
        still visual hierarchy inside the flat section. */
     @media(max-width:640px){
       .bld{padding-left:0;padding-right:0}
-      .bld-hdr{padding:0 16px}
+      .bld-hdr,.bld-progress-row{padding:0 16px}
+      .bld-sticky-hdr{margin-left:0;margin-right:0}
+      body.i-nav-on .bld-sticky-hdr{padding-left:0;padding-right:0}
       .step-card{border-radius:0;border-left:none;border-right:none;box-shadow:none;padding:20px 16px}
       .step-panel{padding-bottom:78px} /* room for sticky nav so content isn't hidden behind it */
       .step-nav{
