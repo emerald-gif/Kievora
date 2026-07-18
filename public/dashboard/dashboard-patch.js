@@ -179,7 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const cardW = thumb.offsetWidth || 160;
       const scale = cardW / 600;
       scaler.style.transform = 'scale(' + scale + ')';
-      thumb.style.height = Math.round(scale * 720) + 'px';
+      // Full template preview, not a cropped peek — size the thumb to the
+      // scaler's actual rendered content height (scrollHeight reads the
+      // natural, un-transformed box height since CSS transform:scale never
+      // changes layout size) rather than hardcoding a fixed crop height.
+      const naturalH = scaler.scrollHeight || 720;
+      thumb.style.height = Math.round(scale * naturalH) + 'px';
     });
   }
 

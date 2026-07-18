@@ -5973,37 +5973,54 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // — these are the seams we can slot a card row between.
       const blocks = Array.from(bubbleEl.children);
 
-      // Short answer or too few sources — one row at the end, same as before.
-      if (list.length <= 2 || blocks.length < 4) {
+      // Fewer than 4 sources can't make two real rows of 2+ without one of
+      // them ending up a single lone full-width card (the bug — a card row
+      // needs at least 2 cards to actually scroll horizontally like the
+      // reference). Just one full row in that case.
+      if (list.length < 4 || blocks.length < 4) {
         const row = _kieCardRow(list);
         if (row) bubbleEl.appendChild(row);
         return;
       }
 
-      // Deal sources round-robin into 3 groups so the strongest results
-      // aren't all clustered at the top — beginning/middle/end each get a mix.
-      const groups = [[], [], []];
-      list.forEach((s, i) => groups[i % 3].push(s));
+      // 6+ sources → 3 rows (beginning/middle/end) of 2 each.
+      // 4-5 sources → 2 rows (beginning/end) of 2-3 each.
+      // Either way every row gets at least 2 cards, guaranteed.
+      const numRows = list.length >= 6 ? 3 : 2;
+      const groups = Array.from({ length: numRows }, () => []);
+      list.forEach((s, i) => groups[i % numRows].push(s));
 
       const beginIdx = 1;
       const midIdx = Math.max(2, Math.floor(blocks.length / 2));
 
-      // Mount end row first, then middle, then beginning — all three use
-      // direct DOM node references so insertion order doesn't matter, but
-      // going back-to-front keeps this readable top-to-bottom.
-      const endRow = _kieCardRow(groups[2]);
-      if (endRow) bubbleEl.appendChild(endRow);
+      if (numRows === 3) {
+        // Mount end row first, then middle, then beginning — all three use
+        // direct DOM node references so insertion order doesn't matter, but
+        // going back-to-front keeps this readable top-to-bottom.
+        const endRow = _kieCardRow(groups[2]);
+        if (endRow) bubbleEl.appendChild(endRow);
 
-      const midRow = _kieCardRow(groups[1], 'kie-source-cards-inline');
-      if (midRow) {
-        if (blocks[midIdx]) bubbleEl.insertBefore(midRow, blocks[midIdx]);
-        else bubbleEl.appendChild(midRow);
-      }
+        const midRow = _kieCardRow(groups[1], 'kie-source-cards-inline');
+        if (midRow) {
+          if (blocks[midIdx]) bubbleEl.insertBefore(midRow, blocks[midIdx]);
+          else bubbleEl.appendChild(midRow);
+        }
 
-      const beginRow = _kieCardRow(groups[0], 'kie-source-cards-inline');
-      if (beginRow) {
-        if (blocks[beginIdx]) bubbleEl.insertBefore(beginRow, blocks[beginIdx]);
-        else bubbleEl.appendChild(beginRow);
+        const beginRow = _kieCardRow(groups[0], 'kie-source-cards-inline');
+        if (beginRow) {
+          if (blocks[beginIdx]) bubbleEl.insertBefore(beginRow, blocks[beginIdx]);
+          else bubbleEl.appendChild(beginRow);
+        }
+      } else {
+        // Only 2 rows worth of sources — skip the middle slot, just beginning + end.
+        const endRow = _kieCardRow(groups[1]);
+        if (endRow) bubbleEl.appendChild(endRow);
+
+        const beginRow = _kieCardRow(groups[0], 'kie-source-cards-inline');
+        if (beginRow) {
+          if (blocks[beginIdx]) bubbleEl.insertBefore(beginRow, blocks[beginIdx]);
+          else bubbleEl.appendChild(beginRow);
+        }
       }
     }
 
