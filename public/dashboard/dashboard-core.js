@@ -57,6 +57,9 @@
     let resumePhotoData = ''; // base64 data URL for profile photo
     let wList = [], eList = [], sList = [];
     let certList = [], projList = [], langList = []; // optional resume sections
+    // ── Edit-in-place state: holds the _id of the entry currently loaded into
+    // each section's form, or null when the form is in "add new" mode.
+    let editingWId = null, editingEId = null, editingCrtId = null, editingPrjId = null, editingLngId = null;
     let kieHist = [];
     // In-memory image store — maps imageRef keys to {base64, mimeType, name}.
     // Not persisted to localStorage (images are too large). Follow-up questions
@@ -1609,6 +1612,7 @@
       g('bRName').value = 'Untitled Resume';
       ['bFull','bTitle','bEmail','bPhone','bLoc','bSumm'].forEach(i => g(i).value = '');
       wList = []; eList = []; sList = [];
+      editingWId = editingEId = editingCrtId = editingPrjId = editingLngId = null;
       certList = []; projList = []; langList = [];
       resumePhotoData = '';
       updatePhotoPreview();
@@ -1718,67 +1722,166 @@
     };
     window.prevStep = () => { if (builderStep > 1) { builderStep--; renderStep(); window.scrollTo(0,0); } };
 
+    // ── Shared helper: flips a section's "+ Add …" button into "✓ Save
+    // changes" (and shows a Cancel link) while an existing entry is loaded
+    // into that section's form for editing.
+    function setFormEditUI(btnId, cancelId, editing, addLabel) {
+      const btn = g(btnId), cancel = g(cancelId);
+      if (btn) btn.textContent = editing ? '✓ Save Changes' : addLabel;
+      if (btn) btn.classList.toggle('editing', editing);
+      if (cancel) cancel.style.display = editing ? 'inline-block' : 'none';
+    }
+
     // Work / Edu / Skills render
     function renderW() {
       g('wCont').innerHTML = wList.length === 0
         ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No work experience added yet.</p>'
-        : wList.map(w => `<div class="ec"><div class="ec-top"><div><div class="ec-name">${esc(w.position)} @ ${esc(w.company)}</div><div class="ec-sub">${esc(w.startDate)}–${esc(w.endDate || 'Present')}</div></div><button class="ec-rm" onclick="rmW(${w._id})">✕</button></div>${w.description ? `<div style="font-size:11px;color:#64748b;margin-top:4px">${esc(w.description)}</div>` : ''}</div>`).join('');
+        : wList.map(w => `<div class="ec${w._id===editingWId?' editing':''}" onclick="editW(${w._id})"><div class="ec-top"><div><div class="ec-name">${esc(w.position)} @ ${esc(w.company)}</div><div class="ec-sub">${esc(w.startDate)}–${esc(w.endDate || 'Present')}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmW(${w._id})">✕</button></div>${w.description ? `<div style="font-size:11px;color:#64748b;margin-top:4px">${esc(w.description)}</div>` : ''}<div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
+    window.editW = id => {
+      const w = wList.find(x => x._id === id); if (!w) return;
+      g('wPos').value = w.position || ''; g('wComp').value = w.company || '';
+      g('wSt').value = w.startDate || ''; g('wEn').value = w.endDate || ''; g('wDs').value = w.description || '';
+      editingWId = id; renderW();
+      setFormEditUI('bAddW', 'cancelW', true, '+ Add Work Experience');
+      g('wPos').scrollIntoView({ behavior: 'smooth', block: 'center' }); g('wPos').focus();
+    };
+    window.cancelEditW = () => {
+      editingWId = null;
+      ['wPos','wComp','wSt','wEn','wDs'].forEach(id => g(id).value = '');
+      renderW(); setFormEditUI('bAddW', 'cancelW', false, '+ Add Work Experience');
+    };
     function renderE() {
       g('eCont').innerHTML = eList.length === 0
         ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No education added yet.</p>'
-        : eList.map(e => `<div class="ec"><div class="ec-top"><div><div class="ec-name">${esc(e.degree)} in ${esc(e.field)}</div><div class="ec-sub">${esc(e.school)} · ${esc(e.graduationDate)}</div></div><button class="ec-rm" onclick="rmE(${e._id})">✕</button></div></div>`).join('');
+        : eList.map(e => `<div class="ec${e._id===editingEId?' editing':''}" onclick="editE(${e._id})"><div class="ec-top"><div><div class="ec-name">${esc(e.degree)} in ${esc(e.field)}</div><div class="ec-sub">${esc(e.school)} · ${esc(e.graduationDate)}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmE(${e._id})">✕</button></div><div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
+    window.editE = id => {
+      const e = eList.find(x => x._id === id); if (!e) return;
+      g('eSchl').value = e.school || ''; g('eDeg').value = e.degree || '';
+      g('eFld').value = e.field || ''; g('eGrd').value = e.graduationDate || '';
+      editingEId = id; renderE();
+      setFormEditUI('bAddE', 'cancelE', true, '+ Add Education');
+      g('eSchl').scrollIntoView({ behavior: 'smooth', block: 'center' }); g('eSchl').focus();
+    };
+    window.cancelEditE = () => {
+      editingEId = null;
+      ['eSchl','eDeg','eFld','eGrd'].forEach(id => g(id).value = '');
+      renderE(); setFormEditUI('bAddE', 'cancelE', false, '+ Add Education');
+    };
     function renderS() {
       g('sCont').innerHTML = sList.length === 0
         ? '<p style="font-size:12px;color:#a78bfa;font-style:italic;margin-bottom:8px">No skills added yet.</p>'
         : `<div class="spills">${sList.map((s, i) => `<span class="spill">${esc(s)}<button onclick="rmS(${i})">✕</button></span>`).join('')}</div>`;
     }
-    window.rmW = id => { wList = wList.filter(w => w._id !== id); renderW(); autoSaveDraft(); };
-    window.rmE = id => { eList = eList.filter(e => e._id !== id); renderE(); autoSaveDraft(); };
+    window.rmW = id => { wList = wList.filter(w => w._id !== id); if (editingWId === id) window.cancelEditW(); renderW(); autoSaveDraft(); };
+    window.rmE = id => { eList = eList.filter(e => e._id !== id); if (editingEId === id) window.cancelEditE(); renderE(); autoSaveDraft(); };
     window.rmS = i  => { sList.splice(i, 1); renderS(); autoSaveDraft(); };
-    window.rmCert = id => { certList = certList.filter(c => c._id !== id); renderCert(); autoSaveDraft(); };
-    window.rmProj = id => { projList = projList.filter(p => p._id !== id); renderProj(); autoSaveDraft(); };
-    window.rmLang = id => { langList = langList.filter(l => l._id !== id); renderLang(); autoSaveDraft(); };
+    window.rmCert = id => { certList = certList.filter(c => c._id !== id); if (editingCrtId === id) window.cancelEditCert(); renderCert(); autoSaveDraft(); };
+    window.rmProj = id => { projList = projList.filter(p => p._id !== id); if (editingPrjId === id) window.cancelEditProj(); renderProj(); autoSaveDraft(); };
+    window.rmLang = id => { langList = langList.filter(l => l._id !== id); if (editingLngId === id) window.cancelEditLang(); renderLang(); autoSaveDraft(); };
 
     function renderCert() {
       const el = g('certCont'); if (!el) return;
       el.innerHTML = certList.length === 0
         ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No certifications added yet.</p>'
-        : certList.map(c => `<div class="ec"><div class="ec-top"><div><div class="ec-name">${esc(c.name)}</div><div class="ec-sub">${esc(c.issuer || '')}${c.date ? ' · ' + esc(c.date) : ''}</div></div><button class="ec-rm" onclick="rmCert(${c._id})">✕</button></div></div>`).join('');
+        : certList.map(c => `<div class="ec${c._id===editingCrtId?' editing':''}" onclick="editCert(${c._id})"><div class="ec-top"><div><div class="ec-name">${esc(c.name)}</div><div class="ec-sub">${esc(c.issuer || '')}${c.date ? ' · ' + esc(c.date) : ''}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmCert(${c._id})">✕</button></div><div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
+    window.editCert = id => {
+      const c = certList.find(x => x._id === id); if (!c) return;
+      g('crtName').value = c.name || ''; if (g('crtIssuer')) g('crtIssuer').value = c.issuer || ''; if (g('crtDate')) g('crtDate').value = c.date || '';
+      editingCrtId = id; renderCert();
+      setFormEditUI('bAddCrt', 'cancelCrt', true, '+ Add Certification');
+      g('crtName').scrollIntoView({ behavior: 'smooth', block: 'center' }); g('crtName').focus();
+    };
+    window.cancelEditCert = () => {
+      editingCrtId = null;
+      ['crtName','crtIssuer','crtDate'].forEach(id => { const el = g(id); if (el) el.value = ''; });
+      renderCert(); setFormEditUI('bAddCrt', 'cancelCrt', false, '+ Add Certification');
+    };
     function renderProj() {
       const el = g('projCont'); if (!el) return;
       el.innerHTML = projList.length === 0
         ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No projects added yet.</p>'
-        : projList.map(p => `<div class="ec"><div class="ec-top"><div><div class="ec-name">${esc(p.name)}</div>${p.url ? `<div class="ec-sub">${esc(p.url)}</div>` : ''}</div><button class="ec-rm" onclick="rmProj(${p._id})">✕</button></div>${p.description ? `<div style="font-size:11px;color:#64748b;margin-top:4px">${esc(p.description)}</div>` : ''}</div>`).join('');
+        : projList.map(p => `<div class="ec${p._id===editingPrjId?' editing':''}" onclick="editProj(${p._id})"><div class="ec-top"><div><div class="ec-name">${esc(p.name)}</div>${p.url ? `<div class="ec-sub">${esc(p.url)}</div>` : ''}</div><button class="ec-rm" onclick="event.stopPropagation();rmProj(${p._id})">✕</button></div>${p.description ? `<div style="font-size:11px;color:#64748b;margin-top:4px">${esc(p.description)}</div>` : ''}<div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
+    window.editProj = id => {
+      const p = projList.find(x => x._id === id); if (!p) return;
+      g('prjName').value = p.name || ''; if (g('prjDesc')) g('prjDesc').value = p.description || ''; if (g('prjUrl')) g('prjUrl').value = p.url || '';
+      editingPrjId = id; renderProj();
+      setFormEditUI('bAddPrj', 'cancelPrj', true, '+ Add Project');
+      g('prjName').scrollIntoView({ behavior: 'smooth', block: 'center' }); g('prjName').focus();
+    };
+    window.cancelEditProj = () => {
+      editingPrjId = null;
+      ['prjName','prjDesc','prjUrl'].forEach(id => { const el = g(id); if (el) el.value = ''; });
+      renderProj(); setFormEditUI('bAddPrj', 'cancelPrj', false, '+ Add Project');
+    };
     function renderLang() {
       const el = g('langCont'); if (!el) return;
       el.innerHTML = langList.length === 0
         ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No languages added yet.</p>'
-        : langList.map(l => `<div class="ec"><div class="ec-top"><div><div class="ec-name">${esc(l.language)}</div><div class="ec-sub">${esc(l.proficiency)}</div></div><button class="ec-rm" onclick="rmLang(${l._id})">✕</button></div></div>`).join('');
+        : langList.map(l => `<div class="ec${l._id===editingLngId?' editing':''}" onclick="editLang(${l._id})"><div class="ec-top"><div><div class="ec-name">${esc(l.language)}</div><div class="ec-sub">${esc(l.proficiency)}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmLang(${l._id})">✕</button></div><div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
+    window.editLang = id => {
+      const l = langList.find(x => x._id === id); if (!l) return;
+      g('lngLang').value = l.language || ''; if (g('lngProf')) g('lngProf').value = l.proficiency || 'Fluent';
+      editingLngId = id; renderLang();
+      setFormEditUI('bAddLng', 'cancelLng', true, '+ Add Language');
+      g('lngLang').scrollIntoView({ behavior: 'smooth', block: 'center' }); g('lngLang').focus();
+    };
+    window.cancelEditLang = () => {
+      editingLngId = null;
+      const el = g('lngLang'); if (el) el.value = '';
+      renderLang(); setFormEditUI('bAddLng', 'cancelLng', false, '+ Add Language');
+    };
 
     function addCert() {
       const n = g('crtName')?.value.trim(), s = g('crtIssuer')?.value.trim();
       if (!n) { toast('Certification name is required', 'err'); return; }
-      certList.push({ _id: Date.now(), name: n, issuer: s || '', date: g('crtDate')?.value.trim() || '' });
+      const entry = { name: n, issuer: s || '', date: g('crtDate')?.value.trim() || '' };
+      if (editingCrtId !== null) {
+        const idx = certList.findIndex(c => c._id === editingCrtId);
+        if (idx > -1) certList[idx] = { ...certList[idx], ...entry };
+        toast('Certification updated', 'ok');
+      } else {
+        certList.push({ _id: Date.now(), ...entry });
+      }
+      editingCrtId = null;
       ['crtName','crtIssuer','crtDate'].forEach(id => { const el = g(id); if(el) el.value = ''; });
+      setFormEditUI('bAddCrt', 'cancelCrt', false, '+ Add Certification');
       renderCert(); autoSaveDraft();
     }
     function addProj() {
       const n = g('prjName')?.value.trim();
       if (!n) { toast('Project name is required', 'err'); return; }
-      projList.push({ _id: Date.now(), name: n, description: g('prjDesc')?.value.trim() || '', url: g('prjUrl')?.value.trim() || '' });
+      const entry = { name: n, description: g('prjDesc')?.value.trim() || '', url: g('prjUrl')?.value.trim() || '' };
+      if (editingPrjId !== null) {
+        const idx = projList.findIndex(p => p._id === editingPrjId);
+        if (idx > -1) projList[idx] = { ...projList[idx], ...entry };
+        toast('Project updated', 'ok');
+      } else {
+        projList.push({ _id: Date.now(), ...entry });
+      }
+      editingPrjId = null;
       ['prjName','prjDesc','prjUrl'].forEach(id => { const el = g(id); if(el) el.value = ''; });
+      setFormEditUI('bAddPrj', 'cancelPrj', false, '+ Add Project');
       renderProj(); autoSaveDraft();
     }
     function addLang() {
       const l = g('lngLang')?.value.trim();
       if (!l) { toast('Language is required', 'err'); return; }
-      langList.push({ _id: Date.now(), language: l, proficiency: g('lngProf')?.value || 'Fluent' });
+      const entry = { language: l, proficiency: g('lngProf')?.value || 'Fluent' };
+      if (editingLngId !== null) {
+        const idx = langList.findIndex(x => x._id === editingLngId);
+        if (idx > -1) langList[idx] = { ...langList[idx], ...entry };
+        toast('Language updated', 'ok');
+      } else {
+        langList.push({ _id: Date.now(), ...entry });
+      }
+      editingLngId = null;
       const el = g('lngLang'); if(el) el.value = '';
+      setFormEditUI('bAddLng', 'cancelLng', false, '+ Add Language');
       renderLang(); autoSaveDraft();
     }
     window.addCert = addCert; window.addProj = addProj; window.addLang = addLang;
@@ -1792,16 +1895,34 @@
     function addW() {
       const p = g('wPos').value.trim(), c = g('wComp').value.trim();
       if (!p || !c) { toast('Position and company are required', 'err'); return; }
-      wList.push({ _id: Date.now(), position: p, company: c, startDate: g('wSt').value.trim(), endDate: g('wEn').value.trim(), description: g('wDs').value.trim() });
+      const entry = { position: p, company: c, startDate: g('wSt').value.trim(), endDate: g('wEn').value.trim(), description: g('wDs').value.trim() };
+      if (editingWId !== null) {
+        const idx = wList.findIndex(w => w._id === editingWId);
+        if (idx > -1) wList[idx] = { ...wList[idx], ...entry };
+        toast('Work experience updated', 'ok');
+      } else {
+        wList.push({ _id: Date.now(), ...entry });
+      }
+      editingWId = null;
       ['wPos','wComp','wSt','wEn','wDs'].forEach(id => g(id).value = '');
+      setFormEditUI('bAddW', 'cancelW', false, '+ Add Work Experience');
       renderW();
       autoSaveDraft();
     }
     function addE() {
       const s = g('eSchl').value.trim(), d = g('eDeg').value.trim();
       if (!s || !d) { toast('School and degree are required', 'err'); return; }
-      eList.push({ _id: Date.now(), school: s, degree: d, field: g('eFld').value.trim(), graduationDate: g('eGrd').value.trim() });
+      const entry = { school: s, degree: d, field: g('eFld').value.trim(), graduationDate: g('eGrd').value.trim() };
+      if (editingEId !== null) {
+        const idx = eList.findIndex(e => e._id === editingEId);
+        if (idx > -1) eList[idx] = { ...eList[idx], ...entry };
+        toast('Education updated', 'ok');
+      } else {
+        eList.push({ _id: Date.now(), ...entry });
+      }
+      editingEId = null;
       ['eSchl','eDeg','eFld','eGrd'].forEach(id => g(id).value = '');
+      setFormEditUI('bAddE', 'cancelE', false, '+ Add Education');
       renderE();
       autoSaveDraft();
     }

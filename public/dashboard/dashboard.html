@@ -601,7 +601,11 @@
             <!-- ✦ WORK BULLETS PANEL -->
             <div class="coach-mini-panel" id="workBulletsPanel"></div>
           </div>
-          <button id="bAddW" class="abtn">+ Add Work Experience</button>
+          <p class="add-box-hint">Filling in these fields doesn't save on its own — tap Add below to save this entry.</p>
+          <div class="add-box-actions">
+            <button id="bAddW" class="abtn">+ Add Work Experience</button>
+            <button id="cancelW" class="abtn-cancel" onclick="cancelEditW()" style="display:none">Cancel</button>
+          </div>
         </div>
 
         <!-- Education divider -->
@@ -623,7 +627,10 @@
             <div class="f"><label>Field of Study</label><input id="eFld" type="text" placeholder="Computer Science"/></div>
             <div class="f"><label>Graduation Year</label><input id="eGrd" type="text" placeholder="2023"/></div>
           </div>
-          <button id="bAddE" class="abtn">+ Add Education</button>
+          <div class="add-box-actions">
+            <button id="bAddE" class="abtn">+ Add Education</button>
+            <button id="cancelE" class="abtn-cancel" onclick="cancelEditE()" style="display:none">Cancel</button>
+          </div>
         </div>
 
         <!-- ── OPTIONAL SECTIONS ───────────────────────────────────────────── -->
@@ -646,7 +653,10 @@
                 <div class="f"><label>Issuing Organization</label><input id="crtIssuer" type="text" placeholder="Amazon Web Services"/></div>
               </div>
               <div class="f" style="max-width:200px"><label>Date Obtained</label><input id="crtDate" type="text" placeholder="Jun 2024"/></div>
-              <button id="bAddCrt" class="abtn">+ Add Certification</button>
+              <div class="add-box-actions">
+                <button id="bAddCrt" class="abtn">+ Add Certification</button>
+                <button id="cancelCrt" class="abtn-cancel" onclick="cancelEditCert()" style="display:none">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
@@ -667,7 +677,10 @@
               <div class="f"><label>Project Name</label><input id="prjName" type="text" placeholder="E-commerce Platform"/></div>
               <div class="f"><label>Description</label><textarea id="prjDesc" placeholder="What you built and the impact it had…" style="min-height:50px"></textarea></div>
               <div class="f"><label>URL <span style="font-weight:400;color:var(--mute)">(optional)</span></label><input id="prjUrl" type="text" placeholder="github.com/username/project"/></div>
-              <button id="bAddPrj" class="abtn">+ Add Project</button>
+              <div class="add-box-actions">
+                <button id="bAddPrj" class="abtn">+ Add Project</button>
+                <button id="cancelPrj" class="abtn-cancel" onclick="cancelEditProj()" style="display:none">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
@@ -693,7 +706,10 @@
                   </select>
                 </div>
               </div>
-              <button id="bAddLng" class="abtn">+ Add Language</button>
+              <div class="add-box-actions">
+                <button id="bAddLng" class="abtn">+ Add Language</button>
+                <button id="cancelLng" class="abtn-cancel" onclick="cancelEditLang()" style="display:none">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
