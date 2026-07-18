@@ -7307,17 +7307,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     const JOBS_CACHE_KEY = 'kievora_home_jobs_cache';
     let _jobsSwiperRendered = false; // in-memory guard — cleared only on tab close
 
-    function _saveJobsCache(jobs, query) {
+    function _saveJobsCache(jobs, query, countryCode) {
       try {
-        sessionStorage.setItem(JOBS_CACHE_KEY, JSON.stringify({ jobs, query, ts: Date.now() }));
+        sessionStorage.setItem(JOBS_CACHE_KEY, JSON.stringify({ jobs, query, countryCode: countryCode||'worldwide', ts: Date.now() }));
       } catch {}
     }
-    function _loadJobsCache(query) {
+    function _loadJobsCache(query, countryCode) {
       try {
         const c = JSON.parse(sessionStorage.getItem(JOBS_CACHE_KEY) || 'null');
         if (!c || !c.jobs?.length) return null;
         if (Date.now() - c.ts > JOBS_CACHE_TTL) return null; // stale
         if (c.query !== query) return null; // different search
+        if ((c.countryCode||'worldwide') !== (countryCode||'worldwide')) return null; // country changed (e.g. on find-jobs) — must refetch
         return c.jobs;
       } catch { return null; }
     }
@@ -7359,18 +7360,20 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (cta)     cta.style.display     = 'none';
       if (section) section.style.display = '';
 
+      const country = await getUserCountry();
+
       if (pill) {
-        const country = await getUserCountry();
         const countryLabel = country.code !== 'worldwide' ? ` · ${country.name}` : '';
         const sourceLabel = { builder:'resume', analyzer:'analysis', kie:'KIE AI', manual:'you', category:'your category', profile:'profile' }[prof.source] || '';
         pill.textContent = prof.title + (sourceLabel ? ` · via ${sourceLabel}` : '') + countryLabel;
       }
 
       // ── Cache check — skip fetch if data is still fresh ──────────────────────
-      // If we already rendered this session AND it's the same query, just restore
-      // from sessionStorage (survives find-jobs → back navigation) or skip entirely
+      // If we already rendered this session AND it's the same query AND the same
+      // country, just restore from sessionStorage (survives find-jobs → back
+      // navigation) or skip entirely. A country change on find-jobs must bust this.
       if (!force) {
-        const cached = _loadJobsCache(prof.title);
+        const cached = _loadJobsCache(prof.title, country.code);
         if (cached) {
           window._homeJobs = cached;
           if (_jobsSwiperRendered) return; // DOM already has the cards — nothing to do
@@ -7388,7 +7391,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       try {
         const allJobs = await fetchJobs(prof.title, 8);
         window._homeJobs = allJobs;
-        _saveJobsCache(allJobs, prof.title);
+        _saveJobsCache(allJobs, prof.title, country.code);
         _jobsSwiperRendered = true;
         if (!cards) return;
         if (!allJobs.length) {

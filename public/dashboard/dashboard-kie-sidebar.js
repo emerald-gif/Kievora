@@ -272,6 +272,7 @@
         const isActive = c.id === _activeId;
         html += `
           <div class="ksb-item${isActive?' active':''}" data-id="${c.id}">
+            <div class="ksb-item-ico"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8-1.192 0-2.328-.208-3.362-.587L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div>
             <div class="ksb-item-inner" onclick="loadConversation('${c.id}')">
               <div class="ksb-item-title">${escHtml(c.title||'Conversation')}</div>
               <div class="ksb-item-meta">${fmtTime(c.updatedAt||c.createdAt||Date.now())}${c.preview?` · ${escHtml(c.preview.slice(0,30))}…`:''}</div>
