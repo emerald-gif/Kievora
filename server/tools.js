@@ -726,7 +726,10 @@ module.exports = function registerToolsRoutes(app) {
         user_agent:  'Mozilla/5.0 (compatible; KievoraJobsBot/1.0)',
       });
       const res = await fetch(`https://search.api.careerjet.net/v4/query?${params.toString()}`, {
-        headers: { Authorization: `Basic ${auth}` },
+        headers: {
+          Authorization: `Basic ${auth}`,
+          Referer: 'https://kievora.app/',
+        },
       });
       if (!res.ok) {
         const bodyText = await res.text().catch(() => '');
