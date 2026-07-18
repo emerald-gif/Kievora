@@ -2288,6 +2288,63 @@
       return 'auto'; // longer than one page — paginate normally, don't clip
     }
 
+    // ── DOWNLOAD PROGRESS OVERLAY ────────────────────────────────────────────
+    // One standard, full-page "preparing your download" screen — used by
+    // every Download entry point (resume, cover letter, KIE tool reports) so
+    // it looks and behaves the same everywhere, instead of just a quiet toast.
+    // The ~600-700ms window before print() fires already existed (giving the
+    // iframe time to lay out before printing) — this just makes that wait
+    // visible with a real end-to-end progress bar instead of a blank screen.
+    function _kieDownloadOverlay() {
+      let el = document.getElementById('kieDlOverlay');
+      if (el) return el;
+      el = document.createElement('div');
+      el.id = 'kieDlOverlay';
+      el.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:0;pointer-events:none;transition:opacity .25s ease';
+      el.innerHTML = `
+        <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(124,58,237,.3)">
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </div>
+        <div id="kieDlOverlayLabel" style="font-size:15px;font-weight:800;color:#0f0e17;letter-spacing:-.2px">Preparing your download…</div>
+        <div style="width:220px;height:6px;background:#f0eeff;border-radius:99px;overflow:hidden">
+          <div id="kieDlOverlayBar" style="width:0%;height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:99px"></div>
+        </div>
+      `;
+      document.body.appendChild(el);
+      return el;
+    }
+    function _kieShowDownloadOverlay(label) {
+      const el  = _kieDownloadOverlay();
+      const lbl = el.querySelector('#kieDlOverlayLabel');
+      const bar = el.querySelector('#kieDlOverlayBar');
+      if (lbl) lbl.textContent = label || 'Preparing your download…';
+      // Reset instantly (no transition), then force a reflow so the fill-up
+      // below actually animates from 0 instead of jump-cutting to the target.
+      bar.style.transition = 'none';
+      bar.style.width = '0%';
+      void bar.offsetWidth;
+      el.style.pointerEvents = 'auto';
+      requestAnimationFrame(() => {
+        el.style.opacity = '1';
+        bar.style.transition = 'width 1.1s cubic-bezier(.4,0,.2,1)';
+        requestAnimationFrame(() => { bar.style.width = '92%'; });
+      });
+    }
+    function _kieHideDownloadOverlay() {
+      const el = document.getElementById('kieDlOverlay');
+      if (!el) return;
+      const bar = el.querySelector('#kieDlOverlayBar');
+      // Snap the bar to a full, satisfying 100% right as we close it out —
+      // "end to end" rather than fading away at 92%.
+      if (bar) { bar.style.transition = 'width .2s ease'; bar.style.width = '100%'; }
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+      }, 180);
+    }
+    window._kieShowDownloadOverlay = _kieShowDownloadOverlay;
+    window._kieHideDownloadOverlay = _kieHideDownloadOverlay;
+
     function dlResume(id) {
       const r = getMergedResumes().find(x => x.id === id);
       if (!r) return;
@@ -2309,6 +2366,8 @@
         + '@media print{@page{size:' + pageSizeCSS + ';margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
         + '</head><body>' + html + '</body></html>';
 
+      _kieShowDownloadOverlay('Preparing your resume PDF…');
+
       // PRIMARY: hidden iframe — bypasses Android popup blocker
       try {
         const ifrEl = document.createElement('iframe');
@@ -2318,17 +2377,19 @@
         iDoc.open(); iDoc.write(fullDoc); iDoc.close();
         setTimeout(function() {
           try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
+          _kieHideDownloadOverlay();
           setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
         }, 600);
         toast('Print dialog opening — choose "Save as PDF"');
         return;
-      } catch(e) { /* fall through */ }
+      } catch(e) { _kieHideDownloadOverlay(); /* fall through */ }
 
       // FALLBACK: blob URL new tab
       const blob = new Blob([fullDoc], { type: 'text/html' });
       const url  = URL.createObjectURL(blob);
       const printWin = window.open(url, '_blank');
       if (!printWin) {
+        _kieHideDownloadOverlay();
         const a = document.createElement('a');
         a.href = url; a.download = title + '.html';
         a.style.display = 'none'; document.body.appendChild(a);
@@ -2336,7 +2397,7 @@
         toast('Resume saved to Downloads — open it and print as PDF');
         return;
       }
-      printWin.onload = function() { setTimeout(function() { printWin.focus(); printWin.print(); }, 600); };
+      printWin.onload = function() { setTimeout(function() { printWin.focus(); printWin.print(); _kieHideDownloadOverlay(); }, 600); };
       toast('Choose "Save as PDF" in the print dialog');
     }
 
@@ -4908,6 +4969,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         + '@media print{@page{size:' + pageSizeCSS + ';margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
         + '</head><body>' + html + '</body></html>';
 
+      _kieShowDownloadOverlay('Preparing your resume PDF…');
+
       // PRIMARY: hidden iframe — bypasses Android Chrome popup blocker entirely
       // because it prints within the same page context, no new window needed.
       try {
@@ -4918,11 +4981,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         iDoc.open(); iDoc.write(fullHtml); iDoc.close();
         setTimeout(function() {
           try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
+          _kieHideDownloadOverlay();
           setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
         }, 600);
         toast('Print dialog opening — choose "Save as PDF" in the menu');
         return true;
-      } catch(ifrErr) { /* fall through to blob-URL approaches */ }
+      } catch(ifrErr) { _kieHideDownloadOverlay(); /* fall through to blob-URL approaches */ }
 
       // FALLBACK A: blob URL in a new tab (desktop + some mobile)
       const blob = new Blob([fullHtml], { type: 'text/html' });
@@ -4932,11 +4996,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const printWin = window.open(url, '_blank');
         if (printWin) {
           opened = true;
-          setTimeout(function() { try { printWin.focus(); printWin.print(); } catch(e) {} }, 700);
+          setTimeout(function() { try { printWin.focus(); printWin.print(); } catch(e) {} _kieHideDownloadOverlay(); }, 700);
         }
       } catch(e) { opened = false; }
 
       if (!opened) {
+        _kieHideDownloadOverlay();
         // FALLBACK B: <a download> — downloads the HTML file to device storage,
         // most reliable last resort on stubborn Android browsers.
         const a = document.createElement('a');
@@ -8649,6 +8714,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           + '@media print{@page{size:' + pageSizeCSS + ';margin:' + MARGIN_IN + 'in}html,body{margin:0;padding:0;width:100%}}</style>'
           + '</head><body>' + html + '</body></html>';
 
+        _kieShowDownloadOverlay('Preparing your cover letter PDF…');
+
         // PRIMARY: hidden iframe
         try {
           const ifrEl = document.createElement('iframe');
@@ -8658,17 +8725,19 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           iDoc.open(); iDoc.write(fullDoc); iDoc.close();
           setTimeout(function() {
             try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
+            _kieHideDownloadOverlay();
             setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
           }, 600);
           toast('Print dialog opening — choose "Save as PDF"');
           return;
-        } catch(e) { /* fall through */ }
+        } catch(e) { _kieHideDownloadOverlay(); /* fall through */ }
 
         // FALLBACK
         const blob = new Blob([fullDoc], { type: 'text/html' });
         const url  = URL.createObjectURL(blob);
         const printWin = window.open(url, '_blank');
         if (!printWin) {
+          _kieHideDownloadOverlay();
           const a = document.createElement('a');
           a.href = url; a.download = title + '.html';
           a.style.display = 'none'; document.body.appendChild(a);
@@ -8676,7 +8745,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           toast('Cover letter saved to Downloads — open it and print as PDF');
           return;
         }
-        printWin.onload = function() { setTimeout(function() { printWin.focus(); printWin.print(); }, 600); };
+        printWin.onload = function() { setTimeout(function() { printWin.focus(); printWin.print(); _kieHideDownloadOverlay(); }, 600); };
         toast('Choose "Save as PDF" in the print dialog');
       };
 
@@ -9000,6 +9069,8 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           + '<style>'+REP_CSS+'</style>'
           + '</head><body>'+html+'</body></html>';
 
+        _kieShowDownloadOverlay('Preparing your ' + title + ' report…');
+
         // PRIMARY: hidden iframe — no popup blocker on mobile
         try {
           const ifrEl = document.createElement('iframe');
@@ -9009,17 +9080,19 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           iDoc.open(); iDoc.write(fullDoc); iDoc.close();
           setTimeout(function() {
             try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
+            _kieHideDownloadOverlay();
             setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
           }, 700);
           toast('Print dialog opening — choose "Save as PDF"');
           return;
-        } catch(e) { /* fall through */ }
+        } catch(e) { _kieHideDownloadOverlay(); /* fall through */ }
 
         // FALLBACK: blob URL new tab
         const blob = new Blob([fullDoc], { type: 'text/html' });
         const url  = URL.createObjectURL(blob);
         const printWin = window.open(url, '_blank');
         if (!printWin) {
+          _kieHideDownloadOverlay();
           const a = document.createElement('a');
           a.href = url; a.download = fullTitle + '.html';
           a.style.display = 'none'; document.body.appendChild(a);
@@ -9027,7 +9100,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           toast('Report saved to Downloads — open it and print as PDF');
           return;
         }
-        printWin.onload = function() { setTimeout(function(){ printWin.focus(); printWin.print(); }, 600); };
+        printWin.onload = function() { setTimeout(function(){ printWin.focus(); printWin.print(); _kieHideDownloadOverlay(); }, 600); };
         toast('Choose "Save as PDF" in the print dialog');
       };
 
