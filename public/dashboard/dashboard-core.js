@@ -304,6 +304,70 @@
     }
     window.lockTapped = lockTapped; // bridge — needed by job card onclicks generated outside this module scope
 
+    // ── KIE [GOTO:key] destinations ─────────────────────────────────────────
+    // Every real place inside Kievora KIE can point a user to from chat via a
+    // [GOTO:key] marker in its reply (see _kieApplyGotoMarkers below). Keys
+    // MUST match server/kie.js's KIE_TOOL_KB exactly — that's what tells KIE
+    // which keys exist and whether each is locked for the current user; this
+    // object is just what actually happens when the resulting button is
+    // tapped. Reuses the exact same navigation + paywall-lock path every
+    // other button in the app already uses (isToolUnlocked, lockTapped,
+    // openKieTool, showView) — nothing new to keep in sync at runtime,
+    // "locked" here always reflects the user's real current plan.
+    const KIE_GOTO_DESTINATIONS = {
+      ...Object.fromEntries(Object.keys(TOOL_INFO).map(key => [key, {
+        label: TOOL_INFO[key].title,
+        locked: () => !isToolUnlocked(key),
+        open: () => { if (typeof window.openKieTool === 'function') window.openKieTool(key); },
+        lock: () => lockTapped('tool', key),
+      }])),
+      upload:      { label: 'Upload & Analyze',  locked: () => !isFeatureUnlocked('uploadAnalyze'),
+        open: () => showView('upload'), lock: () => lockTapped('uploadAnalyze') },
+      coverletter: { label: 'Cover Letter',       locked: () => !isFeatureUnlocked('coverLetterFromResume'),
+        open: () => { if (typeof window.openKieTool === 'function') window.openKieTool('coverletter'); }, lock: () => lockTapped('coverLetter') },
+      builder:     { label: 'Resume Builder',    locked: () => false, open: () => showView('builder') },
+      tpick:       { label: 'Choose a Template', locked: () => false, open: () => showView('tpick') },
+      allresumes:  { label: 'My Resumes',        locked: () => false, open: () => showView('allresumes') },
+      moretools:   { label: 'More Tools',        locked: () => false, open: () => { if (typeof window.openMoreTools === 'function') window.openMoreTools(); } },
+      home:        { label: 'Dashboard Home',    locked: () => false, open: () => showView('home') },
+      billing:     { label: 'Billing & Plans',   locked: () => false, open: () => { window.location.href = '/billing'; } },
+      findjobs:    { label: 'Find Jobs',         locked: () => !isFeatureUnlocked('findJobsClick'),
+        open: () => { window.location.href = '/find-jobs'; }, lock: () => lockTapped('findJobs') },
+      gmailai:     { label: 'Gmail AI',          locked: () => !isFeatureUnlocked('gmail'),
+        open: () => { window.location.href = '/gmail-ai'; }, lock: () => lockTapped('gmail') },
+      settings:    { label: 'Settings',          locked: () => false, open: () => { window.location.href = '/settings'; } },
+      account:     { label: 'My Account',        locked: () => false, open: () => { window.location.href = '/account'; } },
+      support:     { label: 'Support',           locked: () => false, open: () => { window.location.href = '/support'; } },
+    };
+
+    function _kieGotoClick(key) {
+      const dest = KIE_GOTO_DESTINATIONS[key];
+      if (!dest) return;
+      if (dest.locked()) {
+        (dest.lock || (() => lockTapped('tool', key)))();
+      } else {
+        dest.open();
+      }
+    }
+    window._kieGotoClick = _kieGotoClick;
+
+    // Self-contained styling for the [GOTO:] button — injected once here
+    // rather than added to dashboard.css, so this feature doesn't depend on
+    // that file being in sync with this one.
+    (function _kieInjectGotoStyles() {
+      if (document.getElementById('kie-goto-style')) return;
+      const style = document.createElement('style');
+      style.id = 'kie-goto-style';
+      style.textContent = `
+        .kie-goto-btn{display:inline-flex;align-items:center;gap:5px;margin:4px 6px 4px 0;padding:8px 13px;border-radius:11px;border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;font:600 12.5px/1.3 inherit;cursor:pointer;transition:transform .12s ease;vertical-align:middle}
+        .kie-goto-btn:active{transform:scale(.96)}
+        .kie-goto-btn::after{content:'→';margin-left:1px;opacity:.7}
+        .kie-goto-btn.kie-goto-locked{background:#f8fafc;color:#64748b;border-color:#e2e8f0}
+        .kie-goto-btn.kie-goto-locked::after{content:none}
+      `;
+      document.head.appendChild(style);
+    })();
+
     // Re-renders every plan-aware surface currently in the DOM. Called once
     // after loadPlanGates() resolves, and again any time the plan might have
     // changed (e.g. coming back from a successful checkout).
@@ -3293,6 +3357,10 @@
         if (userPrompt)
           msg += `You also said: "${userPrompt}" — `;
         msg += `**Want a real downloadable PDF?** Say "build me a resume" and I'll turn this into a full Kievora resume — pick from 13 templates and download it anytime. 📄\n\nOr tell me which area above to fix first.`;
+        // Free-plan uploads occasionally (not every time — see
+        // FREE_RESUME_UPSELL_CHANCE server-side) carry one soft upgrade
+        // line; paid plans never get this field at all.
+        if (analysis.upgradeMessage) msg += `\n\n${analysis.upgradeMessage}`;
       }
 
       appendKMsg('ai', msg, true);
@@ -7770,6 +7838,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       });
     }
 
+    // Turns "[GOTO:key]" markers into real tappable buttons that jump
+    // straight to a tool or page — server/kie.js's KIE_TOOL_KB tells KIE
+    // which keys exist and whether each is locked for this user; this just
+    // renders whatever key it used. Unlike [IMG]/[CARDS:], more than one of
+    // these is fine in a single answer (recommending two tools is a normal,
+    // useful thing to do) — no "used" cap here. An unrecognized key (model
+    // hallucination) is dropped silently rather than showing a dead button.
+    function _kieApplyGotoMarkers(html) {
+      return html.replace(/\[GOTO:([a-zA-Z]+)\]/g, (m, key) => {
+        const dest = KIE_GOTO_DESTINATIONS[key];
+        if (!dest) return '';
+        const locked = dest.locked();
+        return `<button type="button" class="kie-goto-btn${locked ? ' kie-goto-locked' : ''}" onclick="_kieGotoClick('${key}')">${esc(dest.label)}${locked ? ' 🔒' : ''}</button>`;
+      });
+    }
+
     function formatKieText(text, sources, images, mode) {
       let t = esc(String(text || '')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       const lines = t.split('\n');
@@ -7819,7 +7903,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       flush();
       const withCites = _kieApplyCitePills(out.join(''), sources);
       const withCards = _kieApplyCardMarker(withCites, sources, mode);
-      return _kieApplyImageMarker(withCards, images);
+      const withImage = _kieApplyImageMarker(withCards, images);
+      return _kieApplyGotoMarkers(withImage);
     }
     function toast(msg, type = 'ok') {
       const t = g('toast');
