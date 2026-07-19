@@ -507,7 +507,7 @@
     </div>
     <div class="modal-btns">
       <button type="button" class="mbtn mbtn-cancel" onclick="closeEditModal()">Cancel</button>
-      <button type="button" class="mbtn mbtn-save" onclick="saveProfile()">Save Changes</button>
+      <button type="button" class="mbtn mbtn-save" id="editSaveBtn" onclick="saveProfile()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -601,6 +601,11 @@
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db   = firebase.firestore();
+  // Some mobile networks/VPNs silently block Firestore's default streaming
+  // connection — writes then hang indefinitely instead of erroring, which is
+  // exactly what was happening here. This makes the SDK detect that and fall
+  // back to plain long-polling automatically.
+  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
 
   let currentUser      = null;
   let _accountUsername = ''; // currently saved username
@@ -1016,6 +1021,9 @@
   };
 
   async function saveProfile() {
+    const btn = document.getElementById('editSaveBtn');
+    const originalLabel = btn ? btn.innerHTML : '';
+    let timeout;
     try {
       const nameField = document.getElementById('editName');
       const userField = document.getElementById('editUsername');
@@ -1027,6 +1035,14 @@
       if (newUsername && !/^[a-z0-9_]{3,20}$/.test(newUsername)) { toast('Invalid username format', 'err'); return; }
       const usernameChanged = newUsername && newUsername !== _accountUsername;
       if (usernameChanged && !window._accountUsernameOk) { toast('That username is already taken', 'err'); return; }
+
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spinner"></span>Saving…'; }
+      timeout = setTimeout(() => {
+        if (btn && btn.disabled) {
+          btn.disabled = false; btn.innerHTML = originalLabel;
+          toast('Taking too long — check your connection and try again', 'err');
+        }
+      }, 12000);
 
       // 1. Update Firebase Auth displayName
       await currentUser.updateProfile({ displayName: name });
@@ -1049,6 +1065,7 @@
       if (newUsername) fsUpdate.username = newUsername;
       await db.collection('users').doc(currentUser.uid).set(fsUpdate, { merge: true });
 
+      clearTimeout(timeout);
       // Update UI
       document.getElementById('profileName').textContent       = name;
       document.getElementById('infoName').textContent          = name;
@@ -1068,8 +1085,12 @@
       closeEditModal();
       toast('Profile updated!');
     } catch (e) {
+      clearTimeout(timeout);
       console.error('saveProfile failed:', e);
-      toast('Failed: ' + e.message, 'err');
+      toast('Failed: ' + (e.message || e.code || 'unknown error'), 'err');
+    } finally {
+      clearTimeout(timeout);
+      if (btn) { btn.disabled = false; btn.innerHTML = originalLabel; }
     }
   }
   window.saveProfile = saveProfile;
