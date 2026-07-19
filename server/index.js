@@ -61,6 +61,7 @@ require('./gmail')(app);
 require('./billing')(app);
 require('./kie')(app);
 require('./tools')(app);
+require('./job-alerts'); // starts the weekly job-alerts cron — needs tools.js's findJobsCore registered first, hence the order
 if (ENABLE_ARTICLES) {
   require('./articles')(app, { admin, db, authenticate });
 }

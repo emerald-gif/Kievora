@@ -986,6 +986,73 @@ async function sendNewsletterConfirmationEmail(email) {
   }
 }
 
+// ─── Brevo Weekly Job Alert Email (templateId 5) ───────────────────────────────
+// Fired from the weekly job-alerts cron (server/job-alerts.js). Jobs are
+// rendered to HTML here (not via Brevo's own template loop syntax) so the
+// card markup stays exactly in sync with the rest of the site and doesn't
+// depend on what Brevo's editor supports. Every job card links to the SAME
+// find-jobs deep link (title + country prefilled) rather than an external
+// posting URL — the goal is to bring people back into Kievora, where they
+// can see the full, current list (a link saved in an email goes stale the
+// moment a listing is filled; the search itself doesn't).
+async function sendJobAlertEmail(email, name, jobs, jobTitle, countryName, findJobsUrl) {
+  const brevoKey = process.env.BREVO_API_KEY;
+  if (!brevoKey || !email || !jobs || !jobs.length) return false;
+  try {
+    const jobsListHtml = jobs.map(j => `
+      <tr>
+        <td style="padding:20px 0;border-bottom:1px solid #F1F1F1;">
+          <a href="${findJobsUrl}" target="_blank" style="text-decoration:none;color:inherit;display:block;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="top">
+                <p style="margin:0 0 3px 0;font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:#7C3AED;">${(j.company||'').replace(/</g,'&lt;').slice(0,60)}</p>
+                <p style="margin:0 0 6px 0;font-family:'Sora',Arial,sans-serif;font-size:15.5px;font-weight:700;color:#0A0A0B;">${(j.title||'').replace(/</g,'&lt;').slice(0,90)}</p>
+                <p style="margin:0 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;color:#9CA3AF;">${(j.location||countryName||'').replace(/</g,'&lt;')}${j.remote ? ' · Remote' : ''}</p>
+                <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;line-height:20px;color:#6B7280;">${(j.snippet||'').replace(/</g,'&lt;').slice(0,140)}</p>
+              </td>
+            </tr>
+          </table>
+          </a>
+        </td>
+      </tr>`).join('');
+
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': brevoKey,
+      },
+      body: JSON.stringify({
+        sender:     { email: 'support@kievora.app', name: 'Kievora' },
+        to:         [{ email, name: name || email }],
+        templateId: 5,
+        params:     {
+          email, name: name || '',
+          jobTitle, countryName,
+          jobCount: jobs.length,
+          jobsListHtml,
+          findJobsUrl,
+        },
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error('❌ Brevo job alert email failed:', res.status, errBody);
+      return false;
+    }
+    console.log(`✅ Job alert email sent → ${email} (${jobs.length} jobs: "${jobTitle}" in ${countryName})`);
+    db.collection('emailLogs').add({
+      email, type: 'weekly_job_alert', success: true, jobCount: jobs.length,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+    return true;
+  } catch (err) {
+    console.error('❌ Brevo sendJobAlertEmail error:', err.message);
+    return false;
+  }
+}
+
 // Sunday digest — only sent if there's actually something to report, and only
 // to users who haven't opted out (digestOptOut field, default false/on, since
 // connecting Gmail is itself an opt-in signal they want to be kept posted).
@@ -1522,7 +1589,7 @@ module.exports = {
   UPGRADE_MESSAGES, TOPUP_MESSAGES,
   callKieAI, callKieAIStream, callKieAIJson, parseAIJson, fetchWithRetry,
   performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
-  sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest, sendTicketConfirmationEmail, sendNewsletterConfirmationEmail,
+  sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest, sendTicketConfirmationEmail, sendNewsletterConfirmationEmail, sendJobAlertEmail,
   classifyCareerEmail, extractEmailEntities, extractInterviewDateTime, normaliseStr, isSameApplication,
   syncUserGmail, buildApplicationList, generateInsights, computeNextAction, attachStaleFlags, computePipelineStats,
   getWeekKey, recordPipelineTrend, getTrendComparison, detectGhostingPattern, buildKieBrainBlock,
