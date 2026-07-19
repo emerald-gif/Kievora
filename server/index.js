@@ -138,6 +138,49 @@ app.post('/api/claim-username', authenticate, async (req, res) => {
   }
 });
 
+// ─── POST /api/update-profile ──────────────────────────────────────────────────
+// Writes name / jobTitle / category / jobAlert via the Admin SDK, server-side.
+// Added because the CLIENT Firestore SDK's write connection was hanging
+// indefinitely (no error, just never resolving) on some users' networks/VPNs —
+// a known issue where a network blocks Firestore's own streaming channel
+// while regular HTTPS to our own server works completely fine. Routing the
+// write through here sidesteps that, the same way claim-username already
+// does successfully for usernames.
+app.post('/api/update-profile', authenticate, async (req, res) => {
+  const uid = req.user.uid;
+  const allowedFields = ['name', 'displayName', 'jobTitle', 'category', 'jobAlert'];
+  const update = {};
+  for (const f of allowedFields) {
+    if (req.body[f] !== undefined) update[f] = req.body[f];
+  }
+  if (!Object.keys(update).length) return res.status(400).json({ error: 'No fields to update' });
+  update.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+  try {
+    await db.collection(USERS).doc(uid).set(update, { merge: true });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('POST /api/update-profile ERROR:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── GET /api/profile ───────────────────────────────────────────────────────────
+// Reads the user's own doc via the Admin SDK. Added alongside /api/update-profile
+// for the same reason — the client Firestore SDK's connection (reads included,
+// not just writes) can hang indefinitely on some networks/VPNs with no error at
+// all, which showed up as "username not set" even right after saving successfully.
+app.get('/api/profile', authenticate, async (req, res) => {
+  try {
+    const snap = await db.collection(USERS).doc(req.user.uid).get();
+    res.json({ exists: snap.exists, data: snap.exists ? snap.data() : null });
+  } catch (err) {
+    console.error('GET /api/profile ERROR:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
 // ─── POST /api/register-user ───────────────────────────────────────────────────
 // Called by signup.html after Firebase Auth creates the user.
 // Writes the users doc server-side (Admin SDK bypasses rules) and sends welcome email.
