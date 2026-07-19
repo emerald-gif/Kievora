@@ -333,6 +333,27 @@
   .fjd-listed-via { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 12px; font-size: 11.5px; color: #94a3b8; font-weight: 600; }
   .fjd-listed-badge { background: #f8f7ff; border: 1.5px solid #ede9fe; border-radius: 20px; padding: 3px 10px; font-size: 10.5px; font-weight: 800; color: #7c3aed; letter-spacing: .2px; }
 
+  /* ── JOB ALERTS BANNER ── */
+  .alert-banner {
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg,#f8f7ff,#f3eeff); border: 1.5px solid #e9e2ff;
+    border-radius: 16px; padding: 14px 14px; margin-bottom: 16px;
+  }
+  .alert-banner-ico { font-size: 20px; flex-shrink: 0; }
+  .alert-banner-txt { flex: 1; min-width: 0; }
+  .alert-banner-title { font-size: 13px; font-weight: 800; color: var(--txt); }
+  .alert-banner-sub { font-size: 11.5px; color: var(--sub); margin-top: 1px; }
+  .alert-banner-btn {
+    background: var(--g); color: #fff; border: none; border-radius: 10px;
+    padding: 9px 14px; font-size: 12.5px; font-weight: 800; white-space: nowrap;
+    cursor: pointer; box-shadow: 0 6px 16px rgba(124,58,237,.22); flex-shrink: 0;
+  }
+  .alert-banner-x {
+    background: none; border: none; color: #b4aed6; font-size: 13px; cursor: pointer;
+    padding: 4px; flex-shrink: 0;
+  }
+  @media (max-width: 380px) { .alert-banner-sub { display: none; } }
+
   /* ── SECTION HEADER ── */
   .sec-hdr {
     display: flex; align-items: center; justify-content: space-between;
@@ -669,6 +690,17 @@
       <button class="chip" data-filter="full" onclick="setFilter(this,'full')">Full-time</button>
       <button class="chip" data-filter="part" onclick="setFilter(this,'part')">Part-time</button>
       <button class="chip" data-filter="contract" onclick="setFilter(this,'contract')">Contract</button>
+    </div>
+
+    <!-- Job Alerts engagement banner -->
+    <div class="alert-banner" id="alertBanner" style="display:none">
+      <div class="alert-banner-ico">🔔</div>
+      <div class="alert-banner-txt">
+        <div class="alert-banner-title">Get weekly alerts for this search</div>
+        <div class="alert-banner-sub" id="alertBannerSub">We'll email you new matches every week</div>
+      </div>
+      <button class="alert-banner-btn" onclick="goSetJobAlert()">Turn on</button>
+      <button class="alert-banner-x" onclick="dismissAlertBanner()" aria-label="Dismiss">✕</button>
     </div>
 
     <!-- Results header -->
@@ -1255,6 +1287,41 @@ function onCountryChange() {
   if (q) loadJobs(q, true); // force=true — country changed, must re-fetch
 }
 
+// ── Job Alerts engagement banner ──────────────────────────────────────────────
+// Points people at /account to turn on weekly alerts for whatever they just
+// searched. Dismissible per-search-term so it doesn't nag on every keystroke,
+// and hidden entirely once they've already turned alerts on for this exact
+// title+country (best-effort check against the Firestore-synced localStorage
+// mirror — no extra network round trip needed here).
+function _alertBannerDismissKey(q) {
+  const uid = window.__fjUid || 'anon';
+  return `kievora_alert_dismissed_${uid}_${(q||'').toLowerCase().trim()}`;
+}
+function updateAlertBanner(hasResults) {
+  const banner = g('alertBanner');
+  if (!banner) return;
+  const q = g('searchInp')?.value?.trim();
+  if (!hasResults || !q) { banner.style.display = 'none'; return; }
+  try {
+    if (localStorage.getItem(_alertBannerDismissKey(q))) { banner.style.display = 'none'; return; }
+  } catch {}
+  const countryName = _countryName || 'Worldwide';
+  const sub = g('alertBannerSub');
+  if (sub) sub.textContent = `New "${q}" matches in ${countryName}, sent every week`;
+  banner.style.display = 'flex';
+}
+function dismissAlertBanner() {
+  const q = g('searchInp')?.value?.trim();
+  try { if (q) localStorage.setItem(_alertBannerDismissKey(q), '1'); } catch {}
+  const banner = g('alertBanner');
+  if (banner) banner.style.display = 'none';
+}
+function goSetJobAlert() {
+  const q = g('searchInp')?.value?.trim() || '';
+  const country = _selectedCountry || 'worldwide';
+  window.location.href = `/account?openJobAlerts=1&title=${encodeURIComponent(q)}&country=${encodeURIComponent(country)}`;
+}
+
 function getCurrentProfQuery() {
   const uid   = window.__fjUid || 'anon';
   const saved = localStorage.getItem(`kievora_jobs_prof_${uid}`);
@@ -1403,6 +1470,7 @@ function renderJobs() {
   const visible  = filtered.slice(0, page * PAGE_SIZE);
 
   g('jobCount').textContent = filtered.length ? `${filtered.length} jobs found` : '';
+  updateAlertBanner(filtered.length > 0);
 
   if (!filtered.length) {
     grid.innerHTML = '';
@@ -1926,6 +1994,37 @@ populateSortModal();
 window.__onFindJobsAuthReady = async function() {
   // Detect country first, then load jobs so the first search is already localised
   await detectAndSetCountry();
+
+  // Deep link from the weekly job-alert email or the Account page
+  // (/find-jobs?q=...&country=...) — a specific search always wins over
+  // whatever profession/country was previously saved, since the person
+  // clicked through wanting exactly that search, not their general default.
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlQuery   = urlParams.get('q');
+  const urlCountry = urlParams.get('country');
+  if (urlQuery || urlCountry) {
+    if (urlCountry) {
+      const sel = g('countrySelect');
+      const opt = sel && [...sel.options].find(o => o.value === urlCountry.toLowerCase());
+      if (opt) {
+        sel.value = opt.value;
+        _selectedCountry = opt.value;
+        _countryName = (opt.text || '').replace(/^\S+\s*/, '');
+        try {
+          localStorage.setItem(`kievora_country_${window.__fjUid||'anon'}`, JSON.stringify({ code: _selectedCountry, name: _countryName }));
+        } catch {}
+        applyCountryToUI(_selectedCountry, false);
+      }
+    }
+    if (urlQuery && g('searchInp')) g('searchInp').value = urlQuery;
+    window.history.replaceState({}, '', '/find-jobs'); // clean the URL so a refresh doesn't re-trigger
+    updateLocationFieldState();
+    updateSavedCountBadge();
+    renderProfBar();
+    if (urlQuery) { setProfession(urlQuery, 'manual'); loadJobs(urlQuery, true); }
+    return;
+  }
+
   updateLocationFieldState(); // covers the case where detection stayed at "worldwide"
   updateSavedCountBadge();
   const hasProfession = renderProfBar();
