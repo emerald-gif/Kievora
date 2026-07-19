@@ -790,11 +790,15 @@
     await loadPlanInfo(token);
     await loadGmailStatus(token);
 
-    // Load username + extra fields from Firestore
+    // Load username + extra fields — routed through our own server (Admin SDK)
+    // instead of a direct client Firestore read, since that read (like the
+    // writes) can hang/fail with no error on some networks/VPNs.
     try {
-      const snap = await db.collection('users').doc(u.uid).get();
-      if (snap.exists) {
-        const d = snap.data();
+      const profRes = await fetch('/api/profile', { headers: { 'Authorization': 'Bearer ' + token } });
+      const profJson = await profRes.json();
+      if (!profRes.ok) throw new Error(profJson.error || 'Could not load profile');
+      if (profJson.exists) {
+        const d = profJson.data;
         window._userDocData = d;
         _accountUsername = d.username || '';
         const jobTitle   = d.jobTitle  || '';
@@ -955,20 +959,23 @@
 
     try {
       const countryName = JP_COUNTRY_NAMES[country] || '';
-      const fsUpdate = {
-        jobTitle: title,
-        category: category,
-        jobAlert: {
-          enabled: alertsOn,
-          frequency: 'weekly',
-          title,
-          countryCode: country,
-          countryName,
-        },
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      const jobAlert = {
+        enabled: alertsOn,
+        frequency: 'weekly',
+        title,
+        countryCode: country,
+        countryName,
       };
-      await db.collection('users').doc(currentUser.uid).set(fsUpdate, { merge: true });
-      window._userDocData = { ...(window._userDocData||{}), ...fsUpdate };
+      const token = await currentUser.getIdToken();
+      const res = await fetch('/api/update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ jobTitle: title, category, jobAlert }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Could not save');
+
+      window._userDocData = { ...(window._userDocData||{}), jobTitle: title, category, jobAlert };
 
       // Sync to the same localStorage keys dashboard/find-jobs already read,
       // so the rest of the app reflects this immediately without a re-detect.
@@ -1060,10 +1067,18 @@
         _accountUsername = newUsername;
       }
 
-      // 3. Sync name to Firestore so profile.html picks it up
-      const fsUpdate = { name, displayName: name, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-      if (newUsername) fsUpdate.username = newUsername;
-      await db.collection('users').doc(currentUser.uid).set(fsUpdate, { merge: true });
+      // 3. Sync name to Firestore so profile.html picks it up — routed through
+      // our own server (see /api/update-profile) instead of a direct client
+      // Firestore write, since that write was hanging indefinitely on some
+      // networks with no error at all.
+      const token2 = await currentUser.getIdToken();
+      const profRes = await fetch('/api/update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token2 },
+        body: JSON.stringify({ name, displayName: name }),
+      });
+      const profJson = await profRes.json();
+      if (!profRes.ok) throw new Error(profJson.error || 'Could not save');
 
       clearTimeout(timeout);
       // Update UI
