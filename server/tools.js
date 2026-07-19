@@ -1690,6 +1690,53 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     }
   });
 
+  // ─── POST /api/quick-edit ─────────────────────────────────────────────────
+  // Powers the KIE canvas quick-action pills (Make it shorter / More
+  // professional / More casual / etc.) on any generated [CODEBLOCK] document
+  // — cover letters, resignation letters, messages, bios. One instruction
+  // applied per call; the canvas sends back the CURRENT text each time (not
+  // the original), so repeated actions stack on top of each other and undo/
+  // redo is handled entirely client-side against its own history stack.
+  // No plan gate here deliberately — whatever tier already let the user
+  // generate the document in chat is enough to also refine it.
+  const QUICK_EDIT_ACTIONS = {
+    shorter:      'Make it noticeably shorter and tighter — cut filler and repetition, keep every concrete fact, name, and number. Do not pad it back out to a similar length.',
+    professional: 'Make the tone more professional and polished — formal register, precise word choice — without becoming stiff or robotic.',
+    casual:       'Make the tone warmer and more conversational — natural and human, while staying clearly appropriate for the context.',
+    confident:    'Make it read more confident and assertive — stronger, more direct verbs, remove hedging or apologetic phrasing — without becoming arrogant.',
+    formal:       'Make the tone noticeably more formal and traditional, appropriate for a conservative or senior audience.',
+    punchier:     'Make it punchier and more results-focused — lead with concrete impact and outcomes, cut vague or soft phrasing.',
+  };
+  app.post('/api/quick-edit', authenticate, async (req, res) => {
+    const { content, action, label = '' } = req.body;
+    if (!content || !action)
+      return res.status(400).json({ error: 'content and action are required.' });
+    const instruction = QUICK_EDIT_ACTIONS[action];
+    if (!instruction)
+      return res.status(400).json({ error: 'Unknown action.' });
+
+    const m = 'spark'; // ALL tools always use Groq Spark — permanent
+    const system = `You revise an already-written document on request. Return only pure JSON, no markdown: {"text":""}
+
+Rules:
+- Apply ONLY this one instruction: ${instruction}
+- Preserve every fact, name, number, and placeholder bracket (like [Your Name]) exactly as given — never invent or drop content.
+- Preserve the original structure (a greeting stays a greeting, a sign-off stays a sign-off, existing paragraph breaks stay put) unless the instruction is specifically about length.
+- Return the COMPLETE revised document in "text" — never a partial excerpt, summary, or preamble about what you changed.`;
+    const cfg = { max_tokens: 1300, temperature: 0.6, jsonMode: true };
+
+    try {
+      const { data } = await callKieAIJson(m, system, [
+        { role: 'user', content: `Document type: ${label || 'document'}\n\nCurrent content:\n${content}` },
+      ], cfg);
+      if (!data.text) throw new Error('Model returned no text.');
+      res.json({ text: data.text });
+    } catch (err) {
+      console.error('POST /api/quick-edit:', err.message);
+      res.status(500).json({ error: 'Edit failed. Please try again.' });
+    }
+  });
+
   // ─── POST /api/resume/pdf — Puppeteer HTML-to-PDF (WYSIWYG) ──────────────────
   // Renders the exact same HTML as the on-screen template preview → pixel-perfect PDF.
   // Run:  npm install puppeteer   (one-time — ~300MB Chromium download)
