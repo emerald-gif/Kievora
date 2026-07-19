@@ -401,11 +401,91 @@ const UPGRADE_MESSAGES = {
   templates: (plan) => plan === 'free'
     ? `That template is part of a paid plan. Pro and Premier both unlock every template.`
     : `That template is already unlocked on your plan.`,
-  // Free user tries to upload a resume (picker/upload screen)
-  resumeUpload: () => `Your resume has been analyzed. Upgrade to any paid plan to see your full ATS score and what to improve. $7 or $15 both unlock the full report.`,
+  // Free user uploads a resume in KIE chat (full breakdown is shown either
+  // way now — see FREE_RESUME_UPSELL_CHANCE below — so this can't claim the
+  // score/breakdown itself is locked anymore. It's a soft nudge toward the
+  // things that ARE still real, paid perks: every template, actual file
+  // exports, and cover-letter generation.)
+  resumeUpload: () => `Want to turn this into a polished, downloadable resume? Pro ($7) or Premier ($15) unlock every template, real file exports, and auto-generated cover letters.`,
   // Free user requests resume file output (edit/regenerate as file)
   resumeFileExport: () => `Exporting your resume as a file is available on paid plans. Upgrade to $7 or $15 to download your resume and access all templates.`,
 };
+
+// Free-plan resume uploads in KIE chat now always get the full breakdown
+// (score, strengths, weaknesses, suggestions) instead of a hard paywall —
+// see the isFreePlan branch in POST /api/analyze-resume. This constant is
+// just the odds that ONE soft upgrade line (UPGRADE_MESSAGES.resumeUpload)
+// rides along with it. Random rather than a per-user counter — deliberately
+// simple, and "sometimes, not always" is the actual spec: nobody should get
+// sold to on every single upload. Tune freely; 0 disables it entirely.
+const FREE_RESUME_UPSELL_CHANCE = 0.35;
+
+// ─── KIE tool & page knowledge base ────────────────────────────────────────
+// Every real destination inside Kievora that KIE can point a user to —
+// drives both the "TOOLS & PAGES YOU CAN RECOMMEND" system-prompt block
+// below (buildKieToolsBlock) and, via the *same* keys, the frontend's
+// [GOTO:key] button renderer (dashboard-core.js — KIE_GOTO_DESTINATIONS).
+// Add/rename a key in ONE place and you must mirror it in the other, or a
+// button silently no-ops / KIE recommends something that doesn't render.
+// `gate` says how to check whether the CURRENT user has it: 'tool' checks
+// planCfg.tools.includes(key); any other string names a planCfg boolean
+// field directly (e.g. 'gmail'); null means always unlocked for every plan.
+const KIE_TOOL_KB = {
+  // 12 AI Tools — live inside the More Tools hub, each its own dedicated flow
+  aibuild:      { label: 'AI Resume Builder',     desc: 'Builds a complete resume from a single prompt.',                     gate: 'tool' },
+  careerhealth: { label: 'Career Health Score',   desc: 'A full check-up on career momentum, risk areas, and priorities.',    gate: 'tool' },
+  roadmap:      { label: 'Career Roadmap',        desc: 'A step-by-step plan from where they are to where they want to be.', gate: 'tool' },
+  linkedin:     { label: 'LinkedIn Optimizer',    desc: 'Turns a profile into something recruiters actually stop on.',       gate: 'tool' },
+  messaging:    { label: 'Professional Messaging',desc: 'Outreach, follow-ups, and cold messages that actually get replies.', gate: 'tool' },
+  jobmatch:     { label: 'Job Match',             desc: "Scores how well a resume matches a specific job description.",      gate: 'tool' },
+  resignation:  { label: 'Resignation Letter',    desc: 'A clean, professional resignation letter in seconds.',              gate: 'tool' },
+  salary:       { label: 'Salary Intel',          desc: 'What a role actually pays before negotiating.',                     gate: 'tool' },
+  industry:     { label: 'Industry Intel',        desc: 'Trends and shifts in their specific industry.',                    gate: 'tool' },
+  interview:    { label: 'Mock Interview',        desc: 'Real interview questions with honest feedback on the answers.',    gate: 'tool' },
+  branding:     { label: 'Personal Branding',     desc: 'Builds a personal brand that gets noticed for the right reasons.', gate: 'tool' },
+  promotion:    { label: 'Promotion Readiness',   desc: 'Builds a clear, data-backed case for the next promotion.',         gate: 'tool' },
+  // Resume flow — not "AI Tools" in the plan sense, but still real destinations
+  upload:       { label: 'Upload & Analyze',      desc: 'Dedicated resume-upload flow with the full ATS report.',           gate: 'uploadAnalyze' },
+  coverletter:  { label: 'Cover Letter',          desc: 'Writes or auto-generates a cover letter from an existing resume.', gate: 'coverLetterFromResume' },
+  builder:      { label: 'Resume Builder',        desc: 'Build or edit a resume section by section, manually.',            gate: null },
+  tpick:        { label: 'Choose a Template',     desc: 'Browse and apply any of the 13 Kievora templates.',                gate: null },
+  allresumes:   { label: 'My Resumes',            desc: 'Every resume they have saved, in one place.',                     gate: null },
+  moretools:    { label: 'More Tools',            desc: 'The full hub of every AI tool above, in one place.',              gate: null },
+  home:         { label: 'Dashboard Home',        desc: 'The main dashboard.',                                            gate: null },
+  // Account, billing & everything outside the KIE/tools flow
+  billing:      { label: 'Billing & Plans',       desc: 'Upgrade, downgrade, or manage the subscription — point anyone ready to actually pay here.', gate: null },
+  findjobs:     { label: 'Find Jobs',             desc: 'Search and apply to live job listings.',                          gate: 'findJobsClick' },
+  gmailai:      { label: 'Gmail AI',              desc: 'Connects Gmail so KIE auto-tracks applications and interviews.',  gate: 'gmail' },
+  settings:     { label: 'Settings',              desc: 'Account and app preferences.',                                   gate: null },
+  account:      { label: 'My Account',            desc: 'Profile and account details.',                                   gate: null },
+  support:      { label: 'Support',               desc: 'Help center and contact support.',                               gate: null },
+};
+
+// jobmatch and resignation aren't independent entries in planCfg.tools —
+// they ride on the aibuild gate (bundled with the AI Resume Builder tool).
+// Must match dashboard-core.js's TOOL_GATE_ALIAS exactly, or this reports
+// them as permanently locked regardless of plan.
+const KB_TOOL_GATE_ALIAS = { jobmatch: 'aibuild', resignation: 'aibuild' };
+
+// Builds the "TOOLS & PAGES YOU CAN RECOMMEND" system-prompt block from
+// KIE_TOOL_KB above, computing real per-user lock status from planCfg so
+// KIE never has to guess (or lie about) whether THIS user already has
+// something unlocked.
+function buildKieToolsBlock(planCfg) {
+  const lines = Object.entries(KIE_TOOL_KB).map(([key, e]) => {
+    const unlocked = e.gate === 'tool' ? planCfg.tools.includes(KB_TOOL_GATE_ALIAS[key] || key) : (!e.gate || !!planCfg[e.gate]);
+    return `- ${e.label} [${key}] — ${e.desc} ${unlocked ? '(unlocked for this user)' : '(LOCKED for this user — needs a higher plan)'}`;
+  }).join('\n');
+  return `\n\nTOOLS & PAGES YOU CAN RECOMMEND — Kievora has real, working destinations beyond this chat. When one is a genuine fit for what the user is asking or working on, name it naturally in your own words AND drop a [GOTO:key] marker on its own line right after — using the EXACT key in brackets below, nothing invented. This renders as a real tappable button that takes them straight there.
+${lines}
+
+RULES for recommending tools/pages:
+- Only recommend something that's an honest fit for THIS message — don't tack one onto every reply just because you can.
+- No more than 2 [GOTO:] markers in one answer.
+- If something is locked for this user, still say so plainly in your own words (e.g. "that one's part of Pro") — never pretend it's free, and don't skip the button just because it's locked: tapping a locked one is exactly how they'd go see the upgrade screen if they want it.
+- Never link to something you're actively doing yourself in this same reply (e.g. don't drop [GOTO:builder] while you're actively drafting their resume text right here in chat — only link somewhere that's a genuinely different flow from what's already happening).
+- SELLING PLANS: if the user directly asks about pricing/upgrading, or a real opportunity comes up naturally (they hit something locked, or a paid tool would clearly help what they're already doing), make the actual case for Pro ($7) or Premier ($15) — name what it specifically unlocks, not generic hype — and include [GOTO:billing]. Don't bring up plans unprompted more than occasionally; a sales pitch in every message is worse than no pitch at all.`;
+}
 
 // Topup purchase messages (shown in the topup modal on billing.html)
 const TOPUP_MESSAGES = {
@@ -1586,7 +1666,7 @@ module.exports = {
   KIE_MODELS, KIE_TIERS, PLANS, DEFAULT_PLAN, getPlanConfig, getUserPlanKey,
   getCycleAnchorDate, getCycleStart, checkAndIncrementKieUsage,
   COUNTRY_CURRENCY, FX_FALLBACKS, getExchangeRates, getUsdToNgnRate,
-  UPGRADE_MESSAGES, TOPUP_MESSAGES,
+  UPGRADE_MESSAGES, TOPUP_MESSAGES, FREE_RESUME_UPSELL_CHANCE, KIE_TOOL_KB, buildKieToolsBlock,
   callKieAI, callKieAIStream, callKieAIJson, parseAIJson, fetchWithRetry,
   performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
   sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest, sendTicketConfirmationEmail, sendNewsletterConfirmationEmail, sendJobAlertEmail,

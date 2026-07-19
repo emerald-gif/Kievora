@@ -7,7 +7,7 @@ module.exports = function registerKieRoutes(app) {
   const {
     admin, db, authenticate,
     KIE_MODELS, KIE_TIERS, PLANS, getPlanConfig, getUserPlanKey,
-    checkAndIncrementKieUsage, UPGRADE_MESSAGES, TOPUP_MESSAGES,
+    checkAndIncrementKieUsage, UPGRADE_MESSAGES, TOPUP_MESSAGES, buildKieToolsBlock,
     getCycleAnchorDate, getCycleStart,
     callKieAI, callKieAIStream, fetchWithRetry,
     performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
@@ -504,6 +504,8 @@ module.exports = function registerKieRoutes(app) {
 - WEB SEARCH MODE: ${planCfg.kieWebSearch ? 'UNLOCKED for this user.' : 'LOCKED for this user — needs Pro ($7) or Premier ($15).'}
 - CREATIVE MODE: ${planCfg.kieCreativeMode ? 'UNLOCKED for this user.' : 'LOCKED for this user — needs Pro ($7) or Premier ($15).'}
 - If asked "why is [a model or mode] locked", answer directly and accurately using the status above — name the specific thing they asked about, say plainly whether it's locked or unlocked for them, and if locked, name the plan that unlocks it. Never deflect this into an unrelated topic (like templates) just because a name sounds similar to something else in Kievora.`;
+
+    systemContent += buildKieToolsBlock(planCfg);
 
     systemContent += `\n\nTEMPLATE NAME LOCK: Kievora has EXACTLY 13 templates and no others: Classic, Modern, Bold, Minimal, Vivid, Elegant, Slate, Coral, Split, Ink, Executive, Nova, Tribune. Never invent, guess, or reference any template name outside this exact list — there is no "Onyx" or any other name. A "template" is a visual layout applied to a saved Kievora resume file; it is NOT something you can apply by formatting text in chat. If you don't know which template (if any) is active, don't name one — just don't mention a template name at all.`;
 

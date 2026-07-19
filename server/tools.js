@@ -8,7 +8,7 @@
 module.exports = function registerToolsRoutes(app) {
   const {
     admin, db, authenticate,
-    RESUMES, USERS, PLANS, getPlanConfig, getUserPlanKey, UPGRADE_MESSAGES,
+    RESUMES, USERS, PLANS, getPlanConfig, getUserPlanKey, UPGRADE_MESSAGES, FREE_RESUME_UPSELL_CHANCE,
     callKieAI, callKieAIJson, parseAIJson, KIE_MODELS,
   } = require('./lib');
 
@@ -439,16 +439,16 @@ module.exports = function registerToolsRoutes(app) {
         });
       }
 
-      // Free plan: strip explanation fields and return an upgrade gate flag.
-      // The score number is intentionally omitted too — they see "analyzed" but
-      // must upgrade to see it. This creates the "show the wound, sell the cure" moment.
-      if (isFreePlan) {
-        return res.json({
-          fullName:   analysis.fullName,
-          jobTitle:   analysis.jobTitle,
-          gateLocked: true,
-          upgradeMessage: UPGRADE_MESSAGES.resumeUpload(),
-        });
+      // Free plan used to get the analysis stripped down to just a "your
+      // resume has been analyzed, upgrade to see it" tease — the real score,
+      // strengths, weaknesses, and suggestions were computed above either
+      // way (same AI call, same cost) and then thrown away. Now everyone
+      // gets the full breakdown; only an occasional (not every-time) soft
+      // upgrade line rides along for free users, toward the things that are
+      // still genuinely paid (templates, real file exports, cover letters) —
+      // see FREE_RESUME_UPSELL_CHANCE.
+      if (isFreePlan && Math.random() < FREE_RESUME_UPSELL_CHANCE) {
+        analysis.upgradeMessage = UPGRADE_MESSAGES.resumeUpload();
       }
       res.json(analysis);
     } catch (err) {
