@@ -4198,9 +4198,12 @@
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 8l3 4-3 4"/></svg>
                 ${label || 'Content'}
               </span>
-              <button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              </button>
+              <span class="kie-code-card-btns">
+                ${_kieIsDiagramBlock(content) ? '' : `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`}
+                <button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                </button>
+              </span>
             </div>
             <div class="kie-code-card-body">${content.replace(/</g,'&lt;')}</div>
           </div>
@@ -4224,6 +4227,245 @@
         setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.color = ''; }, 1500);
       }).catch(() => {});
     };
+
+    // ── KIE CANVAS — inline AI-editing surface for [CODEBLOCK] documents ─────
+    // Opened from the edit button on a code card (cover letters, resignation
+    // letters, messages, bios...). Everything — quick-action AI edits, the
+    // accept/reject diff, undo/redo — happens inside this overlay against
+    // its own history stack; nothing touches the underlying code card in the
+    // chat until the user closes/minimizes it, at which point the current
+    // state gets committed back in.
+
+    // A [CODEBLOCK] can also be an ASCII structured breakdown (timeline,
+    // hierarchy, roadmap) rather than a sendable document — the system
+    // prompt tells the model to build those with ├──/└──/│ connectors,
+    // which is a reliable enough signal to tell the two apart without
+    // touching the CODEBLOCK marker format. Diagrams keep copy-only; "make
+    // it shorter/more casual" doesn't mean anything for a tree diagram.
+    function _kieIsDiagramBlock(content) {
+      return /[├└│]/.test(content || '');
+    }
+
+    const QUICK_ACTION_INFO = {
+      shorter:      { label: 'Make it shorter' },
+      professional: { label: 'More professional' },
+      casual:       { label: 'More casual' },
+      confident:    { label: 'More confident' },
+      formal:       { label: 'More formal' },
+      punchier:     { label: 'Punchier' },
+    };
+    // Which 3 pills show up depends on what kind of document this is — a
+    // resignation letter and a LinkedIn bio don't want the same defaults.
+    // Falls back to the generic set for anything unrecognized.
+    function _kiePickQuickActions(label) {
+      const l = (label || '').toLowerCase();
+      if (l.includes('resign'))                          return ['shorter', 'formal', 'casual'];
+      if (l.includes('linkedin') || l.includes('bio'))    return ['punchier', 'shorter', 'professional'];
+      if (l.includes('brand') || l.includes('pitch'))     return ['confident', 'punchier', 'professional'];
+      return ['shorter', 'professional', 'casual'];
+    }
+
+    // Paragraph-level diff — matches the granularity the quick-actions
+    // actually produce and is far more robust than word-level diffing on a
+    // full-sentence rewrite. If the paragraph count changed, the split
+    // itself isn't meaningful anymore, so the whole thing is marked changed
+    // rather than guessing at an alignment.
+    function _kieDiffParagraphs(oldText, newText) {
+      const oldParas = (oldText || '').split(/\n\s*\n/);
+      const newParas = (newText || '').split(/\n\s*\n/);
+      if (oldParas.length !== newParas.length) return newParas.map(p => ({ text: p, changed: true }));
+      return newParas.map((p, i) => ({ text: p, changed: p !== oldParas[i] }));
+    }
+
+    const _kieCanvasState = new Map(); // cardId -> { label, history:[text...], historyIndex, pending: null | 'loading' | {newText} }
+
+    function _kieOpenCanvas(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      let state = _kieCanvasState.get(cardId);
+      if (!state) {
+        const body  = card.querySelector('.kie-code-card-body');
+        const label = card.querySelector('.kie-code-card-label')?.textContent?.trim() || 'Content';
+        state = { label, history: [body?.textContent || ''], historyIndex: 0, pending: null };
+        _kieCanvasState.set(cardId, state);
+      }
+      _kieRenderCanvas(cardId);
+    }
+    window._kieOpenCanvas = _kieOpenCanvas;
+
+    function _kieRenderCanvas(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state) return;
+      let overlay = document.getElementById('kie-canvas-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'kie-canvas-overlay';
+        overlay.className = 'kie-canvas-overlay';
+        document.body.appendChild(overlay);
+      }
+      overlay.style.display = 'flex';
+      overlay.onclick = () => _kieCanvasClose(cardId);
+
+      const current = state.history[state.historyIndex];
+      const canUndo = state.historyIndex > 0;
+      const canRedo = state.historyIndex < state.history.length - 1;
+      const loading = state.pending === 'loading';
+      const proposing = state.pending && !loading;
+
+      const bodyHtml = proposing
+        ? _kieDiffParagraphs(current, state.pending.newText).map(p =>
+            `<p class="${p.changed ? 'kie-canvas-changed' : ''}">${esc(p.text)}</p>`).join('')
+        : current.split(/\n\s*\n/).map(p => `<p>${esc(p)}</p>`).join('');
+
+      const actionsHtml = proposing
+        ? `<button type="button" class="kie-canvas-reject" onclick="_kieCanvasReject('${cardId}')">Reject</button>
+           <button type="button" class="kie-canvas-accept" onclick="_kieCanvasAccept('${cardId}')">Accept</button>`
+        : _kiePickQuickActions(state.label).map(a => `
+           <button type="button" class="kie-canvas-quick" ${loading ? 'disabled' : ''} onclick="_kieCanvasQuickAction('${cardId}','${a}')">${esc(QUICK_ACTION_INFO[a].label)}</button>
+          `).join('');
+
+      const undoIcon    = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
+      const redoIcon    = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>';
+      const copyIcon    = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+      const minimizeIcon= '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+      const closeIcon   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+      overlay.innerHTML = `
+        <div class="kie-canvas" onclick="event.stopPropagation()">
+          <div class="kie-canvas-topbar">
+            <button type="button" class="kie-canvas-icon-btn" onclick="_kieCanvasClose('${cardId}')" title="Close">${closeIcon}</button>
+            <div class="kie-canvas-topbar-title">${esc(state.label)}</div>
+            <div class="kie-canvas-topbar-right">
+              <button type="button" class="kie-canvas-icon-btn" ${canUndo ? '' : 'disabled'} onclick="_kieCanvasUndo('${cardId}')" title="Undo">${undoIcon}</button>
+              <button type="button" class="kie-canvas-icon-btn" ${canRedo ? '' : 'disabled'} onclick="_kieCanvasRedo('${cardId}')" title="Redo">${redoIcon}</button>
+              <button type="button" class="kie-canvas-icon-btn" onclick="_kieCanvasCopy('${cardId}')" title="Copy">${copyIcon}</button>
+              <button type="button" class="kie-canvas-icon-btn" onclick="_kieCanvasClose('${cardId}')" title="Minimize">${minimizeIcon}</button>
+            </div>
+          </div>
+          <div class="kie-canvas-body">${bodyHtml}</div>
+          <div class="kie-canvas-actions">${actionsHtml}</div>
+        </div>`;
+    }
+
+    async function _kieCanvasQuickAction(cardId, action) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state || state.pending) return;
+      state.pending = 'loading';
+      _kieRenderCanvas(cardId);
+      try {
+        const current = state.history[state.historyIndex];
+        const r = await fetch('/api/quick-edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+          body: JSON.stringify({ content: current, action, label: state.label }),
+        });
+        const data = await r.json();
+        if (!r.ok || !data.text) throw new Error(data.error || 'Edit failed');
+        state.pending = { newText: data.text };
+      } catch (e) {
+        state.pending = null;
+        toast('Edit failed — try again.', 'err');
+      }
+      _kieRenderCanvas(cardId);
+    }
+    window._kieCanvasQuickAction = _kieCanvasQuickAction;
+
+    function _kieCanvasAccept(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state || !state.pending || state.pending === 'loading') return;
+      // Standard undo/redo semantics — accepting a new change discards
+      // whatever redo branch existed past the current point.
+      state.history = state.history.slice(0, state.historyIndex + 1);
+      state.history.push(state.pending.newText);
+      state.historyIndex = state.history.length - 1;
+      state.pending = null;
+      _kieRenderCanvas(cardId);
+    }
+    window._kieCanvasAccept = _kieCanvasAccept;
+
+    function _kieCanvasReject(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state) return;
+      state.pending = null;
+      _kieRenderCanvas(cardId);
+    }
+    window._kieCanvasReject = _kieCanvasReject;
+
+    function _kieCanvasUndo(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state || state.historyIndex <= 0) return;
+      state.historyIndex--;
+      _kieRenderCanvas(cardId);
+    }
+    window._kieCanvasUndo = _kieCanvasUndo;
+
+    function _kieCanvasRedo(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state || state.historyIndex >= state.history.length - 1) return;
+      state.historyIndex++;
+      _kieRenderCanvas(cardId);
+    }
+    window._kieCanvasRedo = _kieCanvasRedo;
+
+    function _kieCanvasCopy(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state) return;
+      navigator.clipboard?.writeText(state.history[state.historyIndex]).then(() => toast('Copied.', 'ok')).catch(() => {});
+    }
+    window._kieCanvasCopy = _kieCanvasCopy;
+
+    // The ONLY place the underlying chat code-card actually changes — commits
+    // whatever's currently showing in the canvas (post any accepted edits)
+    // back into the card, then hides the overlay. Closing via the X does the
+    // exact same commit as the minimize icon; there's no separate "discard"
+    // path, since a reject already happens per-edit before this point.
+    function _kieCanvasClose(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      const overlay = document.getElementById('kie-canvas-overlay');
+      if (state) {
+        const card = document.getElementById(cardId);
+        const body = card?.querySelector('.kie-code-card-body');
+        if (body) body.textContent = state.history[state.historyIndex];
+      }
+      if (overlay) overlay.style.display = 'none';
+    }
+    window._kieCanvasClose = _kieCanvasClose;
+
+    // Self-contained styling — injected here rather than added to
+    // dashboard.css, so this feature doesn't depend on that file being in
+    // sync with this one. Bottom-sheet layout to match the rest of the
+    // app's mobile overlay patterns (More Tools, premium drawer, etc.).
+    (function _kieInjectCanvasStyles() {
+      if (document.getElementById('kie-canvas-style')) return;
+      const style = document.createElement('style');
+      style.id = 'kie-canvas-style';
+      style.textContent = `
+        .kie-code-card-btns{display:flex;align-items:center;gap:2px}
+        .kie-code-card-edit{background:none;border:none;padding:5px;cursor:pointer;color:#7c3aed;display:flex;align-items:center;border-radius:6px}
+        .kie-code-card-edit:active{background:#f5f3ff}
+
+        .kie-canvas-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,10,25,.5);display:none;align-items:flex-end;justify-content:center}
+        .kie-canvas{width:100%;max-width:560px;max-height:92vh;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.25)}
+        .kie-canvas-topbar{display:flex;align-items:center;gap:8px;padding:14px 12px;border-bottom:1px solid #f1f5f9;flex-shrink:0}
+        .kie-canvas-topbar-title{flex:1;text-align:center;font-size:13.5px;font-weight:700;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+        .kie-canvas-topbar-right{display:flex;align-items:center;gap:2px}
+        .kie-canvas-icon-btn{background:none;border:none;padding:7px;cursor:pointer;color:#475569;display:flex;align-items:center;border-radius:8px}
+        .kie-canvas-icon-btn:active{background:#f1f5f9}
+        .kie-canvas-icon-btn:disabled{color:#cbd5e1;cursor:default}
+        .kie-canvas-icon-btn:disabled:active{background:none}
+        .kie-canvas-body{flex:1;overflow-y:auto;padding:18px 18px 8px;font-size:14px;line-height:1.75;color:#1a1a2e}
+        .kie-canvas-body p{margin:0 0 14px}
+        .kie-canvas-body p.kie-canvas-changed{background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:8px 10px;margin:0 -10px 14px}
+        .kie-canvas-actions{display:flex;gap:8px;padding:12px 16px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #f1f5f9;flex-wrap:wrap;flex-shrink:0}
+        .kie-canvas-quick{flex:1;min-width:90px;padding:11px 10px;border-radius:12px;border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;font:600 12.5px/1.2 inherit;cursor:pointer}
+        .kie-canvas-quick:active{transform:scale(.97)}
+        .kie-canvas-quick:disabled{opacity:.5;cursor:default}
+        .kie-canvas-reject{flex:1;padding:12px 10px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;color:#475569;font:600 13px/1.2 inherit;cursor:pointer}
+        .kie-canvas-accept{flex:1;padding:12px 10px;border-radius:12px;border:none;background:#18181b;color:#fff;font:600 13px/1.2 inherit;cursor:pointer}
+        .kie-canvas-reject:active,.kie-canvas-accept:active{transform:scale(.97)}
+      `;
+      document.head.appendChild(style);
+    })();
 
     // ── SMART REPLY RENDERER ─────────────────────────────────────────────────
     // appendKMsg now handles [CODEBLOCK] live via _formatKieLive.
@@ -6274,7 +6516,15 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>`
             : `<span style="color:#a855f7;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
 
-          html += `<div class="kie-code-card" id="${cardId}"><div class="kie-code-card-hdr"><span class="kie-code-card-label">${docIcon}${esc(label)}</span>${copyBtn}</div><div class="kie-code-card-body">${esc(content.trim())}</div></div>`;
+          // Edit opens the KIE canvas (quick-action AI rewrites, undo/redo,
+          // accept/reject) — only once the block is done streaming, and only
+          // for sendable documents, not ASCII diagrams (a timeline doesn't
+          // have a "make it more casual" version).
+          const editBtn = (closed || isFinal) && !_kieIsDiagramBlock(content)
+            ? `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`
+            : '';
+
+          html += `<div class="kie-code-card" id="${cardId}"><div class="kie-code-card-hdr"><span class="kie-code-card-label">${docIcon}${esc(label)}</span><span class="kie-code-card-btns">${editBtn}${copyBtn}</span></div><div class="kie-code-card-body">${esc(content.trim())}</div></div>`;
         }
 
         lastIndex = match.index + match[0].length;
