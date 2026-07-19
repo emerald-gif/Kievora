@@ -513,17 +513,10 @@
 
     <div class="toggle-row">
       <label for="jpAlertsOn">Weekly Job Alerts</label>
-      <span class="toggle-sw">
+      <label class="toggle-sw">
         <input type="checkbox" id="jpAlertsOn" onchange="renderJobAlertConfirm()"/>
         <span class="slider"></span>
-      </span>
-    </div>
-    <div class="f" id="jpFreqWrap" style="display:none">
-      <label>Frequency</label>
-      <select id="jpFrequency" onchange="renderJobAlertConfirm()">
-        <option value="weekly">Weekly</option>
-        <option value="daily">Daily (Premier only)</option>
-      </select>
+      </label>
     </div>
     <div class="job-alert-confirm" id="jpConfirmText" style="display:none"></div>
 
@@ -767,6 +760,14 @@
     // Prefill edit form
     document.getElementById('editName').value     = u.displayName || '';
     document.getElementById('editUsername').value = _accountUsername;
+
+    // Deep link from Find Jobs: /account?openJobAlerts=1&title=...&country=...
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('openJobAlerts') === '1') {
+      openJobPrefsModal({ title: params.get('title') || '', country: params.get('country') || '' });
+      // Clean the URL so a refresh doesn't reopen it
+      window.history.replaceState({}, '', '/account');
+    }
   });
 
   // ── Photo upload via Kievora Upload Modal ──
@@ -831,54 +832,38 @@
     }
   }
 
-  function openJobPrefsModal() {
+  function openJobPrefsModal(prefill) {
     const d = window._userDocData || {};
     const alert = d.jobAlert || {};
     // Fall back to whatever the rest of the app already has in localStorage
     // (kievora_jobs_prof_<uid> / kievora_country_<uid>) if Firestore has nothing yet.
-    let lsTitle = '', lsCat = '';
+    let lsTitle = '';
     try {
       const rec = JSON.parse(localStorage.getItem(`kievora_jobs_prof_${currentUser?.uid}`) || 'null');
-      if (rec) { lsTitle = rec.title || ''; lsCat = rec.source === 'category' ? rec.title : ''; }
+      if (rec) lsTitle = rec.title || '';
     } catch {}
     let lsCountry = '';
-    try { lsCountry = localStorage.getItem(`kievora_country_${currentUser?.uid}`) || ''; } catch {}
+    try { lsCountry = JSON.parse(localStorage.getItem(`kievora_country_${currentUser?.uid}`) || 'null')?.code || ''; } catch {}
 
-    document.getElementById('jpTitle').value    = d.jobTitle || lsTitle || '';
+    document.getElementById('jpTitle').value    = (prefill && prefill.title) || d.jobTitle || lsTitle || '';
     document.getElementById('jpCategory').value = d.category || '';
-    document.getElementById('jpCountry').value  = alert.countryCode || lsCountry || 'worldwide';
-    document.getElementById('jpAlertsOn').checked = !!alert.enabled;
-    document.getElementById('jpFrequency').value  = alert.frequency || 'weekly';
-    document.getElementById('jpFreqWrap').style.display = alert.enabled ? 'block' : 'none';
+    document.getElementById('jpCountry').value  = (prefill && prefill.country) || alert.countryCode || lsCountry || 'worldwide';
+    document.getElementById('jpAlertsOn').checked = prefill ? true : !!alert.enabled;
     renderJobAlertConfirm();
     document.getElementById('jobPrefsModal').classList.add('open');
   }
   function closeJobPrefsModal() { document.getElementById('jobPrefsModal').classList.remove('open'); }
 
   function renderJobAlertConfirm() {
-    const on       = document.getElementById('jpAlertsOn').checked;
-    const freqSel  = document.getElementById('jpFrequency');
-    const freqWrap = document.getElementById('jpFreqWrap');
-    const confirm  = document.getElementById('jpConfirmText');
-    freqWrap.style.display = on ? 'block' : 'none';
-
-    // Daily is a Premier perk — fall back to weekly for everyone else.
-    const isPremier = window._currentPlanKey === 'paid15';
-    const dailyOpt = freqSel.querySelector('option[value="daily"]');
-    if (dailyOpt) {
-      dailyOpt.disabled = !isPremier;
-      dailyOpt.textContent = isPremier ? 'Daily' : 'Daily (Premier only)';
-    }
-    if (!isPremier && freqSel.value === 'daily') freqSel.value = 'weekly';
-
+    const on      = document.getElementById('jpAlertsOn').checked;
+    const confirm = document.getElementById('jpConfirmText');
     if (!on) { confirm.style.display = 'none'; return; }
     const title   = document.getElementById('jpTitle').value.trim();
     const country = JP_COUNTRY_NAMES[document.getElementById('jpCountry').value] || 'Worldwide';
-    const freq    = freqSel.value === 'daily' ? 'daily' : 'weekly';
     confirm.style.display = 'block';
     confirm.textContent = title
-      ? `Alert me ${freq} for: ${title} in ${country}`
-      : `Add a job title above to turn on ${freq} alerts`;
+      ? `Alert me weekly for: ${title} in ${country}`
+      : `Add a job title above to turn on weekly alerts`;
   }
 
   async function saveJobPrefs() {
@@ -887,8 +872,6 @@
     const category = document.getElementById('jpCategory').value;
     const country  = document.getElementById('jpCountry').value;
     const alertsOn = document.getElementById('jpAlertsOn').checked;
-    const isPremier= window._currentPlanKey === 'paid15';
-    const frequency= (isPremier && document.getElementById('jpFrequency').value === 'daily') ? 'daily' : 'weekly';
 
     if (alertsOn && !title) { toast('Add a job title to turn on alerts', 'err'); return; }
 
@@ -899,7 +882,7 @@
         category: category,
         jobAlert: {
           enabled: alertsOn,
-          frequency,
+          frequency: 'weekly',
           title,
           countryCode: country,
           countryName,
@@ -915,7 +898,7 @@
         localStorage.setItem(`kievora_jobs_prof_${currentUser.uid}`, JSON.stringify({ title, source: 'manual', ts: Date.now() }));
       }
       if (country) {
-        localStorage.setItem(`kievora_country_${currentUser.uid}`, country);
+        localStorage.setItem(`kievora_country_${currentUser.uid}`, JSON.stringify({ code: country, name: countryName }));
       }
       try { sessionStorage.removeItem('kievora_home_jobs_cache'); } catch {}
 
@@ -924,7 +907,7 @@
       toast('Job preferences saved!');
     } catch (e) {
       console.warn('saveJobPrefs failed:', e.message);
-      toast('Could not save — try again', 'err');
+      toast('Save failed: ' + e.message, 'err'); // TEMP — verbose for debugging, revert to generic message once confirmed working
     }
   }
 
