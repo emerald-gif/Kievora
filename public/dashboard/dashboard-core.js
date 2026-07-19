@@ -8476,10 +8476,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           const ln = g('clL' + i);
           if (ln) ln.className = 'cl-stp-line' + (i < step ? ' done' : '');
         }
-        const labels = ['Choose Resume', 'Pick Template', 'All Set!'];
-        const lbl = g('clStepLbl');
-        if (lbl) lbl.textContent = labels[cur] || '';
-
         ['clStep1','clStep2','clStep3'].forEach((id, idx) => {
           const el = g(id); if (el) el.className = 'cl-step-panel' + (idx === cur ? ' active' : '');
         });

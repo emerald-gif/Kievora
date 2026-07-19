@@ -565,8 +565,9 @@
 
     /* ── BUILDER (step wizard, no preview) ── */
     .bld{max-width:680px;margin:0 auto;padding:100px 20px 32px}
-    .bld-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px}
-    .bld-hdr-l{display:flex;align-items:center;gap:14px;flex:1}
+    .bld-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:26px}
+    .hdr-abs-l{position:absolute;left:0;top:50%;transform:translateY(-50%)}
+    .hdr-abs-r{position:absolute;right:0;top:50%;transform:translateY(-50%)}
     /* Style the builder back button to match the Instagram-style back */
     #builderBack.back-btn{
       width:40px;height:40px;background:transparent;border:none;
@@ -1693,7 +1694,15 @@
 
     /* ── COVER LETTER VIEW ── */
     .cl-wrap{max-width:680px;margin:0 auto;padding:88px 20px 48px}
-    .cl-step-hdr{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:nowrap}
+    .cl-step-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:24px}
+    #clBackBtn.back-btn{
+      width:40px;height:40px;background:transparent;border:none;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;border-radius:50%;transition:background .15s;
+      color:#0f0e17;padding:0;box-shadow:none;
+    }
+    #clBackBtn.back-btn:hover{background:rgba(124,58,237,.07);border-color:transparent}
+    #clBackBtn.back-btn svg{stroke:#0f0e17}
     .cl-steps{display:flex;align-items:center;gap:4px}
     .cl-stp{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;transition:all .25s cubic-bezier(.4,0,.2,1);flex-shrink:0;position:relative}
     .cl-stp-done{background:var(--g);color:transparent;box-shadow:0 2px 8px rgba(124,58,237,.35)}
@@ -1702,7 +1711,6 @@
     .cl-stp-idle{background:#fff;border:2px solid #e5e0f5;color:var(--mute)}
     .cl-stp-line{width:22px;height:2px;background:#e5e0f5;transition:background .3s;flex-shrink:0;border-radius:2px}
     .cl-stp-line.done{background:var(--g)}
-    .cl-step-lbl{font-size:12.5px;font-weight:700;color:var(--p)}
     .cl-step-panel{display:none}
     .cl-step-panel.active{display:block}
     .cl-panel-card{background:#fff;border-radius:18px;border:1px solid var(--hair);padding:22px;box-shadow:var(--shadow-crisp)}
