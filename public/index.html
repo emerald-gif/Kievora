@@ -669,6 +669,26 @@ nav.scrolled{box-shadow:0 1px 24px rgba(0,0,0,.07)}
 .wc-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(124,58,237,.35)}
 @media(max-width:860px){.community-inner{grid-template-columns:1fr}.art-stack{margin-top:8px}}
 
+/* ─── TOP VISUALS: brand banner + how it works ─── */
+.top-visuals{padding:64px 24px 88px;background:var(--light);position:relative;overflow:hidden}
+.top-visuals::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(124,58,237,.05) 0 1px,transparent 1px 38px);pointer-events:none}
+.tv-grid{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:1fr 1.15fr;gap:44px;align-items:center;position:relative}
+.tv-banner{border-radius:24px;overflow:hidden;box-shadow:0 1px 2px rgba(20,20,30,.05),0 30px 70px -20px rgba(76,29,149,.35)}
+.tv-banner img{display:block;width:100%;height:100%;object-fit:cover}
+.tv-steps-head{margin-bottom:28px}
+.tv-steps-head .sec-h2{font-size:clamp(24px,3vw,36px)}
+.tv-steps-head .sec-p{max-width:460px}
+.hw-img-wrap{position:relative}
+.hw-img-wrap img{display:block;width:100%;height:auto;border-radius:16px}
+@media(max-width:980px){
+  .tv-grid{grid-template-columns:1fr;gap:52px}
+  .tv-banner{max-width:420px;margin:0 auto}
+}
+@media(max-width:700px){
+  .top-visuals{padding:48px 20px 64px}
+  .tv-steps-head{margin-bottom:20px}
+}
+
 /* ─── REVIEWS ─── */
 .reviews{padding:100px 24px;background:var(--light)}
 .reviews-hd{text-align:center;margin-bottom:56px}
@@ -1044,6 +1064,25 @@ a:focus-visible,button:focus-visible,.btn-p:focus-visible,.btn-g:focus-visible{
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── BRAND BANNER + HOW IT WORKS (top, structured together) ─── -->
+<section class="top-visuals">
+  <div class="tv-grid">
+    <div class="tv-banner reveal">
+      <img src="brand-banner.jpg" alt="Kievora — Build. Improve. Get Hired. AI-powered career platform" loading="lazy"/>
+    </div>
+    <div class="tv-steps reveal d1">
+      <div class="tv-steps-head">
+        <div class="sec-tag">✦ How It Works</div>
+        <h2 class="sec-h2 grad-h">From inbox to offer letter</h2>
+        <p class="sec-p">Connect your email once — KIE handles the tracking, the insights, and the follow-through.</p>
+      </div>
+      <div class="hw-img-wrap">
+        <img src="step.jpg" alt="How Kievora works: connect email, AI scans and understands, track everything automatically, get AI-powered insights, apply smarter with Kievora, land more and grow faster" loading="lazy"/>
       </div>
     </div>
   </div>
