@@ -4200,10 +4200,11 @@
                 ${label || 'Content'}
               </span>
               <span class="kie-code-card-btns">
-                ${isDiagram ? '' : `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`}
+                ${isDiagram ? '' : `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`}
                 <button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
-                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 </button>
+                ${isDiagram ? '' : `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>`}
               </span>
             </div>
             <div class="kie-code-card-body${isDiagram ? ' kie-code-card-body-diagram' : ''}">${content.replace(/</g,'&lt;')}</div>
@@ -4246,6 +4247,48 @@
     function _kieIsDiagramBlock(content) {
       return /[├└│]/.test(content || '');
     }
+
+    // Best-effort geometric recreation of the Gmail mark in Google's actual
+    // brand colors (not pulled from Google's official asset — swap in the
+    // exact SVG from their brand kit if pixel accuracy matters more than
+    // "immediately recognizable as Gmail").
+    const KIE_GMAIL_ICON = '<svg width="19" height="19" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 5.5A2 2 0 0 1 4.5 3.5h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-9z" fill="#fff"/><path d="M2.5 5.7v8.8a2 2 0 0 0 2 2h1.8V9.6l-3.8-3.9z" fill="#4285F4"/><path d="M17.5 5.7v8.8a2 2 0 0 1-2 2h-1.8V9.6l3.8-3.9z" fill="#34A853"/><path d="M2.5 5.5a2 2 0 0 1 2-2h.6L10 8 2.5 5.5z" fill="#EA4335"/><path d="M17.5 5.5a2 2 0 0 0-2-2h-.6L10 8l7.5-2.5z" fill="#FBBC05"/><path d="M6.1 3.5h7.8L10 8 6.1 3.5z" fill="#EA4335"/></svg>';
+
+    // "Open in Gmail" — a plain mailto: link, which every mail app
+    // (Gmail included) registers itself as a handler for, so this opens
+    // exactly like tapping "compose" with everything already filled in — no
+    // API keys or OAuth needed for this. If the content happens to start
+    // with a "Subject: ..." line (some generated documents include one),
+    // that becomes the actual email subject and gets stripped from the
+    // body; otherwise the card's own label (e.g. "Cover Letter") is used as
+    // a reasonable subject default.
+    function _kieMailtoParts(content, label) {
+      const m = (content || '').match(/^\s*Subject:\s*(.+?)\r?\n+([\s\S]*)$/i);
+      if (m) return { subject: m[1].trim(), body: m[2].trim() };
+      return { subject: label || 'Application', body: (content || '').trim() };
+    }
+    function _kieOpenGmail(subject, body) {
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+    // From the compact chat card — reads straight off the DOM, same as copy does.
+    function _kieOpenGmailFromCard(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const label   = card.querySelector('.kie-code-card-label')?.textContent?.trim() || 'Content';
+      const content = card.querySelector('.kie-code-card-body')?.textContent || '';
+      const { subject, body } = _kieMailtoParts(content, label);
+      _kieOpenGmail(subject, body);
+    }
+    window._kieOpenGmailFromCard = _kieOpenGmailFromCard;
+    // From inside the canvas — reads the canvas's own current version
+    // directly, so it's correct even mid-edit before minimizing.
+    function _kieOpenGmailFromCanvas(cardId) {
+      const state = _kieCanvasState.get(cardId);
+      if (!state) return;
+      const { subject, body } = _kieMailtoParts(state.history[state.historyIndex], state.label);
+      _kieOpenGmail(subject, body);
+    }
+    window._kieOpenGmailFromCanvas = _kieOpenGmailFromCanvas;
 
     const QUICK_ACTION_INFO = {
       shorter:      { label: 'Make it shorter' },
@@ -4325,11 +4368,11 @@
            <button type="button" class="kie-canvas-quick" ${loading ? 'disabled' : ''} onclick="_kieCanvasQuickAction('${cardId}','${a}')">${esc(QUICK_ACTION_INFO[a].label)}</button>
           `).join('');
 
-      const undoIcon    = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
-      const redoIcon    = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>';
-      const copyIcon    = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
-      const minimizeIcon= '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
-      const closeIcon   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      const undoIcon    = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
+      const redoIcon    = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>';
+      const copyIcon    = '<svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+      const minimizeIcon= '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+      const closeIcon   = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
       overlay.innerHTML = `
         <div class="kie-canvas" onclick="event.stopPropagation()">
@@ -4340,6 +4383,7 @@
               <button type="button" class="kie-canvas-icon-btn" ${canUndo ? '' : 'disabled'} onclick="_kieCanvasUndo('${cardId}')" title="Undo">${undoIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" ${canRedo ? '' : 'disabled'} onclick="_kieCanvasRedo('${cardId}')" title="Redo">${redoIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" onclick="_kieCanvasCopy('${cardId}')" title="Copy">${copyIcon}</button>
+              <button type="button" class="kie-canvas-icon-btn" onclick="_kieOpenGmailFromCanvas('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>
               <button type="button" class="kie-canvas-icon-btn kie-canvas-icon-minimize" onclick="_kieCanvasClose('${cardId}')" title="Minimize">${minimizeIcon}</button>
             </div>
           </div>
@@ -4441,40 +4485,43 @@
       const style = document.createElement('style');
       style.id = 'kie-canvas-style';
       style.textContent = `
-        /* ── Code-card header ── a little more definition than a bare row:
-           subtle divider under it, and both icon buttons get a resting
-           background so they read as tappable buttons, not floating glyphs. */
-        .kie-code-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid rgba(124,58,237,.12)}
-        .kie-code-card-label{display:flex;align-items:center;gap:6px;font-weight:700;color:#6d28d9}
-        .kie-code-card-btns{display:flex;align-items:center;gap:4px}
-        .kie-code-card-edit,.kie-code-card-copy{background:#f5f3ff;border:none;width:26px;height:26px;padding:0;cursor:pointer;color:#7c3aed;display:flex;align-items:center;justify-content:center;border-radius:8px}
-        .kie-code-card-edit:active,.kie-code-card-copy:active{background:#ede9fe;transform:scale(.93)}
+        /* ── Code-card header ── matched directly to the reference: label
+           left, plain icons right — no background chrome behind them. */
+        .kie-code-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(124,58,237,.12)}
+        .kie-code-card-label{display:flex;align-items:center;gap:7px;font-weight:700;color:#6d28d9}
+        .kie-code-card-btns{display:flex;align-items:center;gap:14px}
+        .kie-code-card-edit,.kie-code-card-copy,.kie-code-card-gmail{background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0}
+        .kie-code-card-edit{color:#6b7280}
+        .kie-code-card-copy{color:#374151}
+        .kie-code-card-edit:active,.kie-code-card-copy:active,.kie-code-card-gmail:active{opacity:.55}
 
-        /* ── Code-card body ── prose documents wrap like normal text; only
-           an actual ASCII diagram keeps the monospace/no-wrap/scroll
-           treatment, since wrapping would break its alignment. !important
-           because this overrides whatever base rule dashboard.css has for
-           this class, written back when every code block really was code. */
-        .kie-code-card-body{white-space:pre-wrap !important;overflow-x:hidden !important;word-break:break-word !important;font-family:inherit !important}
-        .kie-code-card-body-diagram{white-space:pre !important;overflow-x:auto !important;word-break:normal !important;font-family:ui-monospace,'SF Mono',Menlo,monospace !important}
+        /* ── Code-card body ── prose documents wrap like normal text and run
+           the full length of the content, exactly like the message it's
+           part of — no internal scroll, no height cap. Only an actual ASCII
+           diagram keeps the monospace/no-wrap/scroll treatment, since
+           wrapping would break its alignment. !important because this
+           overrides whatever base rule dashboard.css has for this class,
+           written back when every code block really was code (including the
+           old height cap that was forcing the "sliding" scrollbar). */
+        .kie-code-card-body{white-space:pre-wrap !important;overflow-x:hidden !important;overflow-y:visible !important;max-height:none !important;height:auto !important;word-break:break-word !important;font-family:inherit !important}
+        .kie-code-card-body-diagram{white-space:pre !important;overflow-x:auto !important;overflow-y:visible !important;max-height:none !important;height:auto !important;word-break:normal !important;font-family:ui-monospace,'SF Mono',Menlo,monospace !important}
+        .kie-code-card{max-height:none !important;height:auto !important;overflow:visible !important}
 
         .kie-canvas-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,10,25,.5);display:none;align-items:flex-end;justify-content:center}
         .kie-canvas{width:100%;max-width:560px;max-height:92vh;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.25)}
         .kie-canvas-topbar{display:flex;align-items:center;gap:8px;padding:12px;border-bottom:1px solid #f1f5f9;flex-shrink:0}
         .kie-canvas-topbar-title{flex:1;text-align:center;font-size:13.5px;font-weight:700;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
-        .kie-canvas-topbar-right{display:flex;align-items:center;gap:4px}
-        /* Every icon button gets a resting circular background — reads as a
-           real control rather than a bare glyph. Undo/redo/copy stay neutral
-           grey; close is a slightly warmer ghost tone; minimize (the one
-           action that actually commits changes) gets the brand violet fill
-           so it visually reads as the primary way to finish. */
-        .kie-canvas-icon-btn{background:#f8fafc;border:none;width:30px;height:30px;padding:0;cursor:pointer;color:#475569;display:flex;align-items:center;justify-content:center;border-radius:50%}
-        .kie-canvas-icon-btn:active{background:#e2e8f0;transform:scale(.92)}
-        .kie-canvas-icon-btn:disabled{color:#cbd5e1;background:#f8fafc;opacity:.7}
-        .kie-canvas-icon-btn:disabled:active{transform:none}
-        .kie-canvas-icon-close{color:#64748b}
-        .kie-canvas-icon-minimize{background:#f5f3ff;color:#7c3aed}
-        .kie-canvas-icon-minimize:active{background:#ede9fe}
+        .kie-canvas-topbar-right{display:flex;align-items:center;gap:14px}
+        /* Matched directly to the reference screenshots — plain icons, no
+           background chrome. Minimize (the one action that actually commits
+           changes) stays visually distinct with the brand violet color
+           since it's the primary way to finish, everything else neutral. */
+        .kie-canvas-icon-btn{background:none;border:none;padding:0;cursor:pointer;color:#475569;display:flex;align-items:center;justify-content:center;line-height:0}
+        .kie-canvas-icon-btn:active{opacity:.55}
+        .kie-canvas-icon-btn:disabled{color:#cbd5e1}
+        .kie-canvas-icon-btn:disabled:active{opacity:1}
+        .kie-canvas-icon-close{color:#1a1a2e}
+        .kie-canvas-icon-minimize{color:#7c3aed}
         .kie-canvas-body{flex:1;overflow-y:auto;padding:18px 18px 8px;font-size:14px;line-height:1.75;color:#1a1a2e}
         .kie-canvas-body p{margin:0 0 14px}
         .kie-canvas-body p.kie-canvas-changed{background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:8px 10px;margin:0 -10px 14px}
@@ -6535,7 +6582,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           const docIcon  = '<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
 
           const copyBtn = (closed || isFinal)
-            ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>`
+            ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>`
             : `<span style="color:#a855f7;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
 
           // Edit opens the KIE canvas (quick-action AI rewrites, undo/redo,
@@ -6544,7 +6591,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // have a "make it more casual" version).
           const isDiagram = _kieIsDiagramBlock(content);
           const editBtn = (closed || isFinal) && !isDiagram
-            ? `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`
+            ? `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`
+            : '';
+          const gmailBtn = (closed || isFinal) && !isDiagram
+            ? `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>`
             : '';
           // Prose documents wrap like normal text — no reason a cover letter
           // should ever need horizontal scrolling. Diagrams keep the
@@ -6553,7 +6603,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // separate component entirely (kie-table-scroll) and untouched.
           const bodyClass = isDiagram ? 'kie-code-card-body kie-code-card-body-diagram' : 'kie-code-card-body';
 
-          html += `<div class="kie-code-card" id="${cardId}"><div class="kie-code-card-hdr"><span class="kie-code-card-label">${docIcon}${esc(label)}</span><span class="kie-code-card-btns">${editBtn}${copyBtn}</span></div><div class="${bodyClass}">${esc(content.trim())}</div></div>`;
+          html += `<div class="kie-code-card" id="${cardId}"><div class="kie-code-card-hdr"><span class="kie-code-card-label">${docIcon}${esc(label)}</span><span class="kie-code-card-btns">${editBtn}${copyBtn}${gmailBtn}</span></div><div class="${bodyClass}">${esc(content.trim())}</div></div>`;
         }
 
         lastIndex = match.index + match[0].length;
