@@ -576,6 +576,8 @@
   @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
 
 </style>
+<link rel="stylesheet" href="/dashboard/app-sidebar.css"/>
+<style>@media(min-width:900px){body.has-app-sb .hdr{left:var(--app-sb-w)}}</style>
 </head>
 <body>
 
@@ -2168,5 +2170,6 @@ window.closeJobDetail = function() {
   if (!anyPanelOpen(['fjDetailScreen'])) document.body.style.overflow = '';
 };
 </script>
+<script src="/dashboard/app-sidebar.js"></script>
 </body>
 </html>
