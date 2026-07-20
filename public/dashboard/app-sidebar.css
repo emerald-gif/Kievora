@@ -1,0 +1,74 @@
+/* ═══════════════════════════════════════════════════════════════
+   SHARED APP SIDEBAR — desktop-only persistent nav injected into
+   standalone pages (find-jobs, billing, account, support) so the
+   sidebar from /dashboard stays visible everywhere on desktop.
+   Namespaced under .app-sb so it can't collide with each page's
+   own styles. Hidden entirely below 900px — those pages already
+   have a mobile-appropriate header/back-button UX of their own.
+   ═══════════════════════════════════════════════════════════════ */
+.app-sb{ display:none }
+
+@media (min-width:900px){
+  :root{ --app-sb-w:252px; }
+
+  .app-sb{
+    display:flex;flex-direction:column;
+    position:fixed;top:0;left:0;height:100vh;width:var(--app-sb-w);
+    background:#fff;border-right:1px solid rgba(0,0,0,.06);
+    z-index:1000;overflow-y:auto;
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',system-ui,sans-serif;
+  }
+  .app-sb-brand{
+    display:flex;align-items:center;gap:9px;
+    padding:22px 20px 16px;text-decoration:none;
+  }
+  .app-sb-logo{width:26px;height:26px;border-radius:7px;object-fit:cover;flex-shrink:0}
+  .app-sb-brand span{font-size:15px;font-weight:800;letter-spacing:-.3px;color:#0f0e17}
+
+  .app-sb-nav{flex:1;padding:6px 0}
+  .app-sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#9ca3af;padding:14px 20px 6px}
+  .app-sb-item{
+    display:flex;align-items:center;gap:13px;
+    margin:1px 10px;padding:10px 12px;width:calc(100% - 20px);
+    border-radius:10px;
+    font-size:14px;font-weight:500;color:#374151;
+    text-decoration:none;cursor:pointer;
+    transition:background .12s,color .12s;
+  }
+  .app-sb-item svg{flex-shrink:0;opacity:.5;transition:opacity .12s}
+  .app-sb-item:hover{background:#f9f9f9;color:#0f0e17}
+  .app-sb-item:hover svg{opacity:.85}
+  .app-sb-item.active{background:#f3f0ff;color:#5b21b6;font-weight:700}
+  .app-sb-item.active svg{opacity:1;color:#7c3aed}
+
+  .app-sb-item-kie{
+    margin:2px 10px 14px;padding:11px 12px;width:calc(100% - 20px);
+    border-radius:13px;color:#fff;font-weight:700;
+    background:linear-gradient(135deg,#7c3aed,#a855f7);
+    box-shadow:0 4px 14px rgba(124,58,237,.28);
+  }
+  .app-sb-item-kie:hover{color:#fff;filter:brightness(1.05)}
+  .app-sb-item-kie.active{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff}
+  .app-sb-kie-ico{width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center}
+  .app-sb-kie-ico img{width:100%;height:100%;object-fit:cover}
+
+  .app-sb-foot{padding:10px 16px 18px;border-top:1px solid rgba(0,0,0,.06)}
+  .app-sb-signout{
+    display:flex;align-items:center;gap:9px;width:100%;
+    background:none;border:none;padding:10px 6px;
+    font-size:13px;font-weight:600;color:#9a3a3a;
+    cursor:pointer;border-radius:9px;font-family:inherit;
+    transition:background .12s;
+  }
+  .app-sb-signout:hover{background:rgba(185,28,28,.06)}
+
+  /* Push each page's own content over so nothing sits under the sidebar.
+     (Pages whose .hdr uses position:fixed;left:0;right:0 also need their
+     own small override — see the page's own <style> block — since a
+     sticky header would double-offset if we forced `left` here globally.) */
+  body.has-app-sb{margin-left:var(--app-sb-w)}
+}
+
+@media (min-width:900px) and (max-width:1279px){
+  :root{ --app-sb-w:216px; }
+}
