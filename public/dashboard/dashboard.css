@@ -2260,11 +2260,11 @@
 @keyframes sping{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ═══════════════════════════════════════════════════════════════
-   DESKTOP LAYOUT (≥1024px) — persistent sidebar instead of the
+   DESKTOP LAYOUT (≥900px) — persistent sidebar instead of the
    mobile off-canvas drawer, so the app reads like a real desktop
    product instead of a phone screen stretched wide.
    ═══════════════════════════════════════════════════════════════ */
-@media (min-width:1024px){
+@media (min-width:900px){
   :root{ --dsb-w:252px; }
 
   /* Sidebar becomes a static column, always visible, no overlay */
@@ -2298,7 +2298,7 @@
   .i-nav > *{max-width:1080px}
 }
 
-@media (min-width:1024px) and (max-width:1279px){
+@media (min-width:900px) and (max-width:1279px){
   :root{ --dsb-w:216px; }
   .home{padding:96px 32px 60px}
   .hdr-inner{padding:0 32px}
