@@ -1052,6 +1052,9 @@
       document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
       g('v-' + v).classList.add('active');
       window.scrollTo(0, 0);
+      document.querySelectorAll('.msb-item[data-nav]').forEach(el => {
+        el.classList.toggle('active', el.dataset.nav === v);
+      });
       document.body.classList.toggle('kie-mode', v === 'kie');
       document.body.classList.toggle('ctool-mode', ctoolViews.includes(v));
       // Close the tools overlay if it's open
