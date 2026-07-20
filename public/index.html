@@ -221,14 +221,31 @@ nav.scrolled{box-shadow:0 1px 24px rgba(0,0,0,.07)}
 }
 .rc-header{height:5px;background:linear-gradient(90deg,var(--p),var(--p2))}
 .rc-body{padding:14px 16px}
-.rc-name{height:10px;background:#0A0A0B;border-radius:3px;width:44%;margin-bottom:5px}
-.rc-title{height:6px;background:var(--p);border-radius:2px;width:29%;margin-bottom:10px}
+.rc-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.rc-avatar{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--p),var(--pink));
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;letter-spacing:.2px;
+  box-shadow:0 2px 8px rgba(124,58,237,.35);
+}
+.rc-name{font-size:12.5px;font-weight:800;color:#0A0A0B;line-height:1.3}
+.rc-title{height:auto;width:auto;background:none;font-size:10px;font-weight:600;color:var(--p);margin-bottom:0;line-height:1.4}
+.rc-contact{display:flex;align-items:center;gap:5px;font-size:8.5px;color:var(--sub);margin-bottom:10px}
+.rc-live-dot{width:5px;height:5px;border-radius:50%;background:#22C55E;flex-shrink:0;animation:lpulse 2s infinite}
 .rc-row{display:flex;gap:7px;margin-bottom:11px}
 .rc-pill{height:5px;background:#E8EAED;border-radius:2px;flex:1}
 .rc-div{height:1px;background:var(--border);margin-bottom:9px}
 .rc-sh{height:5px;background:var(--p);border-radius:2px;width:22%;margin-bottom:7px}
+.rc-sec-label{font-size:8.5px;font-weight:800;color:var(--p);letter-spacing:.6px;text-transform:uppercase;margin-bottom:7px}
+.rc-exp-role{font-size:10px;font-weight:700;color:#111;margin-bottom:2px}
+.rc-exp-role span{font-weight:500;color:var(--sub)}
+.rc-exp-desc{font-size:9px;color:var(--sub);line-height:1.5;margin-bottom:2px}
 .rc-line{height:4px;background:#F3F4F6;border-radius:2px;margin-bottom:4px}
+.rc-skills{display:flex;flex-wrap:wrap;gap:5px}
+.rc-skill{font-size:8.5px;font-weight:700;padding:3px 9px;border-radius:99px;line-height:1.4}
 .w100{width:100%}.w80{width:80%}.w60{width:60%}.w45{width:45%}
+@keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.78)}}
 
 /* Right panel */
 .db-right{display:flex;flex-direction:column;gap:10px;overflow:hidden}
@@ -669,24 +686,15 @@ nav.scrolled{box-shadow:0 1px 24px rgba(0,0,0,.07)}
 .wc-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(124,58,237,.35)}
 @media(max-width:860px){.community-inner{grid-template-columns:1fr}.art-stack{margin-top:8px}}
 
-/* ─── TOP VISUALS: brand banner + how it works ─── */
-.top-visuals{padding:64px 24px 88px;background:var(--light);position:relative;overflow:hidden}
+/* ─── HOW IT WORKS ─── */
+.top-visuals{padding:96px 24px 88px;background:var(--light);position:relative;overflow:hidden}
 .top-visuals::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(124,58,237,.05) 0 1px,transparent 1px 38px);pointer-events:none}
-.tv-grid{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:1fr 1.15fr;gap:44px;align-items:center;position:relative}
-.tv-banner{border-radius:24px;overflow:hidden;box-shadow:0 1px 2px rgba(20,20,30,.05),0 30px 70px -20px rgba(76,29,149,.35)}
-.tv-banner img{display:block;width:100%;height:100%;object-fit:cover}
-.tv-steps-head{margin-bottom:28px}
-.tv-steps-head .sec-h2{font-size:clamp(24px,3vw,36px)}
-.tv-steps-head .sec-p{max-width:460px}
-.hw-img-wrap{position:relative}
+.hw-head{max-width:var(--max);margin:0 auto 48px;text-align:center;position:relative}
+.hw-img-wrap{max-width:620px;margin:0 auto;position:relative}
 .hw-img-wrap img{display:block;width:100%;height:auto;border-radius:16px}
-@media(max-width:980px){
-  .tv-grid{grid-template-columns:1fr;gap:52px}
-  .tv-banner{max-width:420px;margin:0 auto}
-}
 @media(max-width:700px){
-  .top-visuals{padding:48px 20px 64px}
-  .tv-steps-head{margin-bottom:20px}
+  .top-visuals{padding:64px 20px 60px}
+  .hw-head{margin-bottom:32px}
 }
 
 /* ─── REVIEWS ─── */
@@ -1019,21 +1027,25 @@ a:focus-visible,button:focus-visible,.btn-p:focus-visible,.btn-g:focus-visible{
               <div class="resume-card">
                 <div class="rc-header"></div>
                 <div class="rc-body">
-                  <div class="rc-name"></div>
-                  <div class="rc-title"></div>
-                  <div class="rc-row"><div class="rc-pill"></div><div class="rc-pill"></div><div class="rc-pill"></div></div>
+                  <div class="rc-top">
+                    <div class="rc-avatar">AM</div>
+                    <div>
+                      <div class="rc-name">Alex Morgan</div>
+                      <div class="rc-title">Senior Frontend Engineer</div>
+                    </div>
+                  </div>
+                  <div class="rc-contact"><span class="rc-live-dot"></span>Lagos, NG · 5+ yrs exp · Open to work</div>
                   <div class="rc-div"></div>
-                  <div class="rc-sh"></div>
-                  <div class="rc-line w100"></div><div class="rc-line w80"></div><div class="rc-line w60"></div>
+                  <div class="rc-sec-label">Experience</div>
+                  <div class="rc-exp-role">Product Engineer <span>· Paystack</span></div>
+                  <div class="rc-exp-desc">Shipped checkout revamp, lifting conversion 18%.</div>
                   <div class="rc-div" style="margin-top:10px"></div>
-                  <div class="rc-sh"></div>
-                  <div class="rc-line w100"></div><div class="rc-line w80"></div>
-                  <div class="rc-div" style="margin-top:10px"></div>
-                  <div class="rc-sh"></div>
-                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
-                    <div style="height:16px;background:var(--p3);border-radius:99px;width:52px"></div>
-                    <div style="height:16px;background:var(--p3);border-radius:99px;width:44px"></div>
-                    <div style="height:16px;background:var(--p3);border-radius:99px;width:60px"></div>
+                  <div class="rc-sec-label">Skills</div>
+                  <div class="rc-skills">
+                    <div class="rc-skill" style="background:#EDE9FE;color:#7C3AED">React</div>
+                    <div class="rc-skill" style="background:#FCE7F3;color:#BE185D">Node.js</div>
+                    <div class="rc-skill" style="background:#DBEAFE;color:#1D4ED8">TypeScript</div>
+                    <div class="rc-skill" style="background:#DCFCE7;color:#15803D">Figma</div>
                   </div>
                 </div>
               </div>
@@ -1069,22 +1081,15 @@ a:focus-visible,button:focus-visible,.btn-p:focus-visible,.btn-g:focus-visible{
   </div>
 </section>
 
-<!-- ─── BRAND BANNER + HOW IT WORKS (top, structured together) ─── -->
-<section class="top-visuals">
-  <div class="tv-grid">
-    <div class="tv-banner reveal">
-      <img src="brand-banner.jpg" alt="Kievora — Build. Improve. Get Hired. AI-powered career platform" loading="lazy"/>
-    </div>
-    <div class="tv-steps reveal d1">
-      <div class="tv-steps-head">
-        <div class="sec-tag">✦ How It Works</div>
-        <h2 class="sec-h2 grad-h">From inbox to offer letter</h2>
-        <p class="sec-p">Connect your email once — KIE handles the tracking, the insights, and the follow-through.</p>
-      </div>
-      <div class="hw-img-wrap">
-        <img src="step.jpg" alt="How Kievora works: connect email, AI scans and understands, track everything automatically, get AI-powered insights, apply smarter with Kievora, land more and grow faster" loading="lazy"/>
-      </div>
-    </div>
+<!-- ─── HOW IT WORKS ─── -->
+<section class="top-visuals" id="how-it-works">
+  <div class="hw-head reveal">
+    <div class="sec-tag">✦ How It Works</div>
+    <h2 class="sec-h2 grad-h">From inbox to offer letter</h2>
+    <p class="sec-p" style="margin:0 auto">Connect your email once — KIE handles the tracking, the insights, and the follow-through.</p>
+  </div>
+  <div class="hw-img-wrap reveal d1">
+    <img src="step.jpg" alt="How Kievora works: connect email, AI scans and understands, track everything automatically, get AI-powered insights, apply smarter with Kievora, land more and grow faster" loading="lazy"/>
   </div>
 </section>
 
@@ -1726,14 +1731,25 @@ const SHOWCASE_ITEMS=[
           <div class="resume-card">
             <div class="rc-header"></div>
             <div class="rc-body">
-              <div class="rc-name"></div><div class="rc-title"></div>
-              <div class="rc-row"><div class="rc-pill"></div><div class="rc-pill"></div><div class="rc-pill"></div></div>
+              <div class="rc-top">
+                <div class="rc-avatar">AM</div>
+                <div>
+                  <div class="rc-name">Alex Morgan</div>
+                  <div class="rc-title">Senior Frontend Engineer</div>
+                </div>
+              </div>
+              <div class="rc-contact"><span class="rc-live-dot"></span>Lagos, NG · Open to work</div>
               <div class="rc-div"></div>
-              <div class="rc-sh"></div>
-              <div class="rc-line w100"></div><div class="rc-line w80"></div><div class="rc-line w60"></div>
+              <div class="rc-sec-label">Experience</div>
+              <div class="rc-exp-role">Product Engineer <span>· Paystack</span></div>
+              <div class="rc-exp-desc">Shipped checkout revamp, lifting conversion 18%.</div>
               <div class="rc-div" style="margin-top:9px"></div>
-              <div class="rc-sh"></div>
-              <div class="rc-line w100"></div><div class="rc-line w45"></div>
+              <div class="rc-sec-label">Skills</div>
+              <div class="rc-skills">
+                <div class="rc-skill" style="background:#EDE9FE;color:#7C3AED">React</div>
+                <div class="rc-skill" style="background:#FCE7F3;color:#BE185D">Node.js</div>
+                <div class="rc-skill" style="background:#DBEAFE;color:#1D4ED8">TypeScript</div>
+              </div>
             </div>
           </div>
         </div>
