@@ -126,7 +126,8 @@
       background:linear-gradient(135deg,#7c3aed,#a855f7);opacity:.25;filter:blur(8px);z-index:-1}
     .pfd-icon-wrap.pfd-icon-wrap-plain{background:none;box-shadow:none;width:auto;height:auto}
     .pfd-icon-wrap.pfd-icon-wrap-plain::after{content:none}
-    .pfd-icon{font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))}
+    .pfd-icon{display:flex;align-items:center;justify-content:center}
+    .pfd-icon svg{width:30px;height:30px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))}
     .pfd-title{font-size:19px;font-weight:900;color:#0f0e17;letter-spacing:-.4px;margin-bottom:8px}
     .pfd-desc{font-size:13.5px;color:#64748b;line-height:1.6;padding:0 6px;margin-bottom:6px}
     .pfd-sub{font-size:12px;color:#a78bfa;font-weight:700;margin-bottom:18px;min-height:4px}
@@ -963,6 +964,24 @@
     .km-user{align-self:flex-end;max-width:82%}
     .km-ai-av{display:none}
     .km-ai-body{display:flex;flex-direction:column;min-width:0;flex:1;overflow:hidden;max-width:100%;padding-right:2px}
+
+    /* ── "KIE's response was interrupted" notice — shown after the user
+       taps stop mid-generation, with a one-tap way to pick it back up ── */
+    .km-interrupted{
+      display:flex;align-items:center;gap:9px;
+      margin:6px 4px 10px;padding:11px 12px 11px 13px;
+      background:#f8f7fc;border:1px solid #ece7fb;border-radius:14px;
+      font-size:12.5px;font-weight:600;color:#6b6478;
+      max-width:min(420px,92%);
+    }
+    .km-int-ico{flex-shrink:0;color:#9c94b3;display:flex}
+    .km-int-txt{flex:1}
+    .km-int-retry{
+      flex-shrink:0;border:1px solid #ded6f7;background:#fff;color:#7c3aed;
+      font-size:12px;font-weight:700;padding:6px 13px;border-radius:99px;
+      cursor:pointer;font-family:inherit;transition:background .12s;
+    }
+    .km-int-retry:hover{background:#f3f0ff}
     .km-ai-name{display:none}
     /* AI bubble: plain text, no background box */
     .km-bubble{font-size:13.5px;line-height:1.7;word-break:break-word;overflow-wrap:break-word;white-space:pre-wrap;max-width:100%;min-width:0;display:block;padding:0;color:#1a1a2e}
@@ -1487,21 +1506,22 @@
     #toast{
       position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;
       transform:translateX(-50%) translateY(-14px);
-      z-index:10050;padding:13px 18px;border-radius:14px;
-      font-size:13.5px;font-weight:600;line-height:1.4;
-      box-shadow:0 10px 32px rgba(15,14,23,.28),0 2px 8px rgba(15,14,23,.12);
+      z-index:10050;padding:12px 12px 12px 13px;border-radius:16px;
+      font-size:13.5px;font-weight:600;line-height:1.4;color:#0f0e17;
+      box-shadow:0 12px 32px rgba(15,14,23,.14),0 2px 10px rgba(15,14,23,.06);
       opacity:0;transition:opacity .25s ease,transform .25s ease;pointer-events:none;
-      background:#1f1b2e;color:#fff;
-      display:flex;align-items:center;gap:10px;
+      background:#fff;border:1px solid rgba(15,14,23,.06);
+      display:flex;align-items:center;gap:11px;
       max-width:min(420px,calc(100vw - 32px));width:max-content;
-      border-left:3px solid #7c3aed;
     }
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-    #toast.toast-ok{border-left-color:#22c55e}
-    #toast.toast-err{border-left-color:#f87171}
-    #toast.toast-lock{border-left-color:#a78bfa}
-    #toast .toast-ico{flex-shrink:0;font-size:15px;line-height:1}
-    #toast a{color:#c4b5fd;text-decoration:underline;font-weight:800;white-space:nowrap;pointer-events:auto;margin-left:2px}
+    #toast .toast-ico{flex-shrink:0;width:22px;height:22px}
+    #toast .toast-ico svg{width:22px;height:22px;display:block}
+    #toast .toast-msg{flex:1}
+    #toast .toast-x{flex-shrink:0;width:22px;height:22px;border:none;background:none;color:#b7b2c4;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0}
+    #toast .toast-x:hover{background:#f5f4fa;color:#6b6478}
+    #toast a{color:#7c3aed;text-decoration:underline;font-weight:800;white-space:nowrap;pointer-events:auto;margin-left:2px}
 
     /* print area — download handled by pdfmake */
 
@@ -2302,4 +2322,31 @@
   :root{ --dsb-w:216px; }
   .home{padding:96px 32px 60px}
   .hdr-inner{padding:0 32px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KIE "AI ecosystem" (desktop) — inside KIE, the main dashboard
+   sidebar steps aside and KIE's own chat-history sidebar becomes
+   the persistent one, same treatment as the main sidebar (no more
+   slide-in drawer, no hamburger toggle). Exiting KIE (the Home
+   button in its own header) brings the main sidebar back.
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width:900px){
+  :root{ --kie-sb-w:300px; }
+
+  body.kie-mode .msb{display:none}
+  body.kie-mode .msb-overlay{display:none!important}
+
+  .kie-sidebar{
+    left:0!important;
+    transition:none;
+    box-shadow:none;
+    border-right:1px solid var(--border2);
+  }
+  .kie-sidebar-overlay{display:none!important}
+  #kieHamburger{display:none}
+
+  /* KIE starts right after its own docked sidebar instead of the
+     main sidebar's offset — the two are mutually exclusive */
+  body.kie-mode #v-kie{left:var(--kie-sb-w)}
 }

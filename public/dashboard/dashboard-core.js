@@ -176,36 +176,36 @@
     // Static copy for every locked-feature drawer — title/icon/description never
     // need a network call, so the drawer opens instantly with zero lag.
     const PREMIUM_FEATURE_INFO = {
-      uploadAnalyze:  { icon: '📊', title: 'Upload & Analyze', minPlan: 'paid7',
+      uploadAnalyze:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h6"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="3.2"/><path d="M19 19l2.5 2.5"/></svg>', title: 'Upload & Analyze', minPlan: 'paid7',
         desc: 'Upload any resume and get a full ATS score, strengths, weaknesses, and exactly what to fix — plus our AI Image Analyzer for scanned or photographed resumes.' },
-      recruiterView:  { icon: '🕵️', title: 'Recruiter View', minPlan: 'paid15',
+      recruiterView:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>', title: 'Recruiter View', minPlan: 'paid15',
         desc: "See your resume exactly the way a recruiter does on a 6-second skim — first impressions, red flags, and what makes them keep reading." },
-      templates:      { icon: '🎨', title: 'All Templates', minPlan: 'paid7',
+      templates:      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>', title: 'All Templates', minPlan: 'paid7',
         desc: 'Unlock every resume template in the library, not just the first 5.' },
-      coverLetter:    { icon: '✉️', title: 'Cover Letter from Resume', minPlan: 'paid7',
+      coverLetter:    { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.2"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>', title: 'Cover Letter from Resume', minPlan: 'paid7',
         desc: "Auto-generate a tailored cover letter straight from an existing or uploaded resume instead of writing one from scratch." },
-      atsExplanation: { icon: '📈', title: 'Score Breakdown', minPlan: 'paid7',
+      atsExplanation: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5.5-5.5 4 4L21 7"/><path d="M21 12V7h-5"/></svg>', title: 'Score Breakdown', minPlan: 'paid7',
         desc: "See exactly why you got your ATS score — not just the number, but what's working and what to fix." },
-      articleDownload:{ icon: '⬇️', title: 'Article Downloads', minPlan: 'paid7',
+      articleDownload:{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>', title: 'Article Downloads', minPlan: 'paid7',
         desc: 'Save any article from the Community Feed as a PDF to read or share offline.' },
-      findJobs:       { icon: '💼', title: 'Job Applications', minPlan: 'paid7',
+      findJobs:       { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7.5" width="19" height="12" rx="2.2"/><path d="M8 7.5V6a2.5 2.5 0 0 1 2.5-2.5h3A2.5 2.5 0 0 1 16 6v1.5"/><path d="M2.5 13h19"/></svg>', title: 'Job Applications', minPlan: 'paid7',
         desc: "Open and apply to every job we surface for you, not just preview the listing." },
-      gmail:          { icon: '📧', title: 'Gmail AI', minPlan: 'paid15',
+      gmail:          { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.2"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>', title: 'Gmail AI', minPlan: 'paid15',
         desc: "KIE reads your inbox securely to auto-track applications, interviews, and recruiter emails — no more manually updating your pipeline." },
     };
     const TOOL_INFO = {
-      aibuild:      { icon: '✍️',  title: 'AI Resume Builder',   desc: 'Build a complete resume from a single prompt — KIE writes it for you.' },
-      careerhealth: { icon: '❤️‍🩹', title: 'Career Health Score', desc: 'A full check-up on your career — momentum, risk areas, and what to prioritize next.' },
-      roadmap:      { icon: '🗺️',  title: 'Career Roadmap',      desc: 'A step-by-step plan to get from where you are to where you want to be.' },
-      salary:       { icon: '💰',  title: 'Salary Intel',        desc: 'Know what your role actually pays before you negotiate.' },
-      industry:     { icon: '📡',  title: 'Industry Intel',      desc: 'Stay ahead with trends and shifts in your industry.' },
-      linkedin:     { icon: '🔗',  title: 'LinkedIn Optimizer',  desc: 'Turn your profile into something recruiters actually stop on.' },
-      interview:    { icon: '🎤',  title: 'Mock Interview',      desc: 'Practice real interview questions and get honest feedback on your answers.' },
-      branding:     { icon: '🌟',  title: 'Personal Branding',   desc: 'Build a personal brand that gets you noticed for the right reasons.' },
-      messaging:    { icon: '💬',  title: 'Professional Messaging', desc: 'Write outreach, follow-ups, and cold messages that actually get replies.' },
-      promotion:    { icon: '📊',  title: 'Promotion Readiness', desc: 'Build the case for your next promotion with a clear, data-backed argument.' },
-      jobmatch:     { icon: '🎯',  title: 'Job Match',           desc: 'See exactly how well your resume matches a specific job description before you apply.' },
-      resignation:  { icon: '📝',  title: 'Resignation Letter',  desc: 'Write a clean, professional resignation letter in the right tone, in seconds.' },
+      aibuild:      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3"/><path d="M20 3l.7 1.6L22.3 5l-1.6.7L20 7.3l-.7-1.6L17.7 5l1.6-.7L20 3z"/></svg>',  title: 'AI Resume Builder',   desc: 'Build a complete resume from a single prompt — KIE writes it for you.' },
+      careerhealth: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-9.8-9.4C.9 7.6 3 4 6.6 4c2 0 3.5 1.1 4.4 2.6C11.9 5.1 13.4 4 15.4 4 19 4 21.1 7.6 19.8 11.1 17.5 15.9 12 20.5 12 20.5z"/><path d="M6 12h2.5l1.5-3 2 5 1.5-2.5H18"/></svg>', title: 'Career Health Score', desc: 'A full check-up on your career — momentum, risk areas, and what to prioritize next.' },
+      roadmap:      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>',  title: 'Career Roadmap',      desc: 'A step-by-step plan to get from where you are to where you want to be.' },
+      salary:       { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v11M15 9.2c0-1.2-1.3-2.2-3-2.2s-3 .9-3 2.1c0 3 6 1.5 6 4.5 0 1.3-1.3 2.3-3 2.3s-3-1-3-2.2"/></svg>',        title: 'Salary Intel',        desc: 'Know what your role actually pays before you negotiate.' },
+      industry:     { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6"/><circle cx="12" cy="11" r="2.4"/><path d="M8.3 8.3a5.2 5.2 0 0 0 0 7.4M15.7 8.3a5.2 5.2 0 0 1 0 7.4M5.1 5.1a9.6 9.6 0 0 0 0 13.8M18.9 5.1a9.6 9.6 0 0 1 0 13.8"/></svg>',     title: 'Industry Intel',      desc: 'Stay ahead with trends and shifts in your industry.' },
+      linkedin:     { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M8 16.5l-1.8 1.8a3.2 3.2 0 0 1-4.5-4.5L5 10.5"/><path d="M16 7.5l1.8-1.8a3.2 3.2 0 0 1 4.5 4.5L19.5 13"/></svg>',     title: 'LinkedIn Optimizer',  desc: 'Turn your profile into something recruiters actually stop on.' },
+      interview:    { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21M9 21h6"/></svg>',    title: 'Mock Interview',      desc: 'Practice real interview questions and get honest feedback on your answers.' },
+      branding:     { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2L12 3z"/></svg>',   title: 'Personal Branding',   desc: 'Build a personal brand that gets you noticed for the right reasons.' },
+      messaging:    { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v11H9l-4 3.5v-3.5H4v-11z"/></svg>', title: 'Professional Messaging', desc: 'Write outreach, follow-ups, and cold messages that actually get replies.' },
+      promotion:    { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M10 20V9M16 20v-7M20 20V4"/></svg>',  title: 'Promotion Readiness', desc: 'Build the case for your next promotion with a clear, data-backed argument.' },
+      jobmatch:     { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="#fff"/></svg>',     title: 'Job Match',           desc: 'See exactly how well your resume matches a specific job description before you apply.' },
+      resignation:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h6"/><path d="M14 2v6h6"/><path d="M14.5 15.5L20 10l2 2-5.5 5.5L14 18l.5-2.5z"/></svg>',  title: 'Resignation Letter',  desc: 'Write a clean, professional resignation letter in the right tone, in seconds.' },
     };
 
     // ─── Premium Feature Drawer — opens instantly, no network wait ───────────
@@ -218,7 +218,7 @@
         info = PREMIUM_FEATURE_INFO[feature];
         minPlan = info.minPlan;
       } else {
-        info = { icon: '🔒', title: 'Premium Feature', desc: 'This feature is part of a paid plan.' };
+        info = { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>', title: 'Premium Feature', desc: 'This feature is part of a paid plan.' };
         minPlan = 'paid7';
       }
 
@@ -232,7 +232,7 @@
         if (iconEl) iconEl.innerHTML = '<img src="/gmail.jpg" alt="Gmail" style="width:56px;height:56px;object-fit:contain" onerror="this.outerHTML=\'<svg width=&quot;48&quot; height=&quot;48&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>\'">';
       } else {
         if (iconWrapEl) iconWrapEl.classList.remove('pfd-icon-wrap-plain');
-        if (iconEl) iconEl.textContent = info.icon;
+        if (iconEl) iconEl.innerHTML = info.icon;
       }
       g('pfdTitle').textContent = info.title;
       g('pfdDesc').textContent  = info.desc;
@@ -264,8 +264,9 @@
     function showLockToast(msg) {
       const t = g('toast');
       if (!t) return;
-      t.innerHTML = '<span class="toast-ico">🔒</span><span>' + esc(msg) + '</span>'
-        + ' <a href="/billing">Upgrade →</a>';
+      t.innerHTML = '<span class="toast-ico">' + TOAST_ICONS.lock + '</span>'
+        + '<span class="toast-msg">' + esc(msg) + ' <a href="/billing">Upgrade →</a></span>'
+        + '<button class="toast-x" onclick="closeToast()" aria-label="Dismiss">' + TOAST_X + '</button>';
       t.className = 'toast-lock';
       clearTimeout(window._tt);
       requestAnimationFrame(() => t.classList.add('show'));
@@ -5698,6 +5699,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     let _kieGenerating  = false;   // blocks double-send from any entry point
     let _kieAbort       = null;    // AbortController — cancels the fetch
     let _kieStopTyping  = false;   // stops the typewriter mid-animation
+    let _kieLastUserText = '';     // last thing the user sent — powers the "Try again" retry after a stop
     let _kieIntentClassifying = false; // guards the layer-2 intent-safety-net call below
 
     const SEND_ICON = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>`;
@@ -5733,7 +5735,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
     }
 
-    function stopKieGeneration() {
+    function stopKieGeneration(userInitiated) {
       // Abort fetch if still in flight
       if (_kieAbort) { _kieAbort.abort(); _kieAbort = null; }
       // Signal typewriter to stop mid-animation
@@ -5752,7 +5754,33 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       _kieGenerating = false;
       g('kieInp').disabled = false;
       setKieSendMode('send');
+      // User pressed the stop button (not an internal auto-stop before a new
+      // send) — let them know the reply was cut short, same pattern as any
+      // other AI chat's "response was interrupted" notice.
+      if (userInitiated) _appendKieInterruptedNotice();
     }
+
+    function _appendKieInterruptedNotice() {
+      const msgs = g('kieMsgs');
+      if (!msgs) return;
+      const el = document.createElement('div');
+      el.className = 'km-interrupted';
+      el.innerHTML =
+        '<span class="km-int-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg></span>' +
+        '<span class="km-int-txt">KIE\u2019s response was interrupted.</span>' +
+        '<button class="km-int-retry" onclick="retryKieAfterStop(this)">Try again</button>';
+      msgs.appendChild(el);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    window.retryKieAfterStop = function(btn) {
+      const card = btn.closest('.km-interrupted');
+      if (card) card.remove();
+      if (!_kieLastUserText) return;
+      const inp = g('kieInp');
+      inp.value = _kieLastUserText;
+      sendKie();
+    };
 
     // ── BUG FIX #8 — Retry wrapper ───────────────────────────────────────────
     // Retries on transient network errors and 5xx/429 responses with exponential
@@ -5782,11 +5810,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // ── SEND KIE — unified handler ────────────────────────────────────────────
     async function sendKie() {
       // Stop if generating
-      if (_kieGenerating) { stopKieGeneration(); return; }
+      if (_kieGenerating) { stopKieGeneration(true); return; }
 
       const inp = g('kieInp');
       const msg = inp.value.trim();
       const att = _stagedKieAttachment;
+      if (msg) _kieLastUserText = msg;
 
       // Nothing to send
       if (!msg && !att) return;
@@ -8291,16 +8320,34 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const withImage = _kieApplyImageMarker(withCards, images);
       return _kieApplyGotoMarkers(withImage);
     }
+    // Matching icon set for the toast card — colored circle badge, same
+    // treatment as the premium-drawer icons, no more raw emoji.
+    const TOAST_ICONS = {
+      ok:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#22c55e"/><path d="M7 12.3l3.2 3.2L17.3 8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      err:  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#ef4444"/><path d="M12 7v6.2" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.15" fill="#fff"/></svg>',
+      warn: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#f59e0b"/><path d="M12 7.5v6.2" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.15" fill="#fff"/></svg>',
+      info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#3b82f6"/><circle cx="12" cy="7.9" r="1.15" fill="#fff"/><path d="M12 11v6" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/></svg>',
+      lock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#7c3aed"/><rect x="7.4" y="11" width="9.2" height="6.5" rx="1.4" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M9.3 11V8.7a2.7 2.7 0 015.4 0V11" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
+    };
+    const TOAST_X = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+
     function toast(msg, type = 'ok') {
       const t = g('toast');
-      const icon = type === 'err' ? '⚠️' : '✅';
-      t.innerHTML = '<span class="toast-ico">' + icon + '</span><span>' + esc(msg) + '</span>';
-      t.className = type === 'err' ? 'toast-err' : 'toast-ok';
+      const kind = TOAST_ICONS[type] ? type : 'ok';
+      t.innerHTML = '<span class="toast-ico">' + TOAST_ICONS[kind] + '</span>'
+        + '<span class="toast-msg">' + esc(msg) + '</span>'
+        + '<button class="toast-x" onclick="closeToast()" aria-label="Dismiss">' + TOAST_X + '</button>';
+      t.className = 'toast-' + kind;
       clearTimeout(window._tt);
       requestAnimationFrame(() => t.classList.add('show'));
       window._tt = setTimeout(() => t.classList.remove('show'), 3500);
     }
     window.toast = toast; // bridge — other <script> blocks (e.g. Gmail panel) aren't module-scoped and can't see this otherwise
+    window.closeToast = function() {
+      clearTimeout(window._tt);
+      const t = g('toast');
+      if (t) t.classList.remove('show');
+    };
     function fmtDate(ts) {
       if (!ts) return '—';
       const d = ts._seconds ? new Date(ts._seconds * 1000) : new Date(ts);
