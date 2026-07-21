@@ -644,7 +644,10 @@ function _kieSmartenChips(apps) {
     if (lowScore && t2 && s2 && b2) {
       t2.textContent = 'Fix my ATS score';
       s2.textContent = `Currently ${lowScore.atsScore}/100`;
-      b2.setAttribute('onclick', `sendChip('My ATS score is ${lowScore.atsScore}/100. What specifically is holding it back and how do I fix it?')`);
+      // .onclick assignment, not a string built into the attribute — company/
+      // score values never pass through an HTML/JS string boundary, so a name
+      // containing a quote or apostrophe can't break or inject anything.
+      b2.onclick = () => sendChip(`My ATS score is ${lowScore.atsScore}/100. What specifically is holding it back and how do I fix it?`);
     }
 
     const interview = (apps||[]).find(a => a.status === 'interview_invite');
@@ -652,7 +655,7 @@ function _kieSmartenChips(apps) {
     if (interview && t3 && s3 && b3) {
       t3.textContent = `Prep for ${interview.company}`;
       s3.textContent = 'Your upcoming interview';
-      b3.setAttribute('onclick', `sendChip('I have an interview with ${interview.company}${interview.role?(' ('+interview.role+')'):''}. Help me prepare.')`);
+      b3.onclick = () => sendChip(`I have an interview with ${interview.company}${interview.role?` (${interview.role})`:''}. Help me prepare.`);
     }
 
     const stale = (apps||[]).find(a => a.nextState==='needs_followup' || a.nextState==='needs_followup_again');
@@ -660,7 +663,7 @@ function _kieSmartenChips(apps) {
     if (stale && !interview && t6 && s6 && b6) {
       t6.textContent = `Follow up: ${stale.company}`;
       s6.textContent = `${stale.daysSince}d, no response`;
-      b6.setAttribute('onclick', `sendChip('I applied to ${stale.company} ${stale.daysSince} days ago with no response. Write a follow-up.')`);
+      b6.onclick = () => sendChip(`I applied to ${stale.company} ${stale.daysSince} days ago with no response. Write a follow-up.`);
     }
   } catch(e) { console.warn('[kie-chips]', e); }
 }

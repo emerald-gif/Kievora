@@ -6668,7 +6668,15 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const cardId  = (kind === 'TABLE' ? 'kct-live-' : 'kcc-live-') + label.replace(/\s+/g,'_') + '_' + blockIdx;
 
         if (kind === 'TABLE') {
-          html += _buildTableCard(label, content, closed, cardId);
+          // BUG FIX: this used to pass raw `closed` (true only if a literal
+          // [/TABLE] tag was found in the stream). If the model's response
+          // simply ended right after the table — no closing tag, nothing
+          // after it — isFinal goes true but `closed` never does, so the
+          // table sat on "writing…" forever even though nothing was ever
+          // coming. The code-block cards below already guard against this
+          // with `(closed || isFinal)`; tables need the same treatment so
+          // stream-end always counts as "done", tag or no tag.
+          html += _buildTableCard(label, content, closed || isFinal, cardId);
         } else if (closed && !content.trim()) {
           // Empty closed code block (e.g. a stray duplicate tag pair) — skip
           // entirely rather than rendering a blank card.

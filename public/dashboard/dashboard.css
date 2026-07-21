@@ -1320,7 +1320,7 @@
     .kie-img-overlay-close:hover{background:rgba(255,255,255,.25)}
 
     /* ── GMAIL CONNECT CARD (Premier-gated nudge) ── */
-    .kie-gmail-card{width:100%;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:14px;padding:11px 12px 9px;cursor:pointer;font-family:inherit;text-align:left;display:flex;flex-direction:column;gap:7px;box-shadow:0 4px 14px rgba(124,58,237,.28);transition:transform .12s}
+    .kie-gmail-card{width:100%;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:16px;padding:11px 12px 9px;cursor:pointer;font-family:inherit;text-align:left;display:flex;flex-direction:column;gap:7px;box-shadow:0 4px 14px rgba(124,58,237,.28);transition:transform .12s}
     .kie-gmail-card:active{transform:scale(.98)}
     .kie-gmail-card-top{display:flex;align-items:center;gap:9px}
     .kie-gmail-card-ico{width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15)}
