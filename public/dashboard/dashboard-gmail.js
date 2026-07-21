@@ -21,13 +21,50 @@ window.closeGmailPanel = function() {
   _gpipeGapLoaded = false; // reset so resume-gap re-checks next time panel opens
 };
 
+// Auto-sync runs server-side every 2h, so anything beyond that window means a
+// sync genuinely didn't happen recently rather than "just hasn't ticked yet" —
+// these thresholds are what separate "fresh" / "a little behind" / "stuck".
+const GMAIL_FRESH_MIN = 10;   // under this = "synced" wording, no worry
+const GMAIL_STALE_MIN = 130;  // over this (>2h auto-sync window) = amber, "behind"
+let _gmailStatusPollTimer = null;
+
+function _gmailSetConnError(msg) {
+  const el = document.getElementById('gmailConnError');
+  const tx = document.getElementById('gmailConnErrorText');
+  if (tx) tx.textContent = msg;
+  if (el) el.style.display = 'flex';
+}
+function _gmailClearConnError() {
+  const el = document.getElementById('gmailConnError');
+  if (el) el.style.display = 'none';
+}
+window._gmailRetryAfterError = function() {
+  _gmailClearConnError();
+  _gmailLoadStatus();
+};
+
 async function _gmailLoadStatus() {
   try {
     const tok  = await _gmailTok();
-    const data = await fetch('/api/gmail/status',{headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json());
+    const res  = await fetch('/api/gmail/status',{headers:{Authorization:`Bearer ${tok}`}});
+    if (!res.ok) throw new Error('status_'+res.status);
+    const data = await res.json();
     _gmailConnected = !!data.connected;
+    _gmailClearConnError();
     _gmailRenderPanel(data);
-  } catch(e){ console.warn('[gmail]',e); }
+    // Keep the panel honest while it's open — poll lightly rather than
+    // leaving a "Just now" label sitting there quietly going stale.
+    if (data.connected && !_gmailStatusPollTimer) {
+      _gmailStatusPollTimer = setInterval(() => {
+        const p = document.getElementById('gmailIntPanel');
+        if (!p || p.style.transform !== 'translateX(0px)') { clearInterval(_gmailStatusPollTimer); _gmailStatusPollTimer=null; return; }
+        _gmailLoadStatus();
+      }, 60000);
+    }
+  } catch(e) {
+    console.warn('[gmail]',e);
+    _gmailSetConnError("Couldn't load your Gmail status — check your connection and try again.");
+  }
 }
 
 function _gmailRenderPanel(data) {
@@ -56,9 +93,22 @@ function _gmailRenderPanel(data) {
   setEl('gmailStatApps',  (data.applications||[]).length);
   setEl('gmailStatActions',(data.insights||[]).length);
 
+  // One status dot, one sub-label — the point is there's exactly one place
+  // that says "how current is this", not several that can disagree.
+  const dot = document.getElementById('gmailStatusDot');
+  const statusSub = document.getElementById('gmailStatusSub');
   if (data.lastSynced) {
     const ago = Math.round((Date.now()-new Date(data.lastSynced))/60000);
-    setEl('gmailLastSynced', ago<2?'Just synced':ago<60?`${ago}m ago`:Math.round(ago/60)+'h ago');
+    setEl('gmailLastSynced', ago<2?'Just now':ago<60?`${ago}m ago`:Math.round(ago/60)+'h ago');
+    let color, ring, subText;
+    if (ago < GMAIL_STALE_MIN) { color='#34c759'; ring='rgba(52,199,89,.15)'; subText = ago < GMAIL_FRESH_MIN && data.emailsScanned ? `Synced · ${data.emailsScanned} emails scanned` : 'Connected and up to date'; }
+    else { color='#ff9f0a'; ring='rgba(255,159,10,.18)'; subText = 'Running behind — tap Sync now'; }
+    if (dot) { dot.style.background = color; dot.style.boxShadow = `0 0 0 4px ${ring}`; }
+    if (statusSub) statusSub.textContent = subText;
+  } else {
+    setEl('gmailLastSynced', 'Not synced');
+    if (dot) { dot.style.background = '#ff9f0a'; dot.style.boxShadow = '0 0 0 4px rgba(255,159,10,.18)'; }
+    if (statusSub) statusSub.textContent = 'Connected — tap Sync now to pull your inbox';
   }
 
   _gpipeRenderMismatch(data.nameMismatch, data.gmailName, data.gmailEmail);
@@ -433,18 +483,41 @@ window.connectGmail = async function() {
   }
 };
 
+const _gmailSyncIconIdle = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
+const _gmailSyncIconSpin  = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="animation:sping 1s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
+const _gmailSyncIconOk    = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#34c759" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+
 window.syncGmailNow = async function() {
   const btn = document.getElementById('gmailSyncBtn');
-  if (btn) { btn.innerHTML=`<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="animation:sping 1s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Syncing…`; btn.disabled=true; }
+  const lbl = document.getElementById('gmailSyncBtnLabel');
+  const icon = document.getElementById('gmailSyncIcon');
+  _gmailClearConnError();
+  if (btn) { btn.disabled = true; btn.style.opacity='.6'; }
+  if (icon) icon.outerHTML = _gmailSyncIconSpin.replace('width="13" height="13"','id="gmailSyncIcon" width="13" height="13"');
+  if (lbl) lbl.textContent = 'Syncing…';
   try {
     const tok = await _gmailTok();
-    await fetch('/api/gmail/sync',{method:'POST',headers:{Authorization:`Bearer ${tok}`}});
+    const res = await fetch('/api/gmail/sync',{method:'POST',headers:{Authorization:`Bearer ${tok}`}});
+    if (!res.ok) { const body = await res.json().catch(()=>({})); throw new Error(body.error || 'sync_failed'); }
     await _gmailLoadStatus();
     await ensureGmailFreshAndAlert();
+    const iconNow = document.getElementById('gmailSyncIcon');
+    if (iconNow) iconNow.outerHTML = _gmailSyncIconOk.replace('width="13" height="13"','id="gmailSyncIcon" width="13" height="13"');
+    const lblNow = document.getElementById('gmailSyncBtnLabel');
+    if (lblNow) lblNow.textContent = 'Synced';
     if (typeof window.toast==='function') window.toast('Synced successfully','ok');
-  } catch(e) { console.error('[gmail]',e); }
-  finally {
-    if (btn) { btn.innerHTML=`<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Sync now`; btn.disabled=false; }
+    setTimeout(() => {
+      const i2 = document.getElementById('gmailSyncIcon'); if (i2) i2.outerHTML = _gmailSyncIconIdle.replace('width="13" height="13"','id="gmailSyncIcon" width="13" height="13"');
+      const l2 = document.getElementById('gmailSyncBtnLabel'); if (l2) l2.textContent = 'Sync now';
+    }, 1600);
+  } catch(e) {
+    console.error('[gmail]',e);
+    _gmailSetConnError("Sync didn't go through — check your connection and try again.");
+    const iconNow = document.getElementById('gmailSyncIcon');
+    if (iconNow) iconNow.outerHTML = _gmailSyncIconIdle.replace('width="13" height="13"','id="gmailSyncIcon" width="13" height="13"');
+    if (lbl) lbl.textContent = 'Sync now';
+  } finally {
+    if (btn) { btn.disabled=false; btn.style.opacity='1'; }
   }
 };
 

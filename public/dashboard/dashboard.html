@@ -19,52 +19,64 @@
 
 
 <!-- ══ GMAIL INTELLIGENCE PANEL — body level so position:fixed works ══ -->
-<div id="gmailIntPanel" style="position:fixed;inset:0;z-index:900;background:#f8f7ff;transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column">
+<div id="gmailIntPanel" style="position:fixed;inset:0;z-index:900;background:#F2F2F7;transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif">
 
-  <!-- Header -->
-  <div style="display:flex;align-items:center;padding:18px 20px;background:#fff;border-bottom:1.5px solid #ede9fe;position:sticky;top:0;z-index:10;gap:14px">
-    <button onclick="closeGmailPanel()" style="width:36px;height:36px;border:1.5px solid #ede9fe;background:#f5f3ff;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#7c3aed">
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+  <!-- Header — iOS large-title nav bar, blurred -->
+  <div style="display:flex;align-items:center;padding:14px 16px;background:rgba(242,242,247,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:.5px solid rgba(60,60,67,.29);position:sticky;top:0;z-index:10;gap:12px">
+    <button onclick="closeGmailPanel()" aria-label="Back" style="width:30px;height:30px;border:none;background:rgba(120,120,128,.16);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#3c3c43;padding:0">
+      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </button>
     <div style="flex:1;min-width:0">
-      <div style="font-size:17px;font-weight:900;color:#0f0e17;letter-spacing:-.3px">Gmail Intelligence</div>
-      <div style="font-size:11px;color:#94a3b8;font-weight:500;margin-top:1px">Automatic job search tracking</div>
+      <div style="font-size:17px;font-weight:700;color:#000;letter-spacing:-.4px">Gmail Intelligence</div>
+      <div style="font-size:11px;color:#8e8e93;font-weight:500;margin-top:0px">Automatic job search tracking</div>
     </div>
-    <div id="gmailHeaderBadge" style="display:none;background:#dcfce7;border:1.5px solid #bbf7d0;color:#16a34a;font-size:9.5px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:.4px;flex-shrink:0">● LIVE</div>
+    <div id="gmailHeaderBadge" style="display:none;background:rgba(52,199,89,.15);color:#248a3d;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.3px;flex-shrink:0;display:flex;align-items:center;gap:4px">
+      <span style="width:6px;height:6px;background:#34c759;border-radius:50%;display:inline-block"></span>Live
+    </div>
   </div>
 
-  <div style="padding:18px 16px 32px;flex:1">
+  <div style="padding:16px 16px 36px;flex:1;max-width:520px;width:100%;margin:0 auto">
+
+    <!-- Connection problem banner — hidden unless a load/sync actually fails -->
+    <div id="gmailConnError" style="display:none;align-items:flex-start;gap:9px;background:#fff;border-radius:14px;padding:13px 14px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#ff3b30" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14A2 2 0 004 21h16a2 2 0 001.89-3.14l-8.18-14a2 2 0 00-3.42 0z"/></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:#000">Connection trouble</div>
+        <div style="font-size:12px;color:#8e8e93;margin-top:1px;line-height:1.45" id="gmailConnErrorText">Couldn't reach Gmail. Check your connection and try again.</div>
+      </div>
+      <button onclick="_gmailRetryAfterError()" style="background:none;border:none;color:#7c3aed;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0;padding:2px">Retry</button>
+    </div>
 
     <!-- Disconnected state -->
     <div id="gmailDisconnectedPanel">
       <!-- Hero connect card -->
-      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:20px;padding:28px 20px;text-align:center;margin-bottom:14px;box-shadow:0 2px 12px rgba(124,58,237,.06)">
-        <div style="width:64px;height:64px;background:linear-gradient(135deg,#fef2f2,#fecaca);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;overflow:hidden">
-          <img src="/gmail.jpg" alt="Gmail" style="width:32px;height:32px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;28&quot; height=&quot;28&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"/>
+      <div style="background:#fff;border-radius:14px;padding:26px 20px;text-align:center;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+        <div style="width:60px;height:60px;background:#fef2f2;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;overflow:hidden">
+          <img src="/gmail.jpg" alt="Gmail" style="width:30px;height:30px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;26&quot; height=&quot;26&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"/>
         </div>
-        <div style="font-size:18px;font-weight:900;color:#0f0e17;margin-bottom:8px;letter-spacing:-.3px">Connect your Gmail</div>
-        <div style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:24px">KIE automatically tracks applications, interviews, recruiter messages and offers — no manual logging ever.</div>
-        <button onclick="connectGmail()" id="gmailConnectBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:14px;padding:15px 28px;font-size:14px;font-weight:800;cursor:pointer;width:100%;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3);transition:opacity .15s;letter-spacing:-.1px">Connect Gmail →</button>
+        <div style="font-size:18px;font-weight:700;color:#000;margin-bottom:7px;letter-spacing:-.3px">Connect your Gmail</div>
+        <div style="font-size:13px;color:#8e8e93;line-height:1.55;margin-bottom:22px">KIE automatically tracks applications, interviews, recruiter messages and offers — no manual logging ever.</div>
+        <button onclick="connectGmail()" id="gmailConnectBtn" style="background:#7c3aed;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;letter-spacing:-.1px">Connect Gmail →</button>
       </div>
-      <!-- Trust signals -->
-      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:16px;overflow:hidden">
-        <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #faf5ff">
-          <div style="width:32px;height:32px;background:#f0fdf4;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#15803d" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <!-- Trust signals — iOS grouped list -->
+      <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+        <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:.5px solid rgba(60,60,67,.13)">
+          <div style="width:28px;height:28px;background:rgba(52,199,89,.13);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#34c759" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <div><div style="font-size:12.5px;font-weight:700;color:#0f0e17">Auto-tracks everything</div><div style="font-size:11.5px;color:#64748b;margin-top:2px">Confirmations, interviews, recruiter messages, rejections, offers</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:#000">Auto-tracks everything</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">Confirmations, interviews, recruiter messages, rejections, offers</div></div>
         </div>
-        <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #faf5ff">
-          <div style="width:32px;height:32px;background:#faf5ff;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:.5px solid rgba(60,60,67,.13)">
+          <div style="width:28px;height:28px;background:rgba(124,58,237,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           </div>
-          <div><div style="font-size:12.5px;font-weight:700;color:#0f0e17">Read-only access</div><div style="font-size:11.5px;color:#64748b;margin-top:2px">KIE never sends emails or reads personal messages</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:#000">Read-only access</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">KIE never sends emails or reads personal messages</div></div>
         </div>
-        <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:12px">
-          <div style="width:32px;height:32px;background:#fff7ed;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#c2410c" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px">
+          <div style="width:28px;height:28px;background:rgba(255,159,10,.14);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#ff9f0a" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
-          <div><div style="font-size:12.5px;font-weight:700;color:#0f0e17">Disconnect anytime</div><div style="font-size:11.5px;color:#64748b;margin-top:2px">One tap removes all stored email data permanently</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:#000">Disconnect anytime</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">One tap removes all stored email data permanently</div></div>
         </div>
       </div>
     </div>
@@ -72,43 +84,45 @@
     <!-- Connected state -->
     <div id="gmailConnectedPanel" style="display:none">
       <!-- Identity mismatch warning -->
-      <div id="gpipeMismatchWarning" style="display:none;background:#fff1f2;border:1.5px solid #fecdd3;border-radius:14px;padding:13px 15px;margin-bottom:14px;font-size:12.5px;color:#be123c;line-height:1.5"></div>
+      <div id="gpipeMismatchWarning" style="display:none;background:#fff;border-left:3px solid #ff3b30;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:#c0281c;line-height:1.5;box-shadow:0 1px 2px rgba(0,0,0,.04)"></div>
 
       <!-- Urgent banner -->
       <div id="gpipeUrgentBanner" class="gpipe-urgent"></div>
 
-      <!-- Status + stats card -->
-      <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(124,58,237,.05)">
-        <!-- Connection status row -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 0 3px rgba(34,197,94,.15)"></div>
-          <div style="font-size:13px;font-weight:800;color:#0f0e17;flex:1" id="gmailEmailLabel">Connected</div>
-          <div style="font-size:11px;color:#94a3b8;font-weight:500" id="gmailLastSynced">—</div>
+      <!-- Status card — connection state is the ONE thing this card communicates -->
+      <div style="background:#fff;border-radius:14px;overflow:hidden;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:.5px solid rgba(60,60,67,.13)">
+          <div id="gmailStatusDot" style="width:10px;height:10px;border-radius:50%;background:#34c759;box-shadow:0 0 0 4px rgba(52,199,89,.15);flex-shrink:0;transition:background .25s,box-shadow .25s"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14.5px;font-weight:600;color:#000;letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="gmailEmailLabel">Connected</div>
+            <div style="font-size:12px;color:#8e8e93;margin-top:1px;font-weight:500" id="gmailStatusSub">Checking status…</div>
+          </div>
+          <div style="font-size:11.5px;color:#8e8e93;font-weight:500;text-align:right;flex-shrink:0" id="gmailLastSynced">—</div>
         </div>
-        <!-- Stat pills -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-          <div style="background:#faf8ff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 8px;text-align:center">
-            <div style="font-size:22px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px" id="gmailStatEmails">—</div>
-            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.4px">Emails</div>
-          </div>
-          <div style="background:#faf8ff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 8px;text-align:center">
-            <div style="font-size:22px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px" id="gmailStatApps">—</div>
-            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.4px">Companies</div>
-          </div>
-          <div style="background:#faf8ff;border:1.5px solid #ede9fe;border-radius:12px;padding:12px 8px;text-align:center">
-            <div style="font-size:22px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px" id="gmailStatActions">—</div>
-            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.4px">Actions</div>
-          </div>
-        </div>
-        <!-- Funnel rates -->
-        <div class="gpipe-funnel" id="gpipeFunnel"></div>
-        <!-- Trend badges -->
-        <div id="gpipeTrendBadge" style="margin-bottom:10px"></div>
-        <!-- Sync button -->
-        <button onclick="syncGmailNow()" id="gmailSyncBtn" style="width:100%;background:#faf5ff;border:1.5px solid #ede9fe;color:#7c3aed;border-radius:12px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:7px">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          Sync now
+        <button onclick="syncGmailNow()" id="gmailSyncBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:none;padding:13px;font-size:14px;font-weight:600;color:#7c3aed;cursor:pointer;font-family:inherit;transition:opacity .15s">
+          <svg id="gmailSyncIcon" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span id="gmailSyncBtnLabel">Sync now</span>
         </button>
+      </div>
+
+      <!-- Stats card -->
+      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr">
+          <div style="text-align:center;border-right:.5px solid rgba(60,60,67,.13)">
+            <div style="font-size:23px;font-weight:700;color:#000;line-height:1;letter-spacing:-.6px" id="gmailStatEmails">—</div>
+            <div style="font-size:10px;color:#8e8e93;font-weight:600;margin-top:5px;text-transform:uppercase;letter-spacing:.4px">Emails</div>
+          </div>
+          <div style="text-align:center;border-right:.5px solid rgba(60,60,67,.13)">
+            <div style="font-size:23px;font-weight:700;color:#000;line-height:1;letter-spacing:-.6px" id="gmailStatApps">—</div>
+            <div style="font-size:10px;color:#8e8e93;font-weight:600;margin-top:5px;text-transform:uppercase;letter-spacing:.4px">Companies</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:23px;font-weight:700;color:#000;line-height:1;letter-spacing:-.6px" id="gmailStatActions">—</div>
+            <div style="font-size:10px;color:#8e8e93;font-weight:600;margin-top:5px;text-transform:uppercase;letter-spacing:.4px">Actions</div>
+          </div>
+        </div>
+        <div class="gpipe-funnel" id="gpipeFunnel"></div>
+        <div id="gpipeTrendBadge" style="margin-top:2px"></div>
       </div>
 
       <!-- Resume gap insight -->
@@ -124,8 +138,8 @@
       <div id="gmailInsightsList" style="margin-bottom:16px"></div>
 
       <!-- Disconnect -->
-      <button onclick="disconnectGmail()" style="width:100%;background:#fff;border:1.5px solid #fecdd3;color:#be123c;border-radius:14px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s">
-        Disconnect Gmail & delete all data
+      <button onclick="disconnectGmail()" style="width:100%;background:#fff;border:none;color:#ff3b30;border-radius:14px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+        Disconnect Gmail &amp; delete all data
       </button>
 
       <!-- Digest opt-out -->
