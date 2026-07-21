@@ -2337,14 +2337,14 @@
   body.kie-mode .msb{display:none}
   body.kie-mode .msb-overlay{display:none!important}
 
-  .kie-sidebar{
+  body.kie-mode .kie-sidebar{
     left:0!important;
     transition:none;
     box-shadow:none;
     border-right:1px solid var(--border2);
   }
   .kie-sidebar-overlay{display:none!important}
-  #kieHamburger{display:none}
+  body.kie-mode #kieHamburger{display:none}
 
   /* KIE starts right after its own docked sidebar instead of the
      main sidebar's offset — the two are mutually exclusive */
