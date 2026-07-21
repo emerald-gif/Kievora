@@ -1394,7 +1394,15 @@ async function attachStaleFlags(apps, uid) {
     const daysSince = Math.floor((now - a.lastActivityTs) / 86400000);
     const appId  = normaliseStr(a.company);
     const next   = computeNextAction({ ...a, daysSince }, actionMap[appId]);
-    return { ...a, daysSince, appId,
+    // A user correction ("that's not right", "I already declined that")
+    // stays in effect only as long as nothing new has actually happened —
+    // dismissedAtEventTs is a snapshot of lastActivityTs at the moment of
+    // correction, so if a genuinely newer email arrives for this company,
+    // lastActivityTs moves past it and the correction auto-clears rather
+    // than permanently silencing a company that has real news later.
+    const dAction  = actionMap[appId];
+    const dismissed = !!dAction?.dismissed && a.lastActivityTs <= (dAction.dismissedAtEventTs || 0);
+    return { ...a, daysSince, appId, dismissed,
       stale: next.state==='needs_followup' || next.state==='needs_followup_again',
       nextState: next.state, nextAction: next.label,
       followUpCount: next.followUpCount, calendarAdded: next.calendarAdded, resumeTailored: next.resumeTailored };
@@ -1477,13 +1485,21 @@ function detectGhostingPattern(apps) {
 }
 
 function buildKieBrainBlock(apps, insights, emailsScanned, patterns) {
-  if (!apps.length) return `GMAIL CAREER INTELLIGENCE: Gmail connected (${emailsScanned} emails scanned). No career emails found yet — will update as they arrive.`;
-  const active     = apps.filter(a=>a.status!=='rejection');
-  const rejected   = apps.filter(a=>a.status==='rejection');
-  const offers     = apps.filter(a=>a.status==='offer');
-  const interviews = apps.filter(a=>a.status==='interview_invite');
+  // Corrected/dismissed apps stay out of everything below — they're still
+  // tracked (a real new email un-masks them automatically), they just don't
+  // get talked about again until something actually changes.
+  const visible = apps.filter(a => !a.dismissed);
+  if (!visible.length) {
+    return apps.length
+      ? `GMAIL CAREER INTELLIGENCE: Gmail connected (${emailsScanned} emails scanned). Nothing to surface right now — everything in the pipeline has been addressed or corrected by the user.`
+      : `GMAIL CAREER INTELLIGENCE: Gmail connected (${emailsScanned} emails scanned). No career emails found yet — will update as they arrive.`;
+  }
+  const active     = visible.filter(a=>a.status!=='rejection');
+  const rejected   = visible.filter(a=>a.status==='rejection');
+  const offers     = visible.filter(a=>a.status==='offer');
+  const interviews = visible.filter(a=>a.status==='interview_invite');
   let b = `GMAIL CAREER INTELLIGENCE (${emailsScanned} emails scanned):\n`;
-  b += `Pipeline: ${apps.length} companies | Active: ${active.length} | Interviews: ${interviews.length} | Offers: ${offers.length} | Rejected: ${rejected.length}\n\n`;
+  b += `Pipeline: ${visible.length} companies | Active: ${active.length} | Interviews: ${interviews.length} | Offers: ${offers.length} | Rejected: ${rejected.length}\n\n`;
   if (offers.length) b += `🔴 OFFER — ${offers[0].company}${offers[0].role?' ('+offers[0].role+')':''} — awaiting response\n`;
   if (interviews.length) {
     const i = interviews[0];
@@ -1491,7 +1507,7 @@ function buildKieBrainBlock(apps, insights, emailsScanned, patterns) {
     b += `⚡ INTERVIEW — ${i.company}${i.role?' ('+i.role+')':''}${when} — prep needed\n`;
   }
   b += `\nAPPLICATIONS (current state — use this, don't suggest actions already done):\n`;
-  for (const app of apps.slice(0,8)) {
+  for (const app of visible.slice(0,8)) {
     let line = `• ${app.company}${app.role?' — '+app.role:''}: ${app.status.replace(/_/g,' ')} (${app.daysSince}d ago)`;
     if (app.nextAction)            line += ` — NEXT: ${app.nextAction}`;
     if (app.followUpCount)         line += ` [followed up ${app.followUpCount}x already]`;
@@ -1501,7 +1517,7 @@ function buildKieBrainBlock(apps, insights, emailsScanned, patterns) {
   }
   if (insights.length) b += `\nACTIONS:\n${insights.map(i=>'• '+i).join('\n')}`;
   if (patterns?.length) b += `\nPATTERNS NOTICED ACROSS THEIR HISTORY:\n${patterns.map(p=>`• Tends to go quiet ${p.label} (${p.count} of ${p.total} that reached this stage, ${p.rate}%)`).join('\n')}`;
-  b += `\n\nCOACHING RULES FOR THIS DATA:\n- Never say "I can see your Gmail" — just know it naturally\n- Reference companies by name like a coach who has been tracking this\n- Check follow-up/calendar/resume state before suggesting an action — if they already followed up or already added it to calendar, don't suggest it again\n- If user seems stressed — acknowledge feelings before advice\n- Weave Gmail data and conversation context together; never treat them as separate\n- Don't repeat the same unprompted nudge every turn once it's been said — see INTELLIGENCE MERGE rules for exactly when to surface vs stay quiet`;
+  b += `\n\nCOACHING RULES FOR THIS DATA:\n- Never say "I can see your Gmail" — just know it naturally\n- Reference companies by name like a coach who has been tracking this\n- Check follow-up/calendar/resume state before suggesting an action — if they already followed up or already added it to calendar, don't suggest it again\n- If user seems stressed — acknowledge feelings before advice\n- Weave Gmail data and conversation context together; never treat them as separate\n- Don't repeat the same unprompted nudge every turn once it's been said — see INTELLIGENCE MERGE rules for exactly when to surface vs stay quiet\n- The ACTIONS list above is valid material for a [FU] follow-up chip when one genuinely fits (e.g. right after mentioning a stale application, offering [FU]Draft a follow-up to ${visible[0]?.company||'them'}[/FU]) — same sparing rules as any other chip, never a default add-on`;
   return b;
 }
 
@@ -1531,18 +1547,22 @@ async function syncGmailForUser(uid) {
   const tokens      = await getValidTokens(uid, tokenDoc.data().tokens);
   const rawEmails   = await syncUserGmail(uid, tokens);
   const apps        = buildApplicationList(rawEmails);
-  const insights    = generateInsights(apps);
   const enriched    = await attachStaleFlags(apps, uid);
+  // Insights generated from the dismissed-aware list — a company the user
+  // corrected earlier this session shouldn't reappear here just because
+  // this sync re-read the same old email out of the inbox again.
+  const insights    = generateInsights(enriched.filter(a => !a.dismissed));
   const patterns    = detectGhostingPattern(enriched);
   const kieBlock    = buildKieBrainBlock(enriched, insights, rawEmails.length, patterns);
   await recordPipelineTrend(uid, computePipelineStats(enriched));
-  // topEvent = the single most-recently-active application's current status —
-  // a cheap fingerprint of "what's new" that KIE can diff against what it last
-  // told the user, without re-reading the whole pipeline every turn. enriched
-  // is already sorted by lastActivityTs desc (see buildApplicationList), so
-  // [0] is always the freshest thing that happened.
-  const topEvent = enriched[0]
-    ? { company: enriched[0].company, status: enriched[0].status, ts: enriched[0].lastActivityTs }
+  // topEvent = the freshest non-dismissed application's current status — a
+  // cheap fingerprint of "what's new" that KIE can diff against what it last
+  // told the user. Dismissed apps are skipped here on purpose: if the user
+  // just corrected this exact fact, it shouldn't be the thing that triggers
+  // the next unprompted nudge.
+  const visibleForTop = enriched.filter(a => !a.dismissed);
+  const topEvent = visibleForTop[0]
+    ? { company: visibleForTop[0].company, status: visibleForTop[0].status, ts: visibleForTop[0].lastActivityTs }
     : null;
   await db.collection('users').doc(uid).collection('gmailBrain').doc('summary').set(
     { applications:apps, insights, kieBlock, emailsScanned:rawEmails.length, topEvent, lastSynced:admin.firestore.FieldValue.serverTimestamp() },

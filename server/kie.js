@@ -13,7 +13,7 @@ module.exports = function registerKieRoutes(app) {
     performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
     getGmailCareerBrain,
     generateConvSummary, saveConvSummary, getConvSummary,
-    USERS, attachStaleFlags, detectGhostingPattern, buildKieBrainBlock, getGmailCareerBrainRaw,
+    USERS, attachStaleFlags, detectGhostingPattern, buildKieBrainBlock, getGmailCareerBrainRaw, generateInsights,
   } = require('./lib');
 
   app.post('/api/kie/summarize', authenticate, async (req,res) => {
@@ -586,7 +586,12 @@ module.exports = function registerKieRoutes(app) {
     if (gmailRaw) {
       gmailApps  = await attachStaleFlags(gmailRaw.applications || [], req.user.uid);
       const gmailPatterns = detectGhostingPattern(gmailApps);
-      gmailBrain = buildKieBrainBlock(gmailApps, gmailRaw.insights || [], gmailRaw.emailsScanned || 0, gmailPatterns);
+      // Regenerate insights live from the dismissed-aware list, not the
+      // stored gmailRaw.insights (frozen at last sync, before this
+      // conversation's corrections could ever be reflected in it) — same
+      // fix as /api/gmail/status, so panel and chat never disagree.
+      const gmailInsights = generateInsights(gmailApps.filter(a => !a.dismissed));
+      gmailBrain = buildKieBrainBlock(gmailApps, gmailInsights, gmailRaw.emailsScanned || 0, gmailPatterns);
 
       // ── Diff-awareness ──────────────────────────────────────────────────
       // Compare the pipeline's current topEvent (freshest thing that
@@ -619,6 +624,7 @@ module.exports = function registerKieRoutes(app) {
     } else {
       systemContent += `\nCONNECTED (${gmailEmailAddr}) and actively tracking — full pipeline detail below.`;
       if (gmailDeltaLine) systemContent += `\n${gmailDeltaLine}`;
+      systemContent += `\nCORRECTIONS: if the user explicitly denies, corrects, or dismisses something Gmail-derived — "that's not right", "I was just testing", "I already declined that", "wrong company", "I'm not accepting" — end your reply with [GMAIL_CORRECTION]Company Name[/GMAIL_CORRECTION] on its own line, using the exact company name from the pipeline data. This stops the system from bringing that specific fact up again — it doesn't hide the company forever, a real new email will surface it normally. Only use this for an explicit, unambiguous correction — never guess, never use it speculatively, never mention the tag itself to the user.`;
     }
     systemContent += `\n[GMAIL_CTA] TAG: put it alone on its own line at the end of a reply to show a real, tappable "Open Gmail Intelligence" (or "Connect Gmail") button. Only include it when Gmail genuinely came up — never as a default add-on.`;
 

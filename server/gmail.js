@@ -15,7 +15,7 @@ module.exports = function registerGmailRoutes(app) {
     attachStaleFlags, computePipelineStats, getWeekKey, recordPipelineTrend,
     getTrendComparison, detectGhostingPattern, buildKieBrainBlock,
     getGmailCareerBrainRaw, getGmailCareerBrain, getValidTokens, syncGmailForUser,
-    RESUMES, normaliseStr, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
+    RESUMES, normaliseStr, isSameApplication, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
   } = require('./lib');
 
   // ─── Gmail Routes ────────────────────────────────────────────────────────────
@@ -83,8 +83,14 @@ module.exports = function registerGmailRoutes(app) {
       const sum   = sSnap.exists ? sSnap.data() : {};
       const apps  = await attachStaleFlags(sum.applications || [], req.user.uid);
       const stats = computePipelineStats(apps);
+      // Regenerate insights from the dismissed-aware list, not sum.insights
+      // (stored at last sync from raw, un-corrected apps) — otherwise a
+      // company the user just corrected in chat could still show up here
+      // even though KIE has already stopped mentioning it. One source of
+      // truth for "what's actually still worth surfacing."
+      const insights = generateInsights(apps.filter(a => !a.dismissed));
       res.json({ connected:true, gmailEmail:uSnap.data().gmailEmail||'', emailsScanned:sum.emailsScanned||0,
-        applications: apps.slice(0,40), insights: sum.insights||[],
+        applications: apps.slice(0,40), insights,
         stats,
         trend: await getTrendComparison(req.user.uid, stats),
         patterns: detectGhostingPattern(apps),
@@ -187,6 +193,33 @@ module.exports = function registerGmailRoutes(app) {
         updates.resumeTailored = true;
       }
       await ref.set(updates, { merge:true });
+      res.json({ success:true });
+    } catch(e) { res.status(500).json({ error:e.message }); }
+  });
+
+  // Called when KIE's [GMAIL_CORRECTION] tag fires — the user explicitly
+  // denied/corrected/dismissed something Gmail-derived mid-conversation
+  // ("that's not right", "I already declined that", "I was just testing").
+  // Masks that specific fact so the pipeline stops re-asserting it, WITHOUT
+  // touching the underlying synced data — the inbox stays the source of
+  // truth. dismissedAtEventTs snapshots the app's current lastActivityTs, so
+  // attachStaleFlags can tell a real newer email (lastActivityTs moves past
+  // it) apart from the same old email resyncing (stays masked).
+  app.post('/api/gmail/pipeline/correct', authenticate, async (req,res) => {
+    try {
+      const { company } = req.body || {};
+      if (!company) return res.status(400).json({ error:'company required' });
+      const appId = normaliseStr(company);
+      const summarySnap = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get();
+      const apps  = summarySnap.exists ? (summarySnap.data().applications || []) : [];
+      const match = apps.find(a => isSameApplication(a, { company }));
+      const eventTs = match ? match.lastActivityTs : Date.now();
+      const ref = db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('actions').collection('apps').doc(appId);
+      await ref.set({
+        dismissed: true,
+        dismissedAtEventTs: eventTs,
+        dismissedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge:true });
       res.json({ success:true });
     } catch(e) { res.status(500).json({ error:e.message }); }
   });
