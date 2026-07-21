@@ -582,11 +582,27 @@ module.exports = function registerKieRoutes(app) {
     // Build the SAME enriched intelligence the Gmail panel uses (follow-up state,
     // calendar/resume flags, ghosting patterns) — so chat and the dedicated panel
     // never know different things about the same pipeline.
-    let gmailBrain = null, gmailApps = [];
+    let gmailBrain = null, gmailApps = [], gmailDeltaLine = null;
     if (gmailRaw) {
       gmailApps  = await attachStaleFlags(gmailRaw.applications || [], req.user.uid);
       const gmailPatterns = detectGhostingPattern(gmailApps);
       gmailBrain = buildKieBrainBlock(gmailApps, gmailRaw.insights || [], gmailRaw.emailsScanned || 0, gmailPatterns);
+
+      // ── Diff-awareness ──────────────────────────────────────────────────
+      // Compare the pipeline's current topEvent (freshest thing that
+      // happened, written every sync) against lastSeenTopEvent (only ever
+      // written here, after KIE has actually had a chance to see it). If
+      // they differ, something changed since the last time KIE looked —
+      // surface it once as a one-line delta, then mark it seen so it doesn't
+      // repeat on every subsequent turn. No new infra, no push — this rides
+      // entirely on the sync that's already running every 2h.
+      const te = gmailRaw.topEvent, seen = gmailRaw.lastSeenTopEvent;
+      const changed = te && (!seen || seen.company !== te.company || seen.status !== te.status || seen.ts !== te.ts);
+      if (changed) {
+        gmailDeltaLine = `NEW SINCE YOU TWO LAST TALKED: ${te.company} is now "${te.status.replace(/_/g,' ')}". Mention this naturally near the top of your reply if it fits the moment — don't force it if the user's current message is clearly about something unrelated.`;
+        db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary')
+          .set({ lastSeenTopEvent: te }, { merge: true }).catch(()=>{});
+      }
     }
 
     // ── Gmail Intelligence — ALWAYS tell KIE the real status ──────────────────
@@ -602,6 +618,7 @@ module.exports = function registerKieRoutes(app) {
       systemContent += `\nCONNECTED (${gmailEmailAddr}), but no career emails tracked yet — either just connected or nothing qualifying has synced. If asked, say it's connected and still building their pipeline. Offer [GMAIL_CTA] if they want to check on it directly.`;
     } else {
       systemContent += `\nCONNECTED (${gmailEmailAddr}) and actively tracking — full pipeline detail below.`;
+      if (gmailDeltaLine) systemContent += `\n${gmailDeltaLine}`;
     }
     systemContent += `\n[GMAIL_CTA] TAG: put it alone on its own line at the end of a reply to show a real, tappable "Open Gmail Intelligence" (or "Connect Gmail") button. Only include it when Gmail genuinely came up — never as a default add-on.`;
 

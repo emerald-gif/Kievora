@@ -1536,8 +1536,17 @@ async function syncGmailForUser(uid) {
   const patterns    = detectGhostingPattern(enriched);
   const kieBlock    = buildKieBrainBlock(enriched, insights, rawEmails.length, patterns);
   await recordPipelineTrend(uid, computePipelineStats(enriched));
+  // topEvent = the single most-recently-active application's current status —
+  // a cheap fingerprint of "what's new" that KIE can diff against what it last
+  // told the user, without re-reading the whole pipeline every turn. enriched
+  // is already sorted by lastActivityTs desc (see buildApplicationList), so
+  // [0] is always the freshest thing that happened.
+  const topEvent = enriched[0]
+    ? { company: enriched[0].company, status: enriched[0].status, ts: enriched[0].lastActivityTs }
+    : null;
   await db.collection('users').doc(uid).collection('gmailBrain').doc('summary').set(
-    { applications:apps, insights, kieBlock, emailsScanned:rawEmails.length, lastSynced:admin.firestore.FieldValue.serverTimestamp() }
+    { applications:apps, insights, kieBlock, emailsScanned:rawEmails.length, topEvent, lastSynced:admin.firestore.FieldValue.serverTimestamp() },
+    { merge: true }
   );
   console.log(`[gmail] synced uid:${uid} — ${rawEmails.length} emails → ${apps.length} apps`);
   return { apps, enriched, insights, emailsScanned:rawEmails.length, stats: computePipelineStats(enriched) };
