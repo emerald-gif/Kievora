@@ -146,14 +146,18 @@ function _gmailRenderPanel(data) {
     const ago = Math.round((Date.now()-new Date(data.lastSynced))/60000);
     setEl('gmailLastSynced', ago<2?'Just now':ago<60?`${ago}m ago`:Math.round(ago/60)+'h ago');
     let color, ring, subText;
-    if (ago < GMAIL_STALE_MIN) { color='#34c759'; ring='rgba(52,199,89,.15)'; subText = ago < GMAIL_FRESH_MIN && data.emailsScanned ? `Synced · ${data.emailsScanned} emails scanned` : 'Connected and up to date'; }
-    else { color='#ff9f0a'; ring='rgba(255,159,10,.18)'; subText = 'Running behind — tap Sync now'; }
+    // The status strip's dot + timestamp already say "how current" at a
+    // glance — statusSub only needs to appear when there's something worth
+    // interrupting for (stale sync), staying collapsed the rest of the time
+    // instead of restating "up to date" redundantly under every load.
+    if (ago < GMAIL_STALE_MIN) { color='#34c759'; ring='rgba(52,199,89,.15)'; subText = ''; }
+    else { color='#ff9f0a'; ring='rgba(255,159,10,.18)'; subText = 'Running behind — tap Sync'; }
     if (dot) { dot.style.background = color; dot.style.boxShadow = `0 0 0 4px ${ring}`; }
-    if (statusSub) statusSub.textContent = subText;
+    if (statusSub) { statusSub.textContent = subText; statusSub.style.display = subText ? 'block' : 'none'; }
   } else {
     setEl('gmailLastSynced', 'Not synced');
     if (dot) { dot.style.background = '#ff9f0a'; dot.style.boxShadow = '0 0 0 4px rgba(255,159,10,.18)'; }
-    if (statusSub) statusSub.textContent = 'Connected — tap Sync now to pull your inbox';
+    if (statusSub) { statusSub.textContent = 'Tap Sync to pull your inbox'; statusSub.style.display = 'block'; }
   }
 
   _gpipeRenderMismatch(data.nameMismatch, data.gmailName, data.gmailEmail);
@@ -626,8 +630,44 @@ function _buildAlert(apps) {
   return null;
 }
 
+// ── Smart chips ──────────────────────────────────────────────────
+// The welcome screen's "Quick chat" row is 6 static chips shown to every
+// user, always. This swaps 2 of the least-essential slots for something
+// grounded in real signals we already have on the page — no new UI, no
+// new fetch, just smarter defaults on the exact same component. Falls
+// back to the original generic chip untouched if no signal applies.
+function _kieSmartenChips(apps) {
+  try {
+    const resumes  = (typeof window._resumesCache === 'function') ? (window._resumesCache()||[]) : [];
+    const lowScore = resumes.find(r => typeof r.atsScore === 'number' && r.atsScore < 70);
+    const t2 = document.getElementById('kieChip2Txt'), s2 = document.getElementById('kieChip2Sub'), b2 = document.getElementById('kieChip2');
+    if (lowScore && t2 && s2 && b2) {
+      t2.textContent = 'Fix my ATS score';
+      s2.textContent = `Currently ${lowScore.atsScore}/100`;
+      b2.setAttribute('onclick', `sendChip('My ATS score is ${lowScore.atsScore}/100. What specifically is holding it back and how do I fix it?')`);
+    }
+
+    const interview = (apps||[]).find(a => a.status === 'interview_invite');
+    const t3 = document.getElementById('kieChip3Txt'), s3 = document.getElementById('kieChip3Sub'), b3 = document.getElementById('kieChip3');
+    if (interview && t3 && s3 && b3) {
+      t3.textContent = `Prep for ${interview.company}`;
+      s3.textContent = 'Your upcoming interview';
+      b3.setAttribute('onclick', `sendChip('I have an interview with ${interview.company}${interview.role?(' ('+interview.role+')'):''}. Help me prepare.')`);
+    }
+
+    const stale = (apps||[]).find(a => a.nextState==='needs_followup' || a.nextState==='needs_followup_again');
+    const t6 = document.getElementById('kieChip6Txt'), s6 = document.getElementById('kieChip6Sub'), b6 = document.getElementById('kieChip6');
+    if (stale && !interview && t6 && s6 && b6) {
+      t6.textContent = `Follow up: ${stale.company}`;
+      s6.textContent = `${stale.daysSince}d, no response`;
+      b6.setAttribute('onclick', `sendChip('I applied to ${stale.company} ${stale.daysSince} days ago with no response. Write a follow-up.')`);
+    }
+  } catch(e) { console.warn('[kie-chips]', e); }
+}
+
 function _renderAlert(status) {
   const alert    = _buildAlert(status.applications||[]);
+  _kieSmartenChips(status.applications||[]);
   const card     = document.getElementById('kieGmailAlert');
   const floatBar = document.getElementById('kieFloatAlert');
   const nudge    = document.getElementById('kieGmailNudge');
@@ -659,7 +699,7 @@ window.ensureGmailFreshAndAlert = async function() {
     const tok  = await _gmailTok();
     const data = await fetch('/api/gmail/status',{headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json());
     _gmailConnected = !!data.connected;
-    if(!data.connected){ const n=document.getElementById('kieGmailNudge');if(n)n.style.display='block'; if(typeof window.renderKieGmailNudgeGate==='function') window.renderKieGmailNudgeGate(); return; }
+    if(!data.connected){ const n=document.getElementById('kieGmailNudge');if(n)n.style.display='block'; if(typeof window.renderKieGmailNudgeGate==='function') window.renderKieGmailNudgeGate(); _kieSmartenChips([]); return; }
     if(data.lastSynced&&(Date.now()-new Date(data.lastSynced))/60000>30){
       fetch('/api/gmail/sync',{method:'POST',headers:{Authorization:`Bearer ${tok}`}})
         .then(()=>fetch('/api/gmail/status',{headers:{Authorization:`Bearer ${tok}`}}).then(r=>r.json()))

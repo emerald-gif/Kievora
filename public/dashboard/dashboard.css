@@ -2182,16 +2182,19 @@
 
 /* ───────────────────────────────────────────────────────────── */
 
-    /* Funnel stats */
-    .gpipe-funnel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
-    .gpipe-funnel-seg{background:#faf8ff;border:1.5px solid #ede9fe;border-radius:14px;padding:14px 12px;text-align:center}
-    .gpipe-funnel-pct{font-size:24px;font-weight:900;color:#7c3aed;line-height:1;letter-spacing:-1px}
-    .gpipe-funnel-lbl{font-size:10px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
-    .gpipe-funnel-bar{height:4px;background:#ede9fe;border-radius:3px;margin-top:10px;overflow:hidden}
+    /* Funnel stats — no longer boxed; lives inside the unified overview card,
+       so it reads as one continuous surface with the stat row above it
+       rather than a card nested inside a card. */
+    .gpipe-funnel{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0}
+    .gpipe-funnel-seg{text-align:center;padding:0 8px}
+    .gpipe-funnel-seg:first-child{border-right:.5px solid rgba(60,60,67,.13)}
+    .gpipe-funnel-pct{font-size:20px;font-weight:800;color:#7c3aed;line-height:1;letter-spacing:-.6px}
+    .gpipe-funnel-lbl{font-size:9.5px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+    .gpipe-funnel-bar{height:3px;background:#ede9fe;border-radius:3px;margin-top:9px;overflow:hidden}
     .gpipe-funnel-bar i{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 
     /* Urgent banner */
-    .gpipe-urgent{display:none;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fde68a;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.55;font-weight:600}
+    .gpipe-urgent{display:none;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fde68a;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.55;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 
     /* Sections */
     .gpipe-section{margin-bottom:18px}
@@ -2199,7 +2202,7 @@
     .gpipe-section-count{background:#ede9fe;color:#7c3aed;border-radius:20px;padding:2px 8px;font-size:9.5px;font-weight:800}
 
     /* Application cards */
-    .gpipe-card{background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:14px 16px;margin-bottom:8px;transition:box-shadow .15s}
+    .gpipe-card{background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.03);transition:box-shadow .15s}
     .gpipe-card:hover{box-shadow:0 2px 12px rgba(124,58,237,.08)}
     .gpipe-card-co{font-size:14px;font-weight:800;color:#0f0e17;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
     .gpipe-card-role{font-size:11.5px;font-weight:500;color:#64748b;margin-top:2px}
@@ -2222,8 +2225,8 @@
     .gpipe-trend-flat{background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0}
 
     /* Gap + pattern cards */
-    .gpipe-gap{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:14px;padding:13px 15px;margin-bottom:10px;font-size:12px;color:#0c4a6e;line-height:1.55}
-    .gpipe-pattern{background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:13px 15px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.55}
+    .gpipe-gap{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:16px;padding:13px 15px;margin-bottom:10px;font-size:12px;color:#0c4a6e;line-height:1.55;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .gpipe-pattern{background:#fffbeb;border:1.5px solid #fde68a;border-radius:16px;padding:13px 15px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.55;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 
     /* Draft box */
     .gpipe-draft-box{display:none;margin-top:12px;background:#faf8ff;border:1.5px solid #ddd6fe;border-radius:14px;padding:12px}
