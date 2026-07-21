@@ -6645,7 +6645,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     function _formatKieLive(partial, isFinal, sources, images, mode) {
-      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').trim();
+      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').replace(/\[GMAIL_CORRECTION\].*?\[\/GMAIL_CORRECTION\]/gis, '').replace(/\[GMAIL_CORRECTION\][\s\S]*$/i, '').trim();
 
       // Detect code blocks AND table blocks — handles MULTIPLE blocks of
       // either kind in the same message (previously only the first was ever
@@ -6886,6 +6886,26 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function maybeShowKieSuggestions(text, msgWrapper, instant) {
       // Guard: don't add chips if they already exist for this bubble
       if (msgWrapper.querySelector('.kie-suggest-row')) return;
+
+      // [GMAIL_CORRECTION] — silent, no button, doesn't return early. Fires
+      // when KIE recognizes the user explicitly corrected/dismissed
+      // something Gmail-derived. This just tells the backend to stop
+      // re-asserting that one fact; it doesn't change anything visible, so
+      // [FU] chip logic below still runs normally on the same message.
+      var corrMatch = text.match(/\[GMAIL_CORRECTION\](.*?)\[\/GMAIL_CORRECTION\]/is);
+      if (corrMatch && corrMatch[1] && corrMatch[1].trim()) {
+        var correctedCompany = corrMatch[1].trim();
+        (async function () {
+          try {
+            var tok = await _gmailTok();
+            await fetch('/api/gmail/pipeline/correct', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+              body: JSON.stringify({ company: correctedCompany })
+            });
+          } catch (e) { /* non-critical — worst case the same nudge surfaces once more */ }
+        })();
+      }
 
       // Suggestions land a beat after the message itself settles, so the chip
       // row reads as a distinct follow-up rather than part of the same blob.
