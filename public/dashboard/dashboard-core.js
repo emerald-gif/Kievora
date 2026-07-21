@@ -2626,51 +2626,57 @@
 
       _kieShowDownloadOverlay('Preparing your resume PDF…');
 
-      _kvComputePageSize(html, 0, function(pageSizeCSS) {
-        const fullDoc = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
-          + '<link rel="preconnect" href="https://fonts.googleapis.com">'
-          + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-          + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
-          + '<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}'
-          + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0;width:100%}'
-          + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
-          + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
-          + '.rf-mono{font-family:"Courier New",Courier,monospace}'
-          + '@media print{@page{size:' + pageSizeCSS + ';margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
-          + '</head><body>' + html + '</body></html>';
+      // Standard Letter size, always — the print dialog's own "Paper size"
+      // picker enforces a standard size regardless of what a custom @page
+      // height asks for, so fighting it with a computed exact-fit height
+      // just produces content sitting in an unpredictable spot on the page.
+      // A short one-page resume having some blank space below it is normal
+      // (that's how any short document looks in Word or Google Docs too) —
+      // reliable positioning matters more than a page trimmed to the pixel.
+      const fullDoc = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
+        + '<link rel="preconnect" href="https://fonts.googleapis.com">'
+        + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
+        + '<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}'
+        + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0;width:100%}'
+        + 'body{display:block}body>*{margin-top:0 !important}'
+        + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
+        + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
+        + '.rf-mono{font-family:"Courier New",Courier,monospace}'
+        + '@media print{@page{size:8.5in 11in;margin:0}html,body{margin:0 !important;padding:0 !important;width:100%}body{display:block !important}}</style>'
+        + '</head><body>' + html + '</body></html>';
 
-        // PRIMARY: hidden iframe — bypasses Android popup blocker
-        try {
-          const ifrEl = document.createElement('iframe');
-          ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
-          document.body.appendChild(ifrEl);
-          const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
-          iDoc.open(); iDoc.write(fullDoc); iDoc.close();
-          _kiePrintWhenReady(ifrEl.contentWindow, function() {
-            try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
-            _kieHideDownloadOverlay();
-            setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
-          });
-          toast('Print dialog opening — choose "Save as PDF"');
-          return;
-        } catch(e) { _kieHideDownloadOverlay(); /* fall through */ }
-
-        // FALLBACK: blob URL new tab
-        const blob = new Blob([fullDoc], { type: 'text/html' });
-        const url  = URL.createObjectURL(blob);
-        const printWin = window.open(url, '_blank');
-        if (!printWin) {
+      // PRIMARY: hidden iframe — bypasses Android popup blocker
+      try {
+        const ifrEl = document.createElement('iframe');
+        ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
+        document.body.appendChild(ifrEl);
+        const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
+        iDoc.open(); iDoc.write(fullDoc); iDoc.close();
+        _kiePrintWhenReady(ifrEl.contentWindow, function() {
+          try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
           _kieHideDownloadOverlay();
-          const a = document.createElement('a');
-          a.href = url; a.download = title + '.html';
-          a.style.display = 'none'; document.body.appendChild(a);
-          a.click(); document.body.removeChild(a);
-          toast('Resume saved to Downloads — open it and print as PDF');
-          return;
-        }
-        printWin.onload = function() { _kiePrintWhenReady(printWin, function() { printWin.focus(); printWin.print(); _kieHideDownloadOverlay(); }); };
-        toast('Choose "Save as PDF" in the print dialog');
-      });
+          setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
+        });
+        toast('Print dialog opening — choose "Save as PDF"');
+        return;
+      } catch(e) { _kieHideDownloadOverlay(); /* fall through */ }
+
+      // FALLBACK: blob URL new tab
+      const blob = new Blob([fullDoc], { type: 'text/html' });
+      const url  = URL.createObjectURL(blob);
+      const printWin = window.open(url, '_blank');
+      if (!printWin) {
+        _kieHideDownloadOverlay();
+        const a = document.createElement('a');
+        a.href = url; a.download = title + '.html';
+        a.style.display = 'none'; document.body.appendChild(a);
+        a.click(); document.body.removeChild(a);
+        toast('Resume saved to Downloads — open it and print as PDF');
+        return;
+      }
+      printWin.onload = function() { _kiePrintWhenReady(printWin, function() { printWin.focus(); printWin.print(); _kieHideDownloadOverlay(); }); };
+      toast('Choose "Save as PDF" in the print dialog');
     }
 
 
@@ -5545,66 +5551,69 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       _kieShowDownloadOverlay('Preparing your resume PDF…');
 
-      _kvComputePageSize(html, 0, function(pageSizeCSS) {
-        const fullHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
-          + '<link rel="preconnect" href="https://fonts.googleapis.com">'
-          + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-          + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
-          + '<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}'
-          + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
-          + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
-          + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
-          + '.rf-mono{font-family:"Courier New",Courier,monospace}'
-          + '@media print{@page{size:' + pageSizeCSS + ';margin:0}html,body{margin:0;padding:0;width:100%}}</style>'
-          + '</head><body>' + html + '</body></html>';
+      // Standard Letter size, always — see dlResume for why: the print
+      // dialog's own "Paper size" picker enforces a standard size regardless
+      // of a custom @page height, so a computed exact-fit height just fights
+      // the OS instead of cooperating with it.
+      const fullHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
+        + '<link rel="preconnect" href="https://fonts.googleapis.com">'
+        + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
+        + '<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}'
+        + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+        + 'body{display:block}body>*{margin-top:0 !important}'
+        + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
+        + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
+        + '.rf-mono{font-family:"Courier New",Courier,monospace}'
+        + '@media print{@page{size:8.5in 11in;margin:0}html,body{margin:0 !important;padding:0 !important;width:100%}body{display:block !important}}</style>'
+        + '</head><body>' + html + '</body></html>';
 
-        // PRIMARY: hidden iframe — bypasses Android Chrome popup blocker entirely
-        // because it prints within the same page context, no new window needed.
-        try {
-          const ifrEl = document.createElement('iframe');
-          ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
-          document.body.appendChild(ifrEl);
-          const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
-          iDoc.open(); iDoc.write(fullHtml); iDoc.close();
-          _kiePrintWhenReady(ifrEl.contentWindow, function() {
-            try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
-            _kieHideDownloadOverlay();
-            setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
-          });
-          toast('Print dialog opening — choose "Save as PDF" in the menu');
-          return;
-        } catch(ifrErr) { _kieHideDownloadOverlay(); /* fall through to blob-URL approaches */ }
-
-        // FALLBACK A: blob URL in a new tab (desktop + some mobile)
-        const blob = new Blob([fullHtml], { type: 'text/html' });
-        const url  = URL.createObjectURL(blob);
-        let opened = false;
-        try {
-          const printWin = window.open(url, '_blank');
-          if (printWin) {
-            opened = true;
-            printWin.onload = function() { _kiePrintWhenReady(printWin, function() { try { printWin.focus(); printWin.print(); } catch(e) {} _kieHideDownloadOverlay(); }); };
-          }
-        } catch(e) { opened = false; }
-
-        if (!opened) {
+      // PRIMARY: hidden iframe — bypasses Android Chrome popup blocker entirely
+      // because it prints within the same page context, no new window needed.
+      try {
+        const ifrEl = document.createElement('iframe');
+        ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
+        document.body.appendChild(ifrEl);
+        const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
+        iDoc.open(); iDoc.write(fullHtml); iDoc.close();
+        _kiePrintWhenReady(ifrEl.contentWindow, function() {
+          try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
           _kieHideDownloadOverlay();
-          // FALLBACK B: <a download> — downloads the HTML file to device storage,
-          // most reliable last resort on stubborn Android browsers.
-          const a = document.createElement('a');
-          a.href = url; a.download = title + '.html';
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          toast('Resume saved to Downloads — open it and tap Print to save as PDF');
-          setTimeout(function() { try { URL.revokeObjectURL(url); } catch(e) {} }, 30000);
-          return;
-        }
+          setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
+        });
+        toast('Print dialog opening — choose "Save as PDF" in the menu');
+        return;
+      } catch(ifrErr) { _kieHideDownloadOverlay(); /* fall through to blob-URL approaches */ }
 
-        toast('Choose "Save as PDF" in the print dialog');
-        setTimeout(function() { try { URL.revokeObjectURL(url); } catch(e) {} }, 120000);
-      });
+      // FALLBACK A: blob URL in a new tab (desktop + some mobile)
+      const blob = new Blob([fullHtml], { type: 'text/html' });
+      const url  = URL.createObjectURL(blob);
+      let opened = false;
+      try {
+        const printWin = window.open(url, '_blank');
+        if (printWin) {
+          opened = true;
+          printWin.onload = function() { _kiePrintWhenReady(printWin, function() { try { printWin.focus(); printWin.print(); } catch(e) {} _kieHideDownloadOverlay(); }); };
+        }
+      } catch(e) { opened = false; }
+
+      if (!opened) {
+        _kieHideDownloadOverlay();
+        // FALLBACK B: <a download> — downloads the HTML file to device storage,
+        // most reliable last resort on stubborn Android browsers.
+        const a = document.createElement('a');
+        a.href = url; a.download = title + '.html';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast('Resume saved to Downloads — open it and tap Print to save as PDF');
+        setTimeout(function() { try { URL.revokeObjectURL(url); } catch(e) {} }, 30000);
+        return;
+      }
+
+      toast('Choose "Save as PDF" in the print dialog');
+      setTimeout(function() { try { URL.revokeObjectURL(url); } catch(e) {} }, 120000);
     };
 
     // Print-card variant — shows a reopen button instead of blob download link
@@ -9423,27 +9432,23 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const naturalHeight = clone.scrollHeight || 840; // at 600px reference width
         document.body.removeChild(measureHost);
 
-        const TARGET_WIDTH_PX    = 780;  // ideal max content width ≈8.1in, for short letters
-        const MARGIN_IN          = 0.2;  // slim, even margin on every side
-        const STD_PAGE_HEIGHT_IN = 11;   // US Letter height — our one-page ceiling
-        const MIN_SCALE          = 1.0;  // never shrink below the design's native size
+        const TARGET_WIDTH_PX = 780;  // ideal max content width ≈8.1in, for short letters
+        const MARGIN_IN       = 0.2;  // slim, even margin on every side
 
-        const widthScale  = TARGET_WIDTH_PX / 600;
-        const maxHeightPx = (STD_PAGE_HEIGHT_IN - MARGIN_IN * 2) * 96;
-        const heightScale = maxHeightPx / naturalHeight;
-
-        let scale = Math.min(widthScale, heightScale);
-        const fitsOnePage = scale >= MIN_SCALE;
-        if (!fitsOnePage) scale = MIN_SCALE;
+        // Width-only scale — sizes the letter to a comfortable print width.
+        // Never enlarges past the design's native size (scale is capped at 1).
+        const scale = Math.min(TARGET_WIDTH_PX / 600, 1);
 
         const scaledWidthPx  = Math.round(600 * scale);
         const scaledHeightPx = Math.ceil(naturalHeight * scale);
-        const scaledWidthIn  = scaledWidthPx / 96;
-        const scaledHeightIn = scaledHeightPx / 96;
 
-        const pageSizeCSS = fitsOnePage
-          ? (scaledWidthIn + MARGIN_IN * 2).toFixed(2) + 'in ' + (scaledHeightIn + MARGIN_IN * 2).toFixed(2) + 'in'
-          : 'auto';
+        // Standard Letter size, always — the print dialog's own "Paper size"
+        // picker enforces a standard size regardless of a custom @page
+        // height, so a computed exact-fit height just fights the OS instead
+        // of cooperating with it. A letter longer than one page now
+        // paginates naturally across full pages instead of being squeezed
+        // smaller and smaller to force it onto a single non-standard page.
+        const pageSizeCSS = '8.5in 11in';
 
         const html = '<div style="width:' + scaledWidthPx + 'px;height:' + scaledHeightPx + 'px;margin:0 auto">'
           + '<div style="width:600px;transform:scale(' + scale + ');transform-origin:top left">' + clone.innerHTML + '</div>'
@@ -9457,9 +9462,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
           + '<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}'
           + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0;width:100%}'
+          + 'body{display:block}body>*{margin-top:0 !important}'
           + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
           + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
-          + '@media print{@page{size:' + pageSizeCSS + ';margin:' + MARGIN_IN + 'in}html,body{margin:0;padding:0;width:100%}}</style>'
+          + '@media print{@page{size:' + pageSizeCSS + ';margin:' + MARGIN_IN + 'in}html,body{margin:0 !important;padding:0 !important;width:100%}body{display:block !important}}</style>'
           + '</head><body>' + html + '</body></html>';
 
         _kieShowDownloadOverlay('Preparing your cover letter PDF…');
