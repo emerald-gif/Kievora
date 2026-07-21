@@ -83,11 +83,9 @@
 
     <!-- Connected state -->
     <div id="gmailConnectedPanel" style="display:none">
-      <!-- Identity mismatch warning -->
+      <!-- Identity mismatch warning — stays standalone, it's a different
+           severity tier (account-level problem) from the insight rows below -->
       <div id="gpipeMismatchWarning" style="display:none;background:#fff;border-left:3px solid #ff3b30;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:#c0281c;line-height:1.5;box-shadow:0 1px 2px rgba(0,0,0,.04)"></div>
-
-      <!-- Urgent banner -->
-      <div id="gpipeUrgentBanner" class="gpipe-urgent"></div>
 
       <!-- Status strip — compact, secondary once already connected. The pipeline
            itself is what the user came to see, so connection state shrinks to a
@@ -126,11 +124,18 @@
         <div id="gpipeTrendBadge" style="margin-top:6px"></div>
       </div>
 
-      <!-- Resume gap insight -->
-      <div id="gpipeResumeGap" style="margin-bottom:8px"></div>
-
-      <!-- Ghosting patterns -->
-      <div id="gpipePatterns"></div>
+      <!-- Insights — urgent banner, resume gap, and ghosting patterns used to
+           each be their own full-width tinted/bordered/shadowed box, stacked
+           back to back. That reads as 3-4 separate alerts shouting at once.
+           Now one card, each insight a quiet icon+text row inside it — same
+           information, ordered by real urgency, without the wall-of-banners
+           feeling. Any row's target div stays empty and collapses (:empty
+           CSS rule) when there's nothing to say. -->
+      <div class="gpipe-insights-card" id="gpipeInsightsCard">
+        <div id="gpipeUrgentBanner"></div>
+        <div id="gpipeResumeGap"></div>
+        <div id="gpipePatterns"></div>
+      </div>
 
       <!-- Pipeline sections -->
       <div id="gmailAppsList" style="margin-bottom:12px"></div>

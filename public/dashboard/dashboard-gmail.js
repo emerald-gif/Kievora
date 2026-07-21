@@ -229,12 +229,12 @@ async function _gpipeRenderResumeGap() {
     const r   = await fetch('/api/gmail/resume-gap', { headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json());
     if (!r.success) return;
     if (r.needsResumeChoice && r.resumes?.length) {
-      el.innerHTML = `<div class="gpipe-gap" style="display:flex;gap:8px;align-items:flex-start">${_gpipeIcon.doc('#0369a1')}<div><b>Check your resume against your pipeline?</b><br>You have ${r.resumes.length} resumes — which one should KIE compare?<br><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${r.resumes.map(rv=>`<button class="gpipe-btn gpipe-btn-prep" style="flex:none" onclick="gpipeLoadResumeGap('${rv.id}')">${_gpipeEsc(rv.resumeName)}</button>`).join('')}</div></div></div>`;
+      el.innerHTML = `<div class="gpipe-gap"><div class="gpipe-insight-ico" style="background:#e0f2fe">${_gpipeIcon.doc('#0369a1')}</div><div><b>Check your resume against your pipeline?</b><br>You have ${r.resumes.length} resumes — which one should KIE compare?<br><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${r.resumes.map(rv=>`<button class="gpipe-btn gpipe-btn-prep" style="flex:none" onclick="gpipeLoadResumeGap('${rv.id}')">${_gpipeEsc(rv.resumeName)}</button>`).join('')}</div></div></div>`;
       return;
     }
     if (r.gap && r.gap.skill) {
       const cos = (r.gap.companies||[]).map(c=>`<b>${_gpipeEsc(c)}</b>`).join(', ');
-      el.innerHTML = `<div class="gpipe-gap" style="display:flex;gap:8px;align-items:flex-start">${_gpipeIcon.idea('#0369a1')}<div><b>Worth checking:</b> ${cos} ${r.gap.companies.length===1?'mentions':'mention'} "<b>${_gpipeEsc(r.gap.skill)}</b>" — that keyword doesn't appear in your "${_gpipeEsc(r.resumeUsed||'resume')}" right now. Want to add it? <span style="font-size:10.5px;color:#0369a1">(This is a pattern, not a verdict — verify it yourself first)</span></div></div>`;
+      el.innerHTML = `<div class="gpipe-gap"><div class="gpipe-insight-ico" style="background:#e0f2fe">${_gpipeIcon.idea('#0369a1')}</div><div><b>Worth checking:</b> ${cos} ${r.gap.companies.length===1?'mentions':'mention'} "<b>${_gpipeEsc(r.gap.skill)}</b>" — that keyword doesn't appear in your "${_gpipeEsc(r.resumeUsed||'resume')}" right now. Want to add it? <span style="font-size:10.5px;color:#0369a1">(This is a pattern, not a verdict — verify it yourself first)</span></div></div>`;
     }
   } catch(e) { /* non-critical — gap card just stays empty */ }
 }
@@ -248,7 +248,7 @@ window.gpipeLoadResumeGap = async function(resumeId) {
     const r   = await fetch(`/api/gmail/resume-gap?resumeId=${encodeURIComponent(resumeId)}`, { headers:{ Authorization:`Bearer ${tok}` } }).then(r=>r.json());
     if (!r.success || !r.gap?.skill) { el.innerHTML=''; return; }
     const cos = (r.gap.companies||[]).map(c=>`<b>${_gpipeEsc(c)}</b>`).join(', ');
-    el.innerHTML = `<div class="gpipe-gap" style="display:flex;gap:8px;align-items:flex-start">${_gpipeIcon.idea('#0369a1')}<div><b>Worth checking:</b> ${cos} ${r.gap.companies.length===1?'mentions':'mention'} "<b>${_gpipeEsc(r.gap.skill)}</b>" — that keyword doesn't appear in your "${_gpipeEsc(r.resumeUsed||'resume')}" right now. <span style="font-size:10.5px;color:#0369a1">(Pattern, not a verdict — verify first)</span></div></div>`;
+    el.innerHTML = `<div class="gpipe-gap"><div class="gpipe-insight-ico" style="background:#e0f2fe">${_gpipeIcon.idea('#0369a1')}</div><div><b>Worth checking:</b> ${cos} ${r.gap.companies.length===1?'mentions':'mention'} "<b>${_gpipeEsc(r.gap.skill)}</b>" — that keyword doesn't appear in your "${_gpipeEsc(r.resumeUsed||'resume')}" right now. <span style="font-size:10.5px;color:#0369a1">(Pattern, not a verdict — verify first)</span></div></div>`;
   } catch(e) { el.innerHTML=''; }
 };
 
@@ -310,13 +310,13 @@ function _gpipeRenderUrgent(apps) {
   const offer     = apps.find(a=>a.status==='offer');
   const interview = apps.find(a=>a.status==='interview_invite');
   if (offer) {
-    el.style.display='flex'; el.style.alignItems='center'; el.style.gap='9px';
-    el.innerHTML = `${_gpipeIcon.offer('#b45309')}<span><b>Offer from ${_gpipeEsc(offer.company)}</b>${offer.role?` (${_gpipeEsc(offer.role)})`:''} — time to evaluate &amp; respond.</span>`;
+    el.className = 'gpipe-insight-row';
+    el.innerHTML = `<div class="gpipe-insight-ico" style="background:#fef3c7">${_gpipeIcon.offer('#b45309')}</div><span><b>Offer from ${_gpipeEsc(offer.company)}</b>${offer.role?` (${_gpipeEsc(offer.role)})`:''} — time to evaluate &amp; respond.</span>`;
   } else if (interview) {
-    el.style.display='flex'; el.style.alignItems='center'; el.style.gap='9px';
-    el.innerHTML = `${_gpipeIcon.interview('#7c3aed')}<span><b>Interview stage with ${_gpipeEsc(interview.company)}</b>${interview.role?` (${_gpipeEsc(interview.role)})`:''} — prep time.</span>`;
+    el.className = 'gpipe-insight-row';
+    el.innerHTML = `<div class="gpipe-insight-ico" style="background:#ede9fe">${_gpipeIcon.interview('#7c3aed')}</div><span><b>Interview stage with ${_gpipeEsc(interview.company)}</b>${interview.role?` (${_gpipeEsc(interview.role)})`:''} — prep time.</span>`;
   } else {
-    el.style.display='none'; el.innerHTML='';
+    el.className = ''; el.innerHTML='';
   }
 }
 
@@ -357,7 +357,7 @@ function _gpipeRenderPatterns(patterns) {
   if (!el) return;
   if (!patterns || !patterns.length) { el.innerHTML=''; return; }
   el.innerHTML = patterns.map(p =>
-    `<div class="gpipe-pattern" style="display:flex;gap:8px;align-items:flex-start">${_gpipeIcon.chart('#92400e')}<div>You tend to go quiet ${p.label} — ${p.count} of your last ${p.total} applications that reached this stage went cold (${p.rate}%). Worth tightening follow-up here.</div></div>`
+    `<div class="gpipe-pattern"><div class="gpipe-insight-ico" style="background:#fef3c7">${_gpipeIcon.chart('#92400e')}</div><div>You tend to go quiet ${p.label} — ${p.count} of your last ${p.total} applications that reached this stage went cold (${p.rate}%). Worth tightening follow-up here.</div></div>`
   ).join('');
 }
 

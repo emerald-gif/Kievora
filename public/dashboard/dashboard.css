@@ -2194,7 +2194,7 @@
     .gpipe-funnel-bar i{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 
     /* Urgent banner */
-    .gpipe-urgent{display:none;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fde68a;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.55;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .gpipe-urgent{display:flex;gap:10px;align-items:flex-start;padding:13px 15px;font-size:12.5px;color:#3c3c43;line-height:1.55;font-weight:600}
 
     /* Sections */
     .gpipe-section{margin-bottom:18px}
@@ -2224,9 +2224,19 @@
     .gpipe-trend-dn{background:#fff1f2;color:#be123c;border:1.5px solid #fecdd3}
     .gpipe-trend-flat{background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0}
 
-    /* Gap + pattern cards */
-    .gpipe-gap{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:16px;padding:13px 15px;margin-bottom:10px;font-size:12px;color:#0c4a6e;line-height:1.55;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-    .gpipe-pattern{background:#fffbeb;border:1.5px solid #fde68a;border-radius:16px;padding:13px 15px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.55;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    /* Insights card — one shared shell for urgent/gap/pattern rows. Collapses
+       entirely if every row inside is empty, and each row only grows a top
+       divider once a prior row actually has content — so 1 insight looks
+       like a clean single row, not a lonely card with dead space. */
+    .gpipe-insights-card{background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:14px;overflow:hidden}
+    .gpipe-insights-card:empty{display:none;box-shadow:none;margin-bottom:0}
+    .gpipe-insights-card > *:not(:empty) ~ *:not(:empty){border-top:.5px solid rgba(60,60,67,.08)}
+    .gpipe-insight-row{display:flex;gap:10px;align-items:flex-start;padding:13px 15px;font-size:12px;color:#3c3c43;line-height:1.55}
+    .gpipe-insight-ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .gpipe-insight-row b{font-weight:700}
+
+    /* Gap + pattern rows now live inside .gpipe-insights-card as quiet rows */
+    .gpipe-gap,.gpipe-pattern{display:flex;gap:10px;align-items:flex-start;padding:13px 15px;font-size:12px;color:#3c3c43;line-height:1.55}
 
     /* Draft box */
     .gpipe-draft-box{display:none;margin-top:12px;background:#faf8ff;border:1.5px solid #ddd6fe;border-radius:14px;padding:12px}
