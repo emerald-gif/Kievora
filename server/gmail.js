@@ -94,6 +94,41 @@ module.exports = function registerGmailRoutes(app) {
     } catch(e) { res.status(500).json({ error:e.message }); }
   });
 
+  // AI replies are supposed to be pure JSON, but a model occasionally wraps it
+  // in a sentence or leaves a trailing comment — this salvages the {...} block
+  // instead of the whole request dying on a strict JSON.parse. Every route
+  // below also now console.errors the REAL failure reason before responding,
+  // since "Couldn't generate a reply. Try again." told nobody — including us
+  // in the server logs — what actually broke.
+  function _gpipeSafeParseJson(text) {
+    const cleaned = (text||'').trim().replace(/```json|```/g,'').trim();
+    try { return JSON.parse(cleaned); } catch(e) {}
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) { try { return JSON.parse(match[0]); } catch(e) {} }
+    return null;
+  }
+
+  // Best-effort "who do I actually send this to" lookup — pulls the From
+  // address off the most recent tracked email for this company so the
+  // Gmail-compose link can be pre-addressed, not just pre-filled with text.
+  async function _gpipeRecipientForCompany(uid, tokens, company) {
+    try {
+      const sSnap = await db.collection('users').doc(uid).collection('gmailBrain').doc('summary').get();
+      if (!sSnap.exists) return null;
+      const apps = sSnap.data().applications || [];
+      const a = apps.find(a => normaliseStr(a.company) === normaliseStr(company));
+      const lastEvent = a ? [...(a.timeline||[])].reverse().find(e=>e.threadId) : null;
+      if (!lastEvent) return null;
+      const oauth2 = getOAuthClient(); oauth2.setCredentials(tokens);
+      const gmail  = google.gmail({ version:'v1', auth:oauth2 });
+      const thread = await gmail.users.threads.get({ userId:'me', id:lastEvent.threadId, format:'metadata', metadataHeaders:['From'] });
+      const lastMsg = thread.data.messages?.[thread.data.messages.length-1];
+      const fromHdr = lastMsg?.payload?.headers?.find(h=>h.name.toLowerCase()==='from')?.value || '';
+      const m = fromHdr.match(/<([^>]+)>/);
+      return m ? m[1] : (/^[^\s<>]+@[^\s<>]+$/.test(fromHdr) ? fromHdr : null);
+    } catch(e) { return null; }
+  }
+
   // One-tap AI follow-up draft — text only, the user copies & sends it themselves.
   // Kievora never sends mail on a user's behalf (matches the "read-only access" promise
   // already shown on the Gmail panel).
@@ -113,10 +148,15 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d = await r.json();
-      const text  = (d.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
-      const draft = JSON.parse(text);
-      res.json({ success:true, draft });
-    } catch(e) { res.status(500).json({ error:e.message }); }
+      const draft = _gpipeSafeParseJson(d.choices?.[0]?.message?.content);
+      if (!draft || !draft.body) { console.error('[gmail] draft-followup: no usable AI response —', JSON.stringify(d).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
+      let to = null;
+      try {
+        const tokenDoc = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('tokens').get();
+        if (tokenDoc.exists) { const tokens = await getValidTokens(req.user.uid, tokenDoc.data().tokens); to = await _gpipeRecipientForCompany(req.user.uid, tokens, company); }
+      } catch(e) { /* non-critical — compose link just opens unaddressed */ }
+      res.json({ success:true, draft, to });
+    } catch(e) { console.error('[gmail] draft-followup:', e.message); res.status(500).json({ error:e.message }); }
   });
 
   // Records what the user actually did about a nudge, so the same suggestion
@@ -185,10 +225,10 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d = await r.json();
-      const text = (d.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
-      const prep = JSON.parse(text);
+      const prep = _gpipeSafeParseJson(d.choices?.[0]?.message?.content);
+      if (!prep || !prep.questions) { console.error('[gmail] interview-prep: no usable AI response —', JSON.stringify(d).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
       res.json({ success:true, prep });
-    } catch(e) { res.status(500).json({ error:e.message }); }
+    } catch(e) { console.error('[gmail] interview-prep:', e.message); res.status(500).json({ error:e.message }); }
   });
 
   // Decodes a Gmail message payload into plain text, walking nested MIME parts.
@@ -240,10 +280,13 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const dd    = await rr.json();
-      const text  = (dd.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
-      const draft = JSON.parse(text);
-      res.json({ success:true, draft });
-    } catch(e) { res.status(500).json({ error:e.message }); }
+      const draft = _gpipeSafeParseJson(dd.choices?.[0]?.message?.content);
+      if (!draft || !draft.body) { console.error('[gmail] draft-reply: no usable AI response —', JSON.stringify(dd).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
+      const fromHdr = lastMsg?.payload?.headers?.find(h=>h.name.toLowerCase()==='from')?.value || '';
+      const toMatch = fromHdr.match(/<([^>]+)>/);
+      const to = toMatch ? toMatch[1] : (/^[^\s<>]+@[^\s<>]+$/.test(fromHdr) ? fromHdr : null);
+      res.json({ success:true, draft, to });
+    } catch(e) { console.error('[gmail] draft-reply:', e.message); res.status(500).json({ error:e.message }); }
   });
 
   // Cross-references Gmail signal with resume content — but talks like a
@@ -285,10 +328,10 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d2 = await r2.json();
-      const text2 = (d2.choices?.[0]?.message?.content||'{}').trim().replace(/```json|```/g,'').trim();
-      const result = JSON.parse(text2);
+      const result = _gpipeSafeParseJson(d2.choices?.[0]?.message?.content);
+      if (!result) { console.error('[gmail] resume-gap: no usable AI response —', JSON.stringify(d2).slice(0,400)); return res.json({ success:true, gap:null, reason:'ai_response_invalid' }); }
       res.json({ success:true, gap: result.found ? { skill:result.skill, companies:result.companies||[] } : null, resumeUsed: chosen.resumeName||'Untitled' });
-    } catch(e) { res.status(500).json({ error:e.message }); }
+    } catch(e) { console.error('[gmail] resume-gap:', e.message); res.status(500).json({ error:e.message }); }
   });
 
 
