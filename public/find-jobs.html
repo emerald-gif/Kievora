@@ -570,9 +570,12 @@
   .fjd-footer .fjd-apply { flex: 1; padding: 15px; margin: 0; }
 
   /* ── TOAST ── */
-  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-  .toast-item { background: #1a1a2e; color: #fff; border-radius: 12px; padding: 11px 18px; font-size: 13px; font-weight: 600; white-space: nowrap; animation: toastIn .25s ease; }
-  .toast-item.err { background: #dc2626; }
+  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; align-items: center; }
+  .toast-item { background: #fff; color: #0f0e17; border: 1px solid rgba(15,14,23,.06); border-radius: 16px; padding: 11px 12px 11px 13px; font-size: 13px; font-weight: 600; white-space: nowrap; animation: toastIn .25s ease; box-shadow: 0 12px 32px rgba(15,14,23,.14), 0 2px 10px rgba(15,14,23,.06); display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+  .toast-item .toast-ico{flex-shrink:0;width:20px;height:20px}
+  .toast-item .toast-ico svg{width:20px;height:20px;display:block}
+  .toast-item .toast-x{flex-shrink:0;width:20px;height:20px;border:none;background:none;color:#b7b2c4;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0}
+  .toast-item .toast-x:hover{background:#f5f4fa;color:#6b6478}
   @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
 
 </style>
@@ -1066,13 +1069,22 @@ const FJ_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function g(id) { return document.getElementById(id); }
 
+const TOAST_ICONS_FJ = {
+  ok:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#22c55e"/><path d="M7 12.3l3.2 3.2L17.3 8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  err:  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#ef4444"/><path d="M12 7v6.2" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.15" fill="#fff"/></svg>',
+};
+const TOAST_X_FJ = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+
 function toast(msg, type) {
   const wrap = g('toastWrap');
   const el   = document.createElement('div');
-  el.className = 'toast-item' + (type === 'err' ? ' err' : '');
-  el.textContent = msg;
+  el.className = 'toast-item';
+  const icon = type === 'err' ? TOAST_ICONS_FJ.err : TOAST_ICONS_FJ.ok;
+  el.innerHTML = '<span class="toast-ico">' + icon + '</span>'
+    + '<span>' + msg.replace(/</g,'&lt;') + '</span>'
+    + '<button class="toast-x" onclick="this.closest(\'.toast-item\').remove()" aria-label="Dismiss">' + TOAST_X_FJ + '</button>';
   wrap.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(() => el.remove(), 3500);
 }
 
 function getToken() {
