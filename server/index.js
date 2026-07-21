@@ -205,13 +205,17 @@ app.post('/api/register-user', authenticate, async (req, res) => {
       createdAt:   admin.firestore.FieldValue.serverTimestamp(),
     });
     console.log(`👤 User doc created for ${email}${cleanUn ? ' (@' + cleanUn + ')' : ''}`);
-    // Google signups arrive already emailVerified:true — welcome them right away.
+    // OAuth signups (Google, Microsoft, ...) never go through OTP, so welcome
+    // them right away. Checking sign_in_provider directly — not just
+    // email_verified — means this stays correct for Microsoft (and any future
+    // provider) even if its emailVerified semantics ever differ from Google's.
     // Password signups aren't verified yet at this point (OTP hasn't run), so
     // hold the welcome email until /api/verify-otp succeeds instead. Firing
     // both emails back-to-back at signup was likely why the welcome email
     // wasn't reliably showing up for password signups — most ESPs are more
     // conservative with rapid multi-sends to a brand-new address.
-    if (req.user.email_verified) {
+    const signInProvider = req.user.firebase?.sign_in_provider;
+    if (req.user.email_verified || signInProvider !== 'password') {
       await sendWelcomeEmail(email || req.user.email, name || 'there');
     }
     res.json({ success: true });
