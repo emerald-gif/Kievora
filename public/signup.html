@@ -145,15 +145,16 @@ nav{
 h1.title{font-size:22px;font-weight:800;color:var(--ink);margin-bottom:5px;text-align:center;letter-spacing:-.5px}
 .sub{font-size:13.5px;color:var(--sub);text-align:center;margin-bottom:22px;line-height:1.5}
 
-.google-btn{
+/* Google / Microsoft buttons — share one ruleset so any style change applies to both */
+.google-btn,.microsoft-btn{
   width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
   background:var(--card);border:1.5px solid var(--line);border-radius:13px;
   padding:13px 16px;font-size:14px;font-weight:600;color:var(--ink);
   cursor:pointer;transition:all .18s;margin-bottom:16px;
   box-shadow:0 1px 3px rgba(17,24,39,.04);font-family:inherit;
 }
-.google-btn:hover{border-color:var(--p);box-shadow:0 4px 16px rgba(124,58,237,.14);transform:translateY(-1px)}
-.google-btn:active{transform:translateY(0)}
+.google-btn:hover,.microsoft-btn:hover{border-color:var(--p);box-shadow:0 4px 16px rgba(124,58,237,.14);transform:translateY(-1px)}
+.google-btn:active,.microsoft-btn:active{transform:translateY(0)}
 
 .divider{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .divider hr{flex:1;border:none;border-top:1px solid var(--line)}
@@ -291,6 +292,11 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
         Continue with Google
       </button>
 
+      <button id="microsoftBtn" class="microsoft-btn">
+        <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+        Continue with Microsoft
+      </button>
+
       <div class="divider" id="signupDivider"><hr/><span>OR SIGN UP WITH EMAIL</span><hr/></div>
 
       <div id="err" class="err"></div>
@@ -375,7 +381,7 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
   import { getAuth, createUserWithEmailAndPassword, updateProfile, signInWithPopup,
-           GoogleAuthProvider, onAuthStateChanged, getAdditionalUserInfo, signOut }
+           GoogleAuthProvider, OAuthProvider, onAuthStateChanged, getAdditionalUserInfo, signOut }
     from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 
 
@@ -402,8 +408,10 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
   // so the old "welcome=1" redirect helper is no longer needed.
   const redirectTo = getRedirect(); // used by onAuthStateChanged (existing user re-login edge case)
 
-  // Only password accounts ever need OTP verification — Google accounts are
-  // always emailVerified:true already, so this never triggers for them.
+  // Only password accounts ever need OTP verification — this checks the
+  // 'password' providerId specifically, so Google and Microsoft sign-ins
+  // (any non-password provider) never trigger it, regardless of their
+  // emailVerified value.
   function needsVerification(u) {
     const isPasswordAccount = u.providerData?.some(p => p.providerId === 'password');
     return isPasswordAccount && !u.emailVerified;
@@ -490,11 +498,13 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
       }, 500);
     });
 
-    document.getElementById('googleBtn').onclick=async()=>{
+    // ── Federated sign-up (Google + Microsoft share one code path so both
+    //    behave identically now and stay identical if this ever changes) ─────
+    async function federatedSignUp(provider){
       err.style.display='none';
       signingUp = true;
       try{
-        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        const result = await signInWithPopup(auth, provider);
         const info   = getAdditionalUserInfo(result);
         if (info?.isNewUser) {
           const autoUsername = await generateUniqueUsername(result.user.displayName || result.user.email.split('@')[0]);
@@ -505,7 +515,9 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
         }
       }
       catch(e){ err.textContent=fe(e.code); err.style.display='block'; signingUp=false; }
-    };
+    }
+    document.getElementById('googleBtn').onclick    = () => federatedSignUp(new GoogleAuthProvider());
+    document.getElementById('microsoftBtn').onclick = () => federatedSignUp(new OAuthProvider('microsoft.com'));
 
     document.getElementById('eyeBtn').onclick=()=>{ show=!show; pwd.type=show?'text':'password'; conf.type=show?'text':'password'; };
 
@@ -537,10 +549,11 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
 
   // ── Email/password OTP verification step ──
   // Google signups never call this — they already arrive with a Firebase-
-  // verified email, so they go straight to /onboarding (see googleBtn handler).
+  // verified email, so they go straight to /onboarding (see federatedSignUp).
   async function startOtpVerification(user, name, email) {
     document.getElementById('form').style.display='none';
     document.getElementById('googleBtn').style.display='none';
+    document.getElementById('microsoftBtn').style.display='none';
     document.getElementById('signupDivider').style.display='none';
     document.getElementById('succ').style.display='none';
     document.getElementById('signupFooterLinks').style.display='none';
@@ -644,7 +657,8 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
       'auth/email-already-in-use':'An account with that email already exists.',
       'auth/invalid-email':'Please enter a valid email address.',
       'auth/weak-password':'Password is too weak (min 6 chars).',
-      'auth/popup-closed-by-user':'Popup closed. Try again.'
+      'auth/popup-closed-by-user':'Popup closed. Try again.',
+      'auth/account-exists-with-different-credential':'An account already exists with this email using a different sign-in method.'
     })[c]||'Something went wrong. Please try again.';
   }
 </script>

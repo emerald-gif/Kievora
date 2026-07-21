@@ -166,16 +166,16 @@ nav{
 h1.title{font-size:23px;font-weight:800;color:var(--ink);margin-bottom:5px;text-align:center;letter-spacing:-.5px}
 .sub{font-size:13.5px;color:var(--sub);text-align:center;margin-bottom:24px;line-height:1.5}
 
-/* Google btn */
-.google-btn{
+/* Google / Microsoft buttons — share one ruleset so any style change applies to both */
+.google-btn,.microsoft-btn{
   width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
   background:var(--card);border:1.5px solid var(--line);border-radius:13px;
   padding:13px 16px;font-size:14px;font-weight:600;color:var(--ink);
   cursor:pointer;transition:all .18s;margin-bottom:18px;
   box-shadow:0 1px 3px rgba(17,24,39,.04);font-family:inherit;
 }
-.google-btn:hover{border-color:var(--p);box-shadow:0 4px 16px rgba(124,58,237,.14);transform:translateY(-1px)}
-.google-btn:active{transform:translateY(0)}
+.google-btn:hover,.microsoft-btn:hover{border-color:var(--p);box-shadow:0 4px 16px rgba(124,58,237,.14);transform:translateY(-1px)}
+.google-btn:active,.microsoft-btn:active{transform:translateY(0)}
 
 .divider{display:flex;align-items:center;gap:12px;margin-bottom:18px}
 .divider hr{flex:1;border:none;border-top:1px solid var(--line)}
@@ -324,6 +324,12 @@ input:not(:placeholder-shown) ~ label{
           Continue with Google
         </button>
 
+        <!-- Microsoft -->
+        <button id="microsoftBtn" class="microsoft-btn">
+          <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          Continue with Microsoft
+        </button>
+
         <div class="divider"><hr/><span>OR SIGN IN WITH EMAIL</span><hr/></div>
 
         <div id="err" class="err"></div>
@@ -389,7 +395,7 @@ input:not(:placeholder-shown) ~ label{
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
   import { getAuth, signInWithEmailAndPassword, signInWithPopup, signOut,
-           GoogleAuthProvider, onAuthStateChanged, getAdditionalUserInfo,
+           GoogleAuthProvider, OAuthProvider, onAuthStateChanged, getAdditionalUserInfo,
            sendPasswordResetEmail }
     from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 
@@ -415,8 +421,10 @@ input:not(:placeholder-shown) ~ label{
   }
   const redirectTo = getRedirect();
 
-  // Only password accounts ever need OTP verification — Google accounts are
-  // always emailVerified:true already, so this never triggers for them.
+  // Only password accounts ever need OTP verification — this checks the
+  // 'password' providerId specifically, so Google and Microsoft sign-ins
+  // (any non-password provider) never trigger it, regardless of their
+  // emailVerified value.
   function needsVerification(u) {
     const isPasswordAccount = u.providerData?.some(p => p.providerId === 'password');
     return isPasswordAccount && !u.emailVerified;
@@ -436,22 +444,25 @@ input:not(:placeholder-shown) ~ label{
     const err=document.getElementById('err'), btn=document.getElementById('sbtn'), pwd=document.getElementById('password');
     let show=false;
 
-    // ── Google sign-in ──────────────────────────────────────────────────────
-    document.getElementById('googleBtn').onclick=async()=>{
+    // ── Federated sign-in (Google + Microsoft share one code path so both
+    //    behave identically now and stay identical if this ever changes) ─────
+    async function federatedSignIn(provider, providerLabel){
       err.style.display='none';
       try{
-        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        const result = await signInWithPopup(auth, provider);
         const info   = getAdditionalUserInfo(result);
         if (info?.isNewUser) {
           await signOut(auth);
-          err.textContent = 'No account found for that Google account. Please sign up first.';
+          err.textContent = `No account found for that ${providerLabel} account. Please sign up first.`;
           err.style.display = 'block';
           return;
         }
         routeAfterAuth(result.user);
       }
       catch(e){ err.textContent=fe(e.code); err.style.display='block'; }
-    };
+    }
+    document.getElementById('googleBtn').onclick    = () => federatedSignIn(new GoogleAuthProvider(), 'Google');
+    document.getElementById('microsoftBtn').onclick = () => federatedSignIn(new OAuthProvider('microsoft.com'), 'Microsoft');
 
     // ── Password visibility toggle ──────────────────────────────────────────
     document.getElementById('eyeBtn').onclick=()=>{ show=!show; pwd.type=show?'text':'password'; };
@@ -530,7 +541,8 @@ input:not(:placeholder-shown) ~ label{
       'auth/invalid-credential':'Invalid email or password.',
       'auth/too-many-requests':'Too many attempts. Try again later.',
       'auth/invalid-email':'Please enter a valid email address.',
-      'auth/popup-closed-by-user':'Popup closed. Try again.'
+      'auth/popup-closed-by-user':'Popup closed. Try again.',
+      'auth/account-exists-with-different-credential':'An account already exists with this email using a different sign-in method.'
     })[c]||'Something went wrong. Please try again.';
   }
 </script>

@@ -784,7 +784,7 @@
 
     // Sign-in method — was previously not shown at all
     const providerId = u.providerData?.[0]?.providerId || '';
-    const providerLabels = { 'google.com': 'Google', 'password': 'Email & Password', 'facebook.com': 'Facebook' };
+    const providerLabels = { 'google.com': 'Google', 'microsoft.com': 'Microsoft', 'password': 'Email & Password', 'facebook.com': 'Facebook' };
     document.getElementById('infoSignInMethod').textContent = providerLabels[providerId] || 'Email';
 
     // Email verified — was previously hardcoded to "✓ Verified" for everyone,
