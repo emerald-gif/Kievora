@@ -85,6 +85,13 @@
     let _kiePendingFileName = '';
     let kieSelectedResume = null; // actual resume object for PDF generation + template changes
     let _stagedKieAttachment = null; // { type:'image'|'pdf'|'txt', file, dataUrl, mimeType, name, size }
+    // Staged resume pick — tapping the COACH ON picker used to auto-fire a
+    // reply instantly, no send needed. That's now inconsistent with how a
+    // raw file upload behaves (stages, waits for the user to actually press
+    // Send). This mirrors that: picking a resume just stages an intro to be
+    // folded into whatever the user sends next (their own message, or empty
+    // — same as pressing Send on a bare attachment).
+    let _kiePendingResumeIntro = null; // { name, hadOngoingConv }
     let builderStep = 1; // 1=Personal, 2=Work+Edu, 3=Skills
 
     // ─── Plan Gates — client mirror of server PLANS, hydrated on load ──────────
@@ -3090,6 +3097,7 @@
       kieDocContext     = '';
       _kiePendingFileText = '';
       _kiePendingFileName = '';
+      _kiePendingResumeIntro = null; // dismissed before Send — nothing to fold in anymore
       document.querySelectorAll('.kie-rpill:not(.kie-rpill-uploaded)').forEach(p => {
         p.classList.remove('active');
         const x = p.querySelector('.kie-rpill-dismiss');
@@ -3139,8 +3147,17 @@
       updateKieTplIndicator();
       closeKieResumeDropdown();
 
+      // A saved-resume pick supersedes any not-yet-sent raw upload sitting in
+      // the composer — the user just told us which resume they want to talk
+      // about, so an older staged file shouldn't quietly win instead once
+      // they hit Send.
+      if (_stagedKieAttachment) { clearKieAttachStage(); }
+
       const name = r.resumeName || r.resumeData?.fullName || 'your resume';
-      sendKieRecommendation(name);
+      // STAGE, don't send — matches how a raw upload behaves (waits for the
+      // user to actually press Send, with or without their own message).
+      // The intro copy itself is built later, at send time, in sendKie().
+      _kiePendingResumeIntro = { name, hadOngoingConv: kieHist.length > 0 };
     };
 
     // Silently consumes an /api/kie SSE stream and returns the full concatenated
@@ -3186,7 +3203,12 @@
       return fullText;
     }
 
-    async function sendKieRecommendation(resumeName) {
+    // Fires once the user actually presses Send after picking a resume from
+    // the COACH ON picker — never on tap alone anymore. userMsg is whatever
+    // they typed alongside the pick, or '' if they just hit Send on the bare
+    // pick (mirrors sending a bare file attachment with no caption).
+    async function sendKieRecommendation(resumeName, userMsg) {
+      userMsg = (userMsg || '').trim();
       // If already generating, stop it first before loading the resume
       if (_kieGenerating) stopKieGeneration();
 
@@ -3196,6 +3218,14 @@
       showKieStatus(kieMode);
       scrollKie();
 
+      // Show the user's own message as a real chat bubble first — this is
+      // now a genuine user-initiated turn (they picked a resume AND pressed
+      // Send), not a silent background auto-fire, so it should look like one.
+      if (userMsg) {
+        appendKMsg('user', userMsg, true);
+        kieHist.push({ role: 'user', content: userMsg });
+      }
+
       _kieGenerating = true;
       _kieStopTyping = false;
       _kieAbort = new AbortController();
@@ -3203,15 +3233,19 @@
       setKieSendMode('stop');
 
       // If there's already a conversation going, KIE acknowledges it and ties the resume to that context
-      const hasOngoingConv = kieHist.length > 0;
-      const prompt = hasOngoingConv
+      const hasOngoingConv = kieHist.length > (userMsg ? 1 : 0);
+      const prompt = userMsg
+        ? `The user just picked their resume "${resumeName}" to coach on, and sent this along with it: "${userMsg}". Use the resume as context, but respond directly to what they actually said — don't just give a generic resume intro instead of answering them.`
+        : hasOngoingConv
         ? `The user has just tapped their resume "${resumeName}" while we're in the middle of a conversation. Acknowledge this naturally in 1-2 sentences — say something like "Oh nice, now I can see your resume" and connect it to what we've been talking about. Then give one specific observation from their actual resume that's relevant to our current conversation. End with one concrete action, introduced by a short bolded label + colon (vary it — "**Your move:**", "**Next step:**", "**Try this:**", etc.). Stay warm and direct — don't restart the conversation, just fold the resume in.`
         : `You just loaded "${resumeName}" to coach the user on. Give a warm 2-3 sentence intro: mention one thing that looks strong and one clear area to work on based on what you see. End with one specific action, introduced by a short bolded label + colon (vary it — "**Your move:**", "**Next step:**", "**Try this:**", etc.). Be personal and direct — no generic advice.`;
 
-      // Include conversation history so the response is contextually relevant
-      const messagesPayload = hasOngoingConv
-        ? [...kieHist, { role: 'user', content: prompt }]
-        : [{ role: 'user', content: prompt }];
+      // Include conversation history so the response is contextually relevant.
+      // kieHist may already contain the userMsg turn just pushed above (if the
+      // user typed something alongside the pick) — always building from it
+      // (rather than branching on the old hasOngoingConv flag) means that
+      // turn is never silently dropped on what looks like a "first" message.
+      const messagesPayload = [...kieHist, { role: 'user', content: prompt }];
 
       try {
         const reply = await _kieCallSilent(
@@ -3358,6 +3392,12 @@
       const file = input.files?.[0];
       if (!file) return;
       input.value = '';
+
+      // A fresh upload overrides an older, not-yet-sent resume pick — if the
+      // user tapped a saved resume in the picker but hasn't hit Send yet,
+      // then uploads a document instead, the upload is clearly what they
+      // want to talk about now. Don't let a stale staged pick silently win.
+      _kiePendingResumeIntro = null;
 
       const ext     = file.name.split('.').pop().toLowerCase();
       const isImage = file.type.startsWith('image/');
@@ -5900,10 +5940,25 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const inp = g('kieInp');
       const msg = inp.value.trim();
       const att = _stagedKieAttachment;
+      const pendingResume = _kiePendingResumeIntro;
       if (msg) _kieLastUserText = msg;
 
-      // Nothing to send
-      if (!msg && !att) return;
+      // Nothing to send — a bare resume pick counts as "something to send"
+      // now too, same as a bare file attachment does.
+      if (!msg && !att && !pendingResume) return;
+
+      // ── RESUME PICK (from COACH ON picker) → fold into this send ───────────
+      // Tapping the picker no longer auto-fires a reply — it just stages an
+      // intro, exactly like a raw file upload stages an attachment. This is
+      // where that staged pick actually turns into a real turn: whatever the
+      // user typed (or nothing) gets merged with the resume context in one
+      // combined message instead of two separate auto-triggered ones.
+      if (pendingResume && !att) {
+        _kiePendingResumeIntro = null;
+        inp.value = ''; inp.style.height = 'auto';
+        await sendKieRecommendation(pendingResume.name, msg);
+        return;
+      }
 
       // ── IMAGE ATTACHMENT → vision send ──────────────────────────────────────
       if (att && att.type === 'image') {
