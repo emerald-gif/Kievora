@@ -11,6 +11,7 @@ module.exports = function registerKieRoutes(app) {
     getCycleAnchorDate, getCycleStart,
     callKieAI, callKieAIStream, fetchWithRetry,
     performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
+    GMAIL_CONFUSION_PATTERN, buildGmailEvidenceBlock,
     getGmailCareerBrain,
     generateConvSummary, saveConvSummary, getConvSummary,
     USERS, attachStaleFlags, detectGhostingPattern, buildKieBrainBlock, getGmailCareerBrainRaw, generateInsights,
@@ -582,7 +583,7 @@ module.exports = function registerKieRoutes(app) {
     // Build the SAME enriched intelligence the Gmail panel uses (follow-up state,
     // calendar/resume flags, ghosting patterns) — so chat and the dedicated panel
     // never know different things about the same pipeline.
-    let gmailBrain = null, gmailApps = [], gmailDeltaLine = null;
+    let gmailBrain = null, gmailApps = [], gmailDeltaLine = null, gmailEvidence = null;
     if (gmailRaw) {
       gmailApps  = await attachStaleFlags(gmailRaw.applications || [], req.user.uid);
       const gmailPatterns = detectGhostingPattern(gmailApps);
@@ -592,6 +593,21 @@ module.exports = function registerKieRoutes(app) {
       // fix as /api/gmail/status, so panel and chat never disagree.
       const gmailInsights = generateInsights(gmailApps.filter(a => !a.dismissed));
       gmailBrain = buildKieBrainBlock(gmailApps, gmailInsights, gmailRaw.emailsScanned || 0, gmailPatterns);
+
+      // ── Confusion → evidence ────────────────────────────────────────────
+      // "Why does it say I have an offer from X, I don't remember that" is a
+      // real, common question — and until now KIE had nothing to answer it
+      // with beyond repeating the same label that confused them. If this
+      // message reads as confused/questioning, find which company it's
+      // about (named in the message, or — if not named — whatever KIE just
+      // told them about last, since that's the far more common case) and
+      // pull the real source-email subject lines behind it.
+      const lastUserText = ([...messages].reverse().find(mm => mm.role === 'user')?.content || '').trim();
+      if (GMAIL_CONFUSION_PATTERN.test(lastUserText)) {
+        const namedMatch = gmailApps.find(a => a.company && lastUserText.toLowerCase().includes(a.company.toLowerCase()));
+        const fallback    = gmailApps.find(a => a.company === gmailRaw.topEvent?.company) || gmailApps[0];
+        gmailEvidence = buildGmailEvidenceBlock(namedMatch || fallback);
+      }
 
       // ── Diff-awareness ──────────────────────────────────────────────────
       // Compare the pipeline's current topEvent (freshest thing that
@@ -625,6 +641,7 @@ module.exports = function registerKieRoutes(app) {
       systemContent += `\nCONNECTED (${gmailEmailAddr}) and actively tracking — full pipeline detail below.`;
       if (gmailDeltaLine) systemContent += `\n${gmailDeltaLine}`;
       systemContent += `\nCORRECTIONS: if the user explicitly denies, corrects, or dismisses something Gmail-derived — "that's not right", "I was just testing", "I already declined that", "wrong company", "I'm not accepting" — end your reply with [GMAIL_CORRECTION]Company Name[/GMAIL_CORRECTION] on its own line, using the exact company name from the pipeline data. This stops the system from bringing that specific fact up again — it doesn't hide the company forever, a real new email will surface it normally. Only use this for an explicit, unambiguous correction — never guess, never use it speculatively, never mention the tag itself to the user.`;
+      if (gmailEvidence) systemContent += `\n\n${gmailEvidence}`;
     }
     systemContent += `\n[GMAIL_CTA] TAG: put it alone on its own line at the end of a reply to show a real, tappable "Open Gmail Intelligence" (or "Connect Gmail") button. Only include it when Gmail genuinely came up — never as a default add-on.`;
 

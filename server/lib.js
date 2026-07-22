@@ -842,6 +842,14 @@ function buildSearchContextBlock(query, results, configured) {
 // anything time-anchored. If this fires, a real search runs even outside Web mode.
 const LIVE_INFO_PATTERN = /\b(salary|salaries|pay range|compensation|market rate|hiring trends?|in[\s-]?demand skills?|layoffs?|is\s+\w+\s+still\s+(hiring|around|in business)|currently hiring|right now|this year|latest|trending|2026|2027|industry report|glassdoor|h1b|visa sponsorship|job market)\b/i;
 
+// Detects when the user is confused by or questioning something Gmail-derived
+// ("why does it say...", "I don't remember applying", "what email was that")
+// rather than just asking a normal follow-up. When this fires, kie.js pulls
+// the actual source-email evidence (subject line, date) behind the claim
+// instead of letting KIE just restate the same rolled-up label that
+// confused them in the first place.
+const GMAIL_CONFUSION_PATTERN = /\b(why (does|do you|is) it (say|think|show)|why (do|does) (it|this|kie|you) (say|think)|i don'?t (remember|recall|recognize|understand)|that'?s (not right|wrong|confusing)|where did (that|this) come from|what email (was|is) that|which email|show me the email|how do you know|i'?m confused (about|by)|what does .*mean\b|explain (that|this)\b)/i;
+
 // Short confirmations/continuations that carry no real query of their own —
 // "okay let's do it", "sure", "go ahead", "sounds good", "yes please". These
 // used to fall through to a literal Tavily search in Web Search mode (mode
@@ -1180,6 +1188,33 @@ db.collection(RESUMES).limit(1).get()
 // ─── Gmail Career Intelligence ─────────────────────────────────────────────────
 const CAREER_QUERY = 'subject:(application OR applied OR interview OR offer OR rejected OR "next steps" OR assessment OR screening OR "job opportunity" OR "your application" OR "thank you for applying" OR "we regret" OR "pleased to offer") OR from:(greenhouse.io OR lever.co OR workday.com OR careers@ OR recruitment@ OR hr@ OR talent@ OR noreply@linkedin.com)';
 
+// Gmail's `snippet` field is its own short auto-preview (~100-200 chars) —
+// nowhere near enough to judge an email's real outcome if that outcome is
+// stated further down than the preview reaches. This walks the actual MIME
+// tree (format:'full' returns it) to pull real body text instead, preferring
+// text/plain and falling back to a stripped text/html part. Truncated to a
+// generous but bounded length so the AI call stays cheap and fast.
+function _gmailExtractBody(payload) {
+  if (!payload) return '';
+  const decode = (data) => {
+    try { return Buffer.from(data.replace(/-/g,'+').replace(/_/g,'/'), 'base64').toString('utf8'); }
+    catch { return ''; }
+  };
+  let plain = null, html = null;
+  (function walk(part) {
+    if (!part) return;
+    if (part.mimeType === 'text/plain' && part.body?.data && !plain) plain = decode(part.body.data);
+    else if (part.mimeType === 'text/html' && part.body?.data && !html) html = decode(part.body.data);
+    if (part.parts) part.parts.forEach(walk);
+  })(payload);
+  const text = plain || (html
+    ? html.replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<script[\s\S]*?<\/script>/gi,'')
+          .replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+          .replace(/\s+/g,' ')
+    : '');
+  return (text || '').trim().slice(0, 3000);
+}
+
 async function classifyCareerEmail(subject, snippet) {
   const s = (subject + ' ' + snippet).toLowerCase();
   // Only an instant regex fast-path for the one category that's genuinely
@@ -1211,7 +1246,7 @@ async function classifyCareerEmail(subject, snippet) {
 IMPORTANT: some rejection emails open with a polite or even congratulatory line ("Congratulations on reaching our final round...") before delivering the actual outcome later in the same message. Judge the WHOLE email's real outcome, not just the opening tone — a polite opener followed by "we've decided to move forward with other candidates" (or similar) is a REJECTION, not an offer, no matter how it starts.
 
 Subject: ${subject}
-Preview: ${snippet}
+Email text: ${snippet}
 Reply with ONLY the category, nothing else.` }] })
     });
     const d = await r.json();
@@ -1246,7 +1281,7 @@ async function extractEmailEntities(subject, snippet) {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
       body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 60, temperature: 0,
-        messages: [{ role: 'user', content: `Extract company and job title from this career email. Return ONLY valid JSON: {"company":"Name or null","role":"Title or null"}\nSubject: ${subject}\nPreview: ${snippet}` }] })
+        messages: [{ role: 'user', content: `Extract company and job title from this career email. Return ONLY valid JSON: {"company":"Name or null","role":"Title or null"}\nSubject: ${subject}\nEmail text: ${snippet}` }] })
     });
     const d = await r.json();
     const text = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
@@ -1263,7 +1298,7 @@ async function extractInterviewDateTime(subject, snippet, emailDate) {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
       body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 60, temperature: 0,
-        messages: [{ role: 'user', content: `This email was received ${emailDate.toISOString()}. If it states a specific interview date and time, resolve relative phrases (e.g. "next Tuesday at 2pm") against the received date and return it as an absolute ISO 8601 datetime. If only a date is given with no time, or no specific date/time is mentioned at all, return null for "datetime" rather than guessing. Return ONLY valid JSON: {"datetime":"ISO string or null","durationMinutes":number or null}\nSubject: ${subject}\nPreview: ${snippet}` }] })
+        messages: [{ role: 'user', content: `This email was received ${emailDate.toISOString()}. If it states a specific interview date and time, resolve relative phrases (e.g. "next Tuesday at 2pm") against the received date and return it as an absolute ISO 8601 datetime. If only a date is given with no time, or no specific date/time is mentioned at all, return null for "datetime" rather than guessing. Return ONLY valid JSON: {"datetime":"ISO string or null","durationMinutes":number or null}\nSubject: ${subject}\nEmail text: ${snippet}` }] })
     });
     const d = await r.json();
     const text   = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
@@ -1289,19 +1324,25 @@ async function syncUserGmail(uid, tokens) {
   const list   = await gmail.users.messages.list({ userId: 'me', q: CAREER_QUERY, maxResults: 60 });
   const msgs   = list.data.messages || [];
   if (!msgs.length) return [];
-  const details = await Promise.all(msgs.map(m => gmail.users.messages.get({ userId:'me', id:m.id, format:'metadata', metadataHeaders:['Subject','From','Date'] }).catch(()=>null)));
+  // format:'full' instead of 'metadata' — costs a slightly heavier read per
+  // email, but is what makes the fix above possible: classification now
+  // reads what the email actually says, not just Gmail's ~150-char preview.
+  const details = await Promise.all(msgs.map(m => gmail.users.messages.get({ userId:'me', id:m.id, format:'full' }).catch(()=>null)));
   const parsed = [];
   for (const msg of details) {
     if (!msg) continue;
     const hdrs    = msg.data.payload?.headers || [];
     const getH    = n => hdrs.find(h=>h.name.toLowerCase()===n.toLowerCase())?.value||'';
     const subject = getH('Subject'); const snippet = msg.data.snippet||'';
+    // Real body text when we can get it; snippet is only a fallback for the
+    // rare email whose MIME parts don't decode cleanly.
+    const bodyText = _gmailExtractBody(msg.data.payload) || snippet;
     const ts      = new Date(msg.data.internalDate ? Number(msg.data.internalDate) : getH('Date'));
-    const emailType           = await classifyCareerEmail(subject, snippet);
-    const { company, role }   = await extractEmailEntities(subject, snippet);
+    const emailType           = await classifyCareerEmail(subject, bodyText);
+    const { company, role }   = await extractEmailEntities(subject, bodyText);
     let interviewAt = null, interviewDurationMin = null;
     if (emailType === 'interview_invite') {
-      const idt = await extractInterviewDateTime(subject, snippet, ts);
+      const idt = await extractInterviewDateTime(subject, bodyText, ts);
       if (idt) { interviewAt = idt.datetime; interviewDurationMin = idt.durationMinutes || 60; }
     }
     parsed.push({ subject, snippet, threadId:msg.data.threadId, ts, emailType, company, role, interviewAt, interviewDurationMin });
@@ -1405,8 +1446,55 @@ async function attachStaleFlags(apps, uid) {
     return { ...a, daysSince, appId, dismissed,
       stale: next.state==='needs_followup' || next.state==='needs_followup_again',
       nextState: next.state, nextAction: next.label,
-      followUpCount: next.followUpCount, calendarAdded: next.calendarAdded, resumeTailored: next.resumeTailored };
+      followUpCount: next.followUpCount, calendarAdded: next.calendarAdded, resumeTailored: next.resumeTailored,
+      followUpUnverified: !!dAction?.unverifiedFollowUp };
   });
+}
+
+// Checks the real Sent folder for follow-ups the user self-reported since
+// the last sync. A "followed up" click just means the user opened/copied a
+// draft — this is the only step that actually confirms an email went out.
+// If the grace window has passed with nothing found, the credit is reverted
+// (followUpCount decremented) so the app naturally falls back into
+// "needs_followup" on the next read, and unverifiedFollowUp gets set so
+// KIE/the panel can be straight about it rather than silently pretending
+// nothing happened.
+const GPIPE_VERIFY_GRACE_HOURS = 48;
+async function _gpipeVerifyFollowUps(uid, tokens, apps) {
+  let actionMap = {};
+  try {
+    const snap = await db.collection('users').doc(uid).collection('gmailBrain').doc('actions').collection('apps').get();
+    snap.forEach(d => { actionMap[d.id] = d.data(); });
+  } catch(e) { return; }
+
+  const oauth2 = getOAuthClient(); oauth2.setCredentials(tokens);
+  const gmail  = google.gmail({ version:'v1', auth:oauth2 });
+
+  for (const app of apps) {
+    const appId  = normaliseStr(app.company);
+    const action = actionMap[appId];
+    const pv = action?.pendingVerify;
+    if (!pv || pv.verified) continue;
+    const ref = db.collection('users').doc(uid).collection('gmailBrain').doc('actions').collection('apps').doc(appId);
+    if (!pv.email) continue; // couldn't resolve a recipient at click time — nothing to check against, leave it alone rather than penalize for a missing address
+    try {
+      // 1h buffer before the click timestamp to absorb clock skew between
+      // this server and Gmail's own timestamps.
+      const afterEpoch = Math.floor((pv.sinceTs - 3600000) / 1000);
+      const q = `in:sent to:${pv.email} after:${afterEpoch}`;
+      const found = await gmail.users.messages.list({ userId:'me', q, maxResults:1 });
+      if ((found.data.messages || []).length) {
+        await ref.set({ pendingVerify: { ...pv, verified:true }, unverifiedFollowUp: admin.firestore.FieldValue.delete() }, { merge:true });
+      } else if ((Date.now() - pv.sinceTs) / 3600000 > GPIPE_VERIFY_GRACE_HOURS) {
+        await ref.set({
+          followUpCount: admin.firestore.FieldValue.increment(-1),
+          pendingVerify: admin.firestore.FieldValue.delete(),
+          unverifiedFollowUp: true,
+        }, { merge:true });
+      }
+      // else: still inside the grace window — leave it pending, check again next sync
+    } catch(e) { /* a failed Gmail search for one company shouldn't break the rest of the sync */ }
+  }
 }
 
 function computePipelineStats(apps) {
@@ -1484,6 +1572,20 @@ function detectGhostingPattern(apps) {
   return patterns;
 }
 
+// Called only when GMAIL_CONFUSION_PATTERN fires — turns one application's raw
+// timeline (subject lines + dates, already stored per app, never normally
+// shown to KIE) into something KIE can actually point to. Without this, KIE
+// can only repeat the same rolled-up label that confused the user in the
+// first place ("it's an offer") instead of grounding it ("your Jul 18 email
+// from Stripe, subject 'Your offer from Stripe', is what triggered that").
+function buildGmailEvidenceBlock(app) {
+  if (!app || !app.timeline?.length) return null;
+  const events = app.timeline.slice(-5).reverse().map(e =>
+    `  - ${e.date}: "${e.subject || '(no subject captured)'}" — classified as ${(e.type||'').replace(/_/g,' ')}`
+  ).join('\n');
+  return `GMAIL EVIDENCE (the user seems confused or is questioning something Gmail-derived — ground your reply in the ACTUAL emails below, don't just restate the label):\n${app.company}${app.role?' — '+app.role:''}, currently: ${app.status.replace(/_/g,' ')}\nSource emails behind this (most recent first):\n${events}\nIf they're not actually asking about this company, ignore this block entirely and answer what they asked.`;
+}
+
 function buildKieBrainBlock(apps, insights, emailsScanned, patterns) {
   // Corrected/dismissed apps stay out of everything below — they're still
   // tracked (a real new email un-masks them automatically), they just don't
@@ -1511,6 +1613,7 @@ function buildKieBrainBlock(apps, insights, emailsScanned, patterns) {
     let line = `• ${app.company}${app.role?' — '+app.role:''}: ${app.status.replace(/_/g,' ')} (${app.daysSince}d ago)`;
     if (app.nextAction)            line += ` — NEXT: ${app.nextAction}`;
     if (app.followUpCount)         line += ` [followed up ${app.followUpCount}x already]`;
+    if (app.followUpUnverified)    line += ` [⚠ marked as followed up earlier, but no matching sent email was found — may not have actually gone out; worth asking the user to confirm]`;
     if (app.calendarAdded)         line += ` [already on calendar]`;
     if (app.resumeTailored)        line += ` [resume already tailored for this]`;
     b += line + '\n';
@@ -1548,6 +1651,11 @@ async function syncGmailForUser(uid) {
   const rawEmails   = await syncUserGmail(uid, tokens);
   const apps        = buildApplicationList(rawEmails);
   const enriched    = await attachStaleFlags(apps, uid);
+  // Check the real Sent folder for any follow-ups marked since the last sync
+  // — reverts the "followed up" credit if the grace window passed with
+  // nothing actually sent. Runs here (not on every status read) because it's
+  // the one place that already has live Gmail API tokens in hand.
+  await _gpipeVerifyFollowUps(uid, tokens, enriched);
   // Insights generated from the dismissed-aware list — a company the user
   // corrected earlier this session shouldn't reappear here just because
   // this sync re-read the same old email out of the inbox again.
@@ -1698,6 +1806,7 @@ module.exports = {
   UPGRADE_MESSAGES, TOPUP_MESSAGES, FREE_RESUME_UPSELL_CHANCE, KIE_TOOL_KB, buildKieToolsBlock,
   callKieAI, callKieAIStream, callKieAIJson, parseAIJson, fetchWithRetry,
   performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
+  GMAIL_CONFUSION_PATTERN, buildGmailEvidenceBlock,
   sendWelcomeEmail, sendOtpEmail, sendWeeklyDigest, sendTicketConfirmationEmail, sendNewsletterConfirmationEmail, sendJobAlertEmail,
   classifyCareerEmail, extractEmailEntities, extractInterviewDateTime, normaliseStr, isSameApplication,
   syncUserGmail, buildApplicationList, generateInsights, computeNextAction, attachStaleFlags, computePipelineStats,

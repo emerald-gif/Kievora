@@ -187,6 +187,23 @@ module.exports = function registerGmailRoutes(app) {
       if (action === 'followup') {
         updates.followUpCount  = admin.firestore.FieldValue.increment(1);
         updates.lastFollowUpAt = admin.firestore.FieldValue.serverTimestamp();
+        // This click means "user opened/copied a draft" — NOT "email was
+        // sent". Stash what we'd need to actually check: who it should have
+        // gone to, and when the click happened. The next background sync
+        // reads this and checks the real Sent folder (see
+        // _gpipeVerifyFollowUps in lib.js) — if nothing was actually sent
+        // within the grace window, the credit gets reverted so the pipeline
+        // reflects what really happened, not just what was clicked.
+        let recipientEmail = null;
+        try {
+          const tokenDoc = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('tokens').get();
+          if (tokenDoc.exists) {
+            const tokens = await getValidTokens(req.user.uid, tokenDoc.data().tokens);
+            recipientEmail = await _gpipeRecipientForCompany(req.user.uid, tokens, company);
+          }
+        } catch(e) { /* non-critical — verification just can't run for this one without an address */ }
+        updates.pendingVerify = { email: recipientEmail, sinceTs: Date.now(), verified: false };
+        updates.unverifiedFollowUp = admin.firestore.FieldValue.delete();
       } else if (action === 'calendar') {
         updates.calendarAdded = true;
       } else if (action === 'resume') {
