@@ -31,7 +31,7 @@ module.exports = function registerGmailRoutes(app) {
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.gmail() });
     }
     const url = getOAuthClient().generateAuthUrl({ access_type:'offline', prompt:'consent',
-      scope:['https://www.googleapis.com/auth/gmail.modify','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
+      scope:['https://www.googleapis.com/auth/gmail.modify','https://www.googleapis.com/auth/calendar.readonly','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
       state: req.user.uid });
     res.json({ url });
   });
@@ -180,7 +180,7 @@ module.exports = function registerGmailRoutes(app) {
   app.post('/api/gmail/pipeline/mark-action', authenticate, async (req,res) => {
     try {
       const { company, action } = req.body || {};
-      if (!company || !['followup','calendar','resume'].includes(action))
+      if (typeof company !== 'string' || !company.trim() || !['followup','calendar','resume'].includes(action))
         return res.status(400).json({ error:'company and a valid action are required' });
       const appId = normaliseStr(company);
       const ref = db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('actions').collection('apps').doc(appId);
@@ -207,8 +207,20 @@ module.exports = function registerGmailRoutes(app) {
         updates.unverifiedFollowUp = admin.firestore.FieldValue.delete();
       } else if (action === 'calendar') {
         updates.calendarAdded = true;
+        // Same principle as follow-up: the click just means "a Google
+        // Calendar tab was opened," not "an event was actually saved." The
+        // next sync checks the user's real calendar (if they've granted
+        // calendar.readonly — see /api/gmail/connect) for a matching event
+        // around the interview time, and reverts this if nothing's there.
+        updates.pendingVerifyCalendar = { sinceTs: Date.now(), verified: false };
+        updates.calendarUnverified = admin.firestore.FieldValue.delete();
       } else if (action === 'resume') {
         updates.resumeTailored = true;
+        // Same principle again, verified against Kievora's own resume data
+        // this time (no external permission needed) — did the user actually
+        // save/edit a resume after clicking "Tailor for this role"?
+        updates.pendingVerifyResume = { sinceTs: Date.now(), verified: false };
+        updates.resumeTailoredUnverified = admin.firestore.FieldValue.delete();
       }
       await ref.set(updates, { merge:true });
       bustGmailActionsCache(req.user.uid);
@@ -227,17 +239,54 @@ module.exports = function registerGmailRoutes(app) {
   app.post('/api/gmail/pipeline/correct', authenticate, async (req,res) => {
     try {
       const { company } = req.body || {};
-      if (!company) return res.status(400).json({ error:'company required' });
-      const appId = normaliseStr(company);
+      if (typeof company !== 'string' || !company.trim()) return res.status(400).json({ error:'company required' });
       const summarySnap = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get();
       const apps  = summarySnap.exists ? (summarySnap.data().applications || []) : [];
       const match = apps.find(a => isSameApplication(a, { company }));
-      const eventTs = match ? match.lastActivityTs : Date.now();
+      // BUG FIX: this used to key the Firestore doc off normaliseStr(company)
+      // — the RAW string KIE wrote, e.g. "Google". If the actual stored
+      // record is "Google Inc" or "Google LLC", normaliseStr produces a
+      // DIFFERENT key ("google" vs "googleinc"), so the write landed on a
+      // doc attachStaleFlags would never look up — the correction silently
+      // did nothing while KIE told the user it was handled. Always key off
+      // the matched app's REAL stored company name, never the free-text
+      // guess. If nothing matches, there's genuinely nothing to correct.
+      if (!match) return res.json({ success:true, noop:true });
+      const appId   = normaliseStr(match.company);
+      const eventTs = match.lastActivityTs;
       const ref = db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('actions').collection('apps').doc(appId);
       await ref.set({
         dismissed: true,
         dismissedAtEventTs: eventTs,
         dismissedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge:true });
+      bustGmailActionsCache(req.user.uid);
+      res.json({ success:true });
+    } catch(e) { res.status(500).json({ error:e.message }); }
+  });
+
+  // Called when KIE's [GMAIL_UNDO_FOLLOWUP] tag fires — the user directly
+  // told KIE they haven't actually sent a follow-up they'd earlier marked as
+  // done. Their own word is a stronger signal than waiting for the
+  // background Sent-folder check (see _gpipeVerifyFollowUps in lib.js) to
+  // eventually catch it, so this reverts immediately instead of waiting out
+  // the grace window.
+  app.post('/api/gmail/pipeline/undo-followup', authenticate, async (req,res) => {
+    try {
+      const { company } = req.body || {};
+      if (typeof company !== 'string' || !company.trim()) return res.status(400).json({ error:'company required' });
+      // Same fix as /correct above — resolve to the real stored company name
+      // via fuzzy match, don't trust KIE's free-text string as the key.
+      const summarySnap = await db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('summary').get();
+      const apps  = summarySnap.exists ? (summarySnap.data().applications || []) : [];
+      const match = apps.find(a => isSameApplication(a, { company }));
+      if (!match) return res.json({ success:true, noop:true });
+      const appId = normaliseStr(match.company);
+      const ref = db.collection('users').doc(req.user.uid).collection('gmailBrain').doc('actions').collection('apps').doc(appId);
+      await ref.set({
+        followUpCount: admin.firestore.FieldValue.increment(-1),
+        pendingVerify: admin.firestore.FieldValue.delete(),
+        unverifiedFollowUp: admin.firestore.FieldValue.delete(),
       }, { merge:true });
       bustGmailActionsCache(req.user.uid);
       res.json({ success:true });
