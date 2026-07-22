@@ -928,7 +928,7 @@ module.exports = function registerToolsRoutes(app) {
 
   // ─── POST /api/prompt-resume ──────────────────────────────────────────────────
   app.post('/api/prompt-resume', authenticate, async (req, res) => {
-    const { prompt } = req.body;
+    const { prompt, mode } = req.body;
     // Plan gate: tool hub — check the user's plan allows this tool
     const _planKey = await getUserPlanKey(req.user.uid);
     const _planCfg = getPlanConfig(_planKey);
@@ -940,10 +940,35 @@ module.exports = function registerToolsRoutes(app) {
     if (!prompt || prompt.trim().length < 8)
       return res.status(400).json({ error: 'Please describe the resume you want to create.' });
 
-    const system = `You are a world-class resume writer. Given a description, create a complete professional resume as pure JSON. No markdown, no explanation, only the JSON object.
+    // 'rebuild' = an existing resume's real text is being restructured/
+    // retemplated (upload → Kievora resume, "recreate"/"refurbish" asks).
+    // 'scratch' (default) = a brand-new resume invented from a role/brief
+    // with no real source document behind it. These need OPPOSITE instincts:
+    // scratch wants confident invented specifics; rebuild must never invent
+    // a fact the source didn't contain — a rebuilt resume with a fabricated
+    // employer or graduation date is worse than useless, it's a lie with the
+    // user's name on it.
+    const isRebuild = mode === 'rebuild';
 
-  Return this exact structure:
+    const sharedStructure = `Return this exact structure:
   {"fullName":"","jobTitle":"","email":"","phone":"","location":"","summary":"","workExperience":[{"position":"","company":"","startDate":"","endDate":"","description":""}],"education":[{"degree":"","field":"","school":"","graduationDate":""}],"skills":[],"templateSuggestion":""}
+  templateSuggestion: one of [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split`;
+
+    const system = isRebuild
+      ? `You are a resume editor restructuring a REAL person's existing resume into clean, professional JSON. This is NOT a creative-writing task — it is formatting and light polish of content that already exists. No markdown, no explanation, only the JSON object.
+
+  ${sharedStructure}
+
+  GROUNDING RULES — these override everything else:
+  - Every factual entity — full name, employer/company names, job titles, employment dates, degree names, school names, certifications — MUST come directly from the input text. NEVER invent, guess, substitute, or "improve" a name/date/employer/school that isn't literally present in the input.
+  - If a field genuinely isn't present anywhere in the input (e.g. no phone number given, no education section at all), leave it as an empty string, or omit that array entry — do NOT fill it with a plausible-sounding placeholder. An empty field is honest; a fabricated one is not.
+  - You MAY and SHOULD: fix grammar, tighten weak phrasing, convert flat descriptions into stronger action-verb bullet points, and reorganize messy formatting into the structure above — as long as the underlying facts (who, where, when, what) are unchanged from the source.
+  - Do not add metrics/numbers that aren't in the source just to sound impressive. You may rephrase a metric that IS present to read better, but never invent one that isn't there.
+  - summary: base it only on roles/skills actually present in the input — no generic filler that could describe anyone.
+  - skills: extract/consolidate skills actually mentioned or clearly implied by the described work — don't pad with unrelated buzzwords.`
+      : `You are a world-class resume writer. Given a description, create a complete professional resume as pure JSON. No markdown, no explanation, only the JSON object.
+
+  ${sharedStructure}
 
   Rules:
   - fullName/email: if a REAL full name and/or email is given in the input (e.g. "Full name: ..." / "Email: ..."), use it EXACTLY — never invent a different one when a real one is provided. Only invent a realistic placeholder (e.g. "Alex Johnson") when truly nothing was given.
@@ -952,23 +977,38 @@ module.exports = function registerToolsRoutes(app) {
   - workExperience: 2-3 entries with realistic companies, strong bullet points with action verbs and real metrics, separated by newlines. Most recent first.
   - education: 1-2 entries appropriate to the seniority level requested
   - skills: 10-14 relevant skills mixing technical and soft skills
-  - templateSuggestion: one of [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split
-  - SPEED OVER INTERROGATION: the person asking for this resume wants it built now, not a back-and-forth. Never leave a field blank or generic waiting for "more details" — where something concrete (years of experience, past employers, specific skills) wasn't given, generate strong, industry-standard content that fits the stated role convincingly. Confident, specific invented content beats a hedge every time.
+  - SPEED OVER INTERROGATION: the person asking for this resume wants it built now, not a back-and-forth. Never leave a field blank or generic waiting for "more details" — where something concrete (years of experience, past employers, specific skills) wasn't given, generate strong, industry-standard content that fits the stated role convincingly. Confident, specific invented content beats a hedge every time.`;
 
-STRICTNESS RULES — apply to every field, not just the summary ones:
-- Ground every claim in the ACTUAL input given (resume text, job title, answer, etc.) — never generic filler that could apply to anyone. If you cannot point to something specific in the input that justifies a strength/weakness/score, don't state it.
-- Never praise something vague ("good experience", "solid background", "well written") without naming the specific line, number, or detail that earns it.
-- If a number, metric, or quantified result is missing where one should exist, say so explicitly rather than skipping it — silence is itself misleading feedback.
-- Do not soften a real weakness to be polite. State it plainly, then immediately follow with the concrete fix — never leave a criticism without an actionable next step.
-- Prefer exact rewrites over abstract advice: instead of "add more detail," write the actual improved line the user could paste in.
-- Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
-
-    const cfg = { max_tokens: 2000, temperature: 0.78, jsonMode: true };
+    // Rebuild wants faithful reformatting, not creative variance — lower
+    // temperature reduces the chance of the model drifting into invented
+    // specifics. Scratch-build keeps its original higher temperature since
+    // there's no source to be unfaithful to.
+    const cfg = { max_tokens: 2000, temperature: isRebuild ? 0.3 : 0.78, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const { data: resumeData } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a complete professional resume for: ${prompt}` }], cfg);
-      console.log(`POST /api/prompt-resume — model:${m} job:"${resumeData.jobTitle}"`);
+      const { data: resumeData } = await callKieAIJson(m, system, [{ role: 'user', content: `${isRebuild ? 'Restructure this existing resume' : 'Create a complete professional resume for'}: ${prompt}` }], cfg);
+
+      // Safety net for rebuild mode: contact details are objectively
+      // verifiable against the source text (unlike names/dates/companies,
+      // which need real judgement to check). If the input plainly contains
+      // an email or phone number the model's output doesn't match, trust
+      // the source text over the model — a wrong contact detail is the
+      // single most damaging kind of error a rebuilt resume could contain.
+      if (isRebuild) {
+        const emailMatch = prompt.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+        if (emailMatch && resumeData.email !== emailMatch[0]) {
+          console.log(`[prompt-resume:rebuild] email mismatch — using source email over model output`);
+          resumeData.email = emailMatch[0];
+        }
+        const phoneMatch = prompt.match(/(\+?\d[\d\s().-]{7,}\d)/);
+        if (phoneMatch && resumeData.phone && !prompt.includes(resumeData.phone)) {
+          console.log(`[prompt-resume:rebuild] phone mismatch — using source phone over model output`);
+          resumeData.phone = phoneMatch[0].trim();
+        }
+      }
+
+      console.log(`POST /api/prompt-resume — mode:${isRebuild ? 'rebuild' : 'scratch'} model:${m} job:"${resumeData.jobTitle}"`);
       res.json({ resumeData, model: m });
     } catch (err) {
       console.error('POST /api/prompt-resume:', err.message);
