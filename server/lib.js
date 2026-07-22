@@ -1424,13 +1424,49 @@ function computeNextAction(a, action) {
   return { ...base, state:'needs_followup_again', label:'Send another follow-up' };
 }
 
-async function attachStaleFlags(apps, uid) {
-  const now = Date.now();
+// ─── Gmail pipeline "actions" cache ─────────────────────────────────────────
+// attachStaleFlags() re-reads the WHOLE actions/apps subcollection (one
+// Firestore read per document in it) every time it runs — and it runs on
+// every single KIE chat message plus every 60s status-panel poll. The data
+// in there barely changes (a handful of writes per user per day), so a
+// short-TTL in-memory cache turns most of those into free reads instead of
+// a full subcollection scan each time. Same pattern as feedCache in
+// articles.js. Busted explicitly on every write to that subcollection so
+// nothing here is ever more than one write-then-immediate-read stale.
+const _gmailActionsCache = new Map(); // uid → { data: {appId: docData}, ts }
+const GMAIL_ACTIONS_CACHE_TTL = 60 * 1000; // 60s — matches the panel's own poll interval
+
+async function _getGmailActionsMap(uid) {
+  const cached = _gmailActionsCache.get(uid);
+  if (cached && Date.now() - cached.ts < GMAIL_ACTIONS_CACHE_TTL) return cached.data;
   let actionMap = {};
   try {
     const snap = await db.collection('users').doc(uid).collection('gmailBrain').doc('actions').collection('apps').get();
     snap.forEach(d => { actionMap[d.id] = d.data(); });
-  } catch(e) { /* no actions yet — fine, treat as fresh */ }
+  } catch (e) { /* no actions yet — fine, treat as fresh */ }
+  _gmailActionsCache.set(uid, { data: actionMap, ts: Date.now() });
+  return actionMap;
+}
+
+// Call after ANY write to users/{uid}/gmailBrain/actions/apps/* so the next
+// read (even one immediately after, e.g. chat reacting to its own action)
+// sees the fresh value instead of a stale cached one.
+function bustGmailActionsCache(uid) {
+  _gmailActionsCache.delete(uid);
+}
+
+// Sweep stale entries every 30 min so the Map never grows unboundedly for
+// users who stop being active.
+setInterval(() => {
+  const now = Date.now();
+  for (const [uid, entry] of _gmailActionsCache) {
+    if (now - entry.ts > GMAIL_ACTIONS_CACHE_TTL) _gmailActionsCache.delete(uid);
+  }
+}, 30 * 60 * 1000);
+
+async function attachStaleFlags(apps, uid) {
+  const now = Date.now();
+  const actionMap = await _getGmailActionsMap(uid);
   return apps.map(a => {
     const daysSince = Math.floor((now - a.lastActivityTs) / 86400000);
     const appId  = normaliseStr(a.company);
@@ -1485,12 +1521,14 @@ async function _gpipeVerifyFollowUps(uid, tokens, apps) {
       const found = await gmail.users.messages.list({ userId:'me', q, maxResults:1 });
       if ((found.data.messages || []).length) {
         await ref.set({ pendingVerify: { ...pv, verified:true }, unverifiedFollowUp: admin.firestore.FieldValue.delete() }, { merge:true });
+        bustGmailActionsCache(uid);
       } else if ((Date.now() - pv.sinceTs) / 3600000 > GPIPE_VERIFY_GRACE_HOURS) {
         await ref.set({
           followUpCount: admin.firestore.FieldValue.increment(-1),
           pendingVerify: admin.firestore.FieldValue.delete(),
           unverifiedFollowUp: true,
         }, { merge:true });
+        bustGmailActionsCache(uid);
       }
       // else: still inside the grace window — leave it pending, check again next sync
     } catch(e) { /* a failed Gmail search for one company shouldn't break the rest of the sync */ }
@@ -1802,6 +1840,7 @@ module.exports = {
   admin, db, RESUMES, USERS,
   KIE_MODELS, KIE_TIERS, PLANS, DEFAULT_PLAN, getPlanConfig, getUserPlanKey,
   getCycleAnchorDate, getCycleStart, checkAndIncrementKieUsage,
+  bustGmailActionsCache,
   COUNTRY_CURRENCY, FX_FALLBACKS, getExchangeRates, getUsdToNgnRate,
   UPGRADE_MESSAGES, TOPUP_MESSAGES, FREE_RESUME_UPSELL_CHANCE, KIE_TOOL_KB, buildKieToolsBlock,
   callKieAI, callKieAIStream, callKieAIJson, parseAIJson, fetchWithRetry,

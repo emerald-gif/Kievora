@@ -16,6 +16,7 @@ module.exports = function registerGmailRoutes(app) {
     getTrendComparison, detectGhostingPattern, buildKieBrainBlock,
     getGmailCareerBrainRaw, getGmailCareerBrain, getValidTokens, syncGmailForUser,
     RESUMES, normaliseStr, isSameApplication, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
+    bustGmailActionsCache,
   } = require('./lib');
 
   // ─── Gmail Routes ────────────────────────────────────────────────────────────
@@ -210,6 +211,7 @@ module.exports = function registerGmailRoutes(app) {
         updates.resumeTailored = true;
       }
       await ref.set(updates, { merge:true });
+      bustGmailActionsCache(req.user.uid);
       res.json({ success:true });
     } catch(e) { res.status(500).json({ error:e.message }); }
   });
@@ -237,6 +239,7 @@ module.exports = function registerGmailRoutes(app) {
         dismissedAtEventTs: eventTs,
         dismissedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge:true });
+      bustGmailActionsCache(req.user.uid);
       res.json({ success:true });
     } catch(e) { res.status(500).json({ error:e.message }); }
   });
