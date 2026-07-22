@@ -377,6 +377,7 @@ function _gpipeCard(a, idx) {
   else if (state==='waiting')              metaLine += ` · <span style="color:#0e7490;font-weight:600">${a.nextAction}</span>`;
   else if (state==='prep_interview' && a.calendarAdded) metaLine += ' · <span style="color:#15803d;font-weight:600">✓ added to calendar</span>';
   if (a.resumeTailored) metaLine += ' · <span style="color:#0e7490;font-weight:600">✓ resume tailored</span>';
+  if (a.followUpUnverified) metaLine += ' · <span style="color:#b45309;font-weight:600" title="You marked this as followed up, but no matching sent email was found">⚠ not confirmed sent</span>';
 
   const hasActions = showPrepBtn||showReplyBtn||showFollowUpBtn||showTailorBtn||gcalLink;
   return `<div class="gpipe-card">

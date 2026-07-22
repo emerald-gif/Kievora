@@ -6645,7 +6645,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     function _formatKieLive(partial, isFinal, sources, images, mode) {
-      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').replace(/\[GMAIL_CORRECTION\].*?\[\/GMAIL_CORRECTION\]/gis, '').replace(/\[GMAIL_CORRECTION\][\s\S]*$/i, '').trim();
+      let text = partial.replace(/\[SEND_PDF\]/gi, '').replace(/\[GMAIL_CTA\]/gi, '').replace(/\[BILLING_CTA\]/gi, '').replace(/\[MODEL_CTA\]/gi, '').replace(/\[CONFIRM_RESUME_CTA\]/gi, '').replace(/\[GMAIL_CORRECTION\].*?\[\/GMAIL_CORRECTION\]/gis, '').replace(/\[GMAIL_CORRECTION\][\s\S]*$/i, '').replace(/\[GMAIL_UNDO_FOLLOWUP\].*?\[\/GMAIL_UNDO_FOLLOWUP\]/gis, '').replace(/\[GMAIL_UNDO_FOLLOWUP\][\s\S]*$/i, '').trim();
 
       // Detect code blocks AND table blocks — handles MULTIPLE blocks of
       // either kind in the same message (previously only the first was ever
@@ -6904,6 +6904,25 @@ Return ONLY valid JSON, no markdown, no explanation.`;
               body: JSON.stringify({ company: correctedCompany })
             });
           } catch (e) { /* non-critical — worst case the same nudge surfaces once more */ }
+        })();
+      }
+
+      // [GMAIL_UNDO_FOLLOWUP] — silent, same pattern. Fires when the user
+      // directly tells KIE they haven't actually sent a follow-up that was
+      // marked done — their word reverts it immediately instead of waiting
+      // on the background Sent-folder check to eventually catch it.
+      var undoMatch = text.match(/\[GMAIL_UNDO_FOLLOWUP\](.*?)\[\/GMAIL_UNDO_FOLLOWUP\]/is);
+      if (undoMatch && undoMatch[1] && undoMatch[1].trim()) {
+        var undoCompany = undoMatch[1].trim();
+        (async function () {
+          try {
+            var tok = await _gmailTok();
+            await fetch('/api/gmail/pipeline/undo-followup', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+              body: JSON.stringify({ company: undoCompany })
+            });
+          } catch (e) { /* non-critical */ }
         })();
       }
 
