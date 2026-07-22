@@ -364,7 +364,7 @@ module.exports = function registerToolsRoutes(app) {
     // is actively wrong and confusing.
     const classificationInstruction = forceResume
       ? `The user uploaded this through the resume-analysis tool, so treat it as a resume/CV and analyze it fully even if formatting is unusual. Set "isResume": true.`
-      : `First, honestly judge whether this document actually IS a resume/CV. Plenty of uploads are not — a personal biography, a book or article excerpt, notes for a career roadmap, a cover letter, a legal or business document (contract, agreement, invoice), or something with nothing to do with careers at all. Set "isResume" to true only if it genuinely is a resume or CV. If it is not: set "isResume": false, fill "docType" with one short label (e.g. "personal biography", "book excerpt", "career roadmap notes", "cover letter", "legal agreement", "unrelated document"), fill "docNote" with one warm, specific sentence telling the user what you actually see in it, and set "couldBeResume" — true only if there's a REALISTIC chance the user actually meant this as a resume attempt (e.g. it lists some work history or skills but is poorly formatted, or it's genuinely ambiguous), false if it's obviously and entirely unrelated to a resume (a legal contract, an invoice, a novel, an unrelated article — nothing a reasonable person would mistake for a CV). When isResume is false you may leave every resume-scoring field (atsScore, grade, strengths, weaknesses, suggestions, missingItems, workExperience, education, skills) empty or zero — do NOT invent a fake ATS score or fake resume content for something that isn't a resume.`;
+      : `First, honestly judge whether this document actually IS a resume/CV. Plenty of uploads are not — a personal biography, a book or article excerpt, notes for a career roadmap, a cover letter, a legal or business document (contract, agreement, invoice), or something with nothing to do with careers at all. Set "isResume" to true only if it genuinely is a resume or CV. If it is not: set "isResume": false, fill "docType" with one short label (e.g. "personal biography", "book excerpt", "career roadmap notes", "cover letter", "legal agreement", "unrelated document"), fill "docNote" with one warm, specific sentence telling the user what you actually see in it, and set "couldBeResume" — true only if there's a REALISTIC chance the user actually meant this as a resume attempt (e.g. it lists some work history or skills but is poorly formatted, or it's genuinely ambiguous), false if it's obviously and entirely unrelated to a resume (a legal contract, an invoice, a novel, an unrelated article — nothing a reasonable person would mistake for a CV). When isResume is false you may leave every resume-scoring field (atsScore, grade, strengths, weaknesses, suggestions, missingItems, workExperience, education, skills, certifications, projects, languages) empty or zero — do NOT invent a fake ATS score or fake resume content for something that isn't a resume.`;
 
     const category = detectResumeCategory(resumeText);
     const fewshot  = RESUME_FEWSHOT[category];
@@ -388,6 +388,9 @@ module.exports = function registerToolsRoutes(app) {
     "workExperience": [{"position":"","company":"","startDate":"","endDate":"","description":""}],
     "education": [{"degree":"","field":"","school":"","graduationDate":""}],
     "skills": [],
+    "certifications": [{"name":"","issuer":"","date":""}],
+    "projects": [{"name":"","url":"","description":""}],
+    "languages": [{"language":"","proficiency":""}],
     "atsScore": 0,
     "grade": "",
     "strengths": [],
@@ -402,6 +405,9 @@ module.exports = function registerToolsRoutes(app) {
   - Work experience (30 pts): has entries(10) + descriptions present(8) + quantified result/metric(8) + action verbs(4)
   - Education (15 pts): has entries(10) + degree and field present(5)
   - Skills (15 pts): has skills(5) + 5 or more skills(5) + mix technical and soft(5)
+  - certifications: extract EVERY certification/license mentioned anywhere in the document (name, issuing org, date if present) — do not skip these even if listed briefly in a single line
+  - projects: extract EVERY named project (personal, academic, or professional side-projects distinct from work history), with a URL if one is given and a short description
+  - languages: extract EVERY spoken/written language listed with its proficiency level if stated (e.g. "Fluent", "Native", "Conversational")
   - Formatting signals (10 pts): LinkedIn/website present(3) + consistent dates(3) + no obvious errors(4)
   - Grade: "A+" ≥90, "A" 80–89, "B+" 75–79, "B" 65–74, "C+" 55–64, "C" 45–54, "D" <45
   - strengths: 2–4 SPECIFIC things done well — reference actual content, not generic praise
