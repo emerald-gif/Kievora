@@ -378,6 +378,8 @@ function _gpipeCard(a, idx) {
   else if (state==='prep_interview' && a.calendarAdded) metaLine += ' · <span style="color:#15803d;font-weight:600">✓ added to calendar</span>';
   if (a.resumeTailored) metaLine += ' · <span style="color:#0e7490;font-weight:600">✓ resume tailored</span>';
   if (a.followUpUnverified) metaLine += ' · <span style="color:#b45309;font-weight:600" title="You marked this as followed up, but no matching sent email was found">⚠ not confirmed sent</span>';
+  if (a.resumeTailoredUnverified) metaLine += ' · <span style="color:#b45309;font-weight:600" title="You marked your resume as tailored for this, but no resume edit was found afterward">⚠ resume edit not found</span>';
+  if (a.calendarUnverified) metaLine += ' · <span style="color:#b45309;font-weight:600" title="You marked this as added to your calendar, but no matching event was found">⚠ calendar event not found</span>';
 
   const hasActions = showPrepBtn||showReplyBtn||showFollowUpBtn||showTailorBtn||gcalLink;
   return `<div class="gpipe-card">
