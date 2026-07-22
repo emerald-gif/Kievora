@@ -3255,13 +3255,11 @@
         logEvent('kie_chat', { model: kieModel, mode: kieMode });
         kieHist.push({ role: 'assistant', content: reply });
         saveKieHistory();
-        g('kieTyp').style.display = 'none';
         hideKieStatus();
         appendKMsg('ai', reply, true);
         // appendKMsg typewriter restores button when done
       } catch (e) {
         if (e.name === 'AbortError') return;
-        g('kieTyp').style.display = 'none';
         hideKieStatus();
         appendKMsg('ai', `Got it — I'm looking at ${resumeName} now. What do you want to work on?`, true);
         _kieGenerating = false;
@@ -3564,7 +3562,7 @@
           body:    JSON.stringify({ resumeText: text, forceResume: true }),
         });
         const analysis = await res.json();
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         if (analysis.error) {
           const errMsg = `Trouble analysing that file. ${analysis.error}`;
           appendKMsg('ai', errMsg, true);
@@ -3574,7 +3572,7 @@
         }
         _applyResumeAnalysisResult(analysis, text, '');
       } catch (err) {
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         const failMsg = 'Had a problem scoring that file — try again in a moment.';
         appendKMsg('ai', failMsg, true);
         kieHist.push({ role: 'assistant', content: failMsg });
@@ -3604,7 +3602,7 @@
           : await extractPdfText(att.file);
 
         if (resumeText.trim().length < 30) {
-          g('kieTyp').style.display = 'none'; hideKieStatus();
+          hideKieStatus();
           const shortMsg = "Couldn't extract text from that file — it might be a scanned image PDF. Try pasting your content directly into the chat. 🙏";
           appendKMsg('ai', shortMsg, true);
           // The user's file message was already pushed to kieHist by sendKie()
@@ -3630,7 +3628,7 @@
           signal:  _kieAbort?.signal,
         });
         const analysis = await analysisRes.json();
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         logEvent('analyze_resume', { model: kieModel });
 
         if (analysis.error) {
@@ -3682,7 +3680,7 @@
           saveKieHistory();
           return;
         }
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         const failMsg = 'Had a problem reading that file. Make sure it\'s a proper PDF with selectable text, or paste your resume directly into the chat. 🙏';
         appendKMsg('ai', failMsg, true);
         kieHist.push({ role: 'assistant', content: failMsg });
@@ -3740,11 +3738,9 @@
         ) || `Hey! Since you're into ${cat}, I can help with resumes, interview prep, salary negotiation and job hunting in that space. Want to upload your resume, or just tell me what you're working on?`;
         kieHist.push({ role: 'assistant', content: reply });
         saveKieHistory();
-        g('kieTyp').style.display = 'none';
         hideKieStatus();
         appendKMsg('ai', reply, true);
       } catch (e) {
-        g('kieTyp').style.display = 'none';
         hideKieStatus();
         appendKMsg('ai', `Hey! Since you're into ${cat}, I can help with resumes, interview prep, salary negotiation and job hunting in that space. Want to upload your resume, or just tell me what you're working on?`, true);
       }
@@ -4090,20 +4086,72 @@
       const title = g('kieThinkTitle');
       const panel = g('kieThink');
       const body  = g('kieThinkBody');
-      if (title) title.textContent = `Thought for ${secs}s`;
+      const titleText = `Thought for ${secs}s`;
+      if (title) title.textContent = titleText;
       const cur = body?.querySelector('.kie-think-step.current');
       if (cur) cur.classList.remove('current');
       if (panel) panel.classList.add('collapsed');
+      // Snapshot the finished trace so whichever AI message bubble comes
+      // next can keep a permanent, reviewable copy of it. The shared panel
+      // above is reset and reused by the very next turn (_thinkStart wipes
+      // its body/title), so without this snapshot the trace would just be
+      // gone the moment the next question starts — nothing left to attach
+      // to past messages if the user scrolls back up.
+      _kieLastThoughtSnapshot = { title: titleText, bodyHTML: body ? body.innerHTML : '' };
       _thinkStartTs = null;
     }
+
+    // Consumed once by the next AI message bubble that gets created, so a
+    // finished thinking trace ends up permanently attached to the specific
+    // reply it belongs to — not just flashed in the shared widget and lost.
+    let _kieLastThoughtSnapshot = null;
+    function _kieAttachThoughtTrace(hostEl) {
+      if (!_kieLastThoughtSnapshot || !hostEl) return;
+      const snap = _kieLastThoughtSnapshot;
+      _kieLastThoughtSnapshot = null; // consume once — never double-attach
+      if (hostEl.querySelector('.kie-think-trace')) return;
+      const uid = 'kt-' + Date.now() + '-' + Math.floor(Math.random() * 1e4);
+      const wrap = document.createElement('div');
+      wrap.className = 'kie-think kie-think-trace collapsed';
+      wrap.id = uid;
+      wrap.innerHTML = `
+        <div class="kie-think-hdr" onclick="kieToggleThought('${uid}')">
+          <svg class="kie-think-bulb" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18h6M10 22h4M12 2a6.5 6.5 0 00-3.5 12c.7.55 1 1.32 1 2.15V17h5v-.85c0-.83.3-1.6 1-2.15A6.5 6.5 0 0012 2z"/></svg>
+          <span class="kie-think-title">${snap.title}</span>
+          <svg class="kie-think-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="kie-think-body">${snap.bodyHTML}</div>`;
+      hostEl.insertBefore(wrap, hostEl.firstChild);
+    }
+    // Separate toggle from the shared panel's toggleKieThink() — each
+    // attached trace is its own independent, permanently-collapsible node.
+    window.kieToggleThought = function(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('collapsed');
+    };
 
     window.toggleKieThink = function() {
       const panel = g('kieThink');
       if (panel) panel.classList.toggle('collapsed');
     };
 
+    // BUG FIX: "Quick Answer" sends mode:'default' to the backend on purpose
+    // (full 1100-token depth — see the big warning comment on the pill in
+    // dashboard.html; do NOT change that). But this function was pulling its
+    // ON-SCREEN status copy from that same key, so it showed the slow,
+    // deep-sounding "Thinking…/Crafting your answer…/Almost there…" text
+    // meant for full coaching replies — while the actual "quick" flavored
+    // copy ("Getting straight to it…/Finding the key point…") sat unused in
+    // KIE_MODE_CFG.quick. That mismatch alone made Quick Answer FEEL like it
+    // was grinding through something heavy. Purely cosmetic fix: the visible
+    // wording (and pacing) for 'default' now borrows the snappier 'quick'
+    // set instead, while the mode value sent to the server is untouched —
+    // same model, same tokens, same depth, just honest-feeling copy.
+    const KIE_DISPLAY_STATUS_OVERRIDE = { default: 'quick' };
     function showKieStatus(mode) {
-      const statuses = KIE_MODE_CFG[mode]?.status || ['Thinking…'];
+      const displayKey = KIE_DISPLAY_STATUS_OVERRIDE[mode] || mode;
+      const statuses = KIE_MODE_CFG[displayKey]?.status || ['Thinking…'];
+      const rotateMs = displayKey === 'quick' ? 1400 : 2400;
       _thinkStart();
       let idx = 0;
       _thinkPushStep(statuses[idx]);
@@ -4113,13 +4161,15 @@
           idx++;
           if (idx >= statuses.length) { clearInterval(_statusTimer); return; }
           _thinkPushStep(statuses[idx]);
-        }, 2400);
+        }, rotateMs);
       }
     }
     function hideKieStatus() {
       clearInterval(_statusTimer);
       _statusTimer = null;
       _thinkFinish();
+      const typEl = g('kieTyp');
+      if (typEl) typEl.style.display = 'none';
     }
 
     // ── REAL web-search status (driven by actual SSE events from the server,
@@ -4877,7 +4927,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         if (idx >= 0) resumes[idx] = updatedResume;
 
         await _kieEnforceMinThinkTime(_startedAt);
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
 
         const changedKeys = Object.keys(patchFields);
 
@@ -4912,7 +4962,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
       } catch (err) {
         if (err.name === 'AbortError') return;
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         appendKMsg('ai', "Something went wrong generating that PDF. Try again in a moment. 🙏", true);
       }
     }
@@ -4972,7 +5022,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const html = buildPrevHTML(d, templateId, tplObj.bg, 'rf-sans');
 
         await _kieEnforceMinThinkTime(_startedAt);
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
 
         const changedKeys = Object.keys(patchFields);
         let reply = `Done — switched to the **${tplObj.name}** template (${tplObj.tag})`;
@@ -4987,7 +5037,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
       } catch (err) {
         if (err.name === 'AbortError') return;
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         appendKMsg('ai', "Something went wrong updating that. Try again in a moment. 🙏", true);
         _kieGenerating = false;
         const inp2 = g('kieInp'); if (inp2) { inp2.disabled = false; }
@@ -5011,39 +5061,18 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       return `${recentUserMsgs}. ${triggerMsg}`.trim();
     }
 
-    async function kieActionBuildResumeFromChat(triggerMsg) {
-      const brief = _kieBuildResumeBrief(triggerMsg);
-
-      // Strip the generic trigger phrasing itself and see if anything real is
-      // left to build from. If not, ask one direct question instead of
-      // generating (and SAVING) a resume full of fabricated placeholder info.
-      const strippedForCheck = brief
-        .replace(/\b(build|create|make|generate|write|draft|start)\s+(me\s+)?(a\s+|the\s+)?(new\s+|fresh\s+|full\s+)?resume\b/gi, '')
-        .replace(/\bfrom\s+scratch\b/gi, '')
-        .trim();
-      if (strippedForCheck.length < 12) {
-        appendKMsg('ai', "Happy to build that — what role is it for, and roughly how many years of experience? I'll generate the full resume the moment you tell me. 🚀", true);
-        return;
-      }
-
-      // BUG FIX: this used to hard-block generation entirely unless the message
-      // itself contained a Proper-Noun name, a self-intro phrase, or a literal
-      // email — then dumped a 4-item questionnaire (name, title, years, skills,
-      // location) on the user before it would build anything. That's exactly
-      // backwards: the account already has the user's real name and email, so
-      // asking for them in chat is pure friction, and the resume generator
-      // below (see server/tools.js /api/prompt-resume) is already built to
-      // invent strong, realistic content for anything else that's missing —
-      // it just never got the chance because this gate stopped it first.
-      // Real name/email come straight from the signed-in account now; nothing
-      // else is asked for. If the account has no display name yet (email/
-      // password signup with no name set), the generator falls back to its
-      // own realistic placeholder rather than blocking on a question.
-      const enrichedBrief = [
-        brief,
-        usr?.displayName ? `Full name: ${usr.displayName}.` : '',
-        usr?.email ? `Email: ${usr.email}.` : '',
-      ].filter(Boolean).join(' ');
+    // Shared engine behind every "just build the real thing" path — typed
+    // brief, uploaded-resume rebuild, or upload + template pick all funnel
+    // through here so there's exactly one place that generates, saves, and
+    // hands back a downloadable PDF card. opts.forcedTplId lets a caller pin
+    // the exact template the user asked for instead of letting the AI's
+    // templateSuggestion decide (e.g. user picked "Coral" on an uploaded
+    // resume — that pick should win, not get silently overridden).
+    async function _kieBuildAndSaveResume(enrichedBrief, opts) {
+      opts = opts || {};
+      const forcedTplId = opts.forcedTplId || null;
+      const introVerb   = opts.introVerb || 'built you a full';
+      const statusMsgs  = opts.statusMsgs || ['Analyzing your background…', 'Adding relevant experience…', 'Applying industry-standard formatting…', 'Polishing the final details…', 'Packaging your resume…'];
 
       _kieGenerating = true;
       _kieStopTyping = false;
@@ -5054,7 +5083,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       if (g('kieWelcome')) g('kieWelcome').style.display = 'none';
       if (g('kieMsgs'))   g('kieMsgs').style.display    = 'flex';
       g('kieTyp').style.display = 'flex';
-      _setKieStatusCustom(['Analyzing your background…', 'Adding relevant experience…', 'Applying industry-standard formatting…', 'Polishing the final details…', 'Packaging your resume…']);
+      _setKieStatusCustom(statusMsgs);
       const _startedAt = Date.now();
       scrollKie();
 
@@ -5063,13 +5092,14 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const r = await fetch('/api/prompt-resume', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-          body:    JSON.stringify({ prompt: enrichedBrief, model: kieModel }),
+          body:    JSON.stringify({ prompt: enrichedBrief, model: kieModel, mode: opts.mode || 'scratch' }),
         });
         if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Resume generation failed.');
         const data = await r.json();
         const resumeData = data.resumeData;
 
-        const tplId  = (window.TPLS_REF || []).some(t => t.id === resumeData.templateSuggestion) ? resumeData.templateSuggestion : 'classic';
+        const suggestedTpl = (window.TPLS_REF || []).some(t => t.id === resumeData.templateSuggestion) ? resumeData.templateSuggestion : 'classic';
+        const tplId  = (forcedTplId && (window.TPLS_REF || []).some(t => t.id === forcedTplId)) ? forcedTplId : suggestedTpl;
         const tplObj = (window.TPLS_REF || []).find(t => t.id === tplId) || { bg: '#1e3a8a', name: 'Classic' };
         const resumeName = resumeData.fullName ? `${resumeData.fullName} — ${resumeData.jobTitle || 'Resume'}` : (resumeData.jobTitle || 'New Resume');
 
@@ -5088,23 +5118,86 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         resumes.push(saved);
 
         await _kieEnforceMinThinkTime(_startedAt);
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
 
         const html  = buildPrevHTML(resumeData, tplId, tplObj.bg, 'rf-sans');
-        const intro = _kieMaybeExplainPreviewFlow(`Done — built you a full **${resumeData.jobTitle || 'professional'}** resume using the **${tplObj.name}** template, and saved it to your account. Tap below to download. 📄\n\nWant me to tweak anything — summary, skills, experience?`);
+        const intro = _kieMaybeExplainPreviewFlow(`Done — ${introVerb} **${resumeData.jobTitle || 'professional'}** resume using the **${tplObj.name}** template, and saved it to your account. Tap below to download. 📄\n\nWant me to tweak anything — summary, skills, experience?`);
         appendKiePrintCard(resumeName, html, intro);
         kiePushFileCardHistory(resumeName, html, intro);
+        return true;
 
       } catch (err) {
-        console.error('Build resume from chat error:', err.message);
-        g('kieTyp').style.display = 'none'; hideKieStatus();
-        appendKMsg('ai', "Something went wrong building that resume. Try again in a moment, or tell me the role again. 🙏", true);
+        console.error('Build resume error:', err.message);
+        hideKieStatus();
+        appendKMsg('ai', "Something went wrong building that resume. Try again in a moment. 🙏", true);
+        return false;
       } finally {
         _kieGenerating = false;
         _kieStopTyping = false;
         const inp2 = g('kieInp'); if (inp2) { inp2.disabled = false; }
         setKieSendMode('send');
       }
+    }
+
+    async function kieActionBuildResumeFromChat(triggerMsg) {
+      const brief = _kieBuildResumeBrief(triggerMsg);
+
+      // Strip the generic trigger phrasing itself and see if anything real is
+      // left to build from. If not, ask one direct question instead of
+      // generating (and SAVING) a resume full of fabricated placeholder info.
+      const strippedForCheck = brief
+        .replace(/\b(build|create|make|generate|write|draft|start|recreate|rebuild|redo|refurbish|revamp)\s+(me\s+)?(a\s+|the\s+|this\s+|it\s+)?(new\s+|fresh\s+|full\s+)?resume\b/gi, '')
+        .replace(/\bfrom\s+scratch\b/gi, '')
+        .trim();
+      const hasUploadedResume = !!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED' && !(kieSelectedResume && kieSelectedResume.id);
+      if (strippedForCheck.length < 12 && !hasUploadedResume) {
+        appendKMsg('ai', "Happy to build that — what role is it for, and roughly how many years of experience? I'll generate the full resume the moment you tell me. 🚀", true);
+        return;
+      }
+
+      // BUG FIX: this used to hard-block generation entirely unless the message
+      // itself contained a Proper-Noun name, a self-intro phrase, or a literal
+      // email — then dumped a 4-item questionnaire (name, title, years, skills,
+      // location) on the user before it would build anything. That's exactly
+      // backwards: the account already has the user's real name and email, so
+      // asking for them in chat is pure friction, and the resume generator
+      // below (see server/tools.js /api/prompt-resume) is already built to
+      // invent strong, realistic content for anything else that's missing —
+      // it just never got the chance because this gate stopped it first.
+      // Real name/email come straight from the signed-in account now; nothing
+      // else is asked for. If the account has no display name yet (email/
+      // password signup with no name set), the generator falls back to its
+      // own realistic placeholder rather than blocking on a question.
+      // If there's an already-uploaded raw resume in play, fold its actual
+      // text in too — "recreate this"/"refurbish it" means rebuild FROM that
+      // content, not invent a stranger's resume from thin air.
+      const enrichedBrief = [
+        hasUploadedResume ? `Rewrite and professionally structure this existing resume, preserving all real names, dates, employers, and details:\n${kieResumeContext}` : brief,
+        usr?.displayName ? `Full name: ${usr.displayName}.` : '',
+        usr?.email ? `Email: ${usr.email}.` : '',
+      ].filter(Boolean).join(' ');
+
+      await _kieBuildAndSaveResume(enrichedBrief, { mode: hasUploadedResume ? 'rebuild' : 'scratch' });
+    }
+
+    // User has an uploaded (raw-text, not-yet-Kievora) resume in the chat and
+    // picked a template by name — e.g. tapped/typed "Coral". Rather than
+    // telling them "I can't apply templates to uploaded text, say 'build me
+    // a resume' first" and making them ask again, just build the real
+    // Kievora resume from their uploaded content AND lock in the template
+    // they already chose, in one shot.
+    async function kieActionBuildFromUploadedWithTemplate(tplId) {
+      const enrichedBrief = [
+        `Rewrite and professionally structure this existing resume, preserving all real names, dates, employers, and details:\n${kieResumeContext}`,
+        usr?.displayName ? `Full name: ${usr.displayName}.` : '',
+        usr?.email ? `Email: ${usr.email}.` : '',
+      ].filter(Boolean).join(' ');
+      await _kieBuildAndSaveResume(enrichedBrief, {
+        forcedTplId: tplId,
+        mode: 'rebuild',
+        introVerb: 'rebuilt your',
+        statusMsgs: ['Reading your uploaded resume…', 'Restructuring your experience…', `Applying the ${(window.TPLS_REF || []).find(t => t.id === tplId)?.name || tplId} template…`, 'Packaging your resume…'],
+      });
     }
     async function _sendKieWithImage(att, userPrompt) {
       if (_kieGenerating) stopKieGeneration();
@@ -5182,6 +5275,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           <div class="km-meta">${tStamp}</div>
         </div>`;
         msgsEl.insertBefore(bubbleW, typEl);
+        _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
         bubble    = bubbleW.querySelector('.km-bubble');
         actionsEl = bubbleW.querySelector('.km-actions');
         bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
@@ -5246,7 +5340,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
             try { chunk = JSON.parse(line.slice(6)); } catch { continue; }
 
             if (chunk.t === 'd') {
-              if (!firstToken) { typEl.style.display = 'none'; hideKieStatus(); _ensureImageBubble(); firstToken = true; }
+              if (!firstToken) { hideKieStatus(); _ensureImageBubble(); firstToken = true; }
               streamedText += chunk.v;
               const live = streamedText.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
               bubble.innerHTML = _formatKieLive(live, false, turnSources, turnImages, kieMode) + '<span class="kie-stream-cursor">▌</span>';
@@ -5263,14 +5357,14 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           }
         }
 
-        typEl.style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         const finalText = streamedText || "I couldn't analyse that image right now. Try again! 🙏";
         kieHist.push({ role:'assistant', content: finalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
         saveKieHistory();
         _finishImageBubble(finalText);
 
       } catch(e) {
-        typEl.style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         if (e.name === 'AbortError' || _kieStopTyping) {
           if (streamedText) {
             kieHist.push({ role:'assistant', content: streamedText });
@@ -5336,8 +5430,21 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       // send it" doesn't get swallowed by the generic "send...resume" pattern.
       // Negative lookahead excludes "create a resume summary/headline/etc" —
       // those are normal content-generation asks, not "make me a new resume".
-      const BUILD_RESUME_PATTERN = /\b(build|create|make|generate|write|draft|start)\s+(?:me\s+)?(?:a\s+|the\s+)?(?:new\s+|fresh\s+|full\s+)?resume\b(?!\s+(summary|headline|bullet|bio|section|objective))/i;
+      const BUILD_RESUME_PATTERN = /\b(build|create|make|generate|write|draft|start|recreate|rebuild|redo|refurbish|revamp)\s+(?:me\s+)?(?:a\s+|the\s+|this\s+|it\s+)?(?:new\s+|fresh\s+|full\s+)?resume\b(?!\s+(summary|headline|bullet|bio|section|objective))/i;
       if (BUILD_RESUME_PATTERN.test(msg)) return 'BUILD_RESUME_FROM_SCRATCH';
+
+      // BUG FIX: "recreate for me with those information" / "refurbish it" /
+      // "redo it" carry the same intent as the pattern above but never say
+      // the word "resume" — they only make sense in context, right after KIE
+      // has been discussing the user's uploaded resume. Previously these fell
+      // through to plain chat, which just retyped the content as prose in
+      // the reply instead of actually building and saving a real, downloadable
+      // resume. When there's an uploaded (not-yet-Kievora) resume in this
+      // chat, treat these rebuild-shaped verbs as BUILD_RESUME_FROM_SCRATCH
+      // too, using that uploaded text as the source.
+      const hasUploadedResumeCtx = !!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED' && !(kieSelectedResume && kieSelectedResume.id);
+      const REBUILD_NO_NOUN = /\b(recreate|rebuild|redo|refurbish|revamp)\b/i;
+      if (hasUploadedResumeCtx && REBUILD_NO_NOUN.test(msg)) return 'BUILD_RESUME_FROM_SCRATCH';
 
       // BUG FIX: this used to run AFTER the plain "send/resend...resume" check
       // below, which is broad enough to match almost any sentence containing
@@ -5454,14 +5561,14 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const filename = name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
         const html     = buildPrevHTML(d, tpl, tplObj.bg, 'rf-sans');
 
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         const intro = `Here's your **${name}** resume — ${tplObj.name || tpl} template. Tap the button below to download. 📄`;
         appendKiePrintCard(name, html, intro);
         kiePushFileCardHistory(name, html, intro);
 
       } catch (e) {
         console.error('KIE send resume error:', e.message);
-        g('kieTyp').style.display = 'none'; hideKieStatus();
+        hideKieStatus();
         const friendly = e.message?.includes('503') || e.message?.includes('unavailable')
           ? "PDF service isn't available right now — try the download button on your resume card instead. 🙏"
           : `Couldn't generate the PDF right now (${e.message || 'unknown error'}). Try again in a moment. 🙏`;
@@ -5606,9 +5713,15 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (!tplObj) return;
 
       if (!kieSelectedResume || !kieSelectedResume.id) {
-        const hasUploadedResume = !!kieResumeContext;
+        const hasUploadedResume = !!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED';
         if (hasUploadedResume) {
-          appendKMsg('ai', "Template changes only work on Kievora-saved resumes — your uploaded resume is a read-only text file, so I can't apply templates to it directly.\n\nWant me to **build you a new Kievora resume** from your uploaded one? Just say \"build me a resume\" and I'll create a full editable version you can style with any of the 13 templates. 🎨", true);
+          // They picked a template but only have a raw uploaded resume, not a
+          // saved Kievora one yet. Don't make them ask twice — build the real
+          // resume from their uploaded content with this exact template
+          // applied, and hand back a downloadable PDF in one turn.
+          document.querySelectorAll('.kie-tpl-pick-pill').forEach(p => { p.disabled = true; p.style.opacity = '.5'; });
+          await kieActionBuildFromUploadedWithTemplate(tplId);
+          document.querySelectorAll('.kie-tpl-pick-pill').forEach(p => { p.disabled = false; p.style.opacity = '1'; });
         } else {
           appendKMsg('ai', "I need a saved resume to apply a template to. Select one from the **COACH ON:** picker at the top, then pick a template. 👆", true);
         }
@@ -5768,6 +5881,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           <div class="km-meta">${time}</div>
         </div>`;
       msgs.insertBefore(w, g('kieTyp'));
+      _kieAttachThoughtTrace(w.querySelector('.km-ai-body'));
       scrollKie();
 
       if (silent) return;
@@ -5872,9 +5986,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         saveKieHistory();
       }
       // Hide indicators
-      const typ = g('kieTyp');
-      if (typ) typ.style.display = 'none';
       hideKieStatus();
+      // A stopped generation never gets its own AI bubble to attach the
+      // finished trace to — discard it here so it can't wrongly surface on
+      // some unrelated later message instead.
+      _kieLastThoughtSnapshot = null;
       // Restore UI
       _kieGenerating = false;
       g('kieInp').disabled = false;
@@ -6043,8 +6159,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           g('kieTyp').style.display = 'flex';
           _setKieStatusCustom(['Preparing your report…', 'Formatting for PDF…']);
           setTimeout(function() {
-            g('kieTyp').style.display = 'none';
             hideKieStatus();
+            _kieLastThoughtSnapshot = null;
             window.downloadKieReport(rd.title, rd.subtitle, rd.bodyHtml);
           }, 900);
           window._kieLastReportData = null;
@@ -6244,6 +6360,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           <div class="km-meta">${tStamp}</div>
         </div>`;
         msgsEl.insertBefore(bubbleW, typEl);
+        _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
         bubble    = bubbleW.querySelector('.km-bubble');
         actionsEl = bubbleW.querySelector('.km-actions');
         bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
@@ -6321,7 +6438,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             if (chunk.t === 'd') {
               // First real token — thinking panel hides, answer bubble appears
               if (!firstToken) {
-                typEl.style.display = 'none';
                 hideKieStatus();
                 _ensureBubble();
                 firstToken = true;
@@ -6348,7 +6464,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
 
         // Always hide typing indicator (it may still be visible if no tokens arrived)
-        typEl.style.display = 'none';
         hideKieStatus();
 
         const finalText = streamedText || "Sorry, I couldn't get a response.";
@@ -6419,7 +6534,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
 
       } catch (e) {
-        typEl.style.display = 'none';
         hideKieStatus();
 
         if (e.name === 'AbortError' || _kieStopTyping) {
@@ -6513,6 +6627,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             <div class="km-meta">${t}</div>
           </div>`;
         msgs.insertBefore(w, g('kieTyp'));
+        _kieAttachThoughtTrace(w.querySelector('.km-ai-body'));
         const bubble    = w.querySelector('.km-bubble');
         const actionsEl = w.querySelector('.km-actions');
         scrollKie(true);
