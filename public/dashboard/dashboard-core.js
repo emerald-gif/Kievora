@@ -3158,6 +3158,7 @@
       // user to actually press Send, with or without their own message).
       // The intro copy itself is built later, at send time, in sendKie().
       _kiePendingResumeIntro = { name, hadOngoingConv: kieHist.length > 0 };
+      toast(`Coaching on "${name}" — press Send to continue`, 'info');
     };
 
     // Silently consumes an /api/kie SSE stream and returns the full concatenated
