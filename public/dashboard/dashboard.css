@@ -883,15 +883,15 @@
     .kie-clear-btn:hover{background:#f5f5f8;color:#5f5f7a}
 
     /* Welcome screen */
-    .kie-welcome{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;background:#faf8ff}
+    .kie-welcome{display:flex;flex-direction:column;justify-content:center;flex:1;min-height:0;overflow-y:auto;background:#faf8ff}
     /* Hero band at top */
-    .kie-welcome-hero{position:relative;display:flex;flex-direction:column;align-items:center;padding:26px 24px 18px;background:linear-gradient(180deg,#ffffff 0%,#f5f0ff 55%,#faf8ff 100%);text-align:center;overflow:hidden}
-    .kie-welcome-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(124,58,237,.12) 0%,transparent 70%);pointer-events:none}
-    .kie-welcome-av{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#f0ecff,#e4d9ff);display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 0 0 5px rgba(124,58,237,.08),0 8px 24px rgba(124,58,237,.16);border:3px solid #ede9fe;overflow:hidden;position:relative;z-index:1;flex-shrink:0}
-    .kie-welcome-title{font-size:22px;font-weight:900;color:#1a1a2e;margin-bottom:6px;letter-spacing:-.4px}
+    .kie-welcome-hero{position:relative;display:flex;flex-direction:column;align-items:center;padding:8px 24px 22px;text-align:center;overflow:hidden;flex-shrink:0}
+    .kie-welcome-glow{position:absolute;top:-90px;left:50%;transform:translateX(-50%);width:380px;height:380px;background:radial-gradient(circle,rgba(124,58,237,.16) 0%,rgba(168,85,247,.05) 45%,transparent 72%);pointer-events:none}
+    .kie-welcome-av{width:108px;height:108px;border-radius:30px;background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:16px;filter:drop-shadow(0 10px 28px rgba(124,58,237,.22));position:relative;z-index:1;flex-shrink:0}
+    .kie-welcome-title{font-size:27px;font-weight:900;color:#1a1a2e;margin-bottom:7px;letter-spacing:-.6px}
     .kie-wave{display:inline-block;animation:wave 2.2s ease-in-out infinite;transform-origin:70% 70%}
     @keyframes wave{0%,100%{transform:rotate(0deg)}20%{transform:rotate(14deg)}40%{transform:rotate(-8deg)}60%{transform:rotate(14deg)}80%{transform:rotate(-4deg)}}
-    .kie-welcome-sub{font-size:12.5px;color:#8b8b9e;max-width:280px;line-height:1.6;margin:0 auto}
+    .kie-welcome-sub{font-size:13px;color:#8b8b9e;max-width:300px;line-height:1.6;margin:0 auto}
     /* ── KIE ECOSYSTEM TOOLS inside welcome ── */
     .kie-eco-wrap{padding:14px 14px 6px}
     .kie-eco-divider{display:flex;align-items:center;gap:8px;margin-bottom:12px}
@@ -918,25 +918,30 @@
     .kie-tool-name{font-size:11.5px;font-weight:800;color:var(--txt);letter-spacing:-.2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .kie-tool-sub{font-size:9.5px;color:var(--sub);margin-top:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     /* Swiper section */
-    .kie-swiper-section{padding:10px 0 6px;flex-shrink:0}
+    .kie-swiper-section{padding:6px 0 6px;flex-shrink:0}
     .kie-swiper-label{font-size:11px;font-weight:800;color:#b0b0c0;text-transform:uppercase;letter-spacing:.7px;padding:0 14px;margin-bottom:10px}
-    .kie-swiper-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 14px 8px;cursor:grab}
+    .kie-swiper-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 14px 10px;cursor:grab}
     .kie-swiper-outer::-webkit-scrollbar{display:none}
     .kie-swiper-outer:active{cursor:grabbing}
-    .kie-swiper-track{display:flex;gap:10px;width:max-content;transition:transform .35s cubic-bezier(.4,0,.2,1)}
-    /* Chip 2 — swiper card style */
-    .kie-chip2{background:#fff;border:1.5px solid #eeeef5;border-radius:16px;padding:13px 12px;text-align:left;cursor:pointer;transition:all .22s;font-family:inherit;width:138px;flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-    .kie-chip2:hover{border-color:#7c3aed;background:#faf5ff;transform:translateY(-3px);box-shadow:0 8px 20px rgba(124,58,237,.14)}
-    .kie-chip2:active{transform:translateY(0) scale(.97)}
-    .kie-chip2-ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;flex-shrink:0}
-    .kie-chip2-txt{font-size:11.5px;font-weight:800;color:#1a1a2e;line-height:1.35;margin-bottom:3px}
-    .kie-chip2-sub{font-size:9.5px;color:#8b8b9e;font-weight:400;line-height:1.4}
+    .kie-swiper-track{display:flex;gap:11px;width:max-content;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+    /* Chip 2 — Pinterest-style full-color tile */
+    .kie-chip2{border:none;border-radius:20px;padding:16px 14px;text-align:left;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);font-family:inherit;width:150px;flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 3px 10px rgba(124,58,237,.07)}
+    .kie-chip2:nth-child(6n+1),.kie-chip2:nth-child(6n+2){background:linear-gradient(160deg,#f3e9ff,#e9defd)}
+    .kie-chip2:nth-child(6n+3){background:linear-gradient(160deg,#fff8e6,#fdedc4)}
+    .kie-chip2:nth-child(6n+4){background:linear-gradient(160deg,#e9fbf3,#cdf4e2)}
+    .kie-chip2:nth-child(6n+5){background:linear-gradient(160deg,#eaf3ff,#d6e8ff)}
+    .kie-chip2:nth-child(6n+6){background:linear-gradient(160deg,#fff3e8,#ffe1c2)}
+    .kie-chip2:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(124,58,237,.18)}
+    .kie-chip2:active{transform:translateY(-1px) scale(.97)}
+    .kie-chip2-ico{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:11px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+    .kie-chip2-txt{font-size:12.5px;font-weight:800;color:#1a1a2e;line-height:1.3;margin-bottom:3px}
+    .kie-chip2-sub{font-size:10.5px;color:#726f85;font-weight:500;line-height:1.4}
     /* Swiper dots */
-    .kie-swiper-dots{display:flex;align-items:center;justify-content:center;gap:5px;padding:4px 0 0}
+    .kie-swiper-dots{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 0 0}
     .kie-swiper-dot{width:5px;height:5px;border-radius:99px;background:#ddd6fe;border:none;cursor:pointer;transition:all .25s;padding:0}
     .kie-swiper-dot.active{width:16px;background:#7c3aed}
     /* Bottom hint */
-    .kie-welcome-hint{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#c0c0cc;padding:6px 20px 16px;font-weight:500}
+    .kie-welcome-hint{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#c0c0cc;padding:10px 20px 4px;font-weight:500}
     /* Old chip styles - keep for compat */
     .kie-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px}
     .kie-suggest-row{display:flex;flex-direction:column;gap:7px;margin-top:14px}
