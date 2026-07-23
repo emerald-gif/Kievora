@@ -442,6 +442,17 @@
     let KIE_LS_KEY    = 'kievora_kie_history';   // overwritten once uid is known
     let KIE_IMG_LS_KEY = 'kievora_kie_images';    // overwritten once uid is known — persists attached images across reloads
     let KIE_DOC_LS_KEY = 'kievora_kie_docs';      // overwritten once uid is known — persists attached PDFs/TXT for preview across reloads
+    // BUG FIX: kieSelectedResume (which resume KIE is actively coaching on)
+    // was a plain in-memory variable with no persistence at all. The chat
+    // TEXT survives a reload fine (KIE_LS_KEY above), but the actual active
+    // state didn't — so any real page reload (browser back/forward causing
+    // real navigation, app killed and reopened, pull-to-refresh) silently
+    // dropped which resume was selected even though the visible transcript
+    // still showed it. Follow-up actions ("improve it", "send it") would
+    // then wrongly behave as if nothing was selected. Only the resume's id
+    // is stored — the full object is re-hydrated from the already-loaded
+    // `resumes` array once available, so this never goes stale.
+    let KIE_SELRESUME_LS_KEY = 'kievora_kie_selresume'; // overwritten once uid is known
     // Stable conversation id for the background summary system (getConvSummary/
     // generateConvSummary in server/kie.js already read+write this, they just
     // never had a real id to key off — "New Chat" resets kieHist but there's
@@ -896,6 +907,7 @@
       KIE_LS_KEY     = `kievora_kie_history_${currentUid}`;
       KIE_IMG_LS_KEY = `kievora_kie_images_${currentUid}`;
       KIE_DOC_LS_KEY = `kievora_kie_docs_${currentUid}`;
+      KIE_SELRESUME_LS_KEY = `kievora_kie_selresume_${currentUid}`;
       KIE_CONVID_LS_KEY = `kievora_kie_convid_${currentUid}`;
       DRAFTS_LS_KEY  = `kievora_drafts_${currentUid}`;
 
@@ -2773,6 +2785,33 @@
       loadKieImageStore();
       loadKieFileStore();
     }
+    // BUG FIX: kieSelectedResume never had any persistence — see the comment
+    // on KIE_SELRESUME_LS_KEY above. These two functions are the fix: save
+    // just the id whenever it changes, and re-hydrate the full object from
+    // the already-loaded `resumes` array once it's available. Called from
+    // setupKiePicker() (runs on every openKie()) so it self-heals as soon as
+    // resumes are loaded, however the screen was entered.
+    function saveKieSelectedResume() {
+      try {
+        if (kieSelectedResume && kieSelectedResume.id) {
+          localStorage.setItem(KIE_SELRESUME_LS_KEY, kieSelectedResume.id);
+        } else {
+          localStorage.removeItem(KIE_SELRESUME_LS_KEY);
+        }
+      } catch {}
+    }
+    function restoreKieSelectedResumeIfNeeded() {
+      if (kieSelectedResume) return; // already set in memory — nothing to restore
+      try {
+        const savedId = localStorage.getItem(KIE_SELRESUME_LS_KEY);
+        if (!savedId || !resumes?.length) return;
+        const match = resumes.find(r => r.id === savedId);
+        if (match) {
+          kieSelectedResume = match;
+          kieResumeContext  = buildResumeContext(match);
+        }
+      } catch {}
+    }
     // Persist attached images (base64) so they survive reload/navigation instead
     // of only living in the in-memory _kieImageStore Map, which is wiped on
     // every page load. Only images actually referenced by the messages we keep
@@ -3008,6 +3047,8 @@
       pillsEl.innerHTML = '';
       closeKieResumeDropdown();
 
+      restoreKieSelectedResumeIfNeeded();
+
       if (!resumes || resumes.length === 0) {
         kieResumeContext = 'NO_RESUME_YET';
         renderKieEmptyPicker(pillsEl);
@@ -3093,6 +3134,7 @@
     // Removes the active resume from KIE context
     window.dismissKieResume = function() {
       kieSelectedResume = null;
+      saveKieSelectedResume();
       kieResumeContext  = resumes?.length ? 'HAS_RESUMES_UNSELECTED' : 'NO_RESUME_YET';
       kieDocContext     = '';
       _kiePendingFileText = '';
@@ -3138,6 +3180,7 @@
       }
 
       kieSelectedResume  = r;
+      saveKieSelectedResume();
       kieResumeContext   = buildResumeContext(r);
       // ── Track profession for jobs swiper ──────────────────────────────────
       const _kieJobTitle = r.resumeData?.jobTitle;
@@ -3482,6 +3525,7 @@
       _kiePendingFileText = '';
       _kiePendingFileName = '';
       kieSelectedResume = null;
+      saveKieSelectedResume();
       const btn = g('kieAttachBtn');
       if (btn) btn.classList.add('has-resume');
 
@@ -3707,7 +3751,25 @@
       _kieReturnView = document.querySelector('.view.active')?.id?.replace('v-','') || 'home';
       setupKiePicker();
       showView('kie');
-      restoreKieUI();
+      // BUG FIX: restoreKieUI() clears every message bubble and rebuilds
+      // them from kieHist. That's correct when nothing is happening, but if
+      // the user left the AI screen WHILE a reply was still generating (the
+      // fetch/stream itself keeps running in the background — leaving this
+      // screen doesn't cancel it) and then comes back before it finishes,
+      // this used to wipe out the live typing indicator and the "Thinking
+      // for Ns" panel out from under the still-running completion handler.
+      // kieHist doesn't have the in-progress reply yet (it's only pushed once
+      // the response actually finishes), so the rebuild would show a screen
+      // that looks finished/idle — no typing dots, no thinking panel — while
+      // a response, download button, or search results were still seconds
+      // away from landing, making it look like they vanished or got stuck.
+      // Skip the destructive rebuild while generation is active; the live
+      // DOM already reflects it correctly, and the completion handler will
+      // append the finished message/file-card/search-results normally once
+      // it lands, same as if the person had never left the screen.
+      if (!(_kieGenerating && _kieAbort && !_kieAbort.signal?.aborted)) {
+        restoreKieUI();
+      }
       if(typeof ensureGmailFreshAndAlert==='function') ensureGmailFreshAndAlert().catch(()=>{});
     }
     function closeKie() { showView(_kieReturnView || 'home'); }
@@ -4930,6 +4992,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           });
         }
         kieSelectedResume = updatedResume;
+        saveKieSelectedResume();
         kieResumeContext  = buildResumeContext(updatedResume);
         const idx = resumes.findIndex(r => r.id === updatedResume.id);
         if (idx >= 0) resumes[idx] = updatedResume;
@@ -5023,6 +5086,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           });
         }
         kieSelectedResume = updatedResume;
+        saveKieSelectedResume();
         kieResumeContext  = buildResumeContext(updatedResume);
         const idx = resumes.findIndex(r => r.id === updatedResume.id);
         if (idx >= 0) resumes[idx] = updatedResume;
@@ -5128,6 +5192,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const saved = await saveRes.json();
 
         kieSelectedResume = saved;
+        saveKieSelectedResume();
         kieResumeContext  = buildResumeContext(saved);
         resumes.push(saved);
 
@@ -5456,8 +5521,19 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       // resume. When there's an uploaded (not-yet-Kievora) resume in this
       // chat, treat these rebuild-shaped verbs as BUILD_RESUME_FROM_SCRATCH
       // too, using that uploaded text as the source.
+      //
+      // Also folded in here: plain "improve it" / "optimize my resume" /
+      // "polish this up" on an UPLOADED (not yet built) resume. These used to
+      // only work on an already-selected Kievora resume (see IMPROVE_NOW_VERBS
+      // below) — an uploaded resume would just get told "say build me a
+      // resume first", which is the exact extra round trip that shouldn't be
+      // necessary. There's only one uploaded document in play and the ask is
+      // unambiguous, so treat it the same way: build the real Kievora resume
+      // from it (facts preserved, wording/summary genuinely improved, a
+      // template auto-picked to fit) and hand back a downloadable PDF in one
+      // shot, instead of making the user say the magic phrase.
       const hasUploadedResumeCtx = !!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED' && !(kieSelectedResume && kieSelectedResume.id);
-      const REBUILD_NO_NOUN = /\b(recreate|rebuild|redo|refurbish|revamp)\b/i;
+      const REBUILD_NO_NOUN = /\b(recreate|rebuild|redo|refurbish|revamp|improve|optimi[sz]e|polish|enhance|strengthen|upgrade|perfect|elevate|fix)\b/i;
       if (hasUploadedResumeCtx && REBUILD_NO_NOUN.test(msg)) return 'BUILD_RESUME_FROM_SCRATCH';
 
       // SPEED FIX: when a resume is already selected from the picker, an
@@ -5697,6 +5773,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             });
           }
           kieSelectedResume = updatedResume;
+          saveKieSelectedResume();
           kieResumeContext  = buildResumeContext(updatedResume);
           const idx = resumes.findIndex(r => r.id === updatedResume.id);
           if (idx >= 0) resumes[idx] = updatedResume;
@@ -5785,6 +5862,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
         // Update in memory
         kieSelectedResume = updated;
+        saveKieSelectedResume();
         const idx = resumes.findIndex(r => r.id === updated.id);
         if (idx >= 0) resumes[idx] = updated;
         kieResumeContext = buildResumeContext(updated);
@@ -9206,10 +9284,41 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (uploadedPill) uploadedPill.remove();
         kieResumeContext  = resumes?.length ? 'HAS_RESUMES_UNSELECTED' : 'NO_RESUME_YET';
         kieSelectedResume = null;
+        saveKieSelectedResume();
         const attachBtn = g('kieAttachBtn');
         if (attachBtn) attachBtn.classList.remove('has-resume');
         updateKieTplIndicator();
         closeKieResumeDropdown();
+      };
+
+      // BUG FIX — CRITICAL: dashboard-kie-sidebar.js's loadConversation() has
+      // been calling window._restoreKieMsgs(hist) to load a past conversation
+      // from the sidebar, but this function never existed anywhere in the
+      // codebase. Since the call was guarded with a typeof check, it silently
+      // fell through to the ELSE branch instead — which calls
+      // _kieInternalClear(). That function doesn't just clear the screen, it
+      // also calls saveKieHistory(), which persists the now-empty kieHist
+      // back to localStorage under the ALREADY-SWITCHED-TO conversation's key
+      // (loadConversation() calls saveActive(id) before this runs). Net
+      // effect: tapping any past conversation in the sidebar permanently
+      // wiped that conversation's saved history instead of opening it — the
+      // exact "sidebar history isn't doing well" bug. This is the actual
+      // restore implementation that should have existed from the start.
+      window._restoreKieMsgs = function(hist) {
+        kieHist = Array.isArray(hist) ? hist : [];
+        try { localStorage.setItem(KIE_LS_KEY, JSON.stringify(kieHist)); } catch {}
+        loadKieImageStore();
+        loadKieFileStore();
+        restoreKieUI();
+        // This conversation may have been coaching on a different resume (or
+        // none) than whatever's currently active — don't carry the wrong one
+        // over. There's no per-conversation resume record today, so this
+        // intentionally resets to "nothing selected" rather than guessing;
+        // the transcript itself still shows what was discussed.
+        kieSelectedResume = null;
+        saveKieSelectedResume();
+        kieResumeContext = resumes?.length ? 'HAS_RESUMES_UNSELECTED' : 'NO_RESUME_YET';
+        setupKiePicker();
       };
 
       // ── KIE CODE/TABLE CARD SWIPE ─────────────────────────────────────────
