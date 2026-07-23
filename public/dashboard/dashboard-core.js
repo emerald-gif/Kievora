@@ -3625,6 +3625,185 @@
       }
     };
 
+    // ── Stream a REAL, context-aware KIE reply (used after a file upload
+    // turns out not to be a resume). This replaces the old approach of
+    // building a hardcoded "Got it — I've read your file..." string from
+    // analyze-resume's isolated docNote — that classifier call only ever
+    // sees the file's own text, never kieHist, so its reply had zero idea
+    // what had already been discussed earlier in the same conversation.
+    // Routing through /api/kie with the full history means this reply is
+    // generated exactly like any other KIE turn — same context, same real
+    // token-by-token streaming — instead of a disconnected, instantly-
+    // inserted template.
+    async function _kieStreamDocReply(opts) {
+      opts = opts || {};
+      const inp   = g('kieInp');
+      const typEl = g('kieTyp');
+
+      try { tok = await usr.getIdToken(); } catch (_) { /* use existing */ }
+
+      const historyForApi = kieHist.map(m => {
+        if (!m.imageRef) return m;
+        const imgData = _kieImageStore.get(m.imageRef);
+        if (!imgData) return { role: m.role, content: m.content };
+        return { role: m.role, content: m.content, imageBase64: imgData.base64,
+                 imageType: m.imageType, imageName: m.imageName };
+      });
+
+      const msgsEl = g('kieMsgs');
+      let bubbleW = null, bubble = null, actionsEl = null;
+      const msgId  = 'kb-' + Date.now();
+      const tStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      function _ensureBubble() {
+        if (bubbleW) return;
+        bubbleW = document.createElement('div');
+        bubbleW.className = 'km km-ai';
+        bubbleW.innerHTML = `
+          <div class="km-ai-body">
+            <div class="km-bubble" id="${msgId}"></div>
+            <div class="km-actions" id="kact-${msgId}">
+              <button class="km-act-btn" onclick="kieyCopy(this)" title="Copy response">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              </button>
+              <button class="km-act-btn" onclick="kieSpeak(this)" title="Listen aloud">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path stroke-linecap="round" d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+              </button>
+              <button class="km-act-btn" onclick="kieShare(this)" title="Share">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </button>
+              <button class="km-act-btn" onclick="kieRegen(this)" title="Regenerate">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              </button>
+            </div>
+            <div class="km-meta">${tStamp}</div>
+          </div>`;
+        msgsEl.insertBefore(bubbleW, typEl);
+        _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
+        bubble    = bubbleW.querySelector('.km-bubble');
+        actionsEl = bubbleW.querySelector('.km-actions');
+        bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
+        scrollKie(true);
+      }
+
+      typEl.style.display = 'flex';
+      showKieStatus(kieMode);
+
+      let streamedText = '';
+      let firstToken    = false;
+      let turnSources   = null;
+      let turnImages    = null;
+
+      function _finish(text) {
+        _ensureBubble();
+        const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
+        bubble.innerHTML = _formatKieLive(display, true, turnSources, turnImages, kieMode);
+        _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
+        _kieAttachSources(actionsEl, turnSources);
+        if (actionsEl) actionsEl.classList.add('visible');
+        maybeShowKieSuggestions(text, bubbleW);
+        _kieGenerating = false;
+        _kieStopTyping = false;
+        if (inp) { inp.disabled = false; _kieSafeFocusInput(inp); }
+        setKieSendMode('send');
+        scrollKie();
+      }
+
+      try {
+        const fetchRes = await _kieFetchWithRetry('/api/kie', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+          body:    JSON.stringify({
+            messages:      historyForApi,
+            mode:          kieMode,
+            model:         kieModel,
+            resumeContext: kieResumeContext,
+            docContext:    kieDocContext,
+            convId:        _getKieConvId(),
+            userCategory:  (typeof getUserCategory === 'function' ? getUserCategory() : null),
+          }),
+          signal: _kieAbort?.signal,
+        });
+
+        if (!fetchRes.ok) throw new Error('HTTP ' + fetchRes.status);
+
+        const reader  = fetchRes.body.getReader();
+        const decoder = new TextDecoder();
+        let sseBuffer = '';
+
+        while (true) {
+          let done, value;
+          try { ({ done, value } = await reader.read()); }
+          catch (readErr) { if (_kieStopTyping) break; throw readErr; }
+          if (_kieStopTyping || done) break;
+
+          sseBuffer += decoder.decode(value, { stream: true });
+          const lines = sseBuffer.split('\n');
+          sseBuffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            let chunk;
+            try { chunk = JSON.parse(line.slice(6)); } catch { continue; }
+
+            if (chunk.t === 'd') {
+              if (!firstToken) { hideKieStatus(); _ensureBubble(); firstToken = true; }
+              streamedText += chunk.v;
+              const live = streamedText.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
+              bubble.innerHTML = _formatKieLive(live, false, turnSources, turnImages, kieMode) + '<span class="kie-stream-cursor">▌</span>';
+              scrollKie();
+            } else if (chunk.t === 'search') {
+              _kieShowRealSearch(chunk.v);
+            } else if (chunk.t === 'searchdone') {
+              _kieEndRealSearch(chunk.count);
+              if (chunk.sources?.length) turnSources = chunk.sources;
+              if (chunk.images?.length) turnImages = chunk.images;
+            } else if (chunk.t === 'err') {
+              throw new Error(chunk.v || 'KIE error');
+            }
+          }
+        }
+
+        hideKieStatus();
+        let finalText = streamedText || "Sorry, I couldn't get a response.";
+
+        // Only dangle "score it as my resume" when there's a realistic chance
+        // that's what the user meant — mirrors the old logic, but appended as
+        // a plain tag KIE's own replies also use, so the exact same button
+        // renders regardless of whether the tag came from KIE or from here.
+        if (opts.couldBeResume && !/\[CONFIRM_RESUME_CTA\]/i.test(finalText)) {
+          finalText += `\n\n[CONFIRM_RESUME_CTA]`;
+        }
+
+        kieHist.push({ role: 'assistant', content: finalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
+        saveKieHistory();
+        _finish(finalText);
+
+      } catch (e) {
+        hideKieStatus();
+        if (e.name === 'AbortError' || _kieStopTyping) {
+          if (streamedText) {
+            kieHist.push({ role: 'assistant', content: streamedText, mode: kieMode });
+            saveKieHistory();
+            _finish(streamedText);
+          } else {
+            if (bubbleW && bubbleW.parentNode) bubbleW.parentNode.removeChild(bubbleW);
+            _kieGenerating = false;
+            _kieStopTyping = false;
+            if (inp) inp.disabled = false;
+            setKieSendMode('send');
+          }
+          return;
+        }
+        _ensureBubble();
+        bubble.innerHTML = `<span style="opacity:.8">I'm having trouble connecting right now. Please try again! 🙏</span>`;
+        if (actionsEl) actionsEl.style.display = 'none';
+        _kieGenerating = false;
+        if (inp) inp.disabled = false;
+        setKieSendMode('send');
+      }
+    }
+
     // ── PROCESS PDF/TXT ATTACHMENT (called from sendKie after staging) ────────
     async function _processKieFileAttachment(att, userPrompt) {
       if (_kieGenerating) stopKieGeneration();
@@ -3687,32 +3866,19 @@
         // Not a resume — keep the file's text on hand as background context
         // (so the conversation can keep referencing it) without tagging it
         // "Uploaded Resume" or forcing an ATS score onto content that was
-        // never a resume in the first place. If the user confirms afterward
-        // that it IS their resume, [CONFIRM_RESUME_CTA] promotes it.
+        // never a resume in the first place. Route the reply through a REAL
+        // KIE turn (full kieHist + docContext) instead of a hardcoded string
+        // built purely from analyze-resume's isolated classification — that
+        // used to make KIE's reply feel completely disconnected from
+        // whatever the user had already been discussing before the file
+        // showed up. [CONFIRM_RESUME_CTA] still gets appended when relevant,
+        // so "yes, score it as my resume" keeps working exactly as before.
         if (analysis.isResume === false) {
           _kiePendingFileText = resumeText;
           _kiePendingFileName = att.name || 'your file';
           kieDocContext = resumeText.slice(0, 5000);
 
-          const docType = analysis.docType || 'document';
-          const note    = analysis.docNote || `This looks like a ${docType}, not a resume.`;
-          let msg = userPrompt
-            ? `Got it — I've read your file. ${note}\n\n`
-            : `Alright, I've gone through it. ${note}\n\n`;
-
-          // Only dangle "score it as my resume" when there's a realistic
-          // chance that's actually what the user meant — showing that button
-          // under an obviously unrelated file (a legal contract, an invoice)
-          // reads as the AI not having actually understood what it just read.
-          if (analysis.couldBeResume) {
-            msg += `Happy to talk it through, help with whatever you're actually after, or if I've got it wrong and this is meant to be your resume, just say so.\n\n[CONFIRM_RESUME_CTA]`;
-          } else {
-            msg += `Happy to talk it through or help with whatever you're actually after.`;
-          }
-
-          appendKMsg('ai', msg, true);
-          kieHist.push({ role: 'assistant', content: msg });
-          saveKieHistory();
+          await _kieStreamDocReply({ couldBeResume: !!analysis.couldBeResume });
           return;
         }
 
@@ -5981,8 +6147,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       w.innerHTML = `
         <div class="km-ai-body">
-          <div class="km-bubble">${displayMsg}</div>
-          <div class="km-file-card">
+          <div class="km-bubble"></div>
+          <div class="km-file-card" style="display:none">
             <div class="km-file-ico">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
@@ -6001,12 +6167,51 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       _kieAttachThoughtTrace(w.querySelector('.km-ai-body'));
       scrollKie();
 
-      if (silent) return;
-      _kieGenerating = false;
-      _kieStopTyping = false;
-      const inp = g('kieInp');
-      if (inp) { inp.disabled = false; _kieSafeFocusInput(inp); }
-      setKieSendMode('send');
+      const bubble   = w.querySelector('.km-bubble');
+      const fileCard = w.querySelector('.km-file-card');
+
+      // Silent = restored from history (page reload / nav away+back) — show
+      // instantly, same as appendKMsg does for restored messages.
+      if (silent) {
+        bubble.innerHTML = displayMsg;
+        fileCard.style.display = '';
+        scrollKie();
+        return;
+      }
+
+      function afterType() {
+        fileCard.style.display = '';
+        _kieGenerating = false;
+        _kieStopTyping = false;
+        const inp = g('kieInp');
+        if (inp) { inp.disabled = false; _kieSafeFocusInput(inp); }
+        setKieSendMode('send');
+        scrollKie();
+      }
+
+      // Same typewriter as appendKMsg (3 chars/frame) — a resume/template
+      // reply used to just snap onto the screen instantly while every other
+      // KIE reply typed out, which is exactly the inconsistency being fixed.
+      let i = 0;
+      const CHUNK = 3;
+      let rafId;
+      function typeFrame() {
+        if (_kieStopTyping) {
+          cancelAnimationFrame(rafId);
+          bubble.innerHTML = displayMsg;
+          afterType();
+          return;
+        }
+        i = Math.min(i + CHUNK, rawMsg.length);
+        bubble.innerHTML = rawMsg.slice(0, i).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        scrollKie();
+        if (i < rawMsg.length) {
+          rafId = requestAnimationFrame(typeFrame);
+        } else {
+          afterType();
+        }
+      }
+      rafId = requestAnimationFrame(typeFrame);
     }
 
 
@@ -6024,8 +6229,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       w.innerHTML = `
         <div class="km-ai-body">
-          <div class="km-bubble">${displayMsg}</div>
-          <div class="km-file-card">
+          <div class="km-bubble"></div>
+          <div class="km-file-card" style="display:none">
             <div class="km-file-ico">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
@@ -6043,12 +6248,41 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       msgs.insertBefore(w, g('kieTyp'));
       scrollKie();
 
-      // Always restore UI — file card is a terminal output like a finished message
-      _kieGenerating = false;
-      _kieStopTyping = false;
-      const inp = g('kieInp');
-      if (inp) { inp.disabled = false; _kieSafeFocusInput(inp); }
-      setKieSendMode('send');
+      const bubble   = w.querySelector('.km-bubble');
+      const fileCard = w.querySelector('.km-file-card');
+
+      function afterType() {
+        fileCard.style.display = '';
+        _kieGenerating = false;
+        _kieStopTyping = false;
+        const inp = g('kieInp');
+        if (inp) { inp.disabled = false; _kieSafeFocusInput(inp); }
+        setKieSendMode('send');
+        scrollKie();
+      }
+
+      // Same typewriter as appendKMsg/appendKiePrintCard — this used to snap
+      // onto the screen instantly while every other KIE reply typed out.
+      let i = 0;
+      const CHUNK = 3;
+      let rafId;
+      function typeFrame() {
+        if (_kieStopTyping) {
+          cancelAnimationFrame(rafId);
+          bubble.innerHTML = displayMsg;
+          afterType();
+          return;
+        }
+        i = Math.min(i + CHUNK, rawMsg.length);
+        bubble.innerHTML = rawMsg.slice(0, i).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        scrollKie();
+        if (i < rawMsg.length) {
+          rafId = requestAnimationFrame(typeFrame);
+        } else {
+          afterType();
+        }
+      }
+      rafId = requestAnimationFrame(typeFrame);
     }
 
     // ── KIE Generation State ───────────────────────────────────────────────────
