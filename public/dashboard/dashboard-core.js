@@ -3700,7 +3700,7 @@
         bubble.innerHTML = _formatKieLive(display, true, turnSources, turnImages, kieMode);
         _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
         _kieAttachSources(actionsEl, turnSources);
-        if (actionsEl) actionsEl.classList.add('visible');
+        if (actionsEl) { actionsEl.classList.add('visible'); _kieHideOldRegenButtons(actionsEl); }
         maybeShowKieSuggestions(text, bubbleW);
         _kieGenerating = false;
         _kieStopTyping = false;
@@ -5542,7 +5542,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const display = text.replace(/\s*\[FU\].*?\[\/FU\]/gs, '').trim();
         bubble.innerHTML = _formatKieLive(display, true, turnSources, turnImages, kieMode);
         _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
-        if (actionsEl) actionsEl.classList.add('visible');
+        if (actionsEl) { actionsEl.classList.add('visible'); _kieHideOldRegenButtons(actionsEl); }
         maybeShowKieSuggestions(text, bubbleW);
         _kieGenerating = false;
         _kieStopTyping = false;
@@ -6366,7 +6366,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         '<span class="km-int-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg></span>' +
         '<span class="km-int-txt">KIE\u2019s response was interrupted.</span>' +
         '<button class="km-int-retry" onclick="retryKieAfterStop(this)">Try again</button>';
-      msgs.appendChild(el);
+      msgs.insertBefore(el, g('kieTyp'));
       msgs.scrollTop = msgs.scrollHeight;
     }
 
@@ -6741,7 +6741,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _kieInsertSourceCards(bubbleW.querySelector('.km-ai-body'), turnSources, kieMode);
         // Sources button — injected into the actions bar (after regen), like ChatGPT
         _kieAttachSources(actionsEl, turnSources);
-        if (actionsEl) actionsEl.classList.add('visible');
+        if (actionsEl) { actionsEl.classList.add('visible'); _kieHideOldRegenButtons(actionsEl); }
         maybeShowKieSuggestions(text, bubbleW);
         _kieGenerating = false;
         _kieStopTyping = false;
@@ -6996,7 +6996,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
           // Re-inject Sources button if this message had web search
           _kieAttachSources(actionsEl, sources);
-          if (actionsEl) actionsEl.classList.add('visible');
+          if (actionsEl) { actionsEl.classList.add('visible'); _kieHideOldRegenButtons(actionsEl); }
           maybeShowKieSuggestions(text, w);
           _kieGenerating = false;
           g('kieInp').disabled = false;
@@ -7040,7 +7040,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           bubble.innerHTML = _formatKieLive(restoredDisplay, true, sources, images, msgMode || kieMode);
           _kieInsertSourceCards(w.querySelector('.km-ai-body'), sources, msgMode || kieMode);
           _kieAttachSources(actionsEl, sources);
-          if (actionsEl) actionsEl.classList.add('visible');
+          if (actionsEl) { actionsEl.classList.add('visible'); _kieHideOldRegenButtons(actionsEl); }
           maybeShowKieSuggestions(text, w, true);
           if (typeof onDone === 'function') onDone();
         }
@@ -8906,6 +8906,21 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     });
 
     // Mic init moved to DOMContentLoaded — see below
+
+    // Regenerate only makes sense against the AI's most recent reply (it
+    // re-sends the last user turn) — showing it on older replies further up
+    // the thread is misleading since tapping it there would still regenerate
+    // the LATEST response, not that one. Hide it everywhere except the
+    // newest AI action row whenever a new reply finishes.
+    function _kieHideOldRegenButtons(currentActionsEl) {
+      const msgs = g('kieMsgs');
+      if (!msgs) return;
+      msgs.querySelectorAll('.km-actions').forEach(actionsEl => {
+        if (actionsEl === currentActionsEl) return;
+        const regenBtn = actionsEl.querySelector('.km-act-btn[onclick^="kieRegen"]');
+        if (regenBtn) regenBtn.style.display = 'none';
+      });
+    }
 
     // Regenerate last AI response
     window.kieRegen = function(btn) {

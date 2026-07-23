@@ -1011,7 +1011,7 @@
     .km-ai .km-meta{text-align:left}
     .km-user .km-meta{text-align:right}
     /* AI message action bar */
-    .km-actions{display:inline-flex;align-items:center;gap:1px;margin-top:8px;opacity:0;transition:opacity .25s;pointer-events:none;flex-wrap:wrap;background:#faf8ff;border:1px solid #ede9fe;border-radius:12px;padding:3px}
+    .km-actions{display:inline-flex;align-items:center;gap:1px;margin-top:8px;opacity:0;transition:opacity .25s;pointer-events:none;flex-wrap:wrap;background:#faf8ff;border-radius:12px;padding:3px}
     .km-actions.visible{opacity:1;pointer-events:auto}
     .km-act-btn{background:none;border:none;cursor:pointer;padding:8px 10px;border-radius:9px;color:#9a93b5;transition:all .15s;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0}
     .km-act-btn:hover{background:#ede9fe;color:#7c3aed}
