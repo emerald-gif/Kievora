@@ -867,8 +867,8 @@
 
     .kie-box{width:100%;max-width:760px;margin:0 auto;background:#fff;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;position:relative}
 
-    /* Header — fixed at top */
-    .kie-hdr{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:absolute;top:0;left:0;right:0;z-index:15;background:transparent;border-bottom:none;box-shadow:none;pointer-events:none}
+    /* Header — floating icons only, no bar/background */
+    .kie-hdr{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;position:absolute;top:0;left:0;right:0;z-index:15;background:transparent;border-bottom:none;box-shadow:none;pointer-events:none}
     .kie-hdr-l{display:flex;align-items:center;gap:10px;pointer-events:auto}
     .kie-av{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#ede9fe,#c4b5fd);display:flex;align-items:center;justify-content:center;border:2px solid #ede9fe}
     .kie-av-svg{width:24px;height:24px}
@@ -885,15 +885,15 @@
     /* Welcome screen */
     .kie-welcome{display:flex;flex-direction:column;justify-content:center;flex:1;min-height:0;overflow-y:auto;background:#faf8ff}
     /* Hero band at top */
-    .kie-welcome-hero{position:relative;display:flex;flex-direction:column;align-items:center;padding:8px 24px 22px;text-align:center;overflow:hidden;flex-shrink:0}
+    .kie-welcome-hero{position:relative;display:flex;flex-direction:column;align-items:center;padding:44px 24px 12px;text-align:center;overflow:hidden;flex-shrink:0}
     .kie-welcome-glow{position:absolute;top:-90px;left:50%;transform:translateX(-50%);width:380px;height:380px;background:radial-gradient(circle,rgba(124,58,237,.16) 0%,rgba(168,85,247,.05) 45%,transparent 72%);pointer-events:none}
-    .kie-welcome-av{width:108px;height:108px;border-radius:30px;background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:16px;filter:drop-shadow(0 10px 28px rgba(124,58,237,.22));position:relative;z-index:1;flex-shrink:0}
-    .kie-welcome-title{font-size:27px;font-weight:900;color:#1a1a2e;margin-bottom:7px;letter-spacing:-.6px}
+    .kie-welcome-av{width:72px;height:72px;border-radius:22px;background:transparent;display:flex;align-items:center;justify-content:center;margin-bottom:10px;filter:drop-shadow(0 8px 20px rgba(124,58,237,.2));position:relative;z-index:1;flex-shrink:0}
+    .kie-welcome-title{font-size:21px;font-weight:900;color:#1a1a2e;margin-bottom:4px;letter-spacing:-.5px}
     .kie-wave{display:inline-block;animation:wave 2.2s ease-in-out infinite;transform-origin:70% 70%}
     @keyframes wave{0%,100%{transform:rotate(0deg)}20%{transform:rotate(14deg)}40%{transform:rotate(-8deg)}60%{transform:rotate(14deg)}80%{transform:rotate(-4deg)}}
-    .kie-welcome-sub{font-size:13px;color:#8b8b9e;max-width:300px;line-height:1.6;margin:0 auto}
+    .kie-welcome-sub{font-size:12px;color:#8b8b9e;max-width:280px;line-height:1.5;margin:0 auto}
     /* ── KIE ECOSYSTEM TOOLS inside welcome ── */
-    .kie-eco-wrap{padding:14px 14px 6px}
+    .kie-eco-wrap{padding:8px 14px 4px}
     .kie-eco-divider{display:flex;align-items:center;gap:8px;margin-bottom:12px}
     .kie-eco-divider-line{flex:1;height:1px;background:var(--border2)}
     .kie-eco-divider-label{font-size:9px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;display:flex;align-items:center;gap:5px}
@@ -1899,14 +1899,14 @@
 
     /* ── KIE HEADER UPGRADES ─────────────────────────────────────────────────── */
     /* Hamburger in KIE header — circular outlined chip button */
-    .kie-hbg{width:38px;height:38px;background:#fff;border:1.5px solid #e8e8ec;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:0 1px 2px rgba(15,14,23,.04)}
-    .kie-hbg:hover{background:#faf8ff;border-color:#c4b5fd;box-shadow:0 2px 6px rgba(124,58,237,.1)}
-    .kie-hbg:active{transform:scale(.94)}
+    .kie-hbg{width:34px;height:34px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:none;filter:drop-shadow(0 1px 3px rgba(15,14,23,.18))}
+    .kie-hbg:hover{background:rgba(124,58,237,.08)}
+    .kie-hbg:active{transform:scale(.9)}
     .kie-hbg svg line{stroke:#6b6b80;stroke-width:2;stroke-linecap:round;transition:all .22s cubic-bezier(.4,0,.2,1)}
     /* Home icon button — circular outlined chip button */
-    .kie-home-pill{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid #e8e8ec;border-radius:50%;color:#6b6b80;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:0 1px 2px rgba(15,14,23,.04)}
-    .kie-home-pill:hover{background:#faf8ff;border-color:#c4b5fd;color:var(--p);box-shadow:0 2px 6px rgba(124,58,237,.1)}
-    .kie-home-pill:active{transform:scale(.94)}
+    .kie-home-pill{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#5f5f7a;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:none;filter:drop-shadow(0 1px 3px rgba(15,14,23,.18))}
+    .kie-home-pill:hover{background:rgba(124,58,237,.08);color:var(--p)}
+    .kie-home-pill:active{transform:scale(.9)}
 
     /* ── TOOL CATEGORY SWIPERS ─────────────────────────────────────────────── */
     .kie-toolswiper-section{padding:0 0 6px;flex-shrink:0}
@@ -1927,17 +1927,17 @@
 
     /* New chat icon — hidden by default, shown once there's an active
        conversation to reset (see showPlusFab() in dashboard-kie-sidebar.js) */
-    .kie-newchat-btn{display:none;align-items:center;justify-content:center;width:38px;height:38px;background:#fff;border:1.5px solid #e8e8ec;border-radius:50%;cursor:pointer;color:#6b6b80;transition:all .18s;flex-shrink:0;box-shadow:0 1px 2px rgba(15,14,23,.04)}
+    .kie-newchat-btn{display:none;align-items:center;justify-content:center;width:34px;height:34px;background:transparent;border:none;border-radius:50%;cursor:pointer;color:#5f5f7a;transition:all .18s;flex-shrink:0;box-shadow:none;filter:drop-shadow(0 1px 3px rgba(15,14,23,.18))}
     .kie-newchat-btn.show{display:flex;animation:fabIn .2s ease}
-    .kie-newchat-btn:hover{background:#faf8ff;border-color:#c4b5fd;color:var(--p);box-shadow:0 2px 6px rgba(124,58,237,.1)}
-    .kie-newchat-btn:active{transform:scale(.92)}
+    .kie-newchat-btn:hover{background:rgba(124,58,237,.08);color:var(--p)}
+    .kie-newchat-btn:active{transform:scale(.9)}
     @keyframes fabIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 
     /* Template/resume picker icon — same chip style, plus an "active resume" dot */
-    .kie-tpl-btn{position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid #e8e8ec;border-radius:50%;color:#6b6b80;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:0 1px 2px rgba(15,14,23,.04)}
-    .kie-tpl-btn:hover{background:#faf8ff;border-color:#c4b5fd;color:var(--p);box-shadow:0 2px 6px rgba(124,58,237,.1)}
-    .kie-tpl-btn:active{transform:scale(.94)}
-    .kie-tpl-btn.open{background:#f3ecff;border-color:#c4b5fd;color:var(--p)}
+    .kie-tpl-btn{position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#5f5f7a;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:none;filter:drop-shadow(0 1px 3px rgba(15,14,23,.18))}
+    .kie-tpl-btn:hover{background:rgba(124,58,237,.08);color:var(--p)}
+    .kie-tpl-btn:active{transform:scale(.9)}
+    .kie-tpl-btn.open{background:rgba(124,58,237,.12);color:var(--p);filter:none}
     .kie-tpl-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--p);border:1.5px solid #fff;display:none}
     .kie-tpl-dot.on{display:block}
 
