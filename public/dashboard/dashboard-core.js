@@ -4141,9 +4141,9 @@
     // Ultra removed from the frontend selector for now — backend KIE_MODELS/
     // KIE_TIERS config for it is untouched, so it's a one-line add-back later.
     const KIE_MODEL_META = {
-      spark: { label: 'KIE Spark',  tagline: 'Fast & Smart',              badge: 'Speed',    icon: '⚡', color: '#f59e0b' },
-      core:  { label: 'KIE Core',   tagline: 'Balanced Intelligence',     badge: 'Smart',    icon: '🧠', color: '#3b82f6' },
-      nova:  { label: 'KIE Nova',   tagline: 'Deep Career Intelligence',  badge: 'Powerful', icon: '🚀', color: '#8b5cf6' },
+      spark: { label: 'KIE Spark',  tagline: 'Fast & Smart',              badge: 'Speed',    icon: '⚡', color: '#a78bfa' },
+      core:  { label: 'KIE Core',   tagline: 'Balanced Intelligence',     badge: 'Smart',    icon: '🧠', color: '#8b5cf6' },
+      nova:  { label: 'KIE Nova',   tagline: 'Deep Career Intelligence',  badge: 'Powerful', icon: '🚀', color: '#7c3aed' },
     };
 
     // ── Sources drawer — shows web search sources used in the last reply ────────
@@ -4248,9 +4248,9 @@
       if (badge) {
         const m = KIE_MODEL_META[key];
         badge.textContent = m.label;
-        badge.style.background = '';
-        badge.style.color = '#0f0e17';
-        badge.style.border = '1px solid rgba(0,0,0,.12)';
+        badge.style.background = m.color + '22';
+        badge.style.color = m.color;
+        badge.style.border = 'none';
         badge.style.padding = '3px 10px';
         badge.style.borderRadius = '99px';
         badge.style.fontWeight = '700';
