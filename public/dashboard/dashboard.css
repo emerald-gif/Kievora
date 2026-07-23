@@ -804,12 +804,13 @@
     .kie-sidebar.open{left:0}
     .ksb-hdr{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0ecfe;background:#faf5ff}
     .ksb-brand{display:flex;align-items:center;gap:10px}
-    .ksb-av{width:36px;height:36px;border-radius:10px;background:var(--g);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.22)}
-    .ksb-av img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+    .ksb-av{width:36px;height:36px;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+    .ksb-av img{width:100%;height:100%;object-fit:contain;border-radius:0}
     .ksb-brand-name{font-size:15px;font-weight:900;color:var(--txt);letter-spacing:-.3px}
     .ksb-brand-sub{font-size:10px;color:var(--sub);font-weight:500;margin-top:1px}
-    .ksb-new-chat{display:flex;align-items:center;gap:5px;background:var(--g);color:#fff;border:none;border-radius:99px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s;box-shadow:0 2px 8px rgba(124,58,237,.25)}
-    .ksb-new-chat:hover{opacity:.9}
+    .ksb-new-chat{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:#fff;color:#6b6b80;border:1.5px solid #e8e8ec;border-radius:50%;cursor:pointer;font-family:inherit;transition:all .18s;flex-shrink:0;padding:0;box-shadow:0 1px 2px rgba(15,14,23,.04)}
+    .ksb-new-chat:hover{background:#faf8ff;border-color:#c4b5fd;color:var(--p)}
+    .ksb-new-chat:active{transform:scale(.94)}
     .ksb-body{flex:1;overflow-y:auto;padding:6px 10px 4px}
     .ksb-body::-webkit-scrollbar{width:3px}
     .ksb-body::-webkit-scrollbar-thumb{background:#ede9fe;border-radius:99px}
