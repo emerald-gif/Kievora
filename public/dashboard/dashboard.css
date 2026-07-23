@@ -925,17 +925,14 @@
     .kie-swiper-outer:active{cursor:grabbing}
     .kie-swiper-track{display:flex;gap:11px;width:max-content;transition:transform .35s cubic-bezier(.4,0,.2,1)}
     /* Chip 2 — Pinterest-style full-color tile */
-    .kie-chip2{border:none;border-radius:20px;padding:16px 14px;text-align:left;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);font-family:inherit;width:150px;flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 3px 10px rgba(124,58,237,.07)}
-    .kie-chip2:nth-child(6n+1),.kie-chip2:nth-child(6n+2){background:linear-gradient(160deg,#f3e9ff,#e9defd)}
-    .kie-chip2:nth-child(6n+3){background:linear-gradient(160deg,#fff8e6,#fdedc4)}
-    .kie-chip2:nth-child(6n+4){background:linear-gradient(160deg,#e9fbf3,#cdf4e2)}
-    .kie-chip2:nth-child(6n+5){background:linear-gradient(160deg,#eaf3ff,#d6e8ff)}
-    .kie-chip2:nth-child(6n+6){background:linear-gradient(160deg,#fff3e8,#ffe1c2)}
-    .kie-chip2:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(124,58,237,.18)}
+    .kie-chip2{border:none;border-radius:16px;padding:11px 10px;text-align:left;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);font-family:inherit;width:122px;flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(124,58,237,.06)}
+    .kie-chip2:nth-child(odd){background:#fff;border:1px solid #ece6fb}
+    .kie-chip2:nth-child(even){background:linear-gradient(160deg,#f5f0ff,#ece2fd)}
+    .kie-chip2:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(124,58,237,.15)}
     .kie-chip2:active{transform:translateY(-1px) scale(.97)}
-    .kie-chip2-ico{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:11px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.06)}
-    .kie-chip2-txt{font-size:12.5px;font-weight:800;color:#1a1a2e;line-height:1.3;margin-bottom:3px}
-    .kie-chip2-sub{font-size:10.5px;color:#726f85;font-weight:500;line-height:1.4}
+    .kie-chip2-ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;flex-shrink:0;box-shadow:0 2px 6px rgba(124,58,237,.14)}
+    .kie-chip2-txt{font-size:11.5px;font-weight:800;color:#1a1a2e;line-height:1.25;margin-bottom:2px}
+    .kie-chip2-sub{font-size:9.5px;color:#8b86a0;font-weight:500;line-height:1.3}
     /* Swiper dots */
     .kie-swiper-dots{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 0 0}
     .kie-swiper-dot{width:5px;height:5px;border-radius:99px;background:#ddd6fe;border:none;cursor:pointer;transition:all .25s;padding:0}
@@ -1904,7 +1901,7 @@
     .kie-hbg:active{transform:scale(.92)}
     .kie-hbg svg line{stroke:#6b6b80;stroke-width:2;stroke-linecap:round;transition:all .22s cubic-bezier(.4,0,.2,1)}
     /* Home icon button — circular outlined chip button */
-    .kie-home-pill{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#5f5f7a;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:none}
+    .kie-home-pill{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#8b7cb8;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:none}
     .kie-home-pill:hover{background:#f3ecff;color:var(--p)}
     .kie-home-pill:active{transform:scale(.9)}
 
@@ -1927,14 +1924,14 @@
 
     /* New chat icon — hidden by default, shown once there's an active
        conversation to reset (see showPlusFab() in dashboard-kie-sidebar.js) */
-    .kie-newchat-btn{display:none;align-items:center;justify-content:center;width:34px;height:34px;background:transparent;border:none;border-radius:50%;cursor:pointer;color:#5f5f7a;transition:all .18s;flex-shrink:0;box-shadow:none}
+    .kie-newchat-btn{display:none;align-items:center;justify-content:center;width:34px;height:34px;background:transparent;border:none;border-radius:50%;cursor:pointer;color:#8b7cb8;transition:all .18s;flex-shrink:0;box-shadow:none}
     .kie-newchat-btn.show{display:flex;animation:fabIn .2s ease}
     .kie-newchat-btn:hover{background:#f3ecff;color:var(--p)}
     .kie-newchat-btn:active{transform:scale(.9)}
     @keyframes fabIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 
     /* Template/resume picker icon — same chip style, plus an "active resume" dot */
-    .kie-tpl-btn{position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#5f5f7a;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:none}
+    .kie-tpl-btn{position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#8b7cb8;cursor:pointer;transition:all .18s;flex-shrink:0;padding:0;box-shadow:none}
     .kie-tpl-btn:hover{background:#f3ecff;color:var(--p)}
     .kie-tpl-btn:active{transform:scale(.9)}
     .kie-tpl-btn.open{background:#ede9fe;color:var(--p)}
