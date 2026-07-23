@@ -7396,10 +7396,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     // ── Floating voice player (pill with play/pause, timer, progress, close) ─
+    // Back on the browser's built-in speechSynthesis — no per-play cost, no
+    // network round trip. The two rough edges that used to come with it are
+    // still fixed: a real loading state until speech actually starts, and a
+    // fix for the Chrome/Android bug where pause→resume silently kills audio.
     let _kieVoiceTimer = null;
     let _kieVoiceElapsed = 0;
     let _kieVoiceDuration = 0;
     let _kieVoicePaused = false;
+    let _kieVoiceStarted = false; // true once speech has actually begun (post cold-start)
+    // State kept so a stuck pause/resume can be recovered by restarting
+    // speech from the last known word boundary instead of staying silent.
+    let _kieVoiceFullText = '';
+    let _kieVoiceCharIndex = 0;
+    let _kieVoiceRate = 1;
+    let _kieVoiceVoice = null;
+    let _kieVoiceResumeCheckTimer = null;
 
     function _kieEstimateDuration(text, rate) {
       const words = (text.trim().match(/\S+/g) || []).length;
@@ -7424,8 +7436,24 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       playBtn.title = playing ? 'Pause' : 'Play';
     }
 
+    // Shows a spinning ring in place of the play/pause icon while we wait for
+    // the TTS engine to actually start producing audio (cold-start lag).
+    function _kieSetVoiceLoading(loading) {
+      const playBtn = document.getElementById('kieVoicePlayBtn');
+      if (!playBtn) return;
+      playBtn.classList.toggle('loading', loading);
+    }
+
+    // Called from utter.onstart — the moment audio genuinely begins, not
+    // just the moment speak() was called.
+    function _kieVoicePlaybackStarted() {
+      _kieVoiceStarted = true;
+      _kieSetVoiceLoading(false);
+      if (!_kieVoicePaused) _kieSetVoicePlayIcon(true);
+    }
+
     function _kieVoiceTick() {
-      if (_kieVoicePaused) return;
+      if (_kieVoicePaused || !_kieVoiceStarted) return;
       _kieVoiceElapsed += 0.25;
       const timeEl = document.getElementById('kieVoiceTime');
       const fillEl = document.getElementById('kieVoiceFill');
@@ -7440,12 +7468,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       _kieVoiceElapsed = 0;
       _kieVoiceDuration = duration;
       _kieVoicePaused = false;
+      _kieVoiceStarted = false;
       const player = document.getElementById('kieVoicePlayer');
       const timeEl  = document.getElementById('kieVoiceTime');
       const fillEl  = document.getElementById('kieVoiceFill');
       if (timeEl) timeEl.textContent = '00:00';
       if (fillEl) fillEl.style.width = '0%';
-      _kieSetVoicePlayIcon(true);
+      _kieSetVoiceLoading(true);
       if (player) player.classList.add('show');
       clearInterval(_kieVoiceTimer);
       _kieVoiceTimer = setInterval(_kieVoiceTick, 250);
@@ -7454,16 +7483,64 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function hideKieVoicePlayer() {
       clearInterval(_kieVoiceTimer);
       _kieVoiceTimer = null;
+      clearTimeout(_kieVoiceResumeCheckTimer);
+      _kieVoiceStarted = false;
+      _kieSetVoiceLoading(false);
       const player = document.getElementById('kieVoicePlayer');
       if (player) player.classList.remove('show');
     }
 
+    // Chrome/Android has a long-standing bug where speechSynthesis.resume()
+    // after a pause() leaves the engine reporting speaking=true with no
+    // audio actually coming out — playback is silently dead forever. There's
+    // no reliable way to detect "is audio actually coming out of the
+    // speaker" directly, so we track the last word boundary we heard via
+    // utter.onboundary, and if resume() hasn't produced a fresh boundary
+    // event shortly after resuming, we treat it as stuck and restart a new
+    // utterance from that boundary instead of leaving the person with dead
+    // silence and no way to recover except closing the player.
+    function _kieRestartVoiceFrom(charIndex) {
+      if (!window.speechSynthesis || !_kieVoiceFullText) return;
+      window.speechSynthesis.cancel();
+      const remaining = _kieVoiceFullText.slice(charIndex).trim();
+      if (!remaining) { window.kieVoiceClose(); return; }
+      const utter = new SpeechSynthesisUtterance(remaining);
+      utter.rate = _kieVoiceRate;
+      utter.pitch = 1;
+      utter.volume = 1;
+      if (_kieVoiceVoice) utter.voice = _kieVoiceVoice;
+      utter.onboundary = (e) => {
+        if (typeof e.charIndex === 'number') _kieVoiceCharIndex = charIndex + e.charIndex;
+      };
+      utter.onstart = _kieVoicePlaybackStarted;
+      utter.onend = utter.onerror = () => {
+        if (_activeSpeakBtn) { resetSpeakBtn(_activeSpeakBtn); _activeSpeakBtn = null; }
+        hideKieVoicePlayer();
+      };
+      _kieVoicePaused = false;
+      window.speechSynthesis.speak(utter);
+    }
+
     window.kieVoiceToggle = function() {
       if (!window.speechSynthesis) return;
+      const playBtn = document.getElementById('kieVoicePlayBtn');
+      if (playBtn && playBtn.classList.contains('loading')) return; // still cold-starting, ignore taps
+
       if (_kieVoicePaused) {
+        // Resume
+        const charIndexAtResume = _kieVoiceCharIndex;
         window.speechSynthesis.resume();
         _kieVoicePaused = false;
         _kieSetVoicePlayIcon(true);
+        // Give the browser a moment, then check whether it actually resumed
+        // (a fresh boundary event should have landed by then). If not,
+        // silently restart from where we left off.
+        clearTimeout(_kieVoiceResumeCheckTimer);
+        _kieVoiceResumeCheckTimer = setTimeout(() => {
+          if (_kieVoicePaused) return; // paused again already, leave it
+          const stillStuck = !window.speechSynthesis.speaking || window.speechSynthesis.paused;
+          if (stillStuck) _kieRestartVoiceFrom(charIndexAtResume);
+        }, 400);
       } else {
         window.speechSynthesis.pause();
         _kieVoicePaused = true;
@@ -7474,6 +7551,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     window.kieVoiceClose = function() {
       window.speechSynthesis?.cancel();
       hideKieVoicePlayer();
+      _kieVoiceFullText = '';
+      _kieVoiceCharIndex = 0;
+      _kieVoiceVoice = null;
       if (_activeSpeakBtn) {
         resetSpeakBtn(_activeSpeakBtn);
         _activeSpeakBtn = null;
@@ -7495,6 +7575,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         resetSpeakBtn(btn);
         _activeSpeakBtn = null;
         hideKieVoicePlayer();
+        _kieVoiceFullText = '';
+        _kieVoiceCharIndex = 0;
+        _kieVoiceVoice = null;
         setTimeout(() => window.speechSynthesis.cancel(), 0);
         return;
       }
@@ -7518,13 +7601,26 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // genuinely good voice (Apple Enhanced/Siri, Edge Natural, Wavenet) is
       // what makes it sound artificial and robotic again. A slightly slower
       // rate reads as calmer and more natural without distorting the voice.
-      utter.rate  = 0.98;
+      utter.rate  = 0.96;
       utter.pitch = 1;
       utter.volume = 1;
       const voice = pickMaleVoice();
       if (voice) utter.voice = voice;
 
+      // Stash for pause/resume recovery (see _kieRestartVoiceFrom).
+      _kieVoiceFullText = txt;
+      _kieVoiceCharIndex = 0;
+      _kieVoiceRate = utter.rate;
+      _kieVoiceVoice = voice || null;
+
       showKieVoicePlayer(_kieEstimateDuration(txt, utter.rate));
+
+      utter.onboundary = (e) => {
+        if (typeof e.charIndex === 'number') _kieVoiceCharIndex = e.charIndex;
+      };
+      // Player stays in its loading/spinner state until audio actually
+      // starts — covers the native TTS engine's cold-start delay.
+      utter.onstart = _kieVoicePlaybackStarted;
 
       utter.onend = utter.onerror = () => {
         if (_activeSpeakBtn === btn) {
@@ -7541,6 +7637,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utter);
     };
+
 
     // Share AI message
     window.kieShare = function(btn) {
@@ -8043,7 +8140,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         window.speechSynthesis.cancel();
         const myTok = ++speakToken;
         const utter = new SpeechSynthesisUtterance(text);
-        utter.rate = 0.98; utter.pitch = 1; utter.volume = 1;
+        utter.rate = 0.96; utter.pitch = 1; utter.volume = 1;
         const voice = (typeof pickMaleVoice === 'function') ? pickMaleVoice() : null;
         if (voice) utter.voice = voice;
         utter.onend = utter.onerror = () => {
