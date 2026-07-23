@@ -4807,14 +4807,16 @@ Current resume data (JSON):
 ${JSON.stringify(currentResumeData, null, 2)}
 
 Return ONLY valid JSON with the fields to update. Only include a field if you have REAL information for it.
-Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array).
+Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array), changeSummary (string).
 
 CRITICAL RULES:
 1. If the user asks you to ADD a new experience entry (e.g. "add a 4th experience about X"), build a new workExperience entry using the details they described and APPEND it to the existing workExperience array. Include ALL existing entries plus the new one.
 2. If the user asks to EXTEND or EXPAND an existing experience, rewrite that entry with more bullet points/detail, keeping all other entries intact.
 3. If the user asks to ADD or CHANGE something but gives you actual real details to work with (even rough ones like "I built AI automation for a company's WhatsApp inbox"), USE those details — don't refuse just because they're informal.
-4. If the user asks you to add/change something but gives you ZERO real details (no company, no role, no achievement, nothing), return {} and do not invent content.
+4. If the user asks you to add/change a SPECIFIC new fact (a new role, a new certification, a new metric) but gives you ZERO real details for that specific fact, return {} for that field and do not invent content.
 5. When updating workExperience, always return the FULL array (existing + changes), not just the changed entry.
+6. GENERAL IMPROVEMENT REQUESTS ("improve it", "make this better", "optimize my resume", "polish it", "analyze and improve", "strengthen it", "make it more ATS-friendly") are NOT the same as rule 4 — the user isn't withholding new facts, they're asking you to make the EXISTING content stronger. For these, proactively rewrite using only what's already in the current resume data above: tighten and punch up the summary, lead each bullet with a strong action verb, quantify impact wherever the existing data already implies a number or scope, cut filler words, and make phrasing more ATS-friendly. Rewrite summary, workExperience, and skills as appropriate — do NOT return {} just because no new facts were given; you already have everything you need to make it measurably better without inventing anything untrue.
+7. ALWAYS include "changeSummary": a short, specific, honest description of the actual coaching work you did — 1-3 sentences, plain language, naming the real thing you changed (e.g. "Rewrote your summary to lead with your 5 years in digital marketing instead of a generic opener. Added a measurable result to your Senior Analyst bullet. Trimmed your skills list down to the ones ATS systems actually scan for in marketing roles."). Never write a vague summary like "made improvements" — name the specific weak spot you found and what you did about it. If you genuinely changed nothing, set changeSummary to explain why (e.g. "Your resume already reads strong — I didn't find anything worth changing without more detail from you.").
 
 Return ONLY JSON, no markdown, no explanation. If there is nothing you can confidently update, return {}.`;
 
@@ -4835,7 +4837,12 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         raw = raw.replace(/```json|```/g,'').trim();
         patchFields = JSON.parse(raw);
       } catch(e) { patchFields = {}; }
-      return patchFields;
+      // changeSummary describes the coaching work in plain language — it's
+      // metadata for the chat reply, not a real resumeData field, so it
+      // must never get merged into the resume object itself.
+      const changeSummary = typeof patchFields.changeSummary === 'string' ? patchFields.changeSummary : '';
+      delete patchFields.changeSummary;
+      return { patchFields, changeSummary };
     }
 
     // Figures out which fields the user clearly asked about but that didn't make it
@@ -4877,7 +4884,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
     // ── UPDATE RESUME + RESEND PDF (with animated progress) ──────────────────
     async function kieActionUpdateAndSendResume(userRequest) {
       if (!kieSelectedResume || !kieSelectedResume.resumeData) {
-        appendKMsg('ai', "I need a saved resume to edit. Tap one from the **COACH ON:** picker above first. 👆", true);
+        appendKMsg('ai', "I need a saved resume to edit. Tap the resume icon at the top of the chat, pick one from the dropdown, and I'll get started. 👆", true);
         return;
       }
 
@@ -4905,7 +4912,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
       try {
         // Step 1: Ask AI to generate the patch
-        const patchFields = await kieRequestResumePatch(userRequest, kieSelectedResume.resumeData);
+        const { patchFields, changeSummary } = await kieRequestResumePatch(userRequest, kieSelectedResume.resumeData);
         const missingFields = kieRequestedFieldsNotInPatch(userRequest, patchFields);
 
         // Step 2: Apply changes
@@ -4950,11 +4957,13 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const name    = updatedResume.resumeName || d.fullName || 'Resume';
         const html    = buildPrevHTML(d, tpl, tplObj.bg, 'rf-sans');
 
-        const changeDesc = changedKeys.length
-          ? changedKeys.map(k => k === 'summary' ? 'summary' : k === 'skills' ? 'skills' : k).join(', ')
-          : 'your resume';
-
-        let intro = `Done — I've updated your ${changeDesc}. Tap the button below to download your resume. 📄`;
+        // Prefer the model's actual, specific description of what it changed
+        // over a generic field-name list — this is the "show real work"
+        // piece: the user should see WHAT was weak and WHAT was done about
+        // it, not just "I updated your summary."
+        let intro = changeSummary
+          ? `${changeSummary}\n\nTap the button below to download your updated resume. 📄`
+          : `Done — I've updated your ${changedKeys.length ? changedKeys.join(', ') : 'resume'}. Tap the button below to download. 📄`;
         if (missingFields.length) {
           intro += `\n\nOne thing — I still need real details for your ${missingFields.join(' and ')} to add ${missingFields.length > 1 ? 'those' : 'that'} in. Share them and I'll update and resend.`;
         }
@@ -4979,7 +4988,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         if (hasUploadedResume) {
           appendKMsg('ai', "Your uploaded resume is raw text — there's no template or real PDF behind it yet.\n\nSay \"build me a resume\" and I'll turn it into a full editable Kievora resume you can style and download. 📄", true);
         } else {
-          appendKMsg('ai', "I need a saved resume to work with. Select one from the **COACH ON:** picker at the top first. 👆", true);
+          appendKMsg('ai', "I need a saved resume to work with. Tap the resume icon at the top of the chat and pick one from the dropdown first. 👆", true);
         }
         return;
       }
@@ -4998,7 +5007,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       scrollKie();
 
       try {
-        const patchFields  = await kieRequestResumePatch(userRequest, kieSelectedResume.resumeData);
+        const { patchFields, changeSummary } = await kieRequestResumePatch(userRequest, kieSelectedResume.resumeData);
         const missingFields = kieRequestedFieldsNotInPatch(userRequest, patchFields);
 
         const updatedData   = { ...kieSelectedResume.resumeData, ...patchFields };
@@ -5027,7 +5036,11 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
         const changedKeys = Object.keys(patchFields);
         let reply = `Done — switched to the **${tplObj.name}** template (${tplObj.tag})`;
-        reply += changedKeys.length ? ` and updated your ${changedKeys.join(', ')}. ✅` : '. ✅';
+        if (changedKeys.length && changeSummary) {
+          reply += `.\n\n${changeSummary}`;
+        } else {
+          reply += changedKeys.length ? ` and updated your ${changedKeys.join(', ')}. ✅` : '. ✅';
+        }
         if (missingFields.length) {
           reply += `\n\nOne thing though — I still need real details for your ${missingFields.join(' and ')} (school, dates, etc.) to actually add ${missingFields.length > 1 ? 'those' : 'that'} in. Share them and I'll update and resend.`;
         }
@@ -5447,6 +5460,31 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       const REBUILD_NO_NOUN = /\b(recreate|rebuild|redo|refurbish|revamp)\b/i;
       if (hasUploadedResumeCtx && REBUILD_NO_NOUN.test(msg)) return 'BUILD_RESUME_FROM_SCRATCH';
 
+      // SPEED FIX: when a resume is already selected from the picker, an
+      // actionable "improve it" / "optimize my resume" / "fix it up" request
+      // is unambiguous — there's exactly one resume in play and exactly one
+      // obvious thing to do with it. Previously this required the user to
+      // ALSO say "and send it" / "as a file" or it fell through to plain
+      // chat, which gave written feedback and waited for a separate "yes do
+      // that" before touching the file — two round trips for one request.
+      //
+      // "analyze" is deliberately NOT in this list on its own — a pure
+      // analysis ask ("analyze my resume", "how does this look") should get
+      // real, specific feedback in the chat first (what's weak, what to fix)
+      // so the user sees actual coaching before anything gets rewritten,
+      // not a file that silently changed their content. If the SAME message
+      // also asks for action ("analyze and improve it", "analyze and fix
+      // this"), the action verb below still matches and it goes straight to
+      // work — the analysis is folded into the one PDF-generating pass
+      // instead of costing a second round trip. That's the "depends on the
+      // prompt" behavior: analyze-only stays conversational, analyze+act
+      // fires once.
+      const IMPROVE_NOW_VERBS = /\b(improve|optimi[sz]e|polish|enhance|strengthen|upgrade|perfect|elevate|revamp|fix)\b/i;
+      const REFERS_TO_RESUME  = /\b(it|this|that|my resume|the resume|my cv|the cv)\b/i;
+      if (kieSelectedResume?.resumeData && IMPROVE_NOW_VERBS.test(msg) && (REFERS_TO_RESUME.test(msg) || UPDATE_NOUNS.test(msg))) {
+        return 'UPDATE_RESUME_AND_SEND';
+      }
+
       // BUG FIX: this used to run AFTER the plain "send/resend...resume" check
       // below, which is broad enough to match almost any sentence containing
       // both words — so "Add my certification and send me the updated resume"
@@ -5532,7 +5570,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         if (hasUploadedResume) {
           appendKMsg('ai', "Your uploaded resume is raw text — there's no real PDF behind it yet, so there's nothing to download just yet.\n\nWant me to **build it into a real Kievora resume**? Just say \"build me a resume\" and I'll turn it into a full editable version with any of the 13 templates applied — and a real, downloadable PDF. 📄", true);
         } else {
-          appendKMsg('ai', "I'd love to send your resume, but I need you to select one first. Tap a resume from the **COACH ON:** picker above and I'll have it ready for you. 👆", true);
+          appendKMsg('ai', "I'd love to send your resume, but I need you to select one first. Tap the resume icon at the top of the chat, pick one from the dropdown, and I'll have it ready for you. 👆", true);
         }
         return;
       }
@@ -5724,7 +5762,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           await kieActionBuildFromUploadedWithTemplate(tplId);
           document.querySelectorAll('.kie-tpl-pick-pill').forEach(p => { p.disabled = false; p.style.opacity = '1'; });
         } else {
-          appendKMsg('ai', "I need a saved resume to apply a template to. Select one from the **COACH ON:** picker at the top, then pick a template. 👆", true);
+          appendKMsg('ai', "I need a saved resume to apply a template to. Tap the resume icon at the top of the chat, pick one from the dropdown, then choose a template. 👆", true);
         }
         return;
       }
@@ -6196,7 +6234,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (hasUploadedResume) {
             appendKMsg('ai', "Your uploaded resume is raw text, so there's no template or real PDF to edit and resend yet.\n\nSay \"build me a resume\" and I'll turn it into a full editable Kievora resume — then I can apply changes and send you a real PDF anytime. 📄", true);
           } else {
-            appendKMsg('ai', "I need a saved resume to edit. Select one from the **COACH ON:** picker at the top first, then ask me again. 👆", true);
+            appendKMsg('ai', "I need a saved resume to edit. Tap the resume icon at the top of the chat, pick one from the dropdown, then ask me again. 👆", true);
           }
         }
         return;
@@ -6273,7 +6311,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
           if (classified.intent === 'UPDATE_RESUME_AND_SEND') {
             if (kieSelectedResume && kieSelectedResume.resumeData) kieActionUpdateAndSendResume(msg);
-            else appendKMsg('ai', "I need a saved resume to edit. Select one from the **COACH ON:** picker at the top first. 👆", true);
+            else appendKMsg('ai', "I need a saved resume to edit. Tap the resume icon at the top of the chat and pick one from the dropdown first. 👆", true);
             return;
           }
 
