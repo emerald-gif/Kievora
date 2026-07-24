@@ -31,6 +31,51 @@
     else localStorage.removeItem(ACTV_KEY());
   }
 
+  // ── AUTH TOKEN HELPER — for the server-side conversation sync calls below ──
+  function _kieSidebarToken() {
+    return window.__kieAuth?.currentUser?.getIdToken().catch(() => null) || Promise.resolve(null);
+  }
+
+  // ── SYNC CONVERSATION LIST FROM SERVER ────────────────────────────────────
+  // localStorage alone can't survive a new device, a cleared cache, or a
+  // reinstall — but kie.js now upserts a real per-conversation doc on every
+  // turn (users/{uid}/kieConversations/{convId}), so this pulls that list
+  // down and merges it into the local sidebar. Merge, not replace: a
+  // brand-new conversation with no reply yet exists locally before the
+  // server has ever heard of it, and local updatedAt from an in-flight send
+  // can be a beat ahead of the server's (doLogging runs after the stream
+  // finishes) — so server data only overwrites a local entry when it's
+  // actually newer, never blindly.
+  function syncConvsFromServer() {
+    _kieSidebarToken().then(tok => {
+      if (!tok) return;
+      return fetch('/api/kie/conversations', { headers: { Authorization: 'Bearer ' + tok } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data?.conversations?.length) return;
+          loadConvs(); // re-read in case something changed while the request was in flight
+          let changed = false;
+          data.conversations.forEach(sc => {
+            const local = _convs.find(c => c.id === sc.id);
+            if (!local) {
+              _convs.push({ id: sc.id, title: sc.title, createdAt: sc.createdAt || Date.now(), updatedAt: sc.updatedAt || Date.now(), preview: sc.preview || '' });
+              changed = true;
+            } else if (sc.updatedAt && sc.updatedAt > (local.updatedAt || 0)) {
+              local.title     = local.title || sc.title;
+              local.updatedAt = sc.updatedAt;
+              local.preview    = sc.preview || local.preview;
+              changed = true;
+            }
+          });
+          if (changed) {
+            _convs.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+            saveConvs();
+            renderHistory();
+          }
+        });
+    }).catch(() => {});
+  }
+
   // ── HELPERS ───────────────────────────────────────────────────────────────
   function genId() { return 'c' + Date.now() + Math.random().toString(36).slice(2,6); }
 
@@ -228,6 +273,7 @@
   // ── CLEAR ALL HISTORY ─────────────────────────────────────────────────────
   window.confirmClearAllHistory = function() {
     if (confirm('Delete all conversation history? This cannot be undone.')) {
+      const idsToDelete = _convs.map(c => c.id);
       _convs = [];
       saveConvs();
       saveActive(null);
@@ -236,6 +282,17 @@
       closeSidebar();
       if (typeof window._showToast === 'function') window._showToast('History cleared');
       else if (typeof toast === 'function') toast('History cleared');
+      // Same reasoning as ksbDeleteConv — without this, reopening the
+      // sidebar would just re-download everything from the server again.
+      // No bulk-delete endpoint exists yet, so this fires one DELETE per
+      // conversation; fire-and-forget since the local UI is already cleared
+      // and doesn't need to wait on any of these.
+      _kieSidebarToken().then(tok => {
+        if (!tok) return;
+        idsToDelete.forEach(id => {
+          fetch(`/api/kie/conversations/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + tok } }).catch(() => {});
+        });
+      }).catch(() => {});
     }
   };
 
@@ -316,6 +373,27 @@
         } else {
           if (typeof window._kieInternalClear === 'function') window._kieInternalClear();
         }
+      } else {
+        // No local copy of this conversation — it exists in the sidebar list
+        // (server sync put it there) but this device has never actually
+        // opened it, so there's nothing in localStorage to restore from yet.
+        // Pull the real messages from the server instead of showing an
+        // empty chat for a conversation that visibly has a title and preview.
+        if (typeof window._kieInternalClear === 'function') window._kieInternalClear();
+        _kieSidebarToken().then(tok => {
+          if (!tok) return;
+          return fetch(`/api/kie/conversations/${encodeURIComponent(id)}`, { headers: { Authorization: 'Bearer ' + tok } })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+              if (!data?.messages?.length) return;
+              // Only apply if the user is still looking at this same
+              // conversation — they may have tapped into a different one
+              // (or a new chat) while this request was in flight.
+              if (_activeId !== id) return;
+              if (typeof window._restoreKieMsgs === 'function') window._restoreKieMsgs(data.messages);
+              try { localStorage.setItem(histKey, JSON.stringify(data.messages)); } catch(e){}
+            });
+        }).catch(() => {});
       }
       renderHistory();
       setTimeout(()=>{ if(typeof ensureGmailFreshAndAlert==='function') ensureGmailFreshAndAlert().catch(()=>{}); }, 150);
@@ -420,6 +498,13 @@
       startNewKieChat();
     }
     renderHistory();
+    // Delete server-side too — otherwise the next syncConvsFromServer() call
+    // (e.g. reopening the sidebar) would just bring it right back, since as
+    // far as the server's concerned nothing happened to it.
+    _kieSidebarToken().then(tok => {
+      if (!tok) return;
+      return fetch(`/api/kie/conversations/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + tok } });
+    }).catch(() => {});
   };
 
   // ── HOOK INTO KIE SEND TO TRACK CONVERSATIONS ─────────────────────────────
@@ -572,6 +657,7 @@
     watchKieMsgs();
     watchToolResults();
     setTimeout(hookKieSend, 800);
+    syncConvsFromServer();
 
     // Escape key closes sidebar
     document.addEventListener('keydown', e => {

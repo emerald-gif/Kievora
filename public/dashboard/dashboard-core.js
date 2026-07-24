@@ -455,12 +455,19 @@
     let KIE_SELRESUME_LS_KEY = 'kievora_kie_selresume'; // overwritten once uid is known
     // Stable conversation id for the background summary system (getConvSummary/
     // generateConvSummary in server/kie.js already read+write this, they just
-    // never had a real id to key off — "New Chat" resets kieHist but there's
-    // no separate per-thread id concept in the UI today, so this is one
-    // stable id per user, matching how kieHist itself already behaves as a
-    // single ongoing thread. Never overwritten once created, so summaries
-    // accumulate against the same doc for as long as the account exists.
-    let KIE_CONVID_LS_KEY = 'kievora_kie_convid'; // overwritten once uid is known
+    // BUG FIX: this used to be one single, never-changing id per user
+    // ("no separate per-thread id concept in the UI today" — see prior
+    // comment, now stale). The sidebar (dashboard-kie-sidebar.js) has since
+    // grown a real per-conversation id system (_activeId, switched on every
+    // "New Chat" and on picking a past conversation from the list), but
+    // this key was never updated to follow it — so the conversation
+    // summarizer, and now the server-side conversation sync in kie.js, were
+    // both keying EVERY separate conversation a user ever had to the same
+    // single id, silently merging them into one blob. Now this reads the
+    // exact same localStorage key the sidebar uses as its source of truth
+    // (`kievora_kie_active_{uid}`), so a new chat or switching conversations
+    // is reflected here immediately with zero extra wiring between the files.
+    let KIE_ACTIVECONV_LS_KEY = 'kievora_kie_active'; // overwritten once uid is known
     let DRAFTS_LS_KEY = 'kievora_drafts';         // overwritten once uid is known
     let drafts = []; // local-only draft resumes
     let currentDraftId = null; // active draft id while in builder
@@ -915,7 +922,7 @@
       KIE_IMG_LS_KEY = `kievora_kie_images_${currentUid}`;
       KIE_DOC_LS_KEY = `kievora_kie_docs_${currentUid}`;
       KIE_SELRESUME_LS_KEY = `kievora_kie_selresume_${currentUid}`;
-      KIE_CONVID_LS_KEY = `kievora_kie_convid_${currentUid}`;
+      KIE_ACTIVECONV_LS_KEY = `kievora_kie_active_${currentUid}`;
       DRAFTS_LS_KEY  = `kievora_drafts_${currentUid}`;
 
       // Record which uid is active so we can detect account switches
@@ -2903,10 +2910,14 @@
     // ever set it, so the summary system existed but silently never ran.
     function _getKieConvId() {
       try {
-        let id = localStorage.getItem(KIE_CONVID_LS_KEY);
+        let id = localStorage.getItem(KIE_ACTIVECONV_LS_KEY);
         if (!id) {
-          id = 'kc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
-          localStorage.setItem(KIE_CONVID_LS_KEY, id);
+          // Sidebar's own genId() format ('c' + timestamp + random) — matching
+          // it isn't required for correctness (both sides just read/write
+          // whatever string is under this key), but keeps ids visually
+          // consistent if anyone's ever debugging the two side by side.
+          id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem(KIE_ACTIVECONV_LS_KEY, id);
         }
         return id;
       } catch { return null; } // storage unavailable — convId stays null, chat works exactly as before
@@ -7113,7 +7124,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           bubble.classList.add('km-pressed');
           if (navigator.vibrate) { try { navigator.vibrate(12); } catch {} }
           const raw = bubble.dataset.raw ?? (bubble.innerText || bubble.textContent || '');
-          showKMenu(e.clientX, e.clientY, raw);
+          showKMenu(e.clientX, e.clientY, raw, bubble);
         }, HOLD_MS);
       }, { passive: true });
 
@@ -7133,13 +7144,21 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     })();
 
     // Builds (once) and shows the small floating context menu near (x, y).
-    function showKMenu(x, y, rawText) {
+    // bubbleEl (the pressed .km-bubble) is only needed for Edit, so it can
+    // walk back up to the message's wrapper and figure out its position in
+    // kieHist — Copy/Select/Share only ever needed the raw text.
+    function showKMenu(x, y, rawText, bubbleEl) {
       let overlay = g('kmenuOverlay');
       if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'kmenuOverlay';
         overlay.className = 'kmenu-overlay';
         overlay.innerHTML = `<div class="kmenu" id="kmenu">
+          <div class="kmenu-item" id="kmenuEdit">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>
+            Edit
+          </div>
+          <div class="kmenu-sep"></div>
           <div class="kmenu-item" id="kmenuCopy">
             <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copy
@@ -7159,6 +7178,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         overlay.addEventListener('click', (e) => { if (e.target === overlay) closeKMenu(); });
       }
       const menu = g('kmenu');
+      g('kmenuEdit').onclick = () => { closeKMenu(); window.kieEditUserMsg(bubbleEl); };
       g('kmenuCopy').onclick = () => { kmenuCopyAction(rawText); closeKMenu(); };
       g('kmenuSelect').onclick = () => { closeKMenu(); openKSelSheet(rawText); };
       g('kmenuShare').onclick = () => { kmenuShareAction(rawText); closeKMenu(); };
@@ -7192,6 +7212,65 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
     window.showKMenu = showKMenu;
     window.closeKMenu = closeKMenu;
+
+    // ── Edit & resubmit a sent message ──────────────────────────────────────
+    // Standard ChatGPT/Claude-style behavior: editing a message you already
+    // sent discards that message and everything KIE said after it, then
+    // resends the edited text as a fresh turn. There's no branch history —
+    // just one clean redo from that point forward, which matches how a real
+    // conversation correction works (you don't want the old wrong answer
+    // still sitting there once you've fixed what you asked).
+    //
+    // Position in kieHist is derived from DOM order rather than a stored
+    // index: every kieHist entry (plain text, image, file, template picker,
+    // print card) renders as exactly one top-level .km wrapper under
+    // #kieMsgs, always in the same order they were pushed — so counting
+    // .km siblings up to the pressed bubble reliably reproduces its index,
+    // with no need to thread an id through every one of the many kieHist.push
+    // call sites scattered across the file.
+    window.kieEditUserMsg = function(bubbleEl) {
+      if (!bubbleEl) return;
+      if (_kieGenerating) { toast("Can't edit while KIE is replying — stop it first"); return; }
+
+      const wrap = bubbleEl.closest('.km');
+      const msgs = g('kieMsgs');
+      if (!wrap || !msgs) return;
+
+      const siblings = Array.from(msgs.children).filter(el => el.classList.contains('km'));
+      const idx = siblings.indexOf(wrap);
+      if (idx < 0) return;
+
+      const rawText = bubbleEl.dataset.raw ?? (bubbleEl.innerText || bubbleEl.textContent || '');
+
+      // Drop this message and everything after it — both the stored history
+      // and the rendered bubbles — since they're about to be replaced by the
+      // edited resend.
+      kieHist.splice(idx);
+      for (let i = siblings.length - 1; i >= idx; i--) siblings[i].remove();
+      saveKieHistory();
+
+      // Any regenerate button left on an now-earlier reply is stale (it was
+      // hidden in favor of whatever used to be the latest one, which is now
+      // gone) — re-show it on the new latest AI message, same as after a
+      // normal regenerate.
+      const remaining = Array.from(msgs.children).filter(el => el.classList.contains('km-ai'));
+      const newLatest = remaining[remaining.length - 1];
+      if (newLatest) {
+        const regenBtn = newLatest.querySelector('.km-act-btn[onclick^="kieRegen"]');
+        if (regenBtn) regenBtn.style.display = '';
+      }
+
+      const inp = g('kieInp');
+      if (!inp) return;
+      inp.value = rawText;
+      inp.style.height = 'auto';
+      inp.style.height = Math.min(inp.scrollHeight, 140) + 'px';
+      inp.focus();
+      // Put the cursor at the end rather than leaving it wherever a stale
+      // selection was, so typing continues naturally from where they'd expect.
+      inp.setSelectionRange(inp.value.length, inp.value.length);
+      toast('Edit your message, then send');
+    };
 
     // ── Select-text bottom sheet ──────────────────────────────────────────────
     function openKSelSheet(rawText) {
