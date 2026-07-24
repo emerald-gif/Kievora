@@ -2993,7 +2993,7 @@
             appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null, m.mode || null, m.images || null);
           }
         });
-        scrollKie();
+        scrollKie(true, true);
       }
     }
 
@@ -9066,13 +9066,29 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       msgs.addEventListener('touchstart', () => { _kieUserScrolled = true; }, { passive: true });
     }
 
-    function scrollKie(force) {
+    function scrollKie(force, instant) {
       const msgs = g('kieMsgs');
       if (!msgs) return;
       _initKieMsgScroll();
       // Only scroll if: forced (new message sent/received start), or user is already near bottom
       if (force || !_kieUserScrolled) {
-        msgs.scrollTop = msgs.scrollHeight;
+        if (instant) {
+          // .kie-msgs has scroll-behavior:smooth in CSS (nice for following
+          // along as a reply streams in), but that same rule was hijacking
+          // this jump too — every time the screen opened on an existing
+          // conversation, restoreKieUI() rebuilds the message list (which
+          // resets scroll to the top) and then this runs, so the smooth
+          // behavior visibly animated all the way down through the whole
+          // history instead of just landing where the user left off.
+          // Suppressing scroll-behavior for this one jump fixes that
+          // without touching the smooth feel anywhere else.
+          const prevBehavior = msgs.style.scrollBehavior;
+          msgs.style.scrollBehavior = 'auto';
+          msgs.scrollTop = msgs.scrollHeight;
+          msgs.style.scrollBehavior = prevBehavior;
+        } else {
+          msgs.scrollTop = msgs.scrollHeight;
+        }
         _kieUserScrolled = false;
       }
     }
