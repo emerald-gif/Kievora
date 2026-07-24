@@ -2177,6 +2177,62 @@
     document.getElementById('faq').scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
+  // ── Shared SSE reader for /api/kie-support ──
+  // Used by both the quick inline answer panel and the full KIE chat below, so
+  // the stream-parsing logic exists once instead of twice. Also centralizes
+  // hiding the hidden <<SUGGESTIONS: ...>> tag while text is still arriving —
+  // it's the last thing in the reply, so a partial tag would otherwise flash
+  // on screen for a moment before the stream finishes.
+  async function streamKieSupport(messages, { onToken, onDone, onError }) {
+    let res;
+    try {
+      res = await fetch('/api/kie-support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages }),
+      });
+    } catch (e) {
+      onError("Couldn't reach KIE right now. Check your connection and try again.");
+      return;
+    }
+
+    if (!res.ok) {
+      let msg = 'KIE is unavailable right now. Please try again.';
+      try { const errBody = await res.json(); if (errBody && errBody.error) msg = errBody.error; } catch(e) {}
+      onError(msg);
+      return;
+    }
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', full = '';
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let chunk;
+          try { chunk = JSON.parse(line.slice(6)); } catch(e) { continue; }
+          if (chunk.t === 'd') {
+            full += chunk.v;
+            onToken(full);
+          } else if (chunk.t === 'err') {
+            onError(chunk.v || 'KIE is unavailable right now.');
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      onError('Connection interrupted. Please try again.');
+      return;
+    }
+    onDone(full);
+  }
+
   // ── Ask KIE inline — show answer panel ──
   async function askKieInline(q) {
     suggestBox.classList.remove('open');
@@ -2187,22 +2243,31 @@
     answerPanel.style.display = 'block';
     answerPanel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
-    try {
-      const res = await fetch('/api/kie-support', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role:'user', content: q }] })
-      });
-      const data = await res.json();
-      const reply = data.reply || "Sorry, I couldn't get an answer right now.";
-      answerTyping.style.display = 'none';
-      answerBody.innerHTML = reply
+    const render = (text) => {
+      answerBody.innerHTML = text
         .replace(/\n/g,'<br>')
         .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-    } catch(e) {
-      answerTyping.style.display = 'none';
-      answerBody.innerHTML = "Couldn't reach KIE right now. Try the chat below.";
-    }
+    };
+    let started = false;
+
+    await streamKieSupport([{ role:'user', content: q }], {
+      onToken: (full) => {
+        if (!started) { answerTyping.style.display = 'none'; started = true; }
+        // BUG FIX: this panel never stripped the hidden <<SUGGESTIONS: ...>> tag
+        // the model is instructed to append after every on-topic reply, so the
+        // raw "<<SUGGESTIONS: ...>>" text was showing up at the end of every
+        // quick answer. Hidden here while streaming, parsed off for good below.
+        render(full.replace(/<<[\s\S]*$/, ''));
+      },
+      onDone: (full) => {
+        const clean = full.replace(/<<SUGGESTIONS:[\s\S]*?>>\s*$/i, '').trim();
+        render(clean || "Sorry, I couldn't get an answer right now.");
+      },
+      onError: (msg) => {
+        answerTyping.style.display = 'none';
+        if (!started) answerBody.innerHTML = "Couldn't reach KIE right now. Try the chat below.";
+      },
+    });
   }
 
   function closeAnswerPanel() {
@@ -2344,31 +2409,45 @@
     appendKieMsg('user', msg);
     kieHist.push({ role:'user', content:msg });
     document.getElementById('kieSugs').style.display = 'none';
-    setKieTyping(true);
+    setKieTyping(true); // stays true for the whole exchange — only the "…" dots below hide early
 
-    try {
-      const res = await fetch('/api/kie-support', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ messages: kieHist })
-      });
-      const data = await res.json();
-      let reply = data.reply || "Sorry, I couldn't get a response right now. Try emailing support@kievora.app";
+    const msgsEl = document.getElementById('kieMsgs');
+    let bubble = null;
+    const render = (b, text) => { b.innerHTML = text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'); };
 
-      let followUps = [];
-      const sugMatch = reply.match(/<<SUGGESTIONS:\s*(.+?)\s*>>\s*$/i);
-      if (sugMatch) {
-        followUps = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
-        reply = reply.slice(0, sugMatch.index).trim();
-      }
-
-      kieHist.push({ role:'assistant', content:reply });
-      setKieTyping(false);
-      appendKieMsg('ai', reply, followUps);
-    } catch(e) {
-      setKieTyping(false);
-      appendKieMsg('ai', "I'm having trouble connecting right now. Please try again, or email support@kievora.app for help.");
-    }
+    await streamKieSupport(kieHist, {
+      onToken: (full) => {
+        if (!bubble) {
+          document.getElementById('kieTyping').classList.remove('show'); // hide the dots, keep Send disabled till onDone/onError
+          bubble = appendKieMsg('ai', '');
+        }
+        render(bubble, full.replace(/<<[\s\S]*$/, '')); // hide the hidden suggestions tag while it's still streaming in
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+      },
+      onDone: (full) => {
+        let reply = full;
+        let followUps = [];
+        const sugMatch = reply.match(/<<SUGGESTIONS:\s*(.+?)\s*>>\s*$/i);
+        if (sugMatch) {
+          followUps = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
+          reply = reply.slice(0, sugMatch.index).trim();
+        }
+        reply = reply || "Sorry, I couldn't get a response right now. Try emailing support@kievora.app";
+        kieHist.push({ role:'assistant', content:reply });
+        if (!bubble) bubble = appendKieMsg('ai', reply);
+        else render(bubble, reply);
+        appendKieFollowUps(followUps);
+        setKieTyping(false);
+      },
+      onError: (errMsg) => {
+        if (bubble) {
+          bubble.innerHTML += '<br><span style="opacity:.65;font-size:12px">⚠ ' + errMsg.replace(/[<>]/g,'') + '</span>';
+        } else {
+          appendKieMsg('ai', "I'm having trouble connecting right now. Please try again, or email support@kievora.app for help.");
+        }
+        setKieTyping(false);
+      },
+    });
   }
 
   function sendKieQ(q) {
@@ -2381,23 +2460,31 @@
     const typing = document.getElementById('kieTyping');
     const w = document.createElement('div');
     w.className = 'kie-msg ' + role;
-    const formatted = text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    const formatted = (text || '').replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
     if (role === 'ai') {
       w.innerHTML = `<div class="kie-msg-av"><img src="kie.jpg" alt="KIE" onerror="this.parentElement.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#5B21B6,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0';this.parentElement.textContent='K'"/></div><div class="kie-bubble ai">${formatted}</div>`;
     } else {
       w.innerHTML = `<div class="kie-msg-av user">U</div><div class="kie-bubble user">${formatted}</div>`;
     }
     msgs.insertBefore(w, typing);
+    if (role === 'ai') appendKieFollowUps(followUps);
+    msgs.scrollTop = msgs.scrollHeight;
+    return w.querySelector('.kie-bubble'); // returned so a streaming caller can keep updating this same bubble
+  }
 
-    if (role === 'ai' && Array.isArray(followUps) && followUps.length) {
-      const fw = document.createElement('div');
-      fw.className = 'kie-followups';
-      fw.innerHTML = followUps.map(q =>
-        `<button type="button" class="kie-fup" onclick="sendKieQ('${q.replace(/'/g,"\\'")}')">${q}</button>`
-      ).join('');
-      msgs.insertBefore(fw, typing);
-    }
-
+  // Split out of appendKieMsg so a streaming reply (which grows an existing
+  // bubble in place rather than creating a new one each token) can attach its
+  // follow-up chips once, at the end, without duplicating this markup.
+  function appendKieFollowUps(followUps) {
+    if (!Array.isArray(followUps) || !followUps.length) return;
+    const msgs = document.getElementById('kieMsgs');
+    const typing = document.getElementById('kieTyping');
+    const fw = document.createElement('div');
+    fw.className = 'kie-followups';
+    fw.innerHTML = followUps.map(q =>
+      `<button type="button" class="kie-fup" onclick="sendKieQ('${q.replace(/'/g,"\\'")}')">${q}</button>`
+    ).join('');
+    msgs.insertBefore(fw, typing);
     msgs.scrollTop = msgs.scrollHeight;
   }
 
