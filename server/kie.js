@@ -943,6 +943,25 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
     }
   });
 
+  // ─── POST /api/kie/voice-feedback — thumbs up/down after a voice call ──────
+  app.post('/api/kie/voice-feedback', authenticate, async (req, res) => {
+    try {
+      const { rating, durationSec, convId } = req.body;
+      if (rating !== 'up' && rating !== 'down') return res.status(400).json({ error: 'rating must be "up" or "down"' });
+      db.collection('analyticsEvents').add({
+        event: 'kie_voice_feedback', feature: 'kie_voice',
+        userId: req.user.uid, rating,
+        durationSec: Number.isFinite(durationSec) ? durationSec : null,
+        convId: convId || null,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      }).catch(() => {});
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('POST /api/kie/voice-feedback error:', err.message);
+      res.status(500).json({ error: 'Could not save feedback.' });
+    }
+  });
+
   // ─── GET /api/kie/conversations — list this user's conversations ───────────
   // Server-side counterpart to dashboard-kie-sidebar.js's localStorage-only
   // conversation list — lets the sidebar populate itself on a device that
