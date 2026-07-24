@@ -567,8 +567,17 @@
     .tcard-tag{font-size:10px;padding:3px 9px;border-radius:99px;font-weight:700;background:#f3e8ff;color:var(--p)}
 
     /* ── BUILDER (step wizard, no preview) ── */
-    .bld{max-width:680px;margin:0 auto;padding:100px 20px 32px}
-    .bld-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:26px}
+    /* BUG FIX: this container reserved 100px of top padding to clear the
+       fixed page header, but the header itself is nowhere near that tall —
+       compare to .ctool-body's 74px clearance for its own fixed 60px
+       header. The extra ~26px, combined with .bld-hdr's own 26px
+       margin-bottom right below the step circles, rendered as one
+       continuous lavender dead-space band (same background color as the
+       page) between the 1-2-3 step indicator and the actual form — the gap
+       the user is pointing at. Tightened both to match the working pattern
+       used elsewhere in the app. */
+    .bld{max-width:680px;margin:0 auto;padding:74px 20px 32px}
+    .bld-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:14px}
     .hdr-abs-l{position:absolute;left:0;top:50%;transform:translateY(-50%)}
     .hdr-abs-r{position:absolute;right:0;top:50%;transform:translateY(-50%)}
     /* Style the builder back button to match the Instagram-style back */
@@ -1744,8 +1753,10 @@
     .upload-trust-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mute);font-weight:600}
 
     /* ── COVER LETTER VIEW ── */
-    .cl-wrap{max-width:680px;margin:0 auto;padding:88px 20px 48px}
-    .cl-step-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:24px}
+    /* BUG FIX: same dead-space bug as .bld above — see that comment.
+       Tightened to match. */
+    .cl-wrap{max-width:680px;margin:0 auto;padding:74px 20px 48px}
+    .cl-step-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:14px}
     #clBackBtn.back-btn{
       width:40px;height:40px;background:transparent;border:none;
       display:flex;align-items:center;justify-content:center;
@@ -2121,9 +2132,26 @@
     .hub-banner{background:linear-gradient(135deg,#1e0845,#3b1a7a);border-radius:18px;margin:18px 18px 0;padding:20px 18px;color:#fff;position:relative;overflow:hidden}
     .hub-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:rgba(168,85,247,.3);border-radius:50%}
 
-    /* ── SCORE RING ── */
-    .score-ring-wrap{display:flex;flex-direction:column;align-items:center;margin:0 auto 18px}
+    /* ── SCORE RING (AI tool cards — Career Health, Job Match, Promotion
+       Readiness, etc.) ──
+       BUG FIX: this used to be named .score-ring-wrap, same as the class
+       used by the Analyze-tool hero section above (line ~1859). Both rules
+       applied together (CSS merges non-conflicting properties across same-
+       specificity rules), which meant this class ended up fighting the other
+       one's position:relative/width:92px/height:92px against its own
+       flex-column/no-fixed-size layout — even though these tool cards
+       actually draw a 120px SVG ring, not a 92px one. That mismatch is what
+       let the score number/grade drift outside the card and overlap
+       whatever was above it (the "Analyze" button, in the reported case).
+       Renamed to avoid the collision, sized to match the real 120px ring,
+       and paired with .score-ring-overlay-tool below (an absolute-position
+       overlay, the same reliable technique the Analyze-hero ring already
+       uses) instead of the old inline margin-top:-88px hack, which only
+       ever centered correctly by coincidence and broke the moment anything
+       about the surrounding layout shifted. */
+    .score-ring-wrap-tool{position:relative;width:120px;height:120px;margin:0 auto 8px}
     .score-ring-svg{transform:rotate(-90deg)}
+    .score-ring-overlay-tool{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
     .score-ring-val{font-size:32px;font-weight:900;color:var(--txt);letter-spacing:-1px}
     .score-ring-label{font-size:12px;color:var(--sub);margin-top:2px;text-align:center}
     .score-breakdown-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}

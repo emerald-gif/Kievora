@@ -10440,17 +10440,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const dash = circum - (score / 100) * circum;
         el.innerHTML = `
           <div class="ctool-card">
-            <div class="score-ring-wrap">
+            <div class="score-ring-wrap-tool">
               <svg class="score-ring-svg" width="120" height="120" viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/>
                 <circle cx="60" cy="60" r="52" fill="none" stroke="${sc}" stroke-width="10" stroke-dasharray="${circum}" stroke-dashoffset="${dash}" stroke-linecap="round"/>
               </svg>
-              <div style="margin-top:-88px;text-align:center;z-index:1;position:relative">
+              <div class="score-ring-overlay-tool">
                 <div class="score-ring-val" style="color:${sc}">${score}</div>
                 <div style="font-size:11px;color:var(--sub)">${esc(d.matchLevel || 'Match Score')}</div>
               </div>
-              <div style="margin-top:72px;text-align:center;padding:0 16px"><div style="font-size:13px;color:var(--sub);line-height:1.5">${esc(d.summary || '')}</div></div>
             </div>
+            <div style="text-align:center;padding:0 16px"><div style="font-size:13px;color:var(--sub);line-height:1.5">${esc(d.summary || '')}</div></div>
           </div>
           ${mkTakeaway(d.youTakeaway)}
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:#059669;margin-bottom:8px">✅ Matching Strengths</div>${mkListItems(d.matchingSkills)}</div>
@@ -10918,19 +10918,17 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         const dash = circumference - (score/100)*circumference;
         el.innerHTML = `
           <div class="ctool-card">
-            <div class="score-ring-wrap">
+            <div class="score-ring-wrap-tool">
               <svg class="score-ring-svg" width="120" height="120" viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/>
                 <circle cx="60" cy="60" r="52" fill="none" stroke="${scoreColor(score)}" stroke-width="10" stroke-dasharray="${circumference}" stroke-dashoffset="${dash}" stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
               </svg>
-              <div style="margin-top:-88px;text-align:center;z-index:1;position:relative">
+              <div class="score-ring-overlay-tool">
                 <div class="score-ring-val" style="color:${scoreColor(score)}">${score}</div>
                 <div style="font-size:13px;font-weight:700;color:var(--sub)">${d.grade||''}</div>
               </div>
-              <div style="margin-top:72px;text-align:center">
-                <div style="font-size:14px;font-weight:800;color:var(--txt)">${esc(d.headline||'Career Health Score')}</div>
-              </div>
             </div>
+            <div style="text-align:center"><div style="font-size:14px;font-weight:800;color:var(--txt)">${esc(d.headline||'Career Health Score')}</div></div>
             <div class="ctool-divider"></div>
             ${bdKeys.map((k,i)=>{ const item=bd[k]||{}; const s=item.score||0; return `<div class="score-breakdown-row"><div class="score-breakdown-label">${bdLabels[i]}</div><div class="score-breakdown-bar-wrap"><div class="score-breakdown-bar" style="width:${s}%;background:${scoreColor(s)}"></div></div><div class="score-breakdown-num">${s}</div></div>`; }).join('')}
           </div>
@@ -11295,11 +11293,11 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         const circumference=2*Math.PI*52; const dash=circumference-(score/100)*circumference;
         el.innerHTML=`
           <div class="ctool-card">
-            <div class="score-ring-wrap">
+            <div class="score-ring-wrap-tool">
               <svg class="score-ring-svg" width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/><circle cx="60" cy="60" r="52" fill="none" stroke="${sc}" stroke-width="10" stroke-dasharray="${circumference}" stroke-dashoffset="${dash}" stroke-linecap="round"/></svg>
-              <div style="margin-top:-88px;text-align:center;z-index:1;position:relative"><div class="score-ring-val" style="color:${sc}">${score}</div><div style="font-size:11px;color:var(--sub)">${esc(d.readinessLevel||'')}</div></div>
-              <div style="margin-top:72px;text-align:center;padding:0 16px"><div style="font-size:13px;color:var(--sub);line-height:1.5">${esc(d.verdict||'')}</div></div>
+              <div class="score-ring-overlay-tool"><div class="score-ring-val" style="color:${sc}">${score}</div><div style="font-size:11px;color:var(--sub)">${esc(d.readinessLevel||'')}</div></div>
             </div>
+            <div style="text-align:center;padding:0 16px"><div style="font-size:13px;color:var(--sub);line-height:1.5">${esc(d.verdict||'')}</div></div>
           </div>
           ${mkTakeaway(d.youTakeaway)}
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:#059669;margin-bottom:8px">💪 Current Strengths</div>${mkListItems(d.strengths)}</div>
