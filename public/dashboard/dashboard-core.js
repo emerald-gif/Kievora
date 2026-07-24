@@ -464,6 +464,13 @@
     let DRAFTS_LS_KEY = 'kievora_drafts';         // overwritten once uid is known
     let drafts = []; // local-only draft resumes
     let currentDraftId = null; // active draft id while in builder
+    // BUG FIX: carries a REAL (AI-judged) atsScore/grade from the Analyze
+    // tool into the builder when the user imports an analyzed resume via
+    // useAnalyzedResume(). Without this, saving that resume "as-is" into
+    // Kievora silently swapped the real analyzed score for a totally
+    // different, naive field-completeness heuristic on the success screen —
+    // the exact "I didn't change anything but the score changed" bug.
+    let _builderImportedAts = null; // { atsScore, grade } | null
 
     const TPLS = [
       { id:'classic',   name:'Classic',    tag:'Professional',  bg:'#1e3a8a' },
@@ -1008,7 +1015,7 @@
       saveDrafts();
     }
     function getBuilderPayload(){
-      return {
+      const payload = {
         resumeName:   g('bRName').value.trim() || 'Untitled',
         templateType: selTpl,
         primaryColor: (TPLS.find(t => t.id === selTpl) || TPLS[0]).bg,
@@ -1026,6 +1033,11 @@
           languages:      langList.map(({ _id, ...l }) => l),
         },
       };
+      if (_builderImportedAts && typeof _builderImportedAts.atsScore === 'number') {
+        payload.atsScore = _builderImportedAts.atsScore;
+        if (_builderImportedAts.grade) payload.grade = _builderImportedAts.grade;
+      }
+      return payload;
     }
     function autoSaveDraft(){
       if (!currentDraftId) return;
@@ -1227,7 +1239,7 @@
         const openAction = isDraft ? editAction : `openDetail('${r.id}')`;
         const delAction  = isDraft ? `deleteDraft('${r.id}')` : `confirmDel('${r.id}')`;
 
-        const score = isDraft ? null : computeATSScore(d);
+        const score = isDraft ? null : (typeof r.atsScore === 'number' ? r.atsScore : computeATSScore(d));
         const sc = score !== null ? atsColor(score) : '#94a3b8';
 
         if (!isDraft && score !== null) {
@@ -1706,7 +1718,12 @@
         const d = drafts.find(x => x.id === id);
         if (d) { fillForm(d); currentDraftId = id; }
       } else if (id) {
-        try { const r = await api('GET', '/api/resumes/' + id); fillForm(r); editId = id; }
+        try {
+          const r = await api('GET', '/api/resumes/' + id);
+          fillForm(r);
+          editId = id;
+          _builderImportedAts = (typeof r.atsScore === 'number') ? { atsScore: r.atsScore, grade: r.grade || null } : null;
+        }
         catch (e) { toast(e.message, 'err'); return; }
       } else {
         // Brand-new resume → create a draft id
@@ -1738,6 +1755,7 @@
       editingWId = editingEId = editingCrtId = editingPrjId = editingLngId = null;
       certList = []; projList = []; langList = [];
       resumePhotoData = '';
+      _builderImportedAts = null;
       updatePhotoPreview();
       renderW(); renderE(); renderS(); renderCert(); renderProj(); renderLang();
       // Reset coach panels
@@ -2083,13 +2101,16 @@
 
       const btn = g('bSvBtn'); btn.disabled = true; btn.textContent = 'Saving…';
       const payload = getBuilderPayload();
+      let savedDoc = null;
       try {
         if (editId) {
           const u = await api('PUT', '/api/resumes/' + editId, payload);
           resumes = resumes.map(r => r.id === editId ? { id: editId, ...u } : r);
+          savedDoc = u;
         } else {
           const c = await api('POST', '/api/resumes', payload);
           resumes.unshift(c); editId = c.id;
+          savedDoc = c;
         }
         // Clear draft now that it's officially saved
         if (currentDraftId) { removeDraft(currentDraftId); currentDraftId = null; }
@@ -2097,7 +2118,14 @@
         toast('Resume saved! 🎉');
         // Populate ATS score on success screen
         try {
-          const sScore = computeATSScore(payload.resumeData || {});
+          // BUG FIX: this used to always recompute via the naive field-
+          // completeness heuristic, even when a REAL AI-judged score for this
+          // exact resume already existed and was just persisted above — that
+          // mismatch (e.g. Analyzer said 62, this screen said 91) was the
+          // "totally different score after saving with nothing changed" bug.
+          // Prefer the real, persisted score whenever we have one.
+          const hasRealScore = savedDoc && typeof savedDoc.atsScore === 'number';
+          const sScore = hasRealScore ? savedDoc.atsScore : computeATSScore(payload.resumeData || {});
           const sSc = atsColor(sScore);
           const R = 36, circ = +(2 * Math.PI * R).toFixed(2);
           const off = +(circ - (sScore / 100) * circ).toFixed(2);
@@ -2521,7 +2549,7 @@
 
       // Populate ATS score on detail screen
       try {
-        const ds = computeATSScore(d);
+        const ds = typeof r.atsScore === 'number' ? r.atsScore : computeATSScore(d);
         const dc = atsColor(ds);
         const dR = 28, dCirc = +(2 * Math.PI * dR).toFixed(2);
         const dOff = +(dCirc - (ds / 100) * dCirc).toFixed(2);
@@ -9359,6 +9387,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (!analysisResult) return;
       const r = analysisResult;
       resetForm();
+      // Carry the real analyzed score forward — see _builderImportedAts comment.
+      _builderImportedAts = (typeof r.atsScore === 'number') ? { atsScore: r.atsScore, grade: r.grade || null } : null;
       g('bRName').value  = r.fullName ? r.fullName + ' Resume' : 'Untitled Resume';
       g('bFull').value   = r.fullName  || '';
       g('bTitle').value  = r.jobTitle  || '';
