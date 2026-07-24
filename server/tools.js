@@ -53,7 +53,7 @@ module.exports = function registerToolsRoutes(app) {
   app.post('/api/resumes', authenticate, async (req, res) => {
     console.log('POST /api/resumes — uid:', req.user.uid, '| body keys:', Object.keys(req.body));
     try {
-      const { resumeName, templateType, primaryColor, fontFamily, resumeData } = req.body;
+      const { resumeName, templateType, primaryColor, fontFamily, resumeData, atsScore, grade } = req.body;
 
       if (!resumeName || !templateType || !resumeData) {
         const missing = [!resumeName&&'resumeName', !templateType&&'templateType', !resumeData&&'resumeData'].filter(Boolean);
@@ -62,7 +62,7 @@ module.exports = function registerToolsRoutes(app) {
       }
 
       const now    = admin.firestore.FieldValue.serverTimestamp();
-      const docRef = await db.collection(RESUMES).add({
+      const docData = {
         userId:       req.user.uid,
         resumeName:   resumeName   || 'Untitled Resume',
         templateType: templateType || 'classic',
@@ -71,7 +71,17 @@ module.exports = function registerToolsRoutes(app) {
         resumeData,
         createdAt: now,
         updatedAt: now,
-      });
+      };
+      // BUG FIX: ATS score used to be recomputed independently by up to three
+      // completely different methods (AI-judged /api/analyze-resume, AI-judged
+      // /api/career-health, and a client-side field-completeness heuristic) —
+      // none of them shared, none of them persisted — so the same unchanged
+      // resume could show a different "ATS Score" on every screen. Now the
+      // real, AI-judged score gets stored ONCE on the resume record itself
+      // and treated as the source of truth until content actually changes.
+      if (typeof atsScore === 'number') docData.atsScore = Math.min(100, Math.max(0, atsScore));
+      if (grade) docData.grade = grade;
+      const docRef = await db.collection(RESUMES).add(docData);
 
       const created = await docRef.get();
       console.log('POST /api/resumes — created doc:', docRef.id);
@@ -90,13 +100,30 @@ module.exports = function registerToolsRoutes(app) {
       if (!doc.exists)                        return res.status(404).json({ error: 'Resume not found.' });
       if (doc.data().userId !== req.user.uid) return res.status(403).json({ error: 'Forbidden.' });
 
-      const { resumeName, templateType, primaryColor, fontFamily, resumeData } = req.body;
+      const { resumeName, templateType, primaryColor, fontFamily, resumeData, atsScore, grade } = req.body;
       const updates = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
       if (resumeName   !== undefined) updates.resumeName   = resumeName;
       if (templateType !== undefined) updates.templateType = templateType;
       if (primaryColor !== undefined) updates.primaryColor = primaryColor;
       if (fontFamily   !== undefined) updates.fontFamily   = fontFamily;
       if (resumeData   !== undefined) updates.resumeData   = resumeData;
+
+      // BUG FIX: same fix as POST — accept an explicit fresh score from a real
+      // analysis, but if the content itself is changing in this same request
+      // and nobody supplied a new score alongside it, the OLD stored score no
+      // longer describes the new content — clear it instead of silently
+      // leaving a stale number that no longer matches what's on the page.
+      // Content-only saves (template swap, name change, no resumeData in the
+      // request) leave the existing score untouched, which is the actual fix
+      // for "I didn't change anything but the score changed" — it now simply
+      // doesn't get touched at all unless content or a fresh score is present.
+      if (typeof atsScore === 'number') {
+        updates.atsScore = Math.min(100, Math.max(0, atsScore));
+        if (grade) updates.grade = grade;
+      } else if (resumeData !== undefined) {
+        updates.atsScore = admin.firestore.FieldValue.delete();
+        updates.grade    = admin.firestore.FieldValue.delete();
+      }
 
       await docRef.update(updates);
       const updated = await docRef.get();
