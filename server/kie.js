@@ -826,8 +826,21 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
         : (msg.content?.find?.(b => b.type === 'text')?.text || ''),
     }));
 
-    // Fire-and-forget Firestore logging — strips imageBase64 to prevent
-    // 1 MB document-size limit violations (Bug #4 fix)
+    // Fire-and-forget Firestore logging + conversation persistence.
+    // BUG FIX: this used to call .add() on every single turn, which created
+    // a BRAND NEW document each time containing the ENTIRE message history
+    // over again — pure duplication, growing without bound, and never once
+    // read back by anything. The conversation itself only ever lived in the
+    // browser's localStorage, which meant a user's whole KIE history was
+    // gone the moment they switched devices, cleared site data, or
+    // reinstalled the app — nothing like ChatGPT/ Claude/Meta AI, where a
+    // conversation is a server-side object that just happens to be rendered
+    // on whatever device you're on right now.
+    // Now this upserts ONE doc per conversation (keyed by the client's real
+    // convId — see the convId fix in dashboard-core.js's _getKieConvId,
+    // which used to hand every separate conversation the same id), so the
+    // conversation can actually be listed and restored later via the two
+    // new endpoints below.
     const doLogging = (replyText, usedModel, usedMode) => {
       const _uid = req.user.uid;
       db.collection('analyticsEvents').add({
@@ -844,16 +857,36 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
         const { imageBase64: _dropped, ...rest } = msg;
         return { ...rest, imageName: msg.imageName || 'image', imageType: msg.imageType };
       });
-      db.collection('kieLogs').doc(_uid).collection('conversations').add({
-        title:        safeMessages[0]?.content?.slice?.(0, 50) || 'Chat',
-        messages:     [...safeMessages, { role: 'assistant', content: replyText }],
-        model:        usedModel,
-        mode:         usedMode,
-        messageCount: safeMessages.length + 1,
-        createdAt:    admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt:    admin.firestore.FieldValue.serverTimestamp(),
-      }).catch(() => {});
+      const fullThread = [...safeMessages, { role: 'assistant', content: replyText }];
+      // Cap what's actually persisted — a years-long conversation could
+      // otherwise still approach the 1 MB Firestore doc limit even with
+      // images stripped. This keeps the same last-N window the client's own
+      // localStorage cap (saveKieHistory, 40 messages) roughly matches, with
+      // some headroom since server storage doesn't share the browser's tab
+      // memory pressure.
+      const cappedMessages = fullThread.slice(-100);
+      const title = safeMessages[0]?.content?.slice?.(0, 50) || 'Chat';
+
+      const { convId: _convId } = req.body;
+      if (_convId) {
+        const convRef = db.collection('users').doc(_uid).collection('kieConversations').doc(_convId);
+        const baseData = {
+          title,
+          messages:     cappedMessages,
+          model:        usedModel,
+          mode:         usedMode,
+          messageCount: cappedMessages.length,
+          updatedAt:    admin.firestore.FieldValue.serverTimestamp(),
+        };
+        // .create() only succeeds the FIRST time this convId is ever saved —
+        // that's how createdAt ends up set exactly once instead of drifting
+        // forward on every turn. Every later save hits the "already exists"
+        // branch and merges everything except createdAt, leaving it intact.
+        convRef.create({ ...baseData, createdAt: admin.firestore.FieldValue.serverTimestamp() })
+          .catch(() => { convRef.set(baseData, { merge: true }).catch(() => {}); });
+      }
     };
+
 
     try {
       // Spark has no vision at all — even a stale image from an earlier turn
@@ -910,7 +943,68 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
     }
   });
 
-  // ─── POST /api/kie-intent — fast intent-classification safety net ─────────────
+  // ─── GET /api/kie/conversations — list this user's conversations ───────────
+  // Server-side counterpart to dashboard-kie-sidebar.js's localStorage-only
+  // conversation list — lets the sidebar populate itself on a device that
+  // has never talked to KIE before (new phone, cleared cache, reinstall),
+  // instead of just showing "no conversations" even though the account has
+  // real history sitting server-side.
+  app.get('/api/kie/conversations', authenticate, async (req, res) => {
+    try {
+      const snap = await db.collection('users').doc(req.user.uid).collection('kieConversations')
+        .orderBy('updatedAt', 'desc')
+        .limit(100)
+        .get();
+      const convs = snap.docs.map(doc => {
+        const d = doc.data();
+        const lastMsg = Array.isArray(d.messages) && d.messages.length ? d.messages[d.messages.length - 1] : null;
+        return {
+          id:        doc.id,
+          title:     d.title || 'Conversation',
+          preview:   typeof lastMsg?.content === 'string' ? lastMsg.content.slice(0, 80) : '',
+          model:     d.model || null,
+          mode:      d.mode || null,
+          createdAt: d.createdAt?.toMillis?.() || null,
+          updatedAt: d.updatedAt?.toMillis?.() || null,
+        };
+      });
+      res.json({ conversations: convs });
+    } catch (err) {
+      console.error('GET /api/kie/conversations error:', err.message);
+      res.status(500).json({ error: 'Could not load conversations.' });
+    }
+  });
+
+  // ─── GET /api/kie/conversations/:convId — full message history for one chat ──
+  app.get('/api/kie/conversations/:convId', authenticate, async (req, res) => {
+    try {
+      const doc = await db.collection('users').doc(req.user.uid).collection('kieConversations').doc(req.params.convId).get();
+      if (!doc.exists) return res.status(404).json({ error: 'Conversation not found.' });
+      const d = doc.data();
+      res.json({ id: doc.id, title: d.title || 'Conversation', messages: d.messages || [], model: d.model || null, mode: d.mode || null });
+    } catch (err) {
+      console.error('GET /api/kie/conversations/:convId error:', err.message);
+      res.status(500).json({ error: 'Could not load conversation.' });
+    }
+  });
+
+  // ─── DELETE /api/kie/conversations/:convId ──────────────────────────────────
+  app.delete('/api/kie/conversations/:convId', authenticate, async (req, res) => {
+    try {
+      await db.collection('users').doc(req.user.uid).collection('kieConversations').doc(req.params.convId).delete();
+      // Best-effort cleanup of the matching conversation summary too (see
+      // saveConvSummary/getConvSummary in lib.js for where this actually
+      // lives) — not critical if it fails, an orphaned summary just never
+      // gets read again since nothing will ever request this convId again.
+      db.collection('users').doc(req.user.uid).collection('convSummaries').doc(req.params.convId).delete().catch(() => {});
+      res.json({ deleted: true });
+    } catch (err) {
+      console.error('DELETE /api/kie/conversations/:convId error:', err.message);
+      res.status(500).json({ error: 'Could not delete conversation.' });
+    }
+  });
+
+
   // Layer 2 of the hybrid intent system. The client's instant regex layer
   // (detectKieIntent in dashboard.html) catches clean phrasings with zero added
   // latency — that stays the fast path for the obvious cases. This endpoint

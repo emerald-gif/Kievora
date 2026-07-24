@@ -9,7 +9,7 @@ module.exports = function registerToolsRoutes(app) {
   const {
     admin, db, authenticate,
     RESUMES, USERS, PLANS, getPlanConfig, getUserPlanKey, UPGRADE_MESSAGES, FREE_RESUME_UPSELL_CHANCE,
-    callKieAI, callKieAIJson, parseAIJson, KIE_MODELS,
+    callKieAI, callKieAIJson, parseAIJson, callKieAIStream, KIE_MODELS,
   } = require('./lib');
 
   app.get('/api/resumes', authenticate, async (req, res) => {
@@ -150,6 +150,27 @@ module.exports = function registerToolsRoutes(app) {
   });
 
   // ─── KIE Support (public — no auth, used by support page) ────────────────────
+  // STREAMED over SSE — same protocol as /api/kie (see server/kie.js) — so the
+  // widget now types token-by-token instead of sitting on a spinner for several
+  // seconds, and gets callKieAIStream's built-in one-retry on a transient Groq
+  // blip for free. This used to hit Groq with its own one-off fetch() and zero
+  // retry logic — one dropped connection or a 503 was an instant hard failure,
+  // on the one page anonymous, pre-signup visitors rely on.
+  //
+  // Tiny per-IP rate limiter — this route has no auth, so there's no uid to key
+  // on, and nothing was stopping a runaway client (or a bot) from hammering it
+  // straight through to the Groq bill. Same shape as the per-uid limiter
+  // guarding /api/location-suggest above, keyed by IP since there's no user here.
+  const _supportChatHits = new Map(); // ip -> [timestamps in last 60s]
+  function _supportChatRateOk(ip) {
+    const now = Date.now();
+    const hits = (_supportChatHits.get(ip) || []).filter(t => now - t < 60_000);
+    if (hits.length >= 20) return false; // 20 msgs/min is generous for real use, not a script
+    hits.push(now);
+    _supportChatHits.set(ip, hits);
+    return true;
+  }
+
   app.post('/api/kie-support', async (req, res) => {
     const groqKey = process.env.GROQ_API_KEY;
     if (!groqKey) return res.status(503).json({ error: 'Support chat not configured.' });
@@ -158,6 +179,20 @@ module.exports = function registerToolsRoutes(app) {
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages array is required.' });
     }
+
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || 'unknown';
+    if (!_supportChatRateOk(ip)) {
+      return res.status(429).json({ error: "You're sending messages a little fast — give it a few seconds." });
+    }
+
+    // BUG FIX: nothing previously capped history length or per-message size on
+    // this public, unauthenticated route — a stray or malicious payload could
+    // ride straight through to the Groq bill. Sliding window + per-message cap,
+    // sized generously for a real support conversation.
+    const trimmedMessages = messages.slice(-30).map(m => ({
+      role:    m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content || '').slice(0, 4000),
+    }));
 
     const systemPrompt = `You are KIE Support, the in-app support assistant for Kievora — an AI-powered career platform for African professionals. You ONLY answer questions about Kievora. If someone asks about anything unrelated, politely say you can only help with Kievora questions. The user is already on the platform — never tell them to "visit the website" or "go to kievora.app." Instead, direct them to specific in-app sections by name: "the Dashboard", "the Resume Builder", "Find a Job", "Settings", etc.
 
@@ -258,39 +293,37 @@ module.exports = function registerToolsRoutes(app) {
   <<SUGGESTIONS: question one? | question two? | question three?>>
   Keep each suggestion under 6 words, phrased as something the USER would ask (not you). Only suggest things directly relevant to what was just discussed. Never include a suggestion related to the unreleased feature covered by the Absolute Rule above.`;
 
+    // ── SSE headers — identical protocol to /api/kie ──────────────────────────
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+    const sendSSE = (data) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(data)}\n\n`); };
+
+    let fullReply = '';
     try {
-      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-        body: JSON.stringify({
-          model:       'llama-3.3-70b-versatile',
-          max_tokens:  600,
-          temperature: 0.6,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...messages,
-          ],
-        }),
+      await callKieAIStream('spark', systemPrompt, trimmedMessages, { max_tokens: 600, temperature: 0.6 }, (token) => {
+        fullReply += token;
+        sendSSE({ t: 'd', v: token });
       });
 
-      if (!groqRes.ok) {
-        const errBody = await groqRes.text();
-        console.error('Groq kie-support error:', groqRes.status, errBody);
-        return res.status(502).json({ error: 'KIE is unavailable right now. Please try again.' });
+      if (!fullReply.trim()) {
+        fullReply = "Sorry, I couldn't get a response right now. Try emailing support@kievora.app";
+        sendSSE({ t: 'd', v: fullReply });
       }
-
-      const data  = await groqRes.json();
-      const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response right now. Try emailing support@kievora.com";
-      res.json({ reply });
+      sendSSE({ t: 'done' });
+      res.end();
 
       // ── Admin logging (fire-and-forget) ──────────────────────────────────────
       db.collection('supportChats').add({
-        messages:  [...messages, { role: 'assistant', content: reply }],
+        messages:  [...trimmedMessages, { role: 'assistant', content: fullReply }],
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       }).catch(() => {});
     } catch (err) {
-      console.error('POST /api/kie-support error:', err.message);
-      res.status(500).json({ error: 'Failed to reach KIE. Please try again.' });
+      console.error('POST /api/kie-support stream error:', err.message);
+      sendSSE({ t: 'err', v: 'KIE is unavailable right now. Please try again, or email support@kievora.app.' });
+      res.end();
     }
   });
 
@@ -884,13 +917,13 @@ module.exports = function registerToolsRoutes(app) {
     }
   });
 
-  // ─── findJobsCore — shared job-search/merge logic ──────────────────────────
-  // Extracted from the /api/find-jobs route so the weekly job-alerts cron
-  // (server/job-alerts.js) can reuse the exact same merge/dedupe/relevance
-  // logic instead of duplicating (and inevitably drifting from) it. The route
-  // below is just this function plus the plan-gate + response wiring.
-  async function findJobsCore(query, countryCode = 'worldwide', location = '', limit = 20, userIp = '') {
-    if (!query) return [];
+  app.post('/api/find-jobs', authenticate, async (req, res) => {
+    // Plan gate: free users can see the listing cards but can't open/apply to jobs.
+    const planKey = await getUserPlanKey(req.user.uid);
+    const canClick = getPlanConfig(planKey).findJobsClick;
+
+    const { query, limit = 20, countryCode = 'worldwide', location = '' } = req.body;
+    if (!query) return res.status(400).json({ error: 'query is required' });
 
     const isLocal = countryCode && countryCode !== 'worldwide';
     const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
@@ -900,7 +933,7 @@ module.exports = function registerToolsRoutes(app) {
       _fetchAdzuna(query, limit, countryCode),
       _fetchRemotive(query, 10, countryCode),
       _fetchJooble(query, limit, countryCode, countryName, location),
-      _fetchCareerjet(query, limit, countryCode, countryName, location, userIp),
+      _fetchCareerjet(query, limit, countryCode, countryName, location, req.ip),
     ]);
 
     let jobs = [
@@ -944,20 +977,7 @@ module.exports = function registerToolsRoutes(app) {
 
     jobs = jobs.slice(0, limit);
 
-    console.log(`findJobsCore — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'} Careerjet:${r5.status==='fulfilled'?r5.value.length:'err'})`);
-
-    return jobs;
-  }
-
-  app.post('/api/find-jobs', authenticate, async (req, res) => {
-    // Plan gate: free users can see the listing cards but can't open/apply to jobs.
-    const planKey = await getUserPlanKey(req.user.uid);
-    const canClick = getPlanConfig(planKey).findJobsClick;
-
-    const { query, limit = 20, countryCode = 'worldwide', location = '' } = req.body;
-    if (!query) return res.status(400).json({ error: 'query is required' });
-
-    const jobs = await findJobsCore(query, countryCode, location, limit, req.ip);
+    console.log(`POST /api/find-jobs — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'} Careerjet:${r5.status==='fulfilled'?r5.value.length:'err'})`);
 
     if (!canClick) {
       const gatedJobs = jobs.map(({ url, description, ...rest }) => rest);
@@ -965,13 +985,6 @@ module.exports = function registerToolsRoutes(app) {
     }
     res.json({ jobs, source: 'merged', countryCode });
   });
-
-  // Expose findJobsCore on the exported registerToolsRoutes function itself so
-  // server/job-alerts.js can call it directly without hitting Express at all.
-  // index.js requires and invokes this module (registerToolsRoutes(app))
-  // BEFORE requiring job-alerts.js, so this property is guaranteed to exist
-  // by the time job-alerts.js reads registerToolsRoutes.findJobsCore.
-  registerToolsRoutes.findJobsCore = findJobsCore;
 
   // ─── POST /api/prompt-resume ──────────────────────────────────────────────────
   app.post('/api/prompt-resume', authenticate, async (req, res) => {
