@@ -7187,11 +7187,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       navigator.clipboard?.writeText(rawText).then(() => toast('Copied to clipboard')).catch(() => toast('Could not copy', 'err'));
     }
     function kmenuShareAction(rawText) {
-      if (navigator.share) {
-        navigator.share({ text: rawText }).catch(() => {});
-      } else {
-        navigator.clipboard?.writeText(rawText).then(() => toast('Copied — sharing isn\'t supported here')).catch(() => {});
-      }
+      openShareDrawer(rawText);
+      closeKMenu();
     }
     window.showKMenu = showKMenu;
     window.closeKMenu = closeKMenu;
@@ -8022,24 +8019,106 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     };
 
 
+    // ── Share drawer — custom in-app sheet instead of the bare OS share popup.
+    // Built on the same .kmd-backdrop/.kmd-sheet/.kmd-handle system the model
+    // and sources drawers already use, so it looks native to the app rather
+    // than like a browser default. Direct web-intent links cover the apps
+    // that support pre-filled text (WhatsApp, X, Telegram, SMS, Email);
+    // "More" opens the OS share sheet (navigator.share) as an escape hatch
+    // for anything not listed (Messenger, Instagram, Threads, etc.), since
+    // those don't have a public text-share URL scheme we can deep-link to.
+    function openShareDrawer(text) {
+      const enc = encodeURIComponent(text);
+      let drawer = document.getElementById('kieShareDrawer');
+      if (!drawer) {
+        drawer = document.createElement('div');
+        drawer.id = 'kieShareDrawer';
+        drawer.innerHTML = `
+          <div class="kmd-backdrop" onclick="closeShareDrawer()"></div>
+          <div class="kmd-sheet">
+            <div class="kmd-handle"></div>
+            <div class="kmd-hdr-inner"><div class="kmd-title">Share</div></div>
+            <div class="kie-share-row" id="kieShareRow"></div>
+          </div>`;
+        document.body.appendChild(drawer);
+        setTimeout(() => drawer.classList.add('open'), 10);
+      } else {
+        drawer.classList.add('open');
+      }
+
+      const row = document.getElementById('kieShareRow');
+      if (!row) return;
+
+      const targets = [
+        { key: 'whatsapp', label: 'WhatsApp', bg: '#25D366',
+          icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38a9.87 9.87 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2Zm5.8 14.09c-.24.68-1.4 1.3-1.93 1.35-.5.05-1.02.24-3.42-.71-2.89-1.15-4.72-4.06-4.86-4.25-.14-.19-1.16-1.55-1.16-2.96s.73-2.1 1-2.39c.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.42-.07.65.5.24.58.81 2 .88 2.14.07.14.12.31.02.5-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.14.14-.29.29-.13.57.17.28.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.32 1.44.28.14.44.12.6-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.64-.14.26.09 1.66.78 1.94.93.28.14.47.21.53.33.07.12.07.68-.17 1.36Z"/></svg>` },
+        { key: 'x', label: 'X', bg: '#000',
+          icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M18.24 2H21l-6.36 7.27L22 22h-6.16l-4.83-6.32L5.5 22H2.7l6.8-7.77L2 2h6.32l4.36 5.77L18.24 2Zm-1.08 18h1.53L7.35 3.9H5.7L17.16 20Z"/></svg>` },
+        { key: 'telegram', label: 'Telegram', bg: '#26A5E4',
+          icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M21.9 3.9 2.9 11.5c-1.1.45-1.1 1.08-.2 1.36l4.87 1.52 11.3-7.12c.53-.33 1.02-.15.62.21L10.2 15.6l-.35 4.98c.5 0 .72-.23.99-.5l2.38-2.31 4.94 3.65c.9.5 1.55.24 1.78-.84l3.22-15.2c.33-1.33-.5-1.93-1.26-1.48Z"/></svg>` },
+        { key: 'email', label: 'Email', bg: '#64748b',
+          icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>` },
+        { key: 'sms', label: 'Messages', bg: '#22c55e',
+          icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>` },
+        { key: 'copy', label: 'Copy', bg: '#7c3aed',
+          icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>` },
+      ];
+      // "More" (OS share sheet) only makes sense as an escape hatch when the
+      // browser actually supports navigator.share — no point showing a dead
+      // button on a desktop browser that doesn't have one.
+      if (navigator.share) {
+        targets.push({ key: 'more', label: 'More', bg: '#e2e8f0', dark: true,
+          icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>` });
+      }
+
+      row.innerHTML = targets.map(t => `
+        <button class="kie-share-item" onclick="shareViaTarget('${t.key}')" aria-label="Share via ${t.label}">
+          <span class="kie-share-ico" style="background:${t.bg}">${t.icon}</span>
+          <span class="kie-share-label">${t.label}</span>
+        </button>`).join('');
+
+      window._kieShareText = text;
+      window._kieShareEnc = enc;
+    }
+    window.openShareDrawer = openShareDrawer;
+
+    window.closeShareDrawer = function() {
+      const d = document.getElementById('kieShareDrawer');
+      if (d) d.classList.remove('open');
+    };
+
+    window.shareViaTarget = function(key) {
+      const text = window._kieShareText || '';
+      const enc = window._kieShareEnc || '';
+      const urls = {
+        whatsapp: `https://wa.me/?text=${enc}`,
+        x:        `https://twitter.com/intent/tweet?text=${enc}`,
+        telegram: `https://t.me/share/url?url=&text=${enc}`,
+        email:    `mailto:?subject=${encodeURIComponent('KIE Career Advice')}&body=${enc}`,
+        sms:      `sms:?body=${enc}`,
+      };
+      if (key === 'copy') {
+        navigator.clipboard?.writeText(text).then(() => toast('Copied to clipboard')).catch(() => {});
+        closeShareDrawer();
+        return;
+      }
+      if (key === 'more') {
+        navigator.share({ title: 'KIE Career Advice', text }).catch(() => {});
+        closeShareDrawer();
+        return;
+      }
+      const url = urls[key];
+      if (url) window.open(url, '_blank', 'noopener');
+      closeShareDrawer();
+    };
+
     // Share AI message
     window.kieShare = function(btn) {
       const bubble = btn.closest('.km-ai-body')?.querySelector('.km-bubble');
       if (!bubble) return;
       const txt = (bubble.innerText || bubble.textContent || '').trim();
       if (!txt) return;
-
-      const SHARE_ICON = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
-      const CHECK_ICON = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
-
-      if (navigator.share) {
-        navigator.share({ title: 'KIE Career Advice', text: txt }).catch(() => {});
-      } else {
-        navigator.clipboard?.writeText(txt).then(() => {
-          btn.innerHTML = CHECK_ICON;
-          setTimeout(() => { btn.innerHTML = SHARE_ICON; }, 1500);
-        }).catch(() => {});
-      }
+      openShareDrawer(txt);
     };
 
     // ══ LIVE VOICE CHAT — full-screen hands-free conversation with KIE ═══════

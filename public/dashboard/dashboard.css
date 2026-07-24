@@ -1972,12 +1972,15 @@
     #kieSourcesDrawer.open{display:block}
     #kieAttachSheet{position:fixed;inset:0;z-index:800;display:none}
     #kieAttachSheet.open{display:block}
+    #kieShareDrawer{position:fixed;inset:0;z-index:800;display:none}
+    #kieShareDrawer.open{display:block}
     .kas-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,#ede9fe,#ddd6fe);margin-right:2px}
     .kmd-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
     .kmd-sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:0 0 36px;max-height:70vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.12);transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1)}
     #kieModelDrawer.open .kmd-sheet{transform:translateY(0)}
     #kieSourcesDrawer.open .kmd-sheet{transform:translateY(0)}
     #kieAttachSheet.open .kmd-sheet{transform:translateY(0)}
+    #kieShareDrawer.open .kmd-sheet{transform:translateY(0)}
     .kmd-handle{width:36px;height:4px;background:#e2e8f0;border-radius:99px;margin:14px auto 18px}
     .kmd-hdr-inner{padding:0 20px 14px;border-bottom:1px solid #f1f5f9}
     .kmd-title{font-size:16px;font-weight:800;color:#0f0e17;letter-spacing:-.3px}
@@ -1985,7 +1988,40 @@
     .kmd-list{padding:10px 16px 0;display:flex;flex-direction:column;gap:2px}
     .kmd-note{display:none}
 
+    /* Share drawer — row of round app icons, matches the reference share
+       sheet layout (icon circle + label underneath), horizontally scrollable
+       so it doesn't wrap awkwardly if more targets get added later. Bottom
+       padding respects safe-area-inset so it clears the home-indicator on
+       notched phones, same as the rest of the dashboard's sheets. */
+    .kie-share-row{display:flex;gap:6px;padding:18px 14px calc(4px + env(safe-area-inset-bottom,0px));overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .kie-share-item{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:none;padding:6px 8px;cursor:pointer;flex-shrink:0;width:66px;font-family:inherit}
+    .kie-share-item:active .kie-share-ico{transform:scale(.92)}
+    .kie-share-ico{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .12s;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+    .kie-share-label{font-size:11px;font-weight:600;color:#475569;letter-spacing:-.1px;white-space:nowrap}
+
     /* Model item */
+    .kmd-item{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;background:#fff;border:none;border-radius:0;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .14s}
+    .kmd-item:last-child{border-bottom:none}
+    .kmd-item:hover{background:#faf5ff}
+    .kmd-item.active{background:#faf5ff}
+    .kmd-item::before{display:none}
+    .kmd-item-ico{display:none}
+    .kmd-item-body{flex:1;min-width:0}
+    .kmd-item-name{font-size:14px;font-weight:700;color:#0f0e17;letter-spacing:-.1px}
+    .kmd-badge{display:none}
+    .kmd-item-tag{font-size:12px;color:#64748b;margin-top:1px;font-weight:400}
+    .kmd-item-mode{display:none}
+    .kmd-active-dot{width:8px;height:8px;border-radius:50%;background:#7c3aed;flex-shrink:0}
+    .kmd-item.locked{opacity:.78}
+    .kmd-item.locked .kmd-item-name{color:#6b7280}
+    .kmd-lock-badge,.premium-lock-badge{font-size:10.5px;font-weight:800;color:#7c3aed;background:#f3e8ff;border:1px solid #e9d5ff;padding:3px 9px;border-radius:99px;white-space:nowrap;flex-shrink:0;letter-spacing:.1px}
+    /* Generic small lock badge for the corner of any card (tool hub, templates, cover-letter source) */
+    .premium-lock-corner{position:absolute;top:10px;right:10px;font-size:10px;font-weight:800;color:#fff;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);padding:4px 9px;border-radius:99px;z-index:2;
+      display:flex;align-items:center;gap:3px;box-shadow:0 2px 8px rgba(124,58,237,.35)}
+    .kmd-trigger{display:inline-flex;align-items:center;gap:5px;background:rgba(15,14,23,.07);border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:5px 10px 5px 8px;cursor:pointer;transition:all .18s;font-family:inherit;flex-shrink:0;margin-left:2px}
+    .kmd-trigger:hover{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.35)}
+    .kmd-trigger span{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;color:#0f0e17}
     .kmd-item{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;background:#fff;border:none;border-radius:0;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .14s}
     .kmd-item:last-child{border-bottom:none}
     .kmd-item:hover{background:#faf5ff}
