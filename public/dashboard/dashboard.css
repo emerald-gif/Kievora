@@ -1561,6 +1561,37 @@
     #toast .toast-x:hover{background:#f5f4fa;color:#6b6478}
     #toast a{color:#7c3aed;text-decoration:underline;font-weight:800;white-space:nowrap;pointer-events:auto;margin-left:2px}
 
+    /* Voice-chat-ended summary card — shown briefly after closing a KIE voice
+       call, styled as a sibling of #toast (same pill shape, shadow, and
+       top-center placement) but wider, with room for a duration readout and
+       quick thumbs up/down feedback on how the call went. */
+    #kieVoiceEndCard{
+      position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;
+      transform:translateX(-50%) translateY(-14px);
+      z-index:10050;padding:10px 10px 10px 14px;border-radius:18px;
+      box-shadow:0 12px 32px rgba(15,14,23,.14),0 2px 10px rgba(15,14,23,.06);
+      opacity:0;transition:opacity .25s ease,transform .25s ease;pointer-events:none;
+      background:#fff;border:1px solid rgba(15,14,23,.06);
+      display:flex;align-items:center;gap:12px;
+      max-width:min(420px,calc(100vw - 32px));width:max-content;
+    }
+    #kieVoiceEndCard.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .kvec-ico{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#f3e8ff;
+      display:flex;align-items:center;justify-content:center;color:#7c3aed}
+    .kvec-body{display:flex;flex-direction:column;line-height:1.25}
+    .kvec-title{font-size:13.5px;font-weight:700;color:#0f0e17}
+    .kvec-sub{font-size:11.5px;font-weight:600;color:#9491a1;margin-top:1px}
+    .kvec-fb{display:flex;align-items:center;gap:2px;flex-shrink:0}
+    .kvec-fb-btn{width:30px;height:30px;border:none;background:none;color:#b7b2c4;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0;transition:all .15s}
+    .kvec-fb-btn:hover{background:#f5f4fa;color:#6b6478}
+    .kvec-fb-btn.picked{background:#f3e8ff;color:#7c3aed}
+    .kvec-fb-btn.picked.down{background:#fee2e2;color:#dc2626}
+    .kvec-sep{width:1px;height:22px;background:#eceaf3;flex-shrink:0}
+    .kvec-x{flex-shrink:0;width:28px;height:28px;border:none;background:none;color:#b7b2c4;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0}
+    .kvec-x:hover{background:#f5f4fa;color:#6b6478}
+
     /* print area — download handled by pdfmake */
 
     /* ── SPINNER ── */

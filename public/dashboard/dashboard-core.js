@@ -8254,11 +8254,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // untouched. Each turn appends a labeled line; KIE's line fills in with a
       // typewriter effect instead of appearing all at once.
       let curMeLineEl = null; // the in-progress "Me:" line's text span, while listening
+      let curKieLineEl = null; // the in-progress "KIE:" line's text span, growing sentence by sentence while speaking
       let typeTimer   = null;
+      let liveSessionStart = null; // Date.now() when the call opened — for the end-of-call summary card
 
       function resetTranscript() {
         clearInterval(typeTimer); typeTimer = null;
         curMeLineEl = null;
+        curKieLineEl = null;
         const c = capEl();
         if (c) c.innerHTML = '';
       }
@@ -8300,6 +8303,28 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           body.textContent = text.slice(0, i);
           const c = capEl(); if (c) c.scrollTop = c.scrollHeight;
           if (i >= text.length) { body.textContent = text; clearInterval(typeTimer); typeTimer = null; }
+        }, 18);
+      }
+
+      // Progressive counterpart to typeKieLine — used while a reply is being
+      // spoken sentence-by-sentence as it streams in (see handleLiveTurn),
+      // rather than all at once after the whole reply is done. Keeps
+      // appending to the SAME "KIE:" transcript line instead of starting a
+      // new one for every sentence.
+      function appendKieLineChunk(sentence) {
+        if (!liveShowCaption) return;
+        if (!curKieLineEl) curKieLineEl = addTranscriptLine('kie');
+        if (!curKieLineEl) return;
+        const base = curKieLineEl.dataset.full || '';
+        const full = base ? base + ' ' + sentence : sentence;
+        curKieLineEl.dataset.full = full;
+        clearInterval(typeTimer); typeTimer = null;
+        let i = base.length;
+        typeTimer = setInterval(() => {
+          i += 2;
+          curKieLineEl.textContent = full.slice(0, i);
+          const c = capEl(); if (c) c.scrollTop = c.scrollHeight;
+          if (i >= full.length) { curKieLineEl.textContent = full; clearInterval(typeTimer); typeTimer = null; }
         }, 18);
       }
 
@@ -8626,12 +8651,23 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         startListening(carryText);
       }
 
+      // BUG FIX: this used to poll silently until the ENTIRE reply had
+      // finished generating — which could be several seconds for a longer
+      // answer — before speaking a single word, with "Thinking…" covering
+      // that whole wait. Real voice assistants (ChatGPT Advanced Voice,
+      // Meta AI, Siri) start speaking the moment the first sentence is
+      // ready and keep talking while the rest is still being written. This
+      // now does that by reading sentences straight out of the SAME live
+      // bubble the text-chat UI already fills token-by-token — sendKie()
+      // itself is completely untouched, so nothing about normal text chat
+      // changes; this only changes how voice mode watches the result.
       async function handleLiveTurn(text) {
         const myTurn = ++turnId;
         liveBusy = true;
         stopRec();
         setLiveState('thinking');
         finalizeMeLine(text);
+        curKieLineEl = null; // this turn gets its own fresh "KIE:" line
         startInterruptListener(text); // "wait, let me finish" — resumes listening with this carried forward
         const inp = g('kieInp');
         if (!inp) { liveBusy = false; return; }
@@ -8646,28 +8682,92 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const bubblesBefore = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble').length;
         inp.value = text;
         inp.style.height = 'auto';
-        try { sendKie(); } catch (_) {}
+        try { sendKie(); } catch (_) {} // fire-and-forget — streams into its own bubble, watched below
 
+        let spokenText        = '';   // portion of the reply already queued to speak
+        let bubbleEl           = null;
+        let utterancesPending  = 0;
+        let streamDone         = false;
+        let startedSpeaking    = false;
         const waitStart = Date.now();
+
+        const maybeFinishTurn = () => {
+          if (myTurn !== turnId) return; // superseded by a barge-in — that flow already restarted listening
+          if (utterancesPending > 0 || !streamDone) return;
+          liveBusy = false;
+          stopInterruptListener();
+          if (liveOn) startListening();
+        };
+
+        const queueSentence = (sentence) => {
+          sentence = sentence.trim();
+          if (!sentence) return;
+          if (!startedSpeaking) { setLiveState('speaking'); startedSpeaking = true; }
+          appendKieLineChunk(sentence);
+          // Re-arm the barge-in listener with the latest known text so its
+          // self-echo filter (looksLikeOwnEcho) stays current as KIE keeps
+          // talking, instead of only knowing about the first sentence.
+          startInterruptListener(text, spokenText);
+          utterancesPending++;
+          const utter = new SpeechSynthesisUtterance(sentence);
+          utter.rate = 0.96; utter.pitch = 1; utter.volume = 1;
+          const voice = (typeof pickMaleVoice === 'function') ? pickMaleVoice() : null;
+          if (voice) utter.voice = voice;
+          utter.onend = utter.onerror = () => {
+            utterancesPending--;
+            maybeFinishTurn();
+          };
+          window.speechSynthesis.speak(utter);
+        };
+
         while (liveOn && myTurn === turnId && Date.now() - waitStart < 30000) {
-          const count = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble').length;
-          const stillGenerating = typeof _kieGenerating !== 'undefined' && _kieGenerating;
-          if (count > bubblesBefore && !stillGenerating) break;
-          await new Promise(r => setTimeout(r, 200));
+          if (!bubbleEl) {
+            const bubbles = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble');
+            if (bubbles.length > bubblesBefore) bubbleEl = bubbles[bubbles.length - 1];
+          }
+          if (bubbleEl) {
+            // .innerText (not innerHTML) so markdown formatting never leaks
+            // into what gets spoken or diffed — voice-mode replies are
+            // already plain prose by the server's own system prompt, so
+            // this stays a clean, simple string throughout.
+            const full = (bubbleEl.innerText || bubbleEl.textContent || '').replace(/▌\s*$/, '');
+            if (full.length > spokenText.length) {
+              // Only speak COMPLETE sentences — the trailing fragment might
+              // still be mid-word since this is live streaming text, not a
+              // finished thought yet.
+              const parts = full.split(/(?<=[.!?])\s+/);
+              const complete = parts.slice(0, -1).join(' ');
+              if (complete.length > spokenText.length) {
+                queueSentence(complete.slice(spokenText.length));
+                spokenText = complete;
+              }
+            }
+            const stillGenerating = typeof _kieGenerating !== 'undefined' && _kieGenerating;
+            if (!stillGenerating) {
+              // Generation just finished — speak whatever's left over (the
+              // final fragment that never got a trailing punctuation mark to
+              // count as "complete" above, or a short reply that's all one
+              // piece and never hit that branch at all).
+              const finalFull = (bubbleEl.innerText || bubbleEl.textContent || '').replace(/▌\s*$/, '').trim();
+              if (finalFull.length > spokenText.length) {
+                queueSentence(finalFull.slice(spokenText.length));
+                spokenText = finalFull;
+              }
+              streamDone = true;
+              break;
+            }
+          }
+          await new Promise(r => setTimeout(r, 120));
         }
         if (!liveOn || myTurn !== turnId) { liveBusy = false; return; } // superseded by a barge-in
 
-        stopInterruptListener();
-        const bubbles = document.querySelectorAll('#kieMsgs .km-ai-body .km-bubble');
-        const last = bubbles[bubbles.length - 1];
-        const replyTxt = last ? (last.innerText || last.textContent || '').trim() : '';
-
-        if (!replyTxt) {
+        if (!spokenText) {
+          // Nothing ever came through — same fallback as before.
           if (typeof _kieGenerating !== 'undefined') _kieGenerating = false;
           speakLiveReply("Sorry, I didn't catch a reply there — try asking again.");
           return;
         }
-        speakLiveReply(replyTxt);
+        maybeFinishTurn(); // catches the case where every utterance already finished before streamDone flipped true
       }
 
       function speakLiveReply(text) {
@@ -8696,6 +8796,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
 
       function closeLive() {
+        const hadRealCall = liveOn && liveSessionStart;
+        const durationSec = liveSessionStart ? Math.max(1, Math.round((Date.now() - liveSessionStart) / 1000)) : 0;
         liveOn = false;
         liveBusy = false;
         turnId++;
@@ -8708,16 +8810,84 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         barVel = new Array(BAR_COUNT).fill(0);
         dustParticles = [];
         speakPhase = 0; thinkPhase = 0; lastResultTs = 0; emptyRestarts = 0;
-        clearInterval(typeTimer); typeTimer = null; curMeLineEl = null;
+        clearInterval(typeTimer); typeTimer = null; curMeLineEl = null; curKieLineEl = null;
         window._kieVoiceModeActive = false;
         const ovEl = ov();
         if (ovEl) ovEl.classList.remove('open');
         playChime('close');
+        liveSessionStart = null;
+        // Skip the card for an accidental instant-tap-out (call never really
+        // started) — only show it for a call that actually ran.
+        if (hadRealCall && durationSec >= 2) showVoiceEndCard(durationSec);
+      }
+
+      // Small summary card shown after a voice call ends — duration plus a
+      // one-tap "how was that" so voice-quality issues (wrong voice picked,
+      // cut off mid-sentence, etc.) actually reach us instead of just being
+      // silently endured.
+      function showVoiceEndCard(durationSec) {
+        let card = g('kieVoiceEndCard');
+        if (!card) {
+          card = document.createElement('div');
+          card.id = 'kieVoiceEndCard';
+          card.innerHTML = `
+            <div class="kvec-ico">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <div class="kvec-body">
+              <div class="kvec-title">Voice chat ended</div>
+              <div class="kvec-sub" id="kvecSub"></div>
+            </div>
+            <div class="kvec-fb">
+              <button class="kvec-fb-btn" id="kvecUp" title="Good call" aria-label="Thumbs up">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
+              </button>
+              <button class="kvec-fb-btn down" id="kvecDown" title="Something was off" aria-label="Thumbs down">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10z"/><path d="M17 2h3a2 2 0 012 2v7a2 2 0 01-2 2h-3"/></svg>
+              </button>
+            </div>
+            <div class="kvec-sep"></div>
+            <button class="kvec-x" onclick="closeVoiceEndCard()" aria-label="Dismiss"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg></button>`;
+          document.body.appendChild(card);
+        }
+        const sub = card.querySelector('#kvecSub');
+        if (sub) sub.textContent = durationSec < 60 ? `${durationSec}s` : `${Math.round(durationSec / 60)}m`;
+        card.querySelectorAll('.kvec-fb-btn').forEach(b => b.classList.remove('picked'));
+        const upBtn = card.querySelector('#kvecUp'), downBtn = card.querySelector('#kvecDown');
+        if (upBtn)   upBtn.onclick   = () => voiceCallFeedback(durationSec, 'up', upBtn);
+        if (downBtn) downBtn.onclick = () => voiceCallFeedback(durationSec, 'down', downBtn);
+        clearTimeout(window._kvecTimer);
+        requestAnimationFrame(() => card.classList.add('show'));
+        window._kvecTimer = setTimeout(() => card.classList.remove('show'), 8000);
+      }
+      window.closeVoiceEndCard = function() {
+        clearTimeout(window._kvecTimer);
+        const card = g('kieVoiceEndCard');
+        if (card) card.classList.remove('show');
+      };
+
+      function voiceCallFeedback(durationSec, rating, btnEl) {
+        btnEl.closest('.kvec-fb').querySelectorAll('.kvec-fb-btn').forEach(b => b.classList.remove('picked'));
+        btnEl.classList.add('picked');
+        toast(rating === 'up' ? 'Thanks for the feedback!' : "Thanks — we'll look into it.");
+        (async () => {
+          try {
+            const u = auth.currentUser;
+            const tok = u ? await u.getIdToken() : null;
+            if (!tok) return;
+            await fetch('/api/kie/voice-feedback', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+              body: JSON.stringify({ rating, durationSec, convId: _getKieConvId() }),
+            });
+          } catch (_) {} // best-effort — a failed feedback ping shouldn't surface an error to the person
+        })();
       }
 
       window.openKieLive = function () {
         if (!LiveSpeechRecognition) { toast('Voice chat needs a browser with speech recognition support (try Chrome).', 'err'); return; }
         liveOn = true; liveBusy = false; liveMicMuted = false; emptyRestarts = 0;
+        liveSessionStart = Date.now();
         window._kieVoiceModeActive = true; // tells the backend to write for the ear, not the eye
         const mBtn = g('kieLiveMuteBtn'); if (mBtn) mBtn.classList.remove('active');
         const cBtn = g('kieLiveCaptionBtn'); if (cBtn) cBtn.classList.toggle('active', liveShowCaption);
