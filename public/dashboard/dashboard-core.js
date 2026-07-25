@@ -3418,6 +3418,18 @@
     // right picker instead of a generic "everything" file browser. Built the
     // same way as openModelDrawer()/openSourcesDrawer() for consistency.
     window.openKieAttachSheet = function() {
+      if (!document.getElementById('kieAttachTileStyle')) {
+        const style = document.createElement('style');
+        style.id = 'kieAttachTileStyle';
+        style.textContent = `
+          .kie-attach-tile{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;background:#F2F2F4;border:none;border-radius:18px;padding:18px 8px 14px;cursor:pointer;font-family:inherit;transition:background .14s}
+          .kie-attach-tile:hover{background:#E9E9EC}
+          .kie-attach-tile:active{background:#E2E2E6}
+          .kie-attach-tile-ico{display:flex;align-items:center;justify-content:center}
+          .kie-attach-tile-label{font-size:12.5px;font-weight:600;color:#0f0e17;letter-spacing:-.1px}
+        `;
+        document.head.appendChild(style);
+      }
       let sheet = document.getElementById('kieAttachSheet');
       if (!sheet) {
         sheet = document.createElement('div');
@@ -3429,39 +3441,30 @@
             <div class="kmd-hdr-inner">
               <div class="kmd-title">Add to chat</div>
             </div>
-            <div class="kmd-list">
-              <div class="kmd-item" onclick="triggerKieAttach('camera')">
-                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-                <div class="kmd-item-body">
-                  <div class="kmd-item-name">Take Photo</div>
-                  <div class="kmd-item-tag">Snap a resume or document</div>
-                </div>
-              </div>
-              <div class="kmd-item" onclick="triggerKieAttach('photo')">
-                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
-                <div class="kmd-item-body">
-                  <div class="kmd-item-name">Choose Photo</div>
-                  <div class="kmd-item-tag">From your library</div>
-                </div>
-              </div>
-              <div class="kmd-item" onclick="triggerKieAttach('file')">
-                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></div>
-                <div class="kmd-item-body">
-                  <div class="kmd-item-name">Choose File</div>
-                  <div class="kmd-item-tag">PDF or TXT resume</div>
-                </div>
-              </div>
-              <div class="kmd-item" id="kmdDriveItem" onclick="window.kieAttachSheetDriveTap && window.kieAttachSheetDriveTap()">
-                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg></div>
-                <div class="kmd-item-body">
-                  <div class="kmd-item-name">Google Drive</div>
-                  <div class="kmd-item-tag" id="kmdDriveTag">Connect to import a file</div>
-                </div>
-              </div>
+            <div id="kieRecentFilesSection" style="display:none;padding:0 16px 16px">
+              <div style="font-size:11px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:.4px;margin-bottom:9px">Recent</div>
+              <div id="kieRecentFilesList" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:2px"></div>
             </div>
-            <div id="kieRecentFilesSection" style="display:none;padding:2px 16px 14px">
-              <div style="font-size:11px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Recent</div>
-              <div id="kieRecentFilesList" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px"></div>
+            <div style="display:flex;gap:10px;padding:0 16px 22px">
+              <button type="button" class="kie-attach-tile" onclick="triggerKieAttach('camera')">
+                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f0e17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+                <div class="kie-attach-tile-label">Camera</div>
+              </button>
+              <button type="button" class="kie-attach-tile" onclick="triggerKieAttach('photo')">
+                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f0e17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+                <div class="kie-attach-tile-label">Photo</div>
+              </button>
+              <button type="button" class="kie-attach-tile" onclick="triggerKieAttach('file')">
+                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f0e17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+                <div class="kie-attach-tile-label">Document</div>
+              </button>
+              <button type="button" class="kie-attach-tile" id="kmdDriveItem" onclick="window.kieAttachSheetDriveTap && window.kieAttachSheetDriveTap()">
+                <div class="kie-attach-tile-ico" style="position:relative">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg>
+                  <span id="kmdDriveDot" style="display:none;position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#34c759;border:2px solid #f2f2f7"></span>
+                </div>
+                <div class="kie-attach-tile-label">Drive</div>
+              </button>
             </div>
           </div>`;
         document.body.appendChild(sheet);
@@ -3500,11 +3503,11 @@
         const isImg = (f.mimeType || '').startsWith('image/');
         const thumb = isImg && f.thumbnailUrl
           ? `<img src="${f.thumbnailUrl}" style="width:100%;height:100%;object-fit:cover" />`
-          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f1f1f4;font-size:9px;font-weight:800;color:#8e8e93">${(f.mimeType || 'file').split('/').pop().slice(0,4).toUpperCase()}</div>`;
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f1f1f4;font-size:10px;font-weight:800;color:#8e8e93">${(f.mimeType || 'file').split('/').pop().slice(0,4).toUpperCase()}</div>`;
         return `
-          <button onclick="_kieReuseRecentFile(${i})" style="flex-shrink:0;width:64px;text-align:left;background:none;border:none;padding:0;cursor:pointer;font-family:inherit">
-            <div style="width:64px;height:64px;border-radius:11px;overflow:hidden;border:1px solid rgba(60,60,67,.13);margin-bottom:4px">${thumb}</div>
-            <div style="font-size:10px;color:#3c3c43;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${(f.name || 'file').replace(/</g,'')}</div>
+          <button onclick="_kieReuseRecentFile(${i})" style="flex-shrink:0;width:76px;text-align:left;background:none;border:none;padding:0;cursor:pointer;font-family:inherit">
+            <div style="width:76px;height:76px;border-radius:16px;overflow:hidden;border:1px solid rgba(60,60,67,.13);margin-bottom:5px">${thumb}</div>
+            <div style="font-size:10.5px;color:#3c3c43;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${(f.name || 'file').replace(/</g,'')}</div>
           </button>`;
       }).join('');
     }

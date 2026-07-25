@@ -62,14 +62,14 @@ function _driveRenderPanelState() {
   if (emailLabel) emailLabel.textContent = _driveEmail || 'Connected';
 }
 
-// Refreshes the "Google Drive" row's subtitle inside the chat attach sheet
-// (dashboard-core.js calls this every time the sheet opens — see the hook
-// added there). Shows the connected email so the user sees it's ready
-// before they tap to open the picker.
+// Toggles the small green "connected" dot on the Drive tile inside the chat
+// attach sheet (dashboard-core.js calls this every time the sheet opens —
+// see the hook added there). The tile itself has no subtitle text anymore
+// (matches the Camera/Photo/Document tile style), so connection state is
+// just this dot instead.
 window.kieRefreshDriveAttachTag = function () {
-  const tag = document.getElementById('kmdDriveTag');
-  if (!tag) return;
-  tag.textContent = _driveConnected ? (_driveEmail || 'Tap to pick a file') : 'Connect to import a file';
+  const dot = document.getElementById('kmdDriveDot');
+  if (dot) dot.style.display = _driveConnected ? 'block' : 'none';
 };
 
 // ─── Settings panel (full screen, mirrors Gmail's) ───────────────────────
