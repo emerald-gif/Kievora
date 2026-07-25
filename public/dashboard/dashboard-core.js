@@ -3565,15 +3565,17 @@
         const compressed = await _kieCompressImage(file);
         const reader = new FileReader();
         reader.onload = function(e) {
-          const uploadPromise = _kieRecordFileHistory(file.name, file.type || 'image/jpeg', e.target.result);
           _stagedKieAttachment = {
             type: 'image', file,
             dataUrl:  e.target.result,
             mimeType: file.type || 'image/jpeg',
             name: file.name, size: compressed.size || file.size,
-            uploadPromise,
           };
           _showKieAttachStage('image', file.name, e.target.result);
+          // Upload deliberately does NOT start here — only sendKie() kicks it
+          // off, once the user has actually committed to sending this file.
+          // Staging-time uploads meant cancelling an attachment still left
+          // it sitting in Cloudinary/Firestore for nothing.
         };
         reader.readAsDataURL(compressed);
       } else {
@@ -3593,9 +3595,7 @@
           });
           if (_stagedKieAttachment && _stagedKieAttachment.file === file) {
             _stagedKieAttachment.previewDataUrl = previewDataUrl;
-            _stagedKieAttachment.uploadPromise = _kieRecordFileHistory(
-              file.name, file.type || (ext === 'pdf' ? 'application/pdf' : 'text/plain'), previewDataUrl
-            );
+            // Same as images — no upload until Send is pressed (see sendKie()).
           }
         } catch { /* preview just won't be available for this file — non-fatal */ }
       }
@@ -5689,14 +5689,14 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       const base64 = att.dataUrl.split(',')[1];
       const prompt  = userPrompt || 'What do you see in this image? Give me career coaching advice based on it.';
 
-      // Give the background Cloudinary upload (kicked off at staging time) a
-      // brief window to finish so the persisted Firestore message can carry
-      // a real imageUrl. If it's not done yet, don't block the send — the
-      // conversation just won't have a cross-device copy of this one image.
+      // Upload starts HERE — the moment Send is actually pressed — not at
+      // pick time. Give it a brief window to finish so the persisted
+      // Firestore message can carry a real imageUrl; if it's not done in
+      // time, don't block the send — the conversation just won't have a
+      // cross-device copy of this one image.
+      const uploadPromise = _kieRecordFileHistory(att.name || 'image', att.mimeType || 'image/jpeg', att.dataUrl);
       let uploadedUrl = null;
-      if (att.uploadPromise) {
-        try { uploadedUrl = await Promise.race([att.uploadPromise, new Promise((r) => setTimeout(() => r(null), 4000))]); } catch { /* non-fatal */ }
-      }
+      try { uploadedUrl = await Promise.race([uploadPromise, new Promise((r) => setTimeout(() => r(null), 4000))]); } catch { /* non-fatal */ }
 
       // BUG FIX #7 — Store image in the in-memory store and keep a reference
       // in kieHist instead of only storing the text "[Image sent]".
@@ -6673,9 +6673,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const fileRef = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
         const base64  = (att.previewDataUrl || '').split(',')[1] || '';
         const mimeType = att.file?.type || (att.type === 'pdf' ? 'application/pdf' : 'text/plain');
+        // Upload starts HERE, at send time — not when the file was picked.
         let fileUrl = null;
-        if (att.uploadPromise) {
-          try { fileUrl = await Promise.race([att.uploadPromise, new Promise((r) => setTimeout(() => r(null), 4000))]); } catch { /* non-fatal */ }
+        if (att.previewDataUrl) {
+          const uploadPromise = _kieRecordFileHistory(att.name, mimeType, att.previewDataUrl);
+          try { fileUrl = await Promise.race([uploadPromise, new Promise((r) => setTimeout(() => r(null), 4000))]); } catch { /* non-fatal */ }
         }
         _kieFileStore.set(fileRef, { base64, mimeType, name: att.name, ext: att.type, url: fileUrl });
         _appendKieFileMsg(fileRef, att.name, att.type, msg);
