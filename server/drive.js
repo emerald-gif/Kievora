@@ -183,6 +183,10 @@ module.exports = function registerDriveRoutes(app) {
       const dl = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'arraybuffer' });
       const buffer = Buffer.from(dl.data);
 
+      if (buffer.length > 10 * 1024 * 1024) {
+        return res.status(413).json({ error: 'File too large — max 10 MB' });
+      }
+
       const upload = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { folder: 'kievora/drive-imports', resource_type: 'auto' },
@@ -191,7 +195,13 @@ module.exports = function registerDriveRoutes(app) {
         stream.end(buffer);
       });
 
-      res.json({ success: true, url: upload.secure_url, name: meta.data.name, mimeType: meta.data.mimeType });
+      res.json({
+        success: true,
+        url: upload.secure_url,
+        name: meta.data.name,
+        mimeType: meta.data.mimeType,
+        base64: buffer.toString('base64'),
+      });
     } catch (e) {
       console.error('[drive] import:', e.message);
       res.status(500).json({ error: 'Import from Drive failed. Please try again.' });
