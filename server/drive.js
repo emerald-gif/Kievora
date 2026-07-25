@@ -171,9 +171,15 @@ module.exports = function registerDriveRoutes(app) {
   });
 
   // Body: { fileId } — the id the Picker widget returned after the user
-  // selected a file. Downloads it and re-hosts it on Cloudinary (same place
-  // every other upload in this app lands), so the rest of the platform can
-  // treat it exactly like any other uploaded file.
+  // selected a file. Just fetches the bytes from Drive and hands them back
+  // as base64 for the client to STAGE — exactly like any other picked file
+  // (Choose Photo/File). We deliberately do NOT touch Cloudinary or file
+  // history here: that used to happen at import-time, which meant every
+  // Drive pick got uploaded to Cloudinary once here and AGAIN at Send —
+  // double the wait, and it also made the file show up in "Recent" before
+  // it was ever actually sent. The real upload + history record now only
+  // happens once, at Send time, via the same path every other attachment
+  // already uses.
   app.post('/api/drive/import', authenticate, async (req, res) => {
     try {
       const uid = req.user.uid;
@@ -191,14 +197,8 @@ module.exports = function registerDriveRoutes(app) {
         return res.status(413).json({ error: 'File too large — max 10 MB' });
       }
 
-      const upload = await recordFileHistory({
-        admin, db, cloudinary, uid, name: meta.data.name, mimeType: meta.data.mimeType, buffer, source: 'upload',
-      });
-      if (!upload.success) return res.status(500).json({ error: 'Import from Drive failed. Please try again.' });
-
       res.json({
         success: true,
-        url: upload.url,
         name: meta.data.name,
         mimeType: meta.data.mimeType,
         base64: buffer.toString('base64'),
