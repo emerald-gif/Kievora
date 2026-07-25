@@ -1,15 +1,14 @@
 // ════════════════════════════════════════════════════════════════
-// GOOGLE DRIVE INTEGRATION — all functions at global scope, mirrors the
-// dashboard-gmail.js pattern. Free on every plan — no lockTapped() gate.
+// GOOGLE DRIVE INTEGRATION — mirrors dashboard-gmail.js's pattern.
+// Free on every plan — no lockTapped() gate.
 //
-// Two things this file gives the rest of the app:
-//   window.kieSaveToDrive(blob|base64, suggestedName, mimeType)
-//     → shows a "type a name" modal, uploads, shows file + preview.
-//     Call this from any "Download" button anywhere in the platform.
-//   window.kiePickFromDrive(onPicked)
-//     → opens Google's own Picker widget (searches/browses inside
-//     Google's UI, not ours), imports the chosen file, calls
-//     onPicked({url, name, mimeType}).
+// Three entry points into Drive from the rest of the app:
+//   1. Settings → Integrations → Google Drive → full #driveIntPanel
+//      (openDrivePanel/closeDrivePanel), same shape as Gmail's panel.
+//   2. Chat attach sheet → "Google Drive" row → picks a file straight
+//      into the chat input (kieAttachSheetDriveTap).
+//   3. window.kieSaveToDrive(file, name, mimeType) — callable from any
+//      "Download" button anywhere to push a generated file TO Drive.
 // ════════════════════════════════════════════════════════════════
 
 let _driveConnected = false;
@@ -28,6 +27,7 @@ async function _driveLoadStatus() {
     _driveEmail = data.driveEmail || null;
   } catch (e) { _driveConnected = false; }
   _driveRenderSettingsRow();
+  _driveRenderPanelState();
 }
 
 function _driveRenderSettingsRow() {
@@ -37,15 +37,41 @@ function _driveRenderSettingsRow() {
   if (badge) badge.style.display = _driveConnected ? '' : 'none';
 }
 
-// Tapped from Settings → Integrations → Google Drive. No plan gate — always
-// either connects (if not yet connected) or opens the small manage panel.
-window.kieDriveNudgeTap = async function () {
-  if (!_driveConnected) await _driveLoadStatus();
-  if (_driveConnected) {
-    _driveOpenManagePanel();
-  } else {
-    await window.connectDrive();
-  }
+function _driveRenderPanelState() {
+  const disc = document.getElementById('driveDisconnectedPanel');
+  const conn = document.getElementById('driveConnectedPanel');
+  const headerBadge = document.getElementById('driveHeaderBadge');
+  if (!disc || !conn) return;
+  disc.style.display = _driveConnected ? 'none' : '';
+  conn.style.display = _driveConnected ? '' : 'none';
+  if (headerBadge) headerBadge.style.display = _driveConnected ? 'flex' : 'none';
+  const emailLabel = document.getElementById('driveEmailLabel');
+  if (emailLabel) emailLabel.textContent = _driveEmail || 'Connected';
+}
+
+// Refreshes the "Google Drive" row's subtitle inside the chat attach sheet
+// (dashboard-core.js calls this every time the sheet opens — see the hook
+// added there). Shows the connected email so the user sees it's ready
+// before they tap to open the picker.
+window.kieRefreshDriveAttachTag = function () {
+  const tag = document.getElementById('kmdDriveTag');
+  if (!tag) return;
+  tag.textContent = _driveConnected ? (_driveEmail || 'Tap to pick a file') : 'Connect to import a file';
+};
+
+// ─── Settings panel (full screen, mirrors Gmail's) ───────────────────────
+window.kieDriveNudgeTap = function () {
+  window.openDrivePanel();
+};
+window.openDrivePanel = function () {
+  const p = document.getElementById('driveIntPanel');
+  if (p) p.style.transform = 'translateX(0)';
+  document.getElementById('driveImportedCard').style.display = 'none';
+  _driveLoadStatus();
+};
+window.closeDrivePanel = function () {
+  const p = document.getElementById('driveIntPanel');
+  if (p) p.style.transform = 'translateX(100%)';
 };
 
 window.connectDrive = async function () {
@@ -68,8 +94,8 @@ window.disconnectDrive = async function () {
     await fetch('/api/drive/disconnect', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
     _driveConnected = false; _driveEmail = null;
     _driveRenderSettingsRow();
+    _driveRenderPanelState();
     if (typeof window.toast === 'function') window.toast('Drive disconnected', 'ok');
-    _driveCloseModal();
   } catch (e) {
     if (typeof window.toast === 'function') window.toast('Failed. Try again.', 'err'); else alert('Failed. Try again.');
   }
@@ -90,7 +116,106 @@ window.disconnectDrive = async function () {
 
 document.addEventListener('DOMContentLoaded', () => { _driveLoadStatus(); });
 
-// ─── Shared modal shell (used by both Save and Manage panels) ────────────
+// ─── PICK: bring an existing Drive file INTO the platform ────────────────
+let _gapiLoaded = false;
+function _driveLoadGapi() {
+  return new Promise((resolve, reject) => {
+    if (_gapiLoaded && window.gapi && window.google?.picker) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://apis.google.com/js/api.js';
+    s.onload = () => { window.gapi.load('picker', () => { _gapiLoaded = true; resolve(); }); };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// Opens Google's own Picker widget and imports whatever the user selects.
+// onPicked(result) fires with { url, name, mimeType, base64 } on success —
+// callers decide what to do with it (stage into chat, show a card, etc).
+window.kiePickFromDrive = async function (onPicked) {
+  if (!_driveConnected) { await _driveLoadStatus(); }
+  if (!_driveConnected) { await window.connectDrive(); return; }
+
+  try {
+    const tok = await _driveTok();
+    const res = await fetch('/api/drive/picker-token', { headers: { Authorization: `Bearer ${tok}` } });
+    const cfg = await res.json();
+    if (!res.ok) throw new Error(cfg.message || cfg.error || 'Could not open Drive picker');
+
+    await _driveLoadGapi();
+    const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
+      .setIncludeFolders(false)
+      .setSelectFolderEnabled(false)
+      .setMimeTypes('image/png,image/jpeg,image/webp,application/pdf,text/plain');
+    const picker = new google.picker.PickerBuilder()
+      .addView(view)
+      .setOAuthToken(cfg.accessToken)
+      .setDeveloperKey(cfg.apiKey)
+      .setAppId(cfg.appId)
+      .setCallback(async (data) => {
+        if (data.action !== google.picker.Action.PICKED) return;
+        const fileId = data.docs[0].id;
+        try {
+          const tok2 = await _driveTok();
+          const importRes = await fetch('/api/drive/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok2}` },
+            body: JSON.stringify({ fileId }),
+          });
+          const result = await importRes.json();
+          if (!importRes.ok) throw new Error(result.message || result.error || 'Import failed');
+          if (typeof onPicked === 'function') onPicked(result);
+        } catch (e) {
+          if (typeof window.toast === 'function') window.toast(e.message || 'Import failed', 'err'); else alert(e.message || 'Import failed');
+        }
+      })
+      .build();
+    picker.setVisible(true);
+  } catch (e) {
+    if (typeof window.toast === 'function') window.toast(e.message || 'Could not open Drive picker', 'err'); else alert(e.message || 'Could not open Drive picker');
+  }
+};
+
+// Used by the "Import a file from Drive" button inside #driveIntPanel —
+// stages the file into chat (so it doesn't vanish after import, the bug
+// from before) AND shows a small confirmation card right there in the panel.
+window.__kieDrivePanelPicked = function (result) {
+  const staged = window.kieStageExternalAttachment && window.kieStageExternalAttachment({
+    name: result.name, mimeType: result.mimeType, base64: result.base64,
+  });
+  const card = document.getElementById('driveImportedCard');
+  if (card) {
+    card.style.display = 'flex';
+    card.innerHTML = `
+      <div style="width:34px;height:34px;background:#eff6ff;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0066da" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${result.name}</div>
+        <div style="font-size:11px;color:#8e8e93">${staged ? 'Ready in your next chat message' : 'Imported to Drive folder'}</div>
+      </div>
+      <button onclick="closeDrivePanel()" style="background:#7c3aed;color:#fff;border:none;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Go to chat</button>
+    `;
+  }
+  if (typeof window.toast === 'function' && staged) window.toast(`${result.name} ready to send`, 'ok');
+};
+
+// Tapped from the chat attach sheet's "Google Drive" row.
+window.kieAttachSheetDriveTap = async function () {
+  if (!_driveConnected) { await _driveLoadStatus(); }
+  if (typeof window.closeKieAttachSheet === 'function') window.closeKieAttachSheet();
+  if (!_driveConnected) { await window.connectDrive(); return; }
+  window.kiePickFromDrive(function (result) {
+    const staged = window.kieStageExternalAttachment && window.kieStageExternalAttachment({
+      name: result.name, mimeType: result.mimeType, base64: result.base64,
+    });
+    if (staged && typeof window.toast === 'function') window.toast(`${result.name} attached`, 'ok');
+  });
+};
+
+// ─── SAVE: "type a name, get the file + preview" ──────────────────────────
+// Accepts either a Blob or an already-base64 string. Unrelated to the
+// import flow above — this pushes a platform-generated file TO Drive.
 function _driveCloseModal() {
   const el = document.getElementById('kieDriveModal');
   if (el) el.remove();
@@ -106,28 +231,16 @@ function _driveOpenModal(innerHtml) {
   return wrap;
 }
 
-function _driveOpenManagePanel() {
-  _driveOpenModal(`
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg>
-      <div>
-        <div style="font-weight:800;font-size:15px">Google Drive</div>
-        <div style="font-size:12px;color:#64748b">${_driveEmail || 'Connected'}</div>
-      </div>
-    </div>
-    <button onclick="window.kiePickFromDrive(function(r){ if(typeof window.toast==='function') window.toast('Imported '+r.name,'ok'); }); _driveCloseModal();"
-      style="width:100%;padding:11px;border-radius:10px;border:1.5px solid #e2e8f0;background:#f8fafc;font-weight:700;font-size:13px;margin-bottom:8px;cursor:pointer">
-      Import a file from Drive
-    </button>
-    <button onclick="window.disconnectDrive()"
-      style="width:100%;padding:11px;border-radius:10px;border:1.5px solid #fecaca;background:#fef2f2;color:#dc2626;font-weight:700;font-size:13px;cursor:pointer">
-      Disconnect
-    </button>
-  `);
+function _driveToBase64(fileData) {
+  return new Promise((resolve, reject) => {
+    if (typeof fileData === 'string') { resolve(fileData.includes(',') ? fileData.split(',').pop() : fileData); return; }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',').pop());
+    reader.onerror = reject;
+    reader.readAsDataURL(fileData);
+  });
 }
 
-// ─── SAVE: "type a name, get the file + preview" ──────────────────────────
-// Accepts either a Blob or an already-base64 string.
 window.kieSaveToDrive = async function (fileData, suggestedName, mimeType) {
   if (!_driveConnected) { await _driveLoadStatus(); }
   if (!_driveConnected) {
@@ -181,72 +294,4 @@ window.kieSaveToDrive = async function (fileData, suggestedName, mimeType) {
       if (typeof window.toast === 'function') window.toast(e.message || 'Save failed', 'err'); else alert(e.message || 'Save failed');
     }
   };
-};
-
-function _driveToBase64(fileData) {
-  return new Promise((resolve, reject) => {
-    if (typeof fileData === 'string') { resolve(fileData.includes(',') ? fileData.split(',').pop() : fileData); return; }
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(',').pop());
-    reader.onerror = reject;
-    reader.readAsDataURL(fileData);
-  });
-}
-
-// ─── PICK: bring an existing Drive file INTO the platform ────────────────
-let _gapiLoaded = false;
-function _driveLoadGapi() {
-  return new Promise((resolve, reject) => {
-    if (_gapiLoaded && window.gapi && window.google?.picker) return resolve();
-    const s = document.createElement('script');
-    s.src = 'https://apis.google.com/js/api.js';
-    s.onload = () => {
-      window.gapi.load('picker', () => { _gapiLoaded = true; resolve(); });
-    };
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-window.kiePickFromDrive = async function (onPicked) {
-  if (!_driveConnected) { await _driveLoadStatus(); }
-  if (!_driveConnected) { await window.connectDrive(); return; }
-
-  try {
-    const tok = await _driveTok();
-    const res = await fetch('/api/drive/picker-token', { headers: { Authorization: `Bearer ${tok}` } });
-    const cfg = await res.json();
-    if (!res.ok) throw new Error(cfg.message || cfg.error || 'Could not open Drive picker');
-
-    await _driveLoadGapi();
-    const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
-      .setIncludeFolders(false)
-      .setSelectFolderEnabled(false);
-    const picker = new google.picker.PickerBuilder()
-      .addView(view)
-      .setOAuthToken(cfg.accessToken)
-      .setDeveloperKey(cfg.apiKey)
-      .setAppId(cfg.appId)
-      .setCallback(async (data) => {
-        if (data.action !== google.picker.Action.PICKED) return;
-        const fileId = data.docs[0].id;
-        try {
-          const tok2 = await _driveTok();
-          const importRes = await fetch('/api/drive/import', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok2}` },
-            body: JSON.stringify({ fileId }),
-          });
-          const result = await importRes.json();
-          if (!importRes.ok) throw new Error(result.message || result.error || 'Import failed');
-          if (typeof onPicked === 'function') onPicked(result);
-        } catch (e) {
-          if (typeof window.toast === 'function') window.toast(e.message || 'Import failed', 'err'); else alert(e.message || 'Import failed');
-        }
-      })
-      .build();
-    picker.setVisible(true);
-  } catch (e) {
-    if (typeof window.toast === 'function') window.toast(e.message || 'Could not open Drive picker', 'err'); else alert(e.message || 'Could not open Drive picker');
-  }
 };

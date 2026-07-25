@@ -3447,6 +3447,13 @@
                   <div class="kmd-item-tag">PDF or TXT resume</div>
                 </div>
               </div>
+              <div class="kmd-item" id="kmdDriveItem" onclick="window.kieAttachSheetDriveTap && window.kieAttachSheetDriveTap()">
+                <div class="kas-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg></div>
+                <div class="kmd-item-body">
+                  <div class="kmd-item-name">Google Drive</div>
+                  <div class="kmd-item-tag" id="kmdDriveTag">Connect to import a file</div>
+                </div>
+              </div>
             </div>
           </div>`;
         document.body.appendChild(sheet);
@@ -3454,6 +3461,7 @@
       } else {
         sheet.classList.add('open');
       }
+      if (window.kieRefreshDriveAttachTag) window.kieRefreshDriveAttachTag();
     };
 
     window.closeKieAttachSheet = function() {
@@ -3551,6 +3559,37 @@
       if (stage) stage.classList.remove('visible');
       const thumb = g('kieAttachThumb');
       if (thumb) { thumb.src = ''; thumb.style.display = 'none'; }
+    };
+
+    // Public bridge so files that don't come from the native <input type=file>
+    // flow (currently: Google Drive imports, via dashboard-drive.js) can still
+    // land in the exact same staging slot as a normal upload. dashboard-drive.js
+    // is a plain classic script, not a module, so it can't reach
+    // _stagedKieAttachment directly — this is the seam.
+    // opts: { name, mimeType, base64 } — base64 is raw bytes, no data: prefix.
+    window.kieStageExternalAttachment = function(opts) {
+      const { name, mimeType, base64 } = opts || {};
+      if (!name || !base64) return false;
+      const isImage = (mimeType || '').startsWith('image/');
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      const isPdf = mimeType === 'application/pdf' || ext === 'pdf';
+      const isTxt = mimeType === 'text/plain' || ext === 'txt';
+      if (!isImage && !isPdf && !isTxt) {
+        toast('Supported: images (JPG/PNG/WEBP), PDF, or TXT files', 'err');
+        return false;
+      }
+      _kiePendingResumeIntro = null;
+      const dataUrl = `data:${mimeType || 'application/octet-stream'};base64,${base64}`;
+      if (isImage) {
+        _stagedKieAttachment = { type: 'image', file: null, dataUrl, mimeType: mimeType || 'image/jpeg', name };
+        _showKieAttachStage('image', name, dataUrl);
+      } else {
+        const type = isPdf ? 'pdf' : 'txt';
+        _stagedKieAttachment = { type, file: null, name, previewDataUrl: dataUrl };
+        _showKieAttachStage(type, name, null);
+      }
+      setTimeout(() => { const inp = g('kieInp'); if (inp) inp.focus(); }, 80);
+      return true;
     };
 
     // Applies a confirmed resume analysis: tags the "Uploaded Resume" pill,
