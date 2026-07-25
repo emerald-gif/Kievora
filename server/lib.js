@@ -34,6 +34,25 @@ function getOAuthClient() {
   return new google.auth.OAuth2(GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REDIRECT_URI);
 }
 
+// ─── Google Drive OAuth Config ──────────────────────────────────────────────
+// Reuses the SAME OAuth Client ID/Secret as Gmail (it's one Google Cloud OAuth
+// app — you can register multiple "Authorized redirect URIs" on it). Only the
+// redirect URI differs, so add DRIVE_REDIRECT_URI as a second entry on that
+// Client ID in Google Cloud Console (e.g. https://kievora.com/api/drive/callback).
+// Scope is deliberately just 'drive.file' — NOT 'drive' or 'drive.readonly' —
+// because drive.file only grants access to files Kievora creates OR files the
+// user explicitly selects via the Google Picker widget. That keeps this on
+// Google's "non-sensitive" scope tier, so it skips their manual OAuth
+// verification review entirely. Do not widen this scope without expecting a
+// verification review to be required.
+const DRIVE_REDIRECT_URI = process.env.DRIVE_REDIRECT_URI; // e.g. https://kievora.com/api/drive/callback
+const DRIVE_API_KEY      = process.env.DRIVE_API_KEY;       // browser API key, for the Picker widget only
+const DRIVE_APP_ID       = process.env.DRIVE_APP_ID;        // Google Cloud project number, for the Picker widget
+
+function getDriveOAuthClient() {
+  return new google.auth.OAuth2(GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, DRIVE_REDIRECT_URI);
+}
+
 // multer: memory storage so we stream directly to Cloudinary (no disk writes)
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -1944,6 +1963,7 @@ async function authenticate(req, res, next) {
 
 module.exports = {
   getOAuthClient, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REDIRECT_URI, upload,
+  getDriveOAuthClient, DRIVE_REDIRECT_URI, DRIVE_API_KEY, DRIVE_APP_ID,
   admin, db, RESUMES, USERS,
   KIE_MODELS, KIE_TIERS, PLANS, DEFAULT_PLAN, getPlanConfig, getUserPlanKey,
   getCycleAnchorDate, getCycleStart, checkAndIncrementKieUsage,

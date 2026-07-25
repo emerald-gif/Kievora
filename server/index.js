@@ -58,6 +58,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // ─── Route Modules ───────────────────────────────────────────────────────────
 require('./gmail')(app);
+require('./drive')(app);
 require('./billing')(app);
 require('./kie')(app);
 require('./tools')(app);
