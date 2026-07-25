@@ -13,18 +13,31 @@
 
 let _driveConnected = false;
 let _driveEmail = null;
+let _driveStatusLoadedAt = 0;
+const DRIVE_STATUS_TTL_MS = 5 * 60 * 1000; // 5 min — status barely ever changes mid-session
 
 async function _driveTok() {
   return window.__kieGetIdToken();
 }
 
-async function _driveLoadStatus() {
+// force=true always hits the server (used right after connect/disconnect,
+// where the cache is known-stale). Otherwise this is a no-op if we loaded
+// status recently — avoids a Firestore read every time the attach sheet or
+// settings panel is opened, which was happening on every single tap before.
+async function _driveLoadStatus(force = false) {
+  const fresh = Date.now() - _driveStatusLoadedAt < DRIVE_STATUS_TTL_MS;
+  if (!force && fresh && _driveStatusLoadedAt > 0) {
+    _driveRenderSettingsRow();
+    _driveRenderPanelState();
+    return;
+  }
   try {
     const tok = await _driveTok();
     const res = await fetch('/api/drive/status', { headers: { Authorization: `Bearer ${tok}` } });
     const data = await res.json();
     _driveConnected = !!data.connected;
     _driveEmail = data.driveEmail || null;
+    _driveStatusLoadedAt = Date.now();
   } catch (e) { _driveConnected = false; }
   _driveRenderSettingsRow();
   _driveRenderPanelState();
@@ -92,7 +105,7 @@ window.disconnectDrive = async function () {
   try {
     const tok = await _driveTok();
     await fetch('/api/drive/disconnect', { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } });
-    _driveConnected = false; _driveEmail = null;
+    _driveConnected = false; _driveEmail = null; _driveStatusLoadedAt = 0;
     _driveRenderSettingsRow();
     _driveRenderPanelState();
     if (typeof window.toast === 'function') window.toast('Drive disconnected', 'ok');
@@ -110,7 +123,10 @@ window.disconnectDrive = async function () {
   params.delete('drive');
   const clean = window.location.pathname + (params.toString() ? `?${params}` : '');
   window.history.replaceState({}, '', clean);
-  if (state === 'connected' && typeof window.toast === 'function') window.toast('Google Drive connected', 'ok');
+  if (state === 'connected') {
+    _driveStatusLoadedAt = 0; // force the next status check to actually hit the server
+    if (typeof window.toast === 'function') window.toast('Google Drive connected', 'ok');
+  }
   if (state === 'error' && typeof window.toast === 'function') window.toast('Drive connection failed. Try again.', 'err');
 })();
 
@@ -164,6 +180,7 @@ window.kiePickFromDrive = async function (onPicked) {
           });
           const result = await importRes.json();
           if (!importRes.ok) throw new Error(result.message || result.error || 'Import failed');
+          if (window._kieInvalidateRecentFilesCache) window._kieInvalidateRecentFilesCache();
           if (typeof onPicked === 'function') onPicked(result);
         } catch (e) {
           if (typeof window.toast === 'function') window.toast(e.message || 'Import failed', 'err'); else alert(e.message || 'Import failed');
@@ -277,6 +294,7 @@ window.kieSaveToDrive = async function (fileData, suggestedName, mimeType) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Save failed');
+      if (window._kieInvalidateRecentFilesCache) window._kieInvalidateRecentFilesCache();
       modal.querySelector('div').innerHTML = `
         <div style="font-weight:800;font-size:15px;margin-bottom:14px">Saved to Drive</div>
         <div style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;margin-bottom:14px">

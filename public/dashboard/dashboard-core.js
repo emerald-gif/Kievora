@@ -2981,15 +2981,19 @@
             showKieTemplatePicker(m.content || '', false);
           } else if (m.role === 'user' && m.imageRef) {
             const imgData = _kieImageStore.get(m.imageRef);
+            const caption = (m.content && m.content !== '[Image sent]') ? m.content : '';
             if (imgData) {
               const dataUrl = `data:${imgData.mimeType || 'image/jpeg'};base64,${imgData.base64}`;
               // Don't show the auto-generated placeholder text as a caption
-              const caption = (m.content && m.content !== '[Image sent]') ? m.content : '';
               _appendKieImageMsg(dataUrl, caption);
+            } else if (m.imageUrl) {
+              // Not in this browser's local store (different device, or it
+              // aged out of localStorage) — the Cloudinary copy still exists.
+              _appendKieImageMsg(m.imageUrl, caption);
             } else {
               // Image data aged out of storage — show a plain fallback so the
               // conversation flow still makes sense
-              appendKMsg('user', (m.content && m.content !== '[Image sent]') ? m.content : '📷 Image (no longer available)', false);
+              appendKMsg('user', caption || '📷 Image (no longer available)', false);
             }
           } else if (m.role === 'user' && m.fileRef) {
             // Keep the file card (and its preview capability) alive across a
@@ -2997,7 +3001,7 @@
             // storage, the card still shows and preview falls back gracefully
             // to "Preview unavailable" inside openKieFilePreview.
             if (!_kieFileStore.has(m.fileRef)) {
-              _kieFileStore.set(m.fileRef, { base64: '', mimeType: '', name: m.fileName || 'File', ext: m.fileExt || 'file' });
+              _kieFileStore.set(m.fileRef, { base64: '', mimeType: '', name: m.fileName || 'File', ext: m.fileExt || 'file', url: m.fileUrl || null });
             }
             _appendKieFileMsg(m.fileRef, m.fileName || 'File', m.fileExt || 'file', m.content);
           } else {
@@ -3455,6 +3459,10 @@
                 </div>
               </div>
             </div>
+            <div id="kieRecentFilesSection" style="display:none;padding:2px 16px 14px">
+              <div style="font-size:11px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Recent</div>
+              <div id="kieRecentFilesList" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px"></div>
+            </div>
           </div>`;
         document.body.appendChild(sheet);
         setTimeout(() => sheet.classList.add('open'), 10);
@@ -3462,6 +3470,62 @@
         sheet.classList.add('open');
       }
       if (window.kieRefreshDriveAttachTag) window.kieRefreshDriveAttachTag();
+      _kieLoadRecentAttachFiles();
+    };
+
+    // "Recent" strip — files uploaded, AI-generated, or saved, most recent
+    // first, capped server-side at 30. Tapping one re-stages it into chat
+    // with a single tap, no re-upload/re-pick needed.
+    let _kieRecentFilesCache = null;
+    async function _kieLoadRecentAttachFiles() {
+      const section = g('kieRecentFilesSection');
+      const list = g('kieRecentFilesList');
+      if (!section || !list) return;
+      if (_kieRecentFilesCache) { _kieRenderRecentAttachFiles(_kieRecentFilesCache); return; }
+      try {
+        const tok = await __kieGetIdToken();
+        const res = await fetch('/api/files/recent?limit=12', { headers: { Authorization: `Bearer ${tok}` } });
+        const data = await res.json();
+        _kieRecentFilesCache = data.files || [];
+        _kieRenderRecentAttachFiles(_kieRecentFilesCache);
+      } catch { /* Recent is a convenience, not critical — fail silently */ }
+    }
+    function _kieRenderRecentAttachFiles(files) {
+      const section = g('kieRecentFilesSection');
+      const list = g('kieRecentFilesList');
+      if (!section || !list) return;
+      if (!files.length) { section.style.display = 'none'; return; }
+      section.style.display = '';
+      list.innerHTML = files.map((f, i) => {
+        const isImg = (f.mimeType || '').startsWith('image/');
+        const thumb = isImg && f.thumbnailUrl
+          ? `<img src="${f.thumbnailUrl}" style="width:100%;height:100%;object-fit:cover" />`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f1f1f4;font-size:9px;font-weight:800;color:#8e8e93">${(f.mimeType || 'file').split('/').pop().slice(0,4).toUpperCase()}</div>`;
+        return `
+          <button onclick="_kieReuseRecentFile(${i})" style="flex-shrink:0;width:64px;text-align:left;background:none;border:none;padding:0;cursor:pointer;font-family:inherit">
+            <div style="width:64px;height:64px;border-radius:11px;overflow:hidden;border:1px solid rgba(60,60,67,.13);margin-bottom:4px">${thumb}</div>
+            <div style="font-size:10px;color:#3c3c43;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${(f.name || 'file').replace(/</g,'')}</div>
+          </button>`;
+      }).join('');
+    }
+    window._kieInvalidateRecentFilesCache = function() { _kieRecentFilesCache = null; };
+    window._kieReuseRecentFile = async function(i) {
+      const f = _kieRecentFilesCache && _kieRecentFilesCache[i];
+      if (!f) return;
+      closeKieAttachSheet();
+      try {
+        const r = await fetch(f.url);
+        const blob = await r.blob();
+        const base64 = await new Promise((resolve, reject) => {
+          const rd = new FileReader();
+          rd.onload = () => resolve(String(rd.result).split(',').pop());
+          rd.onerror = reject;
+          rd.readAsDataURL(blob);
+        });
+        if (window.kieStageExternalAttachment) {
+          window.kieStageExternalAttachment({ name: f.name, mimeType: f.mimeType, base64 });
+        }
+      } catch { toast('Could not load that file — try again', 'err'); }
     };
 
     window.closeKieAttachSheet = function() {
@@ -3498,17 +3562,20 @@
       if (file.size > 10 * 1024 * 1024) { toast('File too large — max 10 MB', 'err'); return; }
 
       if (isImage) {
+        const compressed = await _kieCompressImage(file);
         const reader = new FileReader();
         reader.onload = function(e) {
+          const uploadPromise = _kieRecordFileHistory(file.name, file.type || 'image/jpeg', e.target.result);
           _stagedKieAttachment = {
             type: 'image', file,
             dataUrl:  e.target.result,
             mimeType: file.type || 'image/jpeg',
-            name: file.name, size: file.size,
+            name: file.name, size: compressed.size || file.size,
+            uploadPromise,
           };
           _showKieAttachStage('image', file.name, e.target.result);
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(compressed);
       } else {
         _stagedKieAttachment = {
           type: ext, file,
@@ -3526,11 +3593,66 @@
           });
           if (_stagedKieAttachment && _stagedKieAttachment.file === file) {
             _stagedKieAttachment.previewDataUrl = previewDataUrl;
+            _stagedKieAttachment.uploadPromise = _kieRecordFileHistory(
+              file.name, file.type || (ext === 'pdf' ? 'application/pdf' : 'text/plain'), previewDataUrl
+            );
           }
         } catch { /* preview just won't be available for this file — non-fatal */ }
       }
       setTimeout(() => g('kieInp').focus(), 80);
     };
+
+    // Fire-and-forget: logs an upload into the server-side Recent/History list
+    // (Firestore + Cloudinary) so it survives beyond this browser's localStorage.
+    // Never awaited by callers — a history-logging failure should never block
+    // or visibly affect the actual attach/staging flow.
+    // Downscales + re-compresses an image before it ever gets staged or
+    // uploaded — most attached photos (resume snaps, screenshots) don't need
+    // full camera resolution to be useful, and this alone typically cuts
+    // file size 70-90%. Keeps everything cheaper: smaller Firestore-adjacent
+    // Cloudinary storage, faster vision calls, less mobile data used.
+    function _kieCompressImage(file, maxDim = 1600, quality = 0.82) {
+      return new Promise((resolve) => {
+        if (!file.type.startsWith('image/') || file.type === 'image/gif') { resolve(file); return; } // don't touch GIFs (animation would break)
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          let { width, height } = img;
+          if (width <= maxDim && height <= maxDim) { resolve(file); return; } // already small enough
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale); height = Math.round(height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', quality);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // if it fails to load, just use the original
+        img.src = url;
+      });
+    }
+
+    // Fire-and-forget-ISH: logs an upload into the server-side Recent/History
+    // list (Firestore + Cloudinary), which also doubles as the persisted copy
+    // conversations reference across devices — see kieStageExternalAttachment
+    // and _sendKieWithImage. Returns the Cloudinary URL (or null on failure)
+    // so callers CAN wait on it, but nothing about staging/sending blocks on
+    // this by default.
+    async function _kieRecordFileHistory(name, mimeType, dataUrl) {
+      try {
+        const base64 = String(dataUrl).split(',').pop();
+        const tok = await __kieGetIdToken();
+        const res = await fetch('/api/files/record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },
+          body: JSON.stringify({ name, mimeType, base64, source: 'upload' }),
+        });
+        const data = await res.json();
+        _kieRecentFilesCache = null;
+        return data?.url || null;
+      } catch { return null; }
+    }
 
     function _showKieAttachStage(type, name, dataUrl) {
       const stage   = g('kieAttachStage');
@@ -4639,6 +4761,23 @@
       ol.classList.add('open');
       document.body.style.overflow = 'hidden';
 
+      if (data && !data.base64 && data.url) {
+        nameEl.textContent = data.name || 'File';
+        subEl.textContent  = 'Loading…';
+        bodyEl.innerHTML   = `<div class="kie-file-overlay-loading"><div class="kie-file-overlay-spinner"></div><div class="kie-file-overlay-loading-txt">Loading preview…</div></div>`;
+        try {
+          const r = await fetch(data.url);
+          const blob = await r.blob();
+          const fetchedBase64 = await new Promise((resolve, reject) => {
+            const rd = new FileReader();
+            rd.onload = () => resolve(String(rd.result).split(',').pop());
+            rd.onerror = reject;
+            rd.readAsDataURL(blob);
+          });
+          data.base64 = fetchedBase64; // cache on the store entry so re-opening doesn't re-fetch
+        } catch { /* fall through to the unavailable state below */ }
+      }
+
       if (!data || !data.base64) {
         nameEl.textContent = (data && data.name) || 'File';
         subEl.textContent  = 'Preview unavailable';
@@ -5550,6 +5689,15 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       const base64 = att.dataUrl.split(',')[1];
       const prompt  = userPrompt || 'What do you see in this image? Give me career coaching advice based on it.';
 
+      // Give the background Cloudinary upload (kicked off at staging time) a
+      // brief window to finish so the persisted Firestore message can carry
+      // a real imageUrl. If it's not done yet, don't block the send — the
+      // conversation just won't have a cross-device copy of this one image.
+      let uploadedUrl = null;
+      if (att.uploadPromise) {
+        try { uploadedUrl = await Promise.race([att.uploadPromise, new Promise((r) => setTimeout(() => r(null), 4000))]); } catch { /* non-fatal */ }
+      }
+
       // BUG FIX #7 — Store image in the in-memory store and keep a reference
       // in kieHist instead of only storing the text "[Image sent]".
       // This way follow-up questions about the image include it in context.
@@ -5558,6 +5706,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       kieHist.push({
         role: 'user', content: userPrompt || '[Image sent]',
         imageRef: imgKey, imageType: att.mimeType, imageName: att.name || 'image',
+        imageUrl: uploadedUrl || undefined,
       });
 
       // BUG FIX #3 — Refresh auth token before API call
@@ -5567,9 +5716,9 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       const historyForApi = kieHist.map(m => {
         if (!m.imageRef) return m;
         const imgData = _kieImageStore.get(m.imageRef);
-        if (!imgData) return { role: m.role, content: m.content };
+        if (!imgData) return { role: m.role, content: m.content, imageUrl: m.imageUrl };
         return { role: m.role, content: m.content, imageBase64: imgData.base64,
-                 imageType: m.imageType, imageName: m.imageName };
+                 imageType: m.imageType, imageName: m.imageName, imageUrl: m.imageUrl };
       });
 
       // Build the streaming bubble lazily — only once the first token exists,
@@ -6524,9 +6673,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const fileRef = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
         const base64  = (att.previewDataUrl || '').split(',')[1] || '';
         const mimeType = att.file?.type || (att.type === 'pdf' ? 'application/pdf' : 'text/plain');
-        _kieFileStore.set(fileRef, { base64, mimeType, name: att.name, ext: att.type });
+        let fileUrl = null;
+        if (att.uploadPromise) {
+          try { fileUrl = await Promise.race([att.uploadPromise, new Promise((r) => setTimeout(() => r(null), 4000))]); } catch { /* non-fatal */ }
+        }
+        _kieFileStore.set(fileRef, { base64, mimeType, name: att.name, ext: att.type, url: fileUrl });
         _appendKieFileMsg(fileRef, att.name, att.type, msg);
-        kieHist.push({ role:'user', content: msg || '', fileRef, fileName: att.name, fileExt: att.type });
+        kieHist.push({ role:'user', content: msg || '', fileRef, fileName: att.name, fileExt: att.type, fileUrl: fileUrl || undefined });
         inp.value = ''; inp.style.height = 'auto';
         await _processKieFileAttachment(att, msg);
         return;
