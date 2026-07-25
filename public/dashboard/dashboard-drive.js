@@ -159,6 +159,8 @@ window.kiePickFromDrive = async function (onPicked) {
     if (!res.ok) throw new Error(cfg.message || cfg.error || 'Could not open Drive picker');
 
     await _driveLoadGapi();
+    const pickerW = Math.round(Math.min(window.innerWidth * 0.94, 560));
+    const pickerH = Math.round(Math.min(window.innerHeight * 0.78, 640));
     const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
       .setIncludeFolders(false)
       .setSelectFolderEnabled(false)
@@ -168,6 +170,7 @@ window.kiePickFromDrive = async function (onPicked) {
       .setOAuthToken(cfg.accessToken)
       .setDeveloperKey(cfg.apiKey)
       .setAppId(cfg.appId)
+      .setSize(pickerW, pickerH)
       .setCallback(async (data) => {
         if (data.action !== google.picker.Action.PICKED) return;
         const fileId = data.docs[0].id;

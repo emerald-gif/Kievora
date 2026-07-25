@@ -2049,6 +2049,51 @@
     #kieAttachSheet.open .kmd-sheet{transform:translateY(0)}
     #kieShareDrawer.open .kmd-sheet{transform:translateY(0)}
     .kmd-handle{width:36px;height:4px;background:#e2e8f0;border-radius:99px;margin:14px auto 18px}
+
+    /* ── GOOGLE DRIVE PICKER — OVERLAY WRAPPER ─────────────────────
+       Google's Picker widget is mostly a locked iframe (the actual file
+       browser inside can't be restyled), but the OUTER dialog/backdrop
+       chrome around it is plain DOM that Google injects into our page —
+       so we can still reshape *that* to stop it going edge-to-edge and
+       make it feel like one of our own drawers instead of a bare Google
+       widget. Google sets some of this via inline style, so !important
+       is required to win. Unsupported/undocumented class names — if a
+       future Google Picker version renames them, this block silently
+       stops applying (safe no-op, picker still works, just unstyled). */
+    .picker-dialog-bg{
+      background:rgba(15,14,23,.55) !important;
+      -webkit-backdrop-filter:blur(3px);
+      backdrop-filter:blur(3px);
+    }
+    .picker-dialog{
+      border:none !important;
+      border-radius:20px !important;
+      box-shadow:0 -8px 40px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.04) !important;
+      overflow:hidden !important;
+      top:auto !important;
+      bottom:16px !important;
+      left:50% !important;
+      transform:translateX(-50%) !important;
+      width:min(94vw,560px) !important;
+      max-width:560px !important;
+      height:min(78vh,640px) !important;
+      max-height:78vh !important;
+    }
+    @media (max-width:640px){
+      .picker-dialog{
+        bottom:0 !important;
+        left:0 !important;
+        right:0 !important;
+        transform:none !important;
+        width:100% !important;
+        max-width:100% !important;
+        border-radius:20px 20px 0 0 !important;
+        padding-bottom:env(safe-area-inset-bottom) !important;
+        height:min(85vh,640px) !important;
+        max-height:85vh !important;
+      }
+    }
+
     .kmd-hdr-inner{padding:0 20px 14px;border-bottom:1px solid #f1f5f9}
     .kmd-title{font-size:16px;font-weight:800;color:#0f0e17;letter-spacing:-.3px}
     .kmd-sub{display:none}
