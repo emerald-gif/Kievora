@@ -10,7 +10,9 @@ module.exports = function registerToolsRoutes(app) {
     admin, db, authenticate,
     RESUMES, USERS, PLANS, getPlanConfig, getUserPlanKey, UPGRADE_MESSAGES, FREE_RESUME_UPSELL_CHANCE,
     callKieAI, callKieAIJson, parseAIJson, callKieAIStream, KIE_MODELS,
+    cloudinary,
   } = require('./lib');
+  const { recordFileHistory } = require('./files');
 
   app.get('/api/resumes', authenticate, async (req, res) => {
     console.log('GET /api/resumes — uid:', req.user.uid);
@@ -1924,6 +1926,10 @@ Rules:
       });
 
       console.log(`POST /api/resume/pdf — uid:${req.user.uid} name:"${safeName}" bytes:${pdfBuffer.length}`);
+      recordFileHistory({
+        admin, db, cloudinary, uid: req.user.uid, name: `${safeName}.pdf`,
+        mimeType: 'application/pdf', buffer: pdfBuffer, source: 'ai_generated',
+      }).catch(() => {});
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${safeName}.pdf"`);
       res.setHeader('Content-Length', pdfBuffer.length);

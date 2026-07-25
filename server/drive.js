@@ -23,6 +23,7 @@ module.exports = function registerDriveRoutes(app) {
     GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, DRIVE_API_KEY, DRIVE_APP_ID,
     cloudinary,
   } = require('./lib');
+  const { recordFileHistory } = require('./files');
 
   const DRIVE_SCOPE = ['https://www.googleapis.com/auth/drive.file',
                         'https://www.googleapis.com/auth/userinfo.email'];
@@ -131,6 +132,9 @@ module.exports = function registerDriveRoutes(app) {
         fields: 'id, name, webViewLink, iconLink, thumbnailLink, mimeType',
       });
 
+      recordFileHistory({ admin, db, cloudinary, uid, name: safeName, mimeType, buffer, source: 'saved' })
+        .catch(() => {}); // never let history logging affect the actual save
+
       res.json({
         success: true,
         fileId: file.data.id,
@@ -187,17 +191,14 @@ module.exports = function registerDriveRoutes(app) {
         return res.status(413).json({ error: 'File too large — max 10 MB' });
       }
 
-      const upload = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: 'kievora/drive-imports', resource_type: 'auto' },
-          (err, result) => (err ? reject(err) : resolve(result))
-        );
-        stream.end(buffer);
+      const upload = await recordFileHistory({
+        admin, db, cloudinary, uid, name: meta.data.name, mimeType: meta.data.mimeType, buffer, source: 'upload',
       });
+      if (!upload.success) return res.status(500).json({ error: 'Import from Drive failed. Please try again.' });
 
       res.json({
         success: true,
-        url: upload.secure_url,
+        url: upload.url,
         name: meta.data.name,
         mimeType: meta.data.mimeType,
         base64: buffer.toString('base64'),
