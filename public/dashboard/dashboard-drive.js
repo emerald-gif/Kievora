@@ -183,7 +183,6 @@ window.kiePickFromDrive = async function (onPicked) {
           });
           const result = await importRes.json();
           if (!importRes.ok) throw new Error(result.message || result.error || 'Import failed');
-          if (window._kieInvalidateRecentFilesCache) window._kieInvalidateRecentFilesCache();
           if (typeof onPicked === 'function') onPicked(result);
         } catch (e) {
           if (typeof window.toast === 'function') window.toast(e.message || 'Import failed', 'err'); else alert(e.message || 'Import failed');
