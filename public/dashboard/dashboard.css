@@ -1477,27 +1477,25 @@
     .kie-live-orb-wrap{position:relative;width:290px;height:290px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .kie-live-orb-halo{
       position:absolute;inset:0;border-radius:50%;
-      background:radial-gradient(circle, rgba(196,181,253,.28) 0%, rgba(249,168,212,.14) 45%, rgba(191,219,254,0) 72%);
+      background:radial-gradient(circle, rgba(167,139,250,.32) 0%, rgba(124,58,237,.13) 45%, rgba(124,58,237,0) 72%);
       filter:blur(2px);
       animation:haloBreathe 3.6s ease-in-out infinite;
     }
     @keyframes haloBreathe{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
     .kie-live-orb{
       position:relative;width:190px;height:190px;flex-shrink:0;overflow:hidden;
-      /* Layered radial gradients instead of one flat color-to-color sphere —
-         blue up top, warm cream/peach through the middle, a blush pink
-         accent low-right — is what actually reads as a soft "mesh gradient"
-         cloud rather than a solid ball. filter:blur softens every gradient
-         edge so nothing has a hard boundary, which is the main thing that
-         separates this look from a plain CSS radial-gradient circle. */
+      /* Same layered mesh-gradient approach as before — several soft radial
+         gradients plus a blur, so nothing has a hard edge — just recolored
+         into Kievora's purple, light lavender up top fading through violet
+         into a deeper purple base, instead of the blue/peach/pink mix. */
       background:
-        radial-gradient(circle at 28% 22%, rgba(191,219,254,.95) 0%, transparent 46%),
-        radial-gradient(circle at 74% 18%, rgba(196,181,253,.55) 0%, transparent 50%),
-        radial-gradient(circle at 50% 52%, rgba(254,235,200,.9) 0%, transparent 58%),
-        radial-gradient(circle at 66% 78%, rgba(249,168,212,.5) 0%, transparent 52%),
-        linear-gradient(165deg, #cfe0fb 0%, #e6dcfb 35%, #fdf1dd 65%, #fbdce9 100%);
+        radial-gradient(circle at 28% 22%, rgba(216,199,255,.95) 0%, transparent 46%),
+        radial-gradient(circle at 74% 18%, rgba(167,139,250,.6) 0%, transparent 50%),
+        radial-gradient(circle at 50% 52%, rgba(196,163,253,.9) 0%, transparent 58%),
+        radial-gradient(circle at 66% 78%, rgba(139,92,246,.55) 0%, transparent 52%),
+        linear-gradient(165deg, #ddd6fe 0%, #c4b5fd 35%, #a78bfa 65%, #7c3aed 100%);
       filter:blur(.4px) saturate(1.08);
-      box-shadow:0 10px 34px rgba(124,58,237,.22), inset 0 0 30px rgba(255,255,255,.5);
+      box-shadow:0 10px 34px rgba(124,58,237,.32), inset 0 0 30px rgba(255,255,255,.4);
       border-radius:50%;border:3px solid #fff;
       transition:box-shadow .25s ease;
       animation:orbDrift 9s ease-in-out infinite;
@@ -1511,14 +1509,15 @@
     }
     .kie-live-orb.thinking{animation-duration:5s}
     .kie-live-orb.speaking{
-      /* Slightly warmer + brighter while actually talking, so there's still
-         a visible state difference without bringing back explicit text. */
+      /* Slightly brighter + more saturated while actually talking, so
+         there's still a visible state difference without bringing back
+         explicit text. */
       background:
-        radial-gradient(circle at 28% 22%, rgba(191,219,254,.75) 0%, transparent 46%),
-        radial-gradient(circle at 74% 18%, rgba(196,181,253,.5) 0%, transparent 50%),
-        radial-gradient(circle at 50% 48%, rgba(254,225,170,.95) 0%, transparent 58%),
-        radial-gradient(circle at 66% 80%, rgba(249,168,212,.65) 0%, transparent 55%),
-        linear-gradient(165deg, #cfe0fb 0%, #e6dcfb 30%, #fde8c8 65%, #fbd3e6 100%);
+        radial-gradient(circle at 28% 22%, rgba(216,199,255,.8) 0%, transparent 46%),
+        radial-gradient(circle at 74% 18%, rgba(167,139,250,.55) 0%, transparent 50%),
+        radial-gradient(circle at 50% 48%, rgba(216,180,255,.95) 0%, transparent 58%),
+        radial-gradient(circle at 66% 80%, rgba(168,85,247,.6) 0%, transparent 55%),
+        linear-gradient(165deg, #e0d4fe 0%, #c9b6fd 30%, #b085f5 65%, #8b3ce8 100%);
       animation-duration:2.4s;
     }
     .kie-live-wave-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}

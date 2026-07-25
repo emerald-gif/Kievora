@@ -8729,7 +8729,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           startInterruptListener(text, spokenText);
           utterancesPending++;
           const utter = new SpeechSynthesisUtterance(sentence);
-          utter.rate = 0.96; utter.pitch = 1; utter.volume = 1;
+          // Slower and a little lower than default — reads as calm and
+          // deliberate (coach-like) instead of rushed. 0.82 is noticeably
+          // unhurried without dragging; much below ~0.7 starts sounding
+          // sluggish/robotic rather than calm. Pitch 0.85 thickens the
+          // voice without going low enough to distort on most engines.
+          utter.rate = 0.82; utter.pitch = 0.85; utter.volume = 1;
           const voice = (typeof pickMaleVoice === 'function') ? pickMaleVoice() : null;
           if (voice) utter.voice = voice;
           utter.onend = utter.onerror = () => {
@@ -8800,7 +8805,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         window.speechSynthesis.cancel();
         const myTok = ++speakToken;
         const utter = new SpeechSynthesisUtterance(text);
-        utter.rate = 0.96; utter.pitch = 1; utter.volume = 1;
+        utter.rate = 0.82; utter.pitch = 0.85; utter.volume = 1; // same calmer, deeper coach voice as the main streaming path above
         const voice = (typeof pickMaleVoice === 'function') ? pickMaleVoice() : null;
         if (voice) utter.voice = voice;
         utter.onend = utter.onerror = () => {
