@@ -8242,11 +8242,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         currentOrbState = state;
         const o = orbEl();
         if (o) o.className = 'kie-live-orb' + (state ? ' ' + state : '') + (liveMicMuted && state === 'listening' ? ' muted' : '');
+        // The orb's own animation (pulsing while listening, thinking motion,
+        // speaking waveform — driven entirely by the className above) already
+        // communicates which state it's in. Spelling it out as "Listening…" /
+        // "Thinking…" / "Speaking…" text on top of that was redundant and,
+        // worse, made the thinking phase FEEL longer than it actually is —
+        // a static word sitting on screen reads as "stuck," whereas the same
+        // wait with just the orb moving reads as "working." Mic-muted is the
+        // one case kept, since that's a real state change the orb's own
+        // animation doesn't otherwise make obvious.
         const s = statusEl();
-        if (s) s.textContent =
-          state === 'listening' ? (liveMicMuted ? 'Mic muted' : 'Listening…') :
-          state === 'thinking'  ? 'Thinking…' :
-          state === 'speaking'  ? 'Speaking…' : '';
+        if (s) s.textContent = (liveMicMuted && state === 'listening') ? 'Mic muted' : '';
       }
 
       // ── Transcript log ("Me: … / KIE: …") ────────────────────────────────────
@@ -8391,7 +8397,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const raw = computeBars();
         const gap  = w / BAR_COUNT;
         const barW = Math.max(1.4, gap * 0.55);
-        const cy   = h / 2;
 
         // Spring toward each target instead of a straight lerp — stiffness
         // pulls it in, damping bleeds energy, but it's loose enough to
@@ -8403,26 +8408,38 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (smoothedBars[i] < 0) { smoothedBars[i] = 0; barVel[i] *= -0.35; }
         }
 
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        // BUG FIX / redesign: this used to paint solid white equalizer bars
+        // across the whole orb — a look that clashed hard with the new soft
+        // pastel-cloud gradient above (see .kie-live-orb in dashboard.css).
+        // The bar HEIGHTS are still computed and still respond to the live
+        // audio level exactly as before — they're just not drawn as
+        // rectangles anymore. Instead they drive where warm gold dust rises
+        // from along the bottom of the orb, denser and taller when the
+        // voice is louder, which is the actual look being matched here:
+        // a glowing cloud with sparkle drifting up from its base, not a
+        // literal waveform meter.
         for (let i = 0; i < BAR_COUNT; i++) {
           const envelope = Math.sin(((i + 0.5) / BAR_COUNT) * Math.PI);
           const bh = Math.max(2.5, smoothedBars[i] * h * 0.44 * envelope);
           const x = i * gap + (gap - barW) / 2;
-          const y = cy - bh / 2;
-          if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, barW, bh, barW / 2); ctx.fill(); }
-          else ctx.fillRect(x, y, barW, bh);
+          // Dust rises from the bottom band of the orb (not wherever a bar
+          // happens to sit) — matches the reference look of sparkle hugging
+          // the lower curve of the sphere rather than spraying from mid-canvas.
+          const spawnY = h * 0.78 + Math.random() * h * 0.18;
 
-          // Tall, lively bars occasionally shed a fleck of dust that drifts
-          // upward off the top and fades — the "anti-gravity" touch.
-          if (smoothedBars[i] > 0.4 && dustParticles.length < 70 && Math.random() < smoothedBars[i] * 0.045) {
+          if (smoothedBars[i] > 0.32 && dustParticles.length < 70 && Math.random() < smoothedBars[i] * 0.05) {
             dustParticles.push({
               x: x + barW / 2 + (Math.random() - 0.5) * barW * 1.4,
-              y: y + (Math.random() < 0.5 ? 0 : bh),
-              vy: -(0.25 + Math.random() * 0.35),
-              vx: (Math.random() - 0.5) * 0.14,
+              y: spawnY,
+              vy: -(0.22 + Math.random() * 0.32),
+              vx: (Math.random() - 0.5) * 0.1,
               life: 0,
-              maxLife: 32 + Math.random() * 30,
-              size: 0.6 + Math.random() * 1.1,
+              maxLife: 36 + Math.random() * 34,
+              size: 0.7 + Math.random() * 1.3,
+              // Warm gold with a little variation — a couple of paler,
+              // creamier flecks mixed in with the amber ones reads as
+              // sparkle/glitter rather than a flat single-color dot pattern.
+              warm: Math.random() < 0.65,
             });
           }
         }
@@ -8434,9 +8451,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           p.y += p.vy;
           p.vy *= 0.985; // keeps easing off, never "falls" back down — reads as floating away
           if (p.life >= p.maxLife || p.y < -6 || p.y > h + 6) { dustParticles.splice(i, 1); continue; }
-          const alpha = (1 - p.life / p.maxLife) * 0.75;
+          const alpha = (1 - p.life / p.maxLife) * 0.85;
           ctx.beginPath();
-          ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+          ctx.fillStyle = p.warm
+            ? `rgba(251,191,80,${alpha.toFixed(3)})`   // amber
+            : `rgba(255,241,214,${alpha.toFixed(3)})`; // pale cream
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
         }

@@ -1477,20 +1477,57 @@
     .kie-live-orb-wrap{position:relative;width:290px;height:290px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .kie-live-orb-halo{
       position:absolute;inset:0;border-radius:50%;
-      background:radial-gradient(circle, rgba(124,58,237,.30) 0%, rgba(124,58,237,.12) 45%, rgba(124,58,237,0) 72%);
+      background:radial-gradient(circle, rgba(196,181,253,.28) 0%, rgba(249,168,212,.14) 45%, rgba(191,219,254,0) 72%);
       filter:blur(2px);
       animation:haloBreathe 3.6s ease-in-out infinite;
     }
     @keyframes haloBreathe{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
     .kie-live-orb{
       position:relative;width:190px;height:190px;flex-shrink:0;overflow:hidden;
-      background:radial-gradient(circle at 34% 30%, #a78bfa 0%, #7c3aed 46%, #5b21b6 100%);
-      box-shadow:0 10px 34px rgba(124,58,237,.4), inset 0 0 24px rgba(255,255,255,.12);
+      /* Layered radial gradients instead of one flat color-to-color sphere —
+         blue up top, warm cream/peach through the middle, a blush pink
+         accent low-right — is what actually reads as a soft "mesh gradient"
+         cloud rather than a solid ball. filter:blur softens every gradient
+         edge so nothing has a hard boundary, which is the main thing that
+         separates this look from a plain CSS radial-gradient circle. */
+      background:
+        radial-gradient(circle at 28% 22%, rgba(191,219,254,.95) 0%, transparent 46%),
+        radial-gradient(circle at 74% 18%, rgba(196,181,253,.55) 0%, transparent 50%),
+        radial-gradient(circle at 50% 52%, rgba(254,235,200,.9) 0%, transparent 58%),
+        radial-gradient(circle at 66% 78%, rgba(249,168,212,.5) 0%, transparent 52%),
+        linear-gradient(165deg, #cfe0fb 0%, #e6dcfb 35%, #fdf1dd 65%, #fbdce9 100%);
+      filter:blur(.4px) saturate(1.08);
+      box-shadow:0 10px 34px rgba(124,58,237,.22), inset 0 0 30px rgba(255,255,255,.5);
       border-radius:50%;border:3px solid #fff;
-      transition:box-shadow .25s ease, background .3s ease;
+      transition:box-shadow .25s ease;
+      animation:orbDrift 9s ease-in-out infinite;
+    }
+    /* Slow, subtle shift in gradient focus — an orb that's completely still
+       reads as a static image; this keeps it feeling alive even at rest
+       (listening) without anything as busy as the old bar equalizer. */
+    @keyframes orbDrift{
+      0%,100%{background-position:0 0, 0 0, 0 0, 0 0, 0 0}
+      50%{background-position:6% 4%, -5% 3%, -3% -4%, 4% -3%, 0 0}
+    }
+    .kie-live-orb.thinking{animation-duration:5s}
+    .kie-live-orb.speaking{
+      /* Slightly warmer + brighter while actually talking, so there's still
+         a visible state difference without bringing back explicit text. */
+      background:
+        radial-gradient(circle at 28% 22%, rgba(191,219,254,.75) 0%, transparent 46%),
+        radial-gradient(circle at 74% 18%, rgba(196,181,253,.5) 0%, transparent 50%),
+        radial-gradient(circle at 50% 48%, rgba(254,225,170,.95) 0%, transparent 58%),
+        radial-gradient(circle at 66% 80%, rgba(249,168,212,.65) 0%, transparent 55%),
+        linear-gradient(165deg, #cfe0fb 0%, #e6dcfb 30%, #fde8c8 65%, #fbd3e6 100%);
+      animation-duration:2.4s;
     }
     .kie-live-wave-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-    .kie-live-orb.muted{background:radial-gradient(circle at 34% 30%,#b7b2c4 0%,#8a8398 46%,#5b5568 100%)}
+    .kie-live-orb.muted{
+      background:
+        radial-gradient(circle at 34% 30%, rgba(203,213,225,.9) 0%, transparent 50%),
+        linear-gradient(165deg, #cbd5e1 0%, #a8b0c2 60%, #8a92a6 100%);
+      animation:none;
+    }
     .kie-live-orb.muted ~ .kie-live-orb-halo,
     .kie-live-orb-wrap:has(.kie-live-orb.muted) .kie-live-orb-halo{background:radial-gradient(circle, rgba(90,85,104,.22) 0%, rgba(90,85,104,.08) 45%, rgba(90,85,104,0) 72%)}
 
