@@ -6543,6 +6543,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (mode === 'stop') {
         btn.innerHTML = STOP_ICON_BTN;
         btn.classList.add('kie-stop');
+        btn.classList.remove('kie-voice-idle');
         btn.disabled = false;
         btn.title = 'Stop generating';
         return;
@@ -6553,9 +6554,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const hasText = !!(inp && inp.value.trim().length);
       if (hasText) {
         btn.innerHTML = SEND_ICON;
+        btn.classList.remove('kie-voice-idle');
         btn.title = 'Send';
       } else {
         btn.innerHTML = WAVE_ICON_BTN;
+        btn.classList.add('kie-voice-idle');
         btn.title = 'Talk live with KIE';
       }
     }
