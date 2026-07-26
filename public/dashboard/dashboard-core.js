@@ -5988,6 +5988,18 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       // dropped. Compound (update + send) intents now resolve before the plain
       // send-only pattern, mirroring the UPDATE_TEMPLATE_AND_SEND fix above.
       if (hasContentUpdateSignal && RESEND_SIGNAL.test(msg)) return 'UPDATE_RESUME_AND_SEND';
+      // CRITICAL BUG FIX: a plain edit request with no "send/resend/pdf" wording
+      // (e.g. "help me add one more experience and a certificate from X") used
+      // to require RESEND_SIGNAL above and, failing that, fall through all the
+      // way to free-form chat — where the model would narrate "I've added
+      // that..." in prose with NOTHING actually patched, saved, or
+      // regenerated. On a resume builder, asking to add/change a section of an
+      // ALREADY-SELECTED resume always implies wanting the updated file — the
+      // user should never have to also say the word "send". If a resume is
+      // selected and the message carries a clear edit verb+noun signal, treat
+      // it as UPDATE_RESUME_AND_SEND outright so it routes to the real patch
+      // pipeline instead of hallucinated chat text.
+      if (kieSelectedResume?.resumeData && hasContentUpdateSignal) return 'UPDATE_RESUME_AND_SEND';
       // BUG FIX: dropped the bare "resend my resume" alternative that used to
       // live here — it had no requirement that anything was actually changed,
       // so a plain "resend my resume" (nothing to update) was being misfiled as
@@ -6660,6 +6672,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     async function sendKie() {
       // Stop if generating
       if (_kieGenerating) { stopKieGeneration(true); return; }
+      // RACE FIX: also block re-entry while a classification round-trip is in
+      // flight (see the safety-net block below) — _kieGenerating isn't true
+      // yet at that point, so without this a second call could slip through
+      // during that window and race the first one over the same input.
+      if (_kieIntentClassifying) return;
 
       const inp = g('kieInp');
       const msg = inp.value.trim();
@@ -6836,30 +6853,45 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // ── SMART INTENT SAFETY NET (layer 2) ───────────────────────────────────
       // The regex patterns above are instant and catch the obvious phrasings
       // with zero added latency — that stays the fast path for most messages.
-      // For the messages that don't cleanly match any pattern (paraphrased,
-      // oddly worded, multi-part), this runs one fast classification call on
-      // KIE Spark before falling through to plain chat.
+      // Everything else runs one fast classification call on KIE Spark, which
+      // actually reads and understands the message instead of pattern-matching
+      // words.
       //
-      // BUG FIX: this used to gate on ONLY a hard six-word literal list
-      // (resume|cv|pdf|file|document|template) — so "update my experience
-      // with what I learned getting that certification" never even reached
-      // the classifier below, because none of those exact words appear in
-      // it. That's the "you're just keyword-matching" problem: a real edit
-      // request with zero listed keywords silently fell through to plain
-      // chat instead of actually editing the resume. Fixed two ways:
-      //   1. ACTION_HINT now also covers the resume SECTION nouns (experience,
-      //      certificate, education, skills, etc.), not just the file-shaped
-      //      words.
-      //   2. When the user actually has a resume in play this session, ANY
-      //      edit-shaped verb (add/change/update/reflect/etc.) is enough to
-      //      run the classifier — no noun needed at all — because there's
-      //      almost nothing else "update this" could mean in that context.
+      // ARCHITECTURAL FIX: this used to gate the classifier call itself behind
+      // a keyword regex (ACTION_HINT) — so a message with zero matching words
+      // ("make it hit different", "yo tighten up that second job", "nah give
+      // it more punch") never reached the classifier AT ALL, no matter how
+      // clearly it meant "edit my resume." A keyword list was deciding whether
+      // real understanding even got a chance to run — that's backwards, and
+      // no amount of adding more words to the list fixes it, since natural
+      // phrasing is unbounded. Fix: whenever the user actually has a resume in
+      // play this session, the classifier runs on EVERY message that wasn't
+      // already resolved by the instant fast-path above — no keyword gate at
+      // all. The classifier itself is already instructed to return "NONE" for
+      // genuine small talk / non-resume questions, so this doesn't misfire on
+      // unrelated chat; it just means informal or unusual phrasing about an
+      // active resume is no longer silently dropped because it didn't contain
+      // one of a fixed set of words. When there's NO resume in play yet, the
+      // keyword hint is kept as a cheap pre-filter (nothing to edit anyway, so
+      // the extra latency isn't worth spending on every message).
       const ACTION_HINT = /\b(resume|cv|pdf|file|document|template|summary|headline|bio|objective|experience|skills?|bullet|educat\w*|degree|school|university|college|certificat\w*|qualification)\b/i;
       const hasActiveResumeSession = (kieSelectedResume && kieSelectedResume.resumeData) ||
         (!!kieResumeContext && kieResumeContext !== 'NO_RESUME_YET' && kieResumeContext !== 'HAS_RESUMES_UNSELECTED');
-      const looksLikeEditInContext = hasActiveResumeSession && UPDATE_VERBS.test(msg);
-      if (!intent && (ACTION_HINT.test(msg) || looksLikeEditInContext) && !_kieIntentClassifying) {
+      const shouldRunClassifier = hasActiveResumeSession || ACTION_HINT.test(msg);
+      if (!intent && shouldRunClassifier && !_kieIntentClassifying) {
         _kieIntentClassifying = true;
+        // RACE FIX: this call awaits a network round-trip (the classifier
+        // hitting the server). Until now nothing locked the input during that
+        // window — the message being classified hadn't been echoed into the
+        // chat or cleared from the box yet either, so a second Enter-press
+        // while this was in flight re-read the SAME uncleared text and fired
+        // a fully independent, parallel dispatch of it. That's the "reply
+        // cuts off and another message shows up" symptom: two dispatches
+        // racing over the same input. Lock the box the instant classification
+        // starts, exactly like every other async branch below already does
+        // before its own await.
+        const inpLock = g('kieInp');
+        if (inpLock) inpLock.disabled = true;
         let classified = null;
         try { classified = await _kieClassifyIntent(msg); }
         catch (e) { console.warn('[kie] intent safety-net skipped:', e.message); }
