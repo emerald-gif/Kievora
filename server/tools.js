@@ -485,7 +485,7 @@ module.exports = function registerToolsRoutes(app) {
 
     try {
       const { data: analysis, retried } = await callKieAIJson(
-        'spark',
+        planCfg.kieModel,
         'You are an expert resume analyst. Always respond with valid JSON only — no extra text, no markdown.',
         [{ role: 'user', content: prompt }],
         { max_tokens: 2500, temperature: 0.15 }
@@ -998,7 +998,7 @@ module.exports = function registerToolsRoutes(app) {
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = _planCfg.kieModel; // resume builder now matches the plan's chat model — Spark/Core/Nova
     if (!prompt || prompt.trim().length < 8)
       return res.status(400).json({ error: 'Please describe the resume you want to create.' });
 
@@ -1013,21 +1013,28 @@ module.exports = function registerToolsRoutes(app) {
     const isRebuild = mode === 'rebuild';
 
     const sharedStructure = `Return this exact structure:
-  {"fullName":"","jobTitle":"","email":"","phone":"","location":"","summary":"","workExperience":[{"position":"","company":"","startDate":"","endDate":"","description":""}],"education":[{"degree":"","field":"","school":"","graduationDate":""}],"skills":[],"templateSuggestion":""}
-  templateSuggestion: one of [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split`;
+  {"fullName":"","jobTitle":"","email":"","phone":"","location":"","summary":"","workExperience":[{"position":"","company":"","startDate":"","endDate":"","description":""}],"education":[{"degree":"","field":"","school":"","graduationDate":""}],"skills":[],"certifications":[{"name":"","issuer":"","date":""}],"projects":[{"name":"","url":"","description":""}],"languages":[{"language":"","proficiency":""}],"templateSuggestion":""}
+  templateSuggestion: one of [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split
+  certifications/projects/languages: omit the array entirely (empty []) if none are present/relevant — never invent one just to fill the section.`;
 
     const system = isRebuild
-      ? `You are a resume editor restructuring a REAL person's existing resume into clean, professional JSON. This is NOT a creative-writing task — it is formatting and light polish of content that already exists. No markdown, no explanation, only the JSON object.
+      ? `You are an elite resume writer doing a full professional rewrite of a REAL person's existing resume into clean JSON. This is a genuine upgrade, not a light copy-edit — the person was told "I can make this a much better resume," and the output must actually earn that. No markdown, no explanation, only the JSON object.
 
   ${sharedStructure}
 
-  GROUNDING RULES — these override everything else:
-  - Every factual entity — full name, employer/company names, job titles, employment dates, degree names, school names, certifications — MUST come directly from the input text. NEVER invent, guess, substitute, or "improve" a name/date/employer/school that isn't literally present in the input.
-  - If a field genuinely isn't present anywhere in the input (e.g. no phone number given, no education section at all), leave it as an empty string, or omit that array entry — do NOT fill it with a plausible-sounding placeholder. An empty field is honest; a fabricated one is not.
-  - You MAY and SHOULD: fix grammar, tighten weak phrasing, convert flat descriptions into stronger action-verb bullet points, and reorganize messy formatting into the structure above — as long as the underlying facts (who, where, when, what) are unchanged from the source.
-  - Do not add metrics/numbers that aren't in the source just to sound impressive. You may rephrase a metric that IS present to read better, but never invent one that isn't there.
-  - summary: base it only on roles/skills actually present in the input — no generic filler that could describe anyone.
-  - skills: extract/consolidate skills actually mentioned or clearly implied by the described work — don't pad with unrelated buzzwords.`
+  GROUNDING RULES — these override everything else, and are the ONLY limits on how hard you rewrite:
+  - Every factual entity — full name, employer/company names, job titles, employment dates, degree names, school names, certifications, project names, languages — MUST come directly from the input text. NEVER invent, guess, substitute, or swap a name/date/employer/school/cert/project/language that isn't literally present in the input.
+  - If the source mentions ANY certifications, projects, or languages — even briefly, in a single line — carry every one of them through into the output. Dropping a real section is a worse failure than leaving one empty.
+  - Never invent a metric/number that isn't in the source. You may re-surface a metric that IS present more prominently (e.g. move it to the front of the bullet), but the number itself must be real.
+  - If a field genuinely isn't present anywhere in the input, leave it empty rather than fabricate a placeholder.
+
+  Inside those limits, go hard — this must read like a different tier of resume, not the same one reformatted:
+  - Rewrite EVERY bullet from scratch: lead with a strong, varied action verb, cut filler words and passive phrasing entirely, and restructure each into a tight "did X → drove/enabled Y" shape using only facts/metrics that exist in the source.
+  - If a bullet in the source only describes a task with no outcome stated, sharpen the language and framing around it (scope, ownership, tools) without inventing a result that isn't there — real specificity beats vague filler even without a number attached.
+  - Rewrite the summary completely: 2-3 sentences that sound like a specific, accomplished person in that exact role — never generic "hardworking professional" filler.
+  - Reorder bullets within each role so the strongest, most relevant point leads — don't just keep source order.
+  - Consolidate and sharpen the skills list for ATS keyword density, using only skills actually mentioned or clearly demonstrated by the described work.
+  - The test for a good rebuild: if you put the original and your output side by side, every line should read noticeably stronger — same facts, sharper writing.`
       : `You are a world-class resume writer. Given a description, create a complete professional resume as pure JSON. No markdown, no explanation, only the JSON object.
 
   ${sharedStructure}
@@ -1041,11 +1048,12 @@ module.exports = function registerToolsRoutes(app) {
   - skills: 10-14 relevant skills mixing technical and soft skills
   - SPEED OVER INTERROGATION: the person asking for this resume wants it built now, not a back-and-forth. Never leave a field blank or generic waiting for "more details" — where something concrete (years of experience, past employers, specific skills) wasn't given, generate strong, industry-standard content that fits the stated role convincingly. Confident, specific invented content beats a hedge every time.`;
 
-    // Rebuild wants faithful reformatting, not creative variance — lower
-    // temperature reduces the chance of the model drifting into invented
-    // specifics. Scratch-build keeps its original higher temperature since
-    // there's no source to be unfaithful to.
-    const cfg = { max_tokens: 2000, temperature: isRebuild ? 0.3 : 0.78, jsonMode: true };
+    // Rebuild still can't drift into invented facts (grounding rules above
+    // are the real safeguard for that), but 0.3 was so conservative the
+    // model kept reproducing near-identical phrasing — this was the actual
+    // cause of "the download still looks the same." 0.55 gives it room to
+    // genuinely rewrite while the grounding rules keep facts honest.
+    const cfg = { max_tokens: 2000, temperature: isRebuild ? 0.55 : 0.78, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
