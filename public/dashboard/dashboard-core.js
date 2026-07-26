@@ -174,7 +174,7 @@
     // real enforcement lives server-side; this mirrors it just for instant,
     // no-network-wait messaging) ─────────────────────────────────────────────
     const PLAN_LABELS = { free: 'Free', paid7: 'Pro', paid15: 'Premier' };
-    const PAID7_TOOLS = ['aibuild', 'careerhealth', 'roadmap', 'linkedin', 'messaging'];
+    const PAID7_TOOLS = ['roadmap', 'linkedin', 'messaging'];
     function minPlanForTool(toolKey) {
       const key = TOOL_GATE_ALIAS[toolKey] || toolKey;
       return PAID7_TOOLS.includes(key) ? 'paid7' : 'paid15';
