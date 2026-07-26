@@ -269,8 +269,11 @@ const PLAN_COPY = {
     name: 'Free', tagline: 'Get started — no credit card needed.',
     features: [
       '5 resume templates',
+      'AI Resume Builder — build a complete resume from a single prompt',
+      'Career Health Score — full career diagnostic',
       'AI bullet points &amp; skills suggestions in the builder',
       'ATS score on every resume you create',
+      'Upload &amp; Analyze — full ATS score, strengths &amp; weaknesses',
       'Create a cover letter from scratch',
       '50 KIE chat messages per month · KIE Spark',
       'Job Match Analyzer — paste any job description &amp; score your fit',
@@ -283,10 +286,9 @@ const PLAN_COPY = {
     features: [
       'Everything in Free',
       'All resume templates',
-      'Standard Image Analyzer + Upload &amp; Analyze',
-      'Full ATS score breakdown — exactly what to fix and why',
+      'Sharper Analyzer (KIE Core) — full breakdown of exactly what to fix and why',
       'Auto-build cover letter from an existing resume',
-      '5 AI Career Tools: Health Score, Roadmap, LinkedIn AI, Pro Message, AI Resume Builder',
+      '3 more AI Tools: Career Roadmap, LinkedIn AI, Pro Message',
       'KIE Spark + Core · more messages per month',
       'Open &amp; apply to every job listing',
       'Good priority support',
@@ -297,7 +299,7 @@ const PLAN_COPY = {
     name: 'Premier', tagline: 'For serious career growth.',
     features: [
       'Everything in Pro',
-      'Advanced Image Analyzer — deeper visual breakdown &amp; sharper suggestions',
+      'Sharpest Analyzer (KIE Nova) — deepest breakdown &amp; suggestions',
       'All 10 AI Tools incl. Salary Intel, Mock Interview, Promotion Ready, Personal Brand',
       'KIE Spark, Core &amp; Nova · highest message allocation',
       'Full Recruiter View report',
@@ -433,8 +435,8 @@ function renderPlans(currentPlan) {
 
   const notes = {
     paid15: "You're on Kievora's top plan — every feature is unlocked.",
-    paid7:  "Upgrading to Premier adds Recruiter View, KIE Nova, all 10 AI Tools, and higher monthly KIE messages.",
-    free:   "Upgrading to Pro unlocks all templates, 5 AI Tools, Upload & Analyze, and more KIE messages — Premier unlocks everything.",
+    paid7:  "Upgrading to Premier adds Recruiter View, KIE Nova, 5 more AI Tools, and higher monthly KIE messages.",
+    free:   "Upgrading to Pro unlocks all templates, a sharper analyzer, 3 more AI Tools, and more KIE messages — Premier unlocks everything.",
   };
   document.getElementById('planNote').textContent = notes[currentPlan] || '';
 
