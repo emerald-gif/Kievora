@@ -184,9 +184,14 @@ const PLANS = {
     kieMonthlyLimit: 50,
     kieModel: 'spark',           // model that powers KIE chat for this plan
     models: ['spark'],           // models visible in KIE selector
-    tools: [],
+    // Free tier: the core resume loop (upload → diagnose → build) is now
+    // fully free, plus one lightweight diagnostic (Career Health) — same
+    // "diagnostics free, deep action tools paid" split as the rest of the
+    // product. Roadmap/LinkedIn/Messaging/Salary/etc. stay Pro+ since those
+    // are full deliverables, not diagnostics — that's the real paywall now.
+    tools: ['aibuild', 'careerhealth'],
     templates: 5,
-    uploadAnalyze: false,
+    uploadAnalyze: true,
     recruiterView: false,
     findJobsClick: false,
     coverLetterFromResume: false,
@@ -398,7 +403,7 @@ const UPGRADE_MESSAGES = {
   kieCreativeMode: () => `Creative mode is available on paid plans. Upgrade to $7 or $15 to unlock it.`,
   // AI Tools Hub
   tool: (plan) => plan === 'free'
-    ? `AI Tools are locked on the Free plan. $7 unlocks 5 tools, $15 unlocks all 10.`
+    ? `Career Roadmap, LinkedIn Optimizer, and Professional Messaging are part of Pro ($7) — on top of the Resume Builder and Career Health Score you already have free. Premier ($15) unlocks all 10.`
     : `This tool is part of the $15 plan — it unlocks Salary Intel, Industry Intel, Mock Interview, Personal Brand, and Promotion Ready on top of your existing 5 tools.`,
   // Upload & Analyze
   uploadAnalyze: () => `Your resume has been analyzed. Upgrade to any paid plan to see your full score, strengths, weaknesses, and specific suggestions to improve it. $7 or $15 both unlock it.`,
@@ -421,11 +426,11 @@ const UPGRADE_MESSAGES = {
     ? `That template is part of a paid plan. Pro and Premier both unlock every template.`
     : `That template is already unlocked on your plan.`,
   // Free user uploads a resume in KIE chat (full breakdown is shown either
-  // way now — see FREE_RESUME_UPSELL_CHANCE below — so this can't claim the
-  // score/breakdown itself is locked anymore. It's a soft nudge toward the
-  // things that ARE still real, paid perks: every template, actual file
-  // exports, and cover-letter generation.)
-  resumeUpload: () => `Want to turn this into a polished, downloadable resume? Pro ($7) or Premier ($15) unlock every template, real file exports, and auto-generated cover letters.`,
+  // way now — see FREE_RESUME_UPSELL_CHANCE below — and Resume Builder
+  // itself is free too, so this can't dangle "build a downloadable resume"
+  // as the paid hook anymore. Nudges toward what's ACTUALLY still paid:
+  // more templates and auto cover-letter generation.)
+  resumeUpload: () => `Want more templates to choose from, or a cover letter auto-generated from this resume? Pro ($7) unlocks all 13 templates + cover letters, plus Career Roadmap, LinkedIn Optimizer, and Professional Messaging.`,
   // Free user requests resume file output (edit/regenerate as file)
   resumeFileExport: () => `Exporting your resume as a file is available on paid plans. Upgrade to $7 or $15 to download your resume and access all templates.`,
 };
