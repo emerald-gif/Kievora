@@ -1084,7 +1084,7 @@ module.exports = function registerToolsRoutes(app) {
       res.json({ resumeData, model: m });
     } catch (err) {
       console.error('POST /api/prompt-resume:', err.message);
-      res.status(500).json({ error: 'Resume generation failed. Try a more specific description.' });
+      res.status(500).json({ error: 'Resume generation failed: ' + err.message });
     }
   });
 
