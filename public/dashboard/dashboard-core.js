@@ -5269,7 +5269,7 @@ Current resume data (JSON):
 ${JSON.stringify(currentResumeData, null, 2)}
 
 Return ONLY valid JSON with the fields to update. Only include a field if you have REAL information for it.
-Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array), changeSummary (string).
+Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array), certifications (array), changeSummary (string).
 
 CRITICAL RULES:
 1. If the user asks you to ADD a new experience entry (e.g. "add a 4th experience about X"), build a new workExperience entry using the details they described and APPEND it to the existing workExperience array. Include ALL existing entries plus the new one.
@@ -5278,7 +5278,8 @@ CRITICAL RULES:
 4. If the user asks you to add/change a SPECIFIC new fact (a new role, a new certification, a new metric) but gives you ZERO real details for that specific fact, return {} for that field and do not invent content.
 5. When updating workExperience, always return the FULL array (existing + changes), not just the changed entry.
 6. GENERAL IMPROVEMENT REQUESTS ("improve it", "make this better", "optimize my resume", "polish it", "analyze and improve", "strengthen it", "make it more ATS-friendly") are NOT the same as rule 4 — the user isn't withholding new facts, they're asking you to make the EXISTING content stronger. For these, proactively rewrite using only what's already in the current resume data above: tighten and punch up the summary, lead each bullet with a strong action verb, quantify impact wherever the existing data already implies a number or scope, cut filler words, and make phrasing more ATS-friendly. Rewrite summary, workExperience, and skills as appropriate — do NOT return {} just because no new facts were given; you already have everything you need to make it measurably better without inventing anything untrue.
-7. ALWAYS include "changeSummary": a short, specific, honest description of the actual coaching work you did — 1-3 sentences, plain language, naming the real thing you changed (e.g. "Rewrote your summary to lead with your 5 years in digital marketing instead of a generic opener. Added a measurable result to your Senior Analyst bullet. Trimmed your skills list down to the ones ATS systems actually scan for in marketing roles."). Never write a vague summary like "made improvements" — name the specific weak spot you found and what you did about it. If you genuinely changed nothing, set changeSummary to explain why (e.g. "Your resume already reads strong — I didn't find anything worth changing without more detail from you.").
+7. If the user asks to ADD a certification/certificate, build a new certifications entry — object shape {name, issuer, date} — using the real details they gave (certification name, issuing org, year). APPEND it to the existing certifications array, keeping all existing entries. If they gave a certification name but no issuer, use their stated issuer/platform (e.g. a company or platform name is a valid issuer) — do not withhold the whole field just because one sub-detail like an exact date format is informal.
+8. ALWAYS include "changeSummary": a short, specific, honest description of the actual coaching work you did — 1-3 sentences, plain language, naming the real thing you changed (e.g. "Rewrote your summary to lead with your 5 years in digital marketing instead of a generic opener. Added a measurable result to your Senior Analyst bullet. Trimmed your skills list down to the ones ATS systems actually scan for in marketing roles."). Never write a vague summary like "made improvements" — name the specific weak spot you found and what you did about it. If you genuinely changed nothing, set changeSummary to explain why (e.g. "Your resume already reads strong — I didn't find anything worth changing without more detail from you.").
 
 Return ONLY JSON, no markdown, no explanation. If there is nothing you can confidently update, return {}.`;
 
@@ -5312,7 +5313,8 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
     // request it couldn't actually fulfil (e.g. "add education" with no real details).
     function kieRequestedFieldsNotInPatch(userRequest, patchFields) {
       const fieldKeywords = {
-        education:      /\beducat\w*|degree|school|university|college|certificat\w*/i,
+        education:      /\beducat\w*|degree|\bschool\b|university|college/i,
+        certifications: /\bcertificat\w*|\blicense\w*|qualification/i,
         summary:        /\bsummary|\bbio\b|objective/i,
         skills:         /\bskills?\b/i,
         workExperience: /\bexperience|job\s?history|work\s?history/i,
@@ -5323,6 +5325,19 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       }
       return missing;
     }
+
+    // What real detail each field actually needs — used to build an honest,
+    // field-specific ask instead of one hardcoded "school name, degree,
+    // dates" example that was showing up even when the missing field was a
+    // certification or a work experience, actively confusing the user about
+    // what info they still needed to give.
+    const KIE_MISSING_FIELD_HINTS = {
+      education:      'school name, degree, dates',
+      certifications: 'the certification name, who issued it, and the year',
+      workExperience: 'job title, company name, and dates',
+      summary:        'a bit about your background and goals',
+      skills:         'the specific skills you want listed',
+    };
 
     // Pushes a resume-file message into history in a way restoreKieUI can
     // recreate later (the actual download/print card, not just the text).
@@ -5406,7 +5421,8 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         // info given) AND nothing else changed either, say so honestly and stop —
         // don't claim "Done" and resend an unchanged file.
         if (!changedKeys.length && missingFields.length) {
-          appendKMsg('ai', `I'd love to add your ${missingFields.join(' and ')}, but I'll need the real details first — school name, degree, dates, that kind of thing. Share those and I'll update it right away. 🙏`, true);
+          const hintParts = missingFields.map(f => KIE_MISSING_FIELD_HINTS[f] || f).join('; ');
+          appendKMsg('ai', `I'd love to add your ${missingFields.join(' and ')}, but I'll need the real details first — ${hintParts}. Share those and I'll update it right away. 🙏`, true);
           _kieGenerating = false; _kieStopTyping = false;
           const inp2 = g('kieInp'); if (inp2) { inp2.disabled = false; }
           setKieSendMode('send');
@@ -6175,7 +6191,7 @@ Rules:
 - Only extract changes the user has EXPLICITLY confirmed (e.g. "yes do that", "go ahead", "apply it", "yes please", "sounds good").
 - If KIE proposed specific text and the user confirmed it, use that exact proposed text.
 - Do NOT invent or guess anything. Do NOT include a field unless you have real confirmed content for it.
-- Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array).
+- Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array), certifications (array, object shape {name, issuer, date}).
 - If no confirmed changes are found, return {}.
 
 Return ONLY valid JSON, no markdown, no explanation.`;
