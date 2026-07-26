@@ -3780,7 +3780,16 @@
           msg += `**What needs fixing:**\n${analysis.weaknesses.map(w => `⚠ ${w}`).join('\n')}\n\n`;
         if (userPrompt)
           msg += `You also said: "${userPrompt}" — `;
-        msg += `**Want a real downloadable PDF?** Say "build me a resume" and I'll turn this into a full Kievora resume — pick from 13 templates and download it anytime. 📄\n\nOr tell me which area above to fix first.`;
+        // Was promising this to EVERYONE regardless of plan — the backend
+        // gates actual resume building behind the 'aibuild' tool, so a
+        // Free-plan user would hit "plan_locked" the moment they took KIE
+        // up on this. Only make the promise to users who can actually
+        // redeem it; give everyone else an honest, specific upgrade path.
+        if (isToolUnlocked('aibuild')) {
+          msg += `**Want a real downloadable PDF?** Say "build me a resume" and I'll turn this into a full Kievora resume — pick from 13 templates and download it anytime. 📄\n\nOr tell me which area above to fix first.`;
+        } else {
+          msg += `**Want a real downloadable PDF?** That's part of the AI Resume Builder — upgrade to Pro ($7) or Premier ($15) to unlock it, and I'll turn this into a full Kievora resume you can pick a template for and download anytime. 📄\n\nOr tell me which area above to fix first.`;
+        }
         // Free-plan uploads occasionally (not every time — see
         // FREE_RESUME_UPSELL_CHANCE server-side) carry one soft upgrade
         // line; paid plans never get this field at all.
@@ -5563,7 +5572,10 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
           body:    JSON.stringify({ prompt: enrichedBrief, model: kieModel, mode: opts.mode || 'scratch' }),
         });
-        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Resume generation failed.');
+        if (!r.ok) {
+          const errBody = await r.json().catch(() => ({}));
+          throw new Error(errBody.message || errBody.error || 'Resume generation failed.');
+        }
         const data = await r.json();
         const resumeData = data.resumeData;
 
@@ -5613,6 +5625,10 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
     }
 
     async function kieActionBuildResumeFromChat(triggerMsg) {
+      if (!isToolUnlocked('aibuild')) {
+        appendKMsg('ai', `Building a full downloadable resume is part of the **AI Resume Builder** — that's on Pro ($7) or Premier ($15). Upgrade to unlock it, and I'll build this out right away. 📄`, true);
+        return;
+      }
       const brief = _kieBuildResumeBrief(triggerMsg);
 
       // Strip the generic trigger phrasing itself and see if anything real is
