@@ -5599,7 +5599,10 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       } catch (err) {
         console.error('Build resume error:', err.message);
         hideKieStatus();
-        appendKMsg('ai', "Something went wrong building that resume. Try again in a moment. 🙏", true);
+        // Was silently swallowing the real reason behind a generic message —
+        // meaning every failure needed a trip to server logs to diagnose.
+        // Showing the actual error text directly in chat instead.
+        appendKMsg('ai', `Something went wrong building that resume: **${esc(err.message || 'unknown error')}**\n\nTry again in a moment. 🙏`, true);
         return false;
       } finally {
         _kieGenerating = false;
