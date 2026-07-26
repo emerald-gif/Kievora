@@ -5651,18 +5651,28 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
     // marks the response gateLocked, so a locked card here behaves
     // identically to a locked card everywhere else in the app with zero
     // extra gating logic needed on this end.
-    async function kieActionFindJobs(query) {
+    async function kieActionFindJobs(rawQuery, originalMsg) {
+      const query = _resolveJobQuery(rawQuery);
+      if (!query) {
+        appendKMsg('ai', `I don't have a profession on file for you yet — build or upload a resume first and I'll know what to search for, or just tell me the role directly (e.g. "find me marketing manager jobs").`, true);
+        kieHist.push({ role: 'ai', content: "Don't have a profession on file yet." });
+        saveKieHistory();
+        return;
+      }
+      const abroad = originalMsg ? _detectAbroadIntent(originalMsg) : null;
       g('kieTyp').style.display = 'flex';
       _setKieStatusCustom([`Searching jobs for "${query}"…`, 'Filtering for relevance…']);
       try {
-        const jobs = await fetchJobs(query, 6);
+        const jobs = await fetchJobs(query, 6, abroad);
         hideKieStatus();
         _appendKieJobsMsg(jobs, query, true);
         kieHist.push({ role: 'ai', content: `Found ${jobs.length} job${jobs.length===1?'':'s'} for "${query}".`, jobsCard: { jobs, query } });
+        saveKieHistory();
       } catch (err) {
         hideKieStatus();
         appendKMsg('ai', `Couldn't pull job listings right now. Try again in a moment, or search directly on the [Find Jobs](/find-jobs?q=${encodeURIComponent(query)}) page. 🙏`, true);
         kieHist.push({ role: 'ai', content: "Couldn't pull job listings right now." });
+        saveKieHistory();
       }
     }
 
@@ -6178,20 +6188,68 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       return null;
     }
 
-    // Strips the search-y wrapper words off a job-search message so what's
-    // left is just the actual role/keyword — "find me marketing jobs near
-    // me" → "marketing". Best-effort heuristic, not a real parser; falls
-    // back to "jobs" (a reasonable generic search) if nothing survives.
+    // Pulls the actual role/keyword out of a job-search message. Handles
+    // three cases, in order:
+    //  1. "jobs for my profession/field/career" → returns the sentinel
+    //     '__PROFILE__' so the caller resolves it against the person's ACTUAL
+    //     known profession (resume/analysis/category), instead of literally
+    //     searching for the text "my profession".
+    //  2. "jobs for <role>" / "job as a <role>" → the strongest signal in
+    //     casual phrasing; grabs everything after "for"/"as a" as the role.
+    //  3. Otherwise, strips conversational filler ("alright", "show me",
+    //     "any", etc.) and returns whatever's left.
+    // Falls back to '__PROFILE__' rather than a bare "jobs" — searching the
+    // person's own profession is a much better generic default than
+    // searching literally nothing.
     function _extractJobQuery(msg) {
+      const lower = msg.toLowerCase();
+      if (/\bmy\s+(profession|field|career|industry|line\s*of\s*work|job\s*title|specialty|specialization)\b/.test(lower)) {
+        return '__PROFILE__';
+      }
+
+      const forMatch = msg.match(/\bjobs?\s+(?:for|as)\s+(?:a|an|my)?\s*(.+?)(?:[?.!]|$)/i)
+                     || msg.match(/\bjob\s+as\s+(?:a|an)?\s*(.+?)(?:[?.!]|$)/i);
+      if (forMatch && forMatch[1] && forMatch[1].trim().length > 1) {
+        return forMatch[1].trim();
+      }
+
       let q = msg
+        .replace(/^\s*(alright|all\s*right|ok(ay)?|yeah|sure|well|so|cool|great)\b[,.]?\s*/i, '')
         .replace(/\b(find|search(\s*for)?|look\s*for|show\s*me|get\s*me|are\s*there(\s*any)?|is\s*there(\s*any)?|any|me|please|pls|can\s*you|could\s*you)\b/gi, ' ')
         .replace(/\bjob\s*openings?\b|\bvacanc(y|ies)\b|\bjobs?\b|\bpositions?\b|\bavailable\b|\bhiring\b/gi, ' ')
         .replace(/\bnear\s*me\b|\bfor\s*me\b/gi, ' ')
+        .replace(/\b(abroad|overseas|internationally?|worldwide|globally?|out\s*side\s+(my\s+|the\s+)?country)\b/gi, ' ')
         .replace(/[?.!]/g, ' ')
-        .replace(/^\s*(a|an|the)\s+/i, ' ')
+        .replace(/^\s*(a|an|the|for)\s+/i, ' ')
         .replace(/\s{2,}/g, ' ')
         .trim();
-      return q || 'jobs';
+      return q || '__PROFILE__';
+    }
+
+    // Resolves the '__PROFILE__' sentinel (or an empty/junk extraction) into
+    // an actual search term using the exact same profession-detection chain
+    // the Home job widget already relies on — resume/analysis first, then
+    // category, so a bare "find me jobs" tailors to what the person's own
+    // resume says they do, not a generic search.
+    function _resolveJobQuery(query) {
+      if (query && query !== '__PROFILE__' && query.trim().length > 1) return query.trim();
+      const prof = getJobProfession();
+      if (prof && prof.title) return prof.title;
+      const cat = getUserCategory();
+      if (cat) return CATEGORY_TO_QUERY[cat] || cat;
+      return null; // caller decides how to handle "we genuinely don't know"
+    }
+
+    // Detects an explicit request for jobs outside the person's own country
+    // ("abroad", "overseas", "worldwide", "outside Nigeria", etc.) so the
+    // search can override the normal default-to-local-country behavior.
+    // Returns 'worldwide' to override, or null to use the detected country
+    // as usual — this only ever WIDENS the search, never narrows it, so a
+    // false negative just means "searches locally as normal," not a broken
+    // result.
+    function _detectAbroadIntent(msg) {
+      return /\b(abroad|overseas|foreign|international|worldwide|globally?|remote\s+from\s+anywhere|out\s*side\s+(my\s+|the\s+)?country|other\s+countries)\b/i.test(msg)
+        ? 'worldwide' : null;
     }
 
     function detectTemplateInMsg(msg) {
@@ -7011,7 +7069,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         appendKMsg('user', msg, true);
         kieHist.push({ role:'user', content: msg });
         inp.value = ''; inp.style.height = 'auto';
-        kieActionFindJobs(intent.query);
+        kieActionFindJobs(intent.query, msg);
         return;
       }
 
@@ -9466,14 +9524,27 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     // ── Try server first, fall back to Remotive ────────────────────────────────
-    async function fetchJobs(query, limit = 8) {
-      const country = await getUserCountry();
+    async function fetchJobs(query, limit = 8, countryOverride) {
+      const country = countryOverride === 'worldwide'
+        ? { code: 'worldwide', name: 'Worldwide' }
+        : await getUserCountry();
       try {
         const res = await api('POST', '/api/find-jobs', { query, limit, countryCode: country.code });
         if (res.jobs?.length) { logEvent('find_jobs'); return res.jobs; }
       } catch (_) { /* server might not have key yet */ }
       logEvent('find_jobs');
-      return fetchJobsRemotive(query, limit);
+      const remotiveJobs = await fetchJobsRemotive(query, limit);
+      // SECURITY: the primary /api/find-jobs path is gated server-side (it
+      // strips url/description for a locked plan before the response ever
+      // reaches the client) — but this Remotive fallback is a raw client-side
+      // fetch with no server involved at all, so it was handing back full,
+      // clickable job URLs to free-plan users any time the primary search
+      // came back empty. Apply the identical gate here so a fallback result
+      // can never be more permissive than the primary path.
+      if (!isFeatureUnlocked('findJobsClick')) {
+        return remotiveJobs.map(({ url, description, ...rest }) => rest);
+      }
+      return remotiveJobs;
     }
 
     // ── ARTICLE SWIPER (real data) ───────────────────────────────────────────
