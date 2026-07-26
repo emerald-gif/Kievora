@@ -2979,6 +2979,8 @@
             appendKiePrintCard(m.fileCard.name, m.fileCard.html, m.content, true);
           } else if (m.role !== 'user' && m.templatePicker) {
             showKieTemplatePicker(m.content || '', false);
+          } else if (m.role !== 'user' && m.jobsCard) {
+            _appendKieJobsMsg(m.jobsCard.jobs, m.jobsCard.query, false);
           } else if (m.role === 'user' && m.imageRef) {
             const imgData = _kieImageStore.get(m.imageRef);
             const caption = (m.content && m.content !== '[Image sent]') ? m.content : '';
@@ -5640,6 +5642,119 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       }
     }
 
+    // ── FIND JOBS, INLINE IN CHAT ────────────────────────────────────────────
+    // Reuses the exact same /api/find-jobs call (via fetchJobs, defined
+    // further down) that powers the Home job-snapshot widget and the
+    // dedicated Find Jobs page — same relevance filtering, same country
+    // detection, and critically, the SAME plan gate: the server already
+    // strips `url`/`description` from each job for a free-plan user and
+    // marks the response gateLocked, so a locked card here behaves
+    // identically to a locked card everywhere else in the app with zero
+    // extra gating logic needed on this end.
+    async function kieActionFindJobs(query) {
+      g('kieTyp').style.display = 'flex';
+      _setKieStatusCustom([`Searching jobs for "${query}"…`, 'Filtering for relevance…']);
+      try {
+        const jobs = await fetchJobs(query, 6);
+        hideKieStatus();
+        _appendKieJobsMsg(jobs, query, true);
+        kieHist.push({ role: 'ai', content: `Found ${jobs.length} job${jobs.length===1?'':'s'} for "${query}".`, jobsCard: { jobs, query } });
+      } catch (err) {
+        hideKieStatus();
+        appendKMsg('ai', `Couldn't pull job listings right now. Try again in a moment, or search directly on the [Find Jobs](/find-jobs?q=${encodeURIComponent(query)}) page. 🙏`, true);
+        kieHist.push({ role: 'ai', content: "Couldn't pull job listings right now." });
+      }
+    }
+
+    // Renders a compact horizontal strip of job cards inside a normal AI chat
+    // bubble — same .job-snap-card visual language used on the Home widget
+    // and Find Jobs page, just narrower (see .kie-jobs-strip in dashboard.css)
+    // so a handful fit naturally inline in a chat message.
+    function _appendKieJobsMsg(jobs, query, animate) {
+      const msgs = g('kieMsgs');
+      msgs.style.display = 'flex';
+      const welcome = g('kieWelcome');
+      if (welcome) welcome.style.display = 'none';
+      const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const w = document.createElement('div');
+      w.className = 'km km-ai';
+
+      if (!jobs || !jobs.length) {
+        w.innerHTML = `
+          <div class="km-ai-body">
+            <div class="km-bubble">I couldn't find any jobs matching "${esc(query)}" right now — try a different phrasing, or search directly on the <a href="/find-jobs?q=${encodeURIComponent(query)}" style="color:#7c3aed;font-weight:700">Find Jobs</a> page.</div>
+            <div class="km-meta">${t}</div>
+          </div>`;
+        msgs.insertBefore(w, g('kieTyp'));
+        scrollKie(true);
+        return;
+      }
+
+      // Stash for openJobDetail-style navigation from this specific card row —
+      // window._homeJobs is the same global the Home widget already uses for
+      // its own cards, but a chat message can be scrolled back to long after
+      // a later search overwrites it, so each row keeps its own closure copy
+      // via data-idx + a per-message lookup instead of relying on that shared
+      // global staying correct.
+      const rowId = 'kiejobs-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+      window._kieJobsRows = window._kieJobsRows || {};
+      window._kieJobsRows[rowId] = jobs;
+
+      const cardsHTML = jobs.map((j, i) => {
+        const tags = [
+          j.remote ? `<span class="job-snap-tag remote">Remote</span>` : '',
+          j.type   ? `<span class="job-snap-tag">${esc(j.type)}</span>` : '',
+          j.salary ? `<span class="job-snap-tag salary">${esc(j.salary)}</span>` : ''
+        ].filter(Boolean).join('');
+        const locked = !j.url;
+        return `
+        <div class="job-snap-card${locked ? ' job-snap-locked' : ''}" onclick="${locked ? `lockTapped('findJobs')` : `openKieJobDetail('${rowId}', ${i})`}" style="cursor:pointer">
+          ${locked ? '<div class="premium-lock-corner">🔒 Premium</div>' : ''}
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="job-snap-logo">
+              ${j.logo
+                ? `<img src="${j.logo}" alt="${esc(j.company)}" onerror="this.style.display='none'">`
+                : `<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-10h2m4 0h2M9 7h2m4 0h2M9 11h2m4 0h2"/></svg>`
+              }
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="job-snap-company">${esc(j.company)}</div>
+            </div>
+          </div>
+          <div class="job-snap-title">${esc(j.title)}</div>
+          <div style="font-size:11px;color:#9ca3af;font-weight:500">${esc(j.location)}</div>
+          ${tags ? `<div class="job-snap-tags">${tags}</div>` : ''}
+          <div class="job-snap-apply">${locked ? 'Upgrade to view' : 'View details'} <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+        </div>`;
+      }).join('') + `
+        <a class="job-snap-more" href="/find-jobs?q=${encodeURIComponent(query)}">
+          <div class="job-snap-more-circle">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </div>
+          <div class="job-snap-more-txt">See all jobs</div>
+        </a>`;
+
+      w.innerHTML = `
+        <div class="km-ai-body">
+          <div class="km-bubble">Found ${jobs.length} job${jobs.length===1?'':'s'} for "${esc(query)}" — here's a quick look:</div>
+          <div class="kie-jobs-strip">${cardsHTML}</div>
+          <div class="km-meta">${t}</div>
+        </div>`;
+      msgs.insertBefore(w, g('kieTyp'));
+      scrollKie(true);
+    }
+
+    // Opens the same job-detail overlay the Home widget and Find Jobs page
+    // use, sourced from this specific chat message's own job row (see rowId
+    // above) rather than whatever the global _homeJobs currently holds.
+    window.openKieJobDetail = function(rowId, idx) {
+      const jobs = (window._kieJobsRows || {})[rowId];
+      const job = jobs && jobs[idx];
+      if (!job) return;
+      window._homeJobs = jobs;
+      if (typeof window.openJobDetail === 'function') window.openJobDetail(idx, 'home');
+    };
+
     async function kieActionBuildResumeFromChat(triggerMsg) {
       if (!isToolUnlocked('aibuild')) {
         appendKMsg('ai', `Building a full downloadable resume is part of the **AI Resume Builder** — that's on Pro ($7) or Premier ($15). Upgrade to unlock it, and I'll build this out right away. 📄`, true);
@@ -6050,7 +6165,33 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       if (namedTpl) return 'CHANGE_TEMPLATE';
       if (/\b(change|switch|update|use|apply|try|pick|select|go with)\b.*\btemplates?\b|\btemplates?\b.*(change|switch|update|use|apply)/i.test(msg)) return 'CHANGE_TEMPLATE';
 
+      // ── FIND JOBS (inline in chat) ───────────────────────────────────────
+      // Deliberately checked LAST among the fast-path patterns — "job" shows
+      // up plenty in resume-editing chat too ("what job title should I use"),
+      // so this only fires once every resume-specific pattern above has had
+      // a chance to claim the message first.
+      const JOB_SEARCH_PATTERN = /\b(find|search|look\s*for|show\s*me|get\s*me)\b.{0,40}\bjobs?\b|\bany\s+jobs?\b|\bare\s+there\s+(any\s+)?jobs?\b|\bjob\s*openings?\b|\bvacanc(y|ies)\b|\bjobs?\s+(hiring|available)\b/i;
+      if (JOB_SEARCH_PATTERN.test(msg)) {
+        return { type: 'FIND_JOBS', query: _extractJobQuery(msg) };
+      }
+
       return null;
+    }
+
+    // Strips the search-y wrapper words off a job-search message so what's
+    // left is just the actual role/keyword — "find me marketing jobs near
+    // me" → "marketing". Best-effort heuristic, not a real parser; falls
+    // back to "jobs" (a reasonable generic search) if nothing survives.
+    function _extractJobQuery(msg) {
+      let q = msg
+        .replace(/\b(find|search(\s*for)?|look\s*for|show\s*me|get\s*me|are\s*there(\s*any)?|is\s*there(\s*any)?|any|me|please|pls|can\s*you|could\s*you)\b/gi, ' ')
+        .replace(/\bjob\s*openings?\b|\bvacanc(y|ies)\b|\bjobs?\b|\bpositions?\b|\bavailable\b|\bhiring\b/gi, ' ')
+        .replace(/\bnear\s*me\b|\bfor\s*me\b/gi, ' ')
+        .replace(/[?.!]/g, ' ')
+        .replace(/^\s*(a|an|the)\s+/i, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      return q || 'jobs';
     }
 
     function detectTemplateInMsg(msg) {
@@ -6863,6 +7004,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         kieHist.push({ role:'user', content: msg });
         inp.value = ''; inp.style.height = 'auto';
         kieActionBuildResumeFromChat(msg);
+        return;
+      }
+
+      if (intent && intent.type === 'FIND_JOBS') {
+        appendKMsg('user', msg, true);
+        kieHist.push({ role:'user', content: msg });
+        inp.value = ''; inp.style.height = 'auto';
+        kieActionFindJobs(intent.query);
         return;
       }
 

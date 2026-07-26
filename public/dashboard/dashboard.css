@@ -94,6 +94,18 @@
     .job-snap-more-circle{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
     .job-snap-more-txt{font-size:12px;font-weight:800;line-height:1.3}
 
+    /* ── KIE CHAT — INLINE JOB RESULTS ─────────────────────────────────────
+       Reuses the exact .job-snap-card visual language from the Home job
+       snapshot widget (same cards the person already recognizes), just
+       narrower so a row of them fits naturally inside a chat bubble. */
+    .kie-jobs-strip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 4px;margin-top:8px;scrollbar-width:none}
+    .kie-jobs-strip::-webkit-scrollbar{display:none}
+    .kie-jobs-strip .job-snap-card{width:168px;padding:12px}
+    .kie-jobs-strip .job-snap-more{width:110px;padding:12px}
+    .kie-jobs-strip .job-snap-more-circle{width:32px;height:32px}
+    .kie-jobs-strip .job-snap-title{font-size:12px}
+    .kie-jobs-strip .job-snap-more-txt{font-size:11px}
+
 
     .av-wrap{position:relative}
     .hbg-btn{width:38px;height:38px;background:transparent;border:1.5px solid rgba(124,58,237,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;padding:0;position:relative}
