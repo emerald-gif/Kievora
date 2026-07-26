@@ -1048,12 +1048,14 @@ module.exports = function registerToolsRoutes(app) {
   - skills: 10-14 relevant skills mixing technical and soft skills
   - SPEED OVER INTERROGATION: the person asking for this resume wants it built now, not a back-and-forth. Never leave a field blank or generic waiting for "more details" — where something concrete (years of experience, past employers, specific skills) wasn't given, generate strong, industry-standard content that fits the stated role convincingly. Confident, specific invented content beats a hedge every time.`;
 
-    // Rebuild still can't drift into invented facts (grounding rules above
-    // are the real safeguard for that), but 0.3 was so conservative the
-    // model kept reproducing near-identical phrasing — this was the actual
-    // cause of "the download still looks the same." 0.55 gives it room to
-    // genuinely rewrite while the grounding rules keep facts honest.
-    const cfg = { max_tokens: 2000, temperature: isRebuild ? 0.55 : 0.78, jsonMode: true };
+    // 2000 was fine for the old shorter, lighter-touch prompt — the fuller
+    // rewrite instructions plus the added certifications/projects/languages
+    // fields need real headroom now, especially for a multi-role resume.
+    // Too tight a cap here means the response gets cut off before the
+    // closing braces, which fails JSON parsing on BOTH the first attempt
+    // and the automatic retry (same cap, same result) — a systematic
+    // failure, not an occasional one.
+    const cfg = { max_tokens: 3500, temperature: isRebuild ? 0.55 : 0.78, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
