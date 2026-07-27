@@ -368,9 +368,9 @@ function renderSummary(d) {
   document.getElementById('planName').textContent = copy.name;
   document.getElementById('planSub').textContent  = copy.tagline;
 
-  const used   = d.usage.kieUsedThisMonth;
-  const limit  = d.usage.kieMonthlyLimit;
-  const topup  = d.usage.kieTopupLeft || 0;
+  const used   = d.usage.aiCreditsUsed;
+  const limit  = d.usage.aiCreditBudget;
+  const topup  = d.usage.aiCreditsTopupLeft || 0;
   const pct    = Math.min(100, Math.round((used / limit) * 100));
 
   document.getElementById('usageMainVal').textContent = used + (topup ? ` + ${topup} topup` : '');
@@ -383,16 +383,16 @@ function renderSummary(d) {
     : '';
   const usageSubEl = document.getElementById('usageSub');
   usageSubEl.textContent = (used >= limit
-    ? topup ? `Messages used — ${topup} topup message${topup!==1?'s':''} remaining` : 'Messages used up for this cycle'
-    : `${limit - used} messages remaining`) + renewLabel;
+    ? topup ? `Credits used — ${topup} topup credit${topup!==1?'s':''} remaining` : 'AI credits used up for this cycle'
+    : `${limit - used} AI credits remaining`) + renewLabel;
   usageSubEl.classList.toggle('danger-txt', used >= limit && !topup);
 
   if (d.topup) {
     const banner = document.getElementById('topupBanner');
     banner.style.display = 'flex';
     const topupPrice = rateData?.topup?.[d.plan]?.display || `$${d.topup.priceUSD}`;
-    document.getElementById('topupBannerTitle').textContent = 'Top up KIE Chat';
-    document.getElementById('topupBannerSub').textContent   = `${d.topup.messages} extra messages · ${topupPrice}`;
+    document.getElementById('topupBannerTitle').textContent = 'Top up AI Credits';
+    document.getElementById('topupBannerSub').textContent   = `${d.topup.credits} extra credits · ${topupPrice}`;
   }
 }
 

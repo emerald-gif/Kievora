@@ -701,9 +701,9 @@
       if (badgeLabel) badgeLabel.textContent = label + ' Plan';
       if (planLabel)  planLabel.textContent  = label;
 
-      const used  = data.usage?.kieUsedThisMonth ?? 0;
-      const limit = data.usage?.kieMonthlyLimit ?? 0;
-      const topup = data.usage?.kieTopupLeft ?? 0;
+      const used  = data.usage?.aiCreditsUsed ?? 0;
+      const limit = data.usage?.aiCreditBudget ?? 0;
+      const topup = data.usage?.aiCreditsTopupLeft ?? 0;
       if (statUsage) {
         statUsage.textContent = limit ? `${used}/${limit}` : String(used);
         statUsage.classList.add('kv-pop');
