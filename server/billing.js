@@ -8,7 +8,7 @@ module.exports = function registerBillingRoutes(app) {
     PLANS, DEFAULT_PLAN, getPlanConfig, getUserPlanKey,
     getExchangeRates, getUsdToNgnRate, COUNTRY_CURRENCY,
     UPGRADE_MESSAGES, TOPUP_MESSAGES,
-    applyPaystackMetadata, checkAndIncrementKieUsage,
+    applyPaystackMetadata,
     USERS, RESUMES, getCycleAnchorDate, getCycleStart, serviceAccount,
   } = require('./lib');
 
@@ -194,9 +194,9 @@ module.exports = function registerBillingRoutes(app) {
       const anchor      = getCycleAnchorDate(data);
       const cycleStart  = getCycleStart(anchor, new Date());
       const cycleStartKey = cycleStart.toISOString();
-      const sameCycle        = usage.kieCycleStart === cycleStartKey;
-      const kieUsedThisMonth = sameCycle ? (usage.kieCount || 0) : 0;
-      const kieTopupLeft     = sameCycle ? (usage.kieTopupRemaining || 0) : 0;
+      const sameCycle        = usage.aiCreditsCycleStart === cycleStartKey;
+      const creditsUsed      = sameCycle ? (usage.aiCreditsUsed || 0) : 0;
+      const creditsTopupLeft = sameCycle ? (usage.aiCreditsTopup || 0) : 0;
       const cfg = getPlanConfig(planKey);
 
       // Next renewal = one cycle-length after the current cycle's start, using
@@ -210,13 +210,14 @@ module.exports = function registerBillingRoutes(app) {
         renewsAt:       nextRenewal.toISOString(),
         gates:          cfg,
         usage: {
-          kieUsedThisMonth,
-          kieMonthlyLimit:  cfg.kieMonthlyLimit,
-          kieTopupLeft,
+          aiCreditsUsed: creditsUsed,
+          aiCreditBudget: cfg.aiCreditBudget,
+          aiCreditsRemaining: Math.max(0, cfg.aiCreditBudget - creditsUsed),
+          aiCreditsTopupLeft: creditsTopupLeft,
         },
         topup: cfg.topupPriceUSD ? {
           priceUSD:  cfg.topupPriceUSD,
-          messages:  cfg.topupMessages,
+          credits:   cfg.topupCredits,
           message:   TOPUP_MESSAGES[planKey] || null,
         } : null,
         plans: Object.values(PLANS).map(p => ({ key: p.key, label: p.label, priceUSD: p.priceUSD })),
@@ -259,7 +260,7 @@ module.exports = function registerBillingRoutes(app) {
             uid:           req.user.uid,
             plan:          planKey,
             type:          'topup',
-            topupMessages: cfg.topupMessages,
+            topupCredits:  cfg.topupCredits,
             usdAmount:     cfg.topupPriceUSD,
             currency, rate,
           },
