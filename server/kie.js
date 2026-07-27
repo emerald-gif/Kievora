@@ -7,7 +7,7 @@ module.exports = function registerKieRoutes(app) {
   const {
     admin, db, authenticate,
     KIE_MODELS, KIE_TIERS, PLANS, getPlanConfig, getUserPlanKey,
-    checkAndIncrementKieUsage, UPGRADE_MESSAGES, TOPUP_MESSAGES, buildKieToolsBlock,
+    getCreditStatus, deductCredits, tokensToCredits, UPGRADE_MESSAGES, TOPUP_MESSAGES, buildKieToolsBlock,
     getCycleAnchorDate, getCycleStart,
     callKieAI, callKieAIStream, fetchWithRetry,
     performWebSearch, buildSearchQuery, buildSearchContextBlock, shouldSearchWeb, suggestDeepMode, extractSessionFacts,
@@ -33,7 +33,7 @@ module.exports = function registerKieRoutes(app) {
     // marked resolved, and genuinely new facts get added — instead of the
     // whole memory resetting to whatever's visible in the last few messages.
     getConvSummary(req.user.uid, convId)
-      .then(prior => generateConvSummary(messages, prior))
+      .then(prior => generateConvSummary(req.user.uid, messages, prior))
       .then(sum => saveConvSummary(req.user.uid, convId, sum))
       .catch(e => console.error('[summarize]:', e.message));
   });
@@ -398,15 +398,18 @@ module.exports = function registerKieRoutes(app) {
       });
     }
 
-    // Monthly message limit check — runs BEFORE any AI call
-    const usage = await checkAndIncrementKieUsage(req.user.uid, planKey);
-    if (!usage.allowed) {
+    // AI credit check — runs BEFORE any AI call. The actual deduction happens
+    // inside callKieAIStream itself once real token usage is known, so this
+    // is purely a pre-flight gate to avoid spending real API money on a
+    // request that was never going to be allowed through.
+    const creditStatus = await getCreditStatus(req.user.uid, planKey);
+    if (!creditStatus.allowed) {
       return res.status(403).json({
-        error:      'limit_reached',
-        message:    UPGRADE_MESSAGES.kieLimit(planKey),
-        isTopup:    planKey !== 'free',
+        error:      'credits_exhausted',
+        message:    UPGRADE_MESSAGES.creditsExhausted(planKey),
+        upsellType: creditStatus.upsellType, // 'upgrade' | 'topup_or_upgrade' | 'topup'
         topupInfo:  planKey !== 'free' ? {
-          messages:  planCfg.topupMessages,
+          credits:   planCfg.topupCredits,
           priceUSD:  planCfg.topupPriceUSD,
           message:   TOPUP_MESSAGES[planKey],
         } : null,
@@ -670,9 +673,10 @@ UNDO FOLLOW-UP: if the pipeline data shows a company as "followed up" but the us
       const cycleAnchor = getCycleAnchorDate(uData);
       const cycleStart = getCycleStart(cycleAnchor, new Date());
       const cycleStartKey = cycleStart.toISOString();
-      const inSameCycle = usageData.kieCycleStart === cycleStartKey;
-      const usedThisCycle = inSameCycle ? (usageData.kieCount || 0) : 0;
-      const topupLeft = inSameCycle ? (usageData.kieTopupRemaining || 0) : 0;
+      const inSameCycle = usageData.aiCreditsCycleStart === cycleStartKey;
+      const creditsUsed = inSameCycle ? (usageData.aiCreditsUsed || 0) : 0;
+      const topupLeft = inSameCycle ? (usageData.aiCreditsTopup || 0) : 0;
+      const creditsRemaining = Math.max(0, planCfg.aiCreditBudget - creditsUsed);
       const nextRenewal = getCycleStart(cycleAnchor, new Date(cycleStart.getTime() + 32 * 24 * 60 * 60 * 1000));
       const fmtDate = (d) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       const lastPaymentRaw = uData.planUpdatedAt;
@@ -684,8 +688,8 @@ UNDO FOLLOW-UP: if the pipeline data shows a company as "followed up" but the us
 - Plan: ${planCfg.label} (${planKey})${planCfg.priceUSD ? ` — $${planCfg.priceUSD}/month` : ' — free, $0/month'}
 - Last payment / plan change: ${lastPaymentDate}
 - Next renewal date: ${fmtDate(nextRenewal)}
-- KIE messages used this cycle: ${usedThisCycle} of ${planCfg.kieMonthlyLimit}
-- Top-up messages remaining: ${topupLeft}
+- AI credits used this cycle: ${creditsUsed} of ${planCfg.aiCreditBudget} (${creditsRemaining} remaining) — covers every AI feature on the platform, not just this chat
+- Top-up credits remaining: ${topupLeft}
 - Web Search mode: ${planCfg.kieWebSearch ? 'unlocked' : 'locked'}
 - Creative mode: ${planCfg.kieCreativeMode ? 'unlocked' : 'locked'}
 - Models unlocked: ${planCfg.models.map(mk => KIE_MODELS[mk]?.label || mk).join(', ')}
@@ -888,6 +892,7 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
     };
 
 
+    const billing = { uid: req.user.uid, planKey };
     try {
       // Spark has no vision at all — even a stale image from an earlier turn
       // in this same conversation (rehydrated onto its original message so
@@ -900,18 +905,30 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
         fullReply += token;
         streamStarted = true;
         sendSSE({ t: 'd', v: token });
-      });
+      }, billing);
+      const postCallStatus = await getCreditStatus(req.user.uid, planKey);
       sendSSE({
         t: 'done', model: effectiveModel, mode: effectiveMode, fallback: false, modeSuggestion,
         planLimited:    modelWasDowngraded,
         upgradeMessage: modelWasDowngraded ? UPGRADE_MESSAGES.kieModel(planKey, requestedModel) : null,
-        usageRemaining: usage.remaining, usageLimit: usage.limit,
+        creditsRemaining: postCallStatus.remaining, creditsBudget: postCallStatus.budget,
       });
       res.end();
       doLogging(fullReply, effectiveModel, effectiveMode);
 
     } catch (err) {
       console.error('POST /api/kie stream error:', err.message);
+
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        // Don't fall back to Spark here — that would still spend credits on
+        // a user we already know is out of them.
+        sendSSE({
+          t: 'err', v: UPGRADE_MESSAGES.creditsExhausted(planKey),
+          error: 'credits_exhausted', upsellType: err.status?.upsellType,
+        });
+        res.end();
+        return;
+      }
 
       if (!streamStarted && effectiveModel !== 'spark') {
         // Primary model failed before sending any tokens — try Spark fallback
@@ -921,7 +938,7 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
           await callKieAIStream('spark', systemContent, textOnlyMessages, { ...cfg }, (token) => {
             fullReply += token;
             sendSSE({ t: 'd', v: token });
-          });
+          }, billing);
           sendSSE({ t: 'done', model: 'spark', mode: effectiveMode, fallback: true, modeSuggestion });
           res.end();
           doLogging(fullReply, 'spark', effectiveMode);
@@ -1072,7 +1089,10 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
   Latest message to classify: "${message}"`;
 
     try {
-      const raw = await callKieAI('spark', system, [{ role: 'user', content: userPrompt }], { max_tokens: 150, temperature: 0.1 });
+      const planKey = await getUserPlanKey(req.user.uid);
+      const status = await getCreditStatus(req.user.uid, planKey);
+      if (!status.allowed) return res.json({ intent: 'NONE' }); // fail closed to NONE, same as any other uncertainty case — never blocks the main chat call on a credits error
+      const raw = await callKieAI('spark', system, [{ role: 'user', content: userPrompt }], { max_tokens: 150, temperature: 0.1 }, { uid: req.user.uid, planKey });
       const parsed = parseAIJson(raw);
       const validIntents = ['SEND_RESUME', 'UPDATE_RESUME_AND_SEND', 'CHANGE_TEMPLATE', 'BUILD_RESUME_FROM_SCRATCH', 'NONE'];
       if (!validIntents.includes(parsed.intent)) parsed.intent = 'NONE';
@@ -1121,6 +1141,16 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
     }
 
     try {
+      const planKey = await getUserPlanKey(req.user.uid);
+      const status = await getCreditStatus(req.user.uid, planKey);
+      if (!status.allowed) {
+        return res.status(403).json({
+          error: 'credits_exhausted',
+          message: UPGRADE_MESSAGES.creditsExhausted(planKey),
+          upsellType: status.upsellType,
+        });
+      }
+
       const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
@@ -1142,6 +1172,9 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
       }
 
       const data = await groqRes.json();
+      if (data.usage) {
+        deductCredits(req.user.uid, planKey, tokensToCredits('spark', data.usage.prompt_tokens, data.usage.completion_tokens)).catch(() => {});
+      }
       let raw = data.choices?.[0]?.message?.content || '{}';
       // Strip any accidental markdown fences
       raw = raw.replace(/```json|```/g, '').trim();

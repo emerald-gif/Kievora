@@ -180,8 +180,8 @@ Surface at least one counter-intuitive angle they almost certainly haven't consi
 const PLANS = {
   free: {
     key: 'free', label: 'Free', priceUSD: 0,
-    // 50 KIE chat messages per calendar month (Groq Spark). When hit → upgrade prompt only.
-    kieMonthlyLimit: 50,
+    kieMonthlyLimit: 50,        // legacy — no longer enforced, kept for reference/display only
+    aiCreditBudget: 50,         // real cap: 50 credits ($0.50) across EVERY AI call on the platform, this cycle
     kieModel: 'spark',           // model that powers KIE chat for this plan
     models: ['spark'],           // models visible in KIE selector
     // Free tier: the core resume loop (upload → diagnose → build) is now
@@ -203,13 +203,12 @@ const PLANS = {
     kieCreativeMode: false,
     gmail: false,
     topupPriceUSD: null,
-    topupMessages: 0,
+    topupCredits: 0,
   },
   paid7: {
     key: 'paid7', label: 'Pro', priceUSD: 7,
-    // 200 KIE chat messages/month (Claude Haiku / KIE Core). The 200 cap is
-    // NEVER shown to the user — if they hit it they see the topup offer only.
-    kieMonthlyLimit: 200,
+    kieMonthlyLimit: 200,       // legacy — no longer enforced, kept for reference/display only
+    aiCreditBudget: 315,        // real cap: 315 credits ($3.15 ≈ 45% of $7) across EVERY AI call on the platform, this cycle
     kieModel: 'core',
     models: ['spark', 'core'],
     tools: ['aibuild', 'careerhealth', 'roadmap', 'linkedin', 'messaging'],
@@ -225,15 +224,15 @@ const PLANS = {
     kieWebSearch: true,
     kieCreativeMode: true,
     gmail: false,
-    topupPriceUSD: 1.5,          // 100 extra KIE messages for $1.50
-    topupMessages: 100,
+    topupPriceUSD: 1.5,          // 150 extra AI credits for $1.50 — same $ as before, now denominated correctly
+    topupCredits: 150,
   },
   paid15: {
     key: 'paid15', label: 'Premier', priceUSD: 15,
-    // 200 KIE chat messages/month (Claude Sonnet / KIE Pro). Same topup mechanic.
+    kieMonthlyLimit: 200,       // legacy — no longer enforced, kept for reference/display only
+    aiCreditBudget: 675,        // real cap: 675 credits ($6.75 ≈ 45% of $15) across EVERY AI call on the platform, this cycle
     // Ultra is kept in KIE_MODELS/KIE_TIERS for backend/future use but is
     // intentionally excluded from models[] so it never appears in the frontend selector.
-    kieMonthlyLimit: 200,
     kieModel: 'nova',
     models: ['spark', 'core', 'nova'],
     tools: ['aibuild', 'careerhealth', 'roadmap', 'linkedin', 'messaging', 'salary', 'industry', 'interview', 'branding', 'promotion'],
@@ -249,8 +248,8 @@ const PLANS = {
     kieWebSearch: true,
     kieCreativeMode: true,
     gmail: true,
-    topupPriceUSD: 5,            // 100 extra KIE messages for $5 (Sonnet is pricier)
-    topupMessages: 100,
+    topupPriceUSD: 5,            // 500 extra AI credits for $5
+    topupCredits: 500,
   },
 };
 const DEFAULT_PLAN = 'free';
@@ -305,14 +304,40 @@ function getCycleStart(anchorDate, now) {
   return candidate;
 }
 
-// ─── KIE chat counter + topup balance — resets on the subscription anniversary,
-// not the calendar month ─────────────────────────────────────────────────────
-// Topup messages (purchased separately via Paystack) are stored in
-// usage.kieTopupRemaining and are drawn down AFTER the cycle's allocation runs
-// out. Any unused topup messages expire at the same boundary the main
-// allocation resets — stated clearly to users at purchase.
-async function checkAndIncrementKieUsage(uid, planKey) {
-  const limit  = getPlanConfig(planKey).kieMonthlyLimit;
+// ─── Real AI pricing — $ per million tokens, current as of the rates we
+// verified live (Anthropic + Groq pricing pages). Sonnet 5 is on introductory
+// pricing through Aug 31, 2026; the standard rate below is used deliberately
+// so credit budgets don't look artificially generous right before that price
+// increase lands. Update this table if any provider changes rates.
+const AI_PRICING_PER_M_TOKENS = {
+  spark: { input: 0.59, output: 0.79 },   // Groq — llama-3.3-70b-versatile
+  core:  { input: 1,    output: 5    },   // Anthropic — Claude Haiku 4.5
+  nova:  { input: 3,    output: 15   },   // Anthropic — Claude Sonnet 5 (standard rate, post Sept 1 2026)
+  ultra: { input: 5,    output: 25   },   // Anthropic — Claude Opus 4.8
+};
+const CREDIT_VALUE_USD = 0.01; // 1 credit = $0.01 — the peg every budget/topup number above is built on
+
+// Converts real token usage on a specific model into credits, rounding UP so
+// the platform is never the one eating a fraction of a cent on rounding.
+function tokensToCredits(modelKey, inputTokens, outputTokens) {
+  const rate = AI_PRICING_PER_M_TOKENS[modelKey] || AI_PRICING_PER_M_TOKENS.spark;
+  const usd  = ((inputTokens || 0) * rate.input + (outputTokens || 0) * rate.output) / 1_000_000;
+  return Math.max(1, Math.ceil(usd / CREDIT_VALUE_USD)); // every call costs at least 1 credit — no free rounding-to-zero calls
+}
+
+// ─── AI credit ledger — resets on the subscription anniversary, not the
+// calendar month. Covers EVERY AI call on the platform (KIE chat + every
+// tool route + Gmail Intelligence), not just chat like the old message
+// counter did. Topup credits (purchased via Paystack) are drawn down AFTER
+// the cycle's allocation runs out, and expire at the same cycle boundary.
+//
+// getCreditStatus() is a read-only check — call this BEFORE making an AI
+// call, to avoid spending real API money on a request that was never going
+// to be allowed through.
+// deductCredits() is called AFTER a call completes, once real token usage is
+// known — this is what actually spends the balance.
+async function getCreditStatus(uid, planKey) {
+  const budget = getPlanConfig(planKey).aiCreditBudget;
   const ref    = db.collection(USERS).doc(uid);
   const snap   = await ref.get();
   const data   = snap.exists ? snap.data() : {};
@@ -320,27 +345,69 @@ async function checkAndIncrementKieUsage(uid, planKey) {
   const anchor = getCycleAnchorDate(data);
   const cycleStartKey = getCycleStart(anchor, new Date()).toISOString();
 
-  const sameCycle    = usage.kieCycleStart === cycleStartKey;
-  const currentCount = sameCycle ? (usage.kieCount || 0) : 0;
-  const topupLeft    = sameCycle ? (usage.kieTopupRemaining || 0) : 0;
+  const sameCycle = usage.aiCreditsCycleStart === cycleStartKey;
+  const used       = sameCycle ? (usage.aiCreditsUsed || 0) : 0;
+  const topupLeft  = sameCycle ? (usage.aiCreditsTopup || 0) : 0;
+  const remaining  = Math.max(0, budget - used);
 
-  // Within this cycle's allocation
-  if (currentCount < limit) {
-    const newCount = currentCount + 1;
-    await ref.set({ usage: { kieCount: newCount, kieCycleStart: cycleStartKey, kieTopupRemaining: topupLeft } }, { merge: true });
-    return { allowed: true, remaining: limit - newCount + topupLeft, limit, count: newCount, fromTopup: false };
-  }
+  // What to tell the user once they're out — matches exactly what was agreed:
+  // free → upgrade only. Pro → topup or upgrade. Premier → topup only.
+  const upsellType = planKey === 'free' ? 'upgrade' : planKey === 'paid7' ? 'topup_or_upgrade' : 'topup';
 
-  // Allocation exhausted — draw from topup if available
-  if (topupLeft > 0) {
-    const newTopup = topupLeft - 1;
-    await ref.set({ usage: { kieCount: currentCount, kieCycleStart: cycleStartKey, kieTopupRemaining: newTopup } }, { merge: true });
-    return { allowed: true, remaining: newTopup, limit, count: currentCount, fromTopup: true, topupRemaining: newTopup };
-  }
-
-  // Hard stop — no allocation and no topup left this cycle
-  return { allowed: false, remaining: 0, limit, count: currentCount, fromTopup: false };
+  return {
+    allowed: remaining > 0 || topupLeft > 0,
+    remaining, topupLeft, budget, used, cycleStartKey, upsellType, planKey,
+  };
 }
+
+// Spends `credits` from the ledger — cycle allocation first, then topup.
+// Always succeeds (never blocks) — the gate happens in getCreditStatus()
+// BEFORE the API call runs; this just records what got spent. Allowed to go
+// slightly negative on the allocation for the one call that pushes someone
+// over the edge — same non-precharged behavior the old message counter had.
+async function deductCredits(uid, planKey, credits) {
+  const ref    = db.collection(USERS).doc(uid);
+  const snap   = await ref.get();
+  const data   = snap.exists ? snap.data() : {};
+  const usage  = data.usage || {};
+  const anchor = getCycleAnchorDate(data);
+  const cycleStartKey = getCycleStart(anchor, new Date()).toISOString();
+  const budget = getPlanConfig(planKey).aiCreditBudget;
+
+  const sameCycle  = usage.aiCreditsCycleStart === cycleStartKey;
+  const usedBefore = sameCycle ? (usage.aiCreditsUsed || 0) : 0;
+  const topupBefore = sameCycle ? (usage.aiCreditsTopup || 0) : 0;
+
+  const remainingAllocation = Math.max(0, budget - usedBefore);
+  const fromAllocation = Math.min(credits, remainingAllocation);
+  const fromTopup       = credits - fromAllocation;
+
+  await ref.set({
+    usage: {
+      aiCreditsUsed: usedBefore + fromAllocation,
+      aiCreditsTopup: Math.max(0, topupBefore - fromTopup),
+      aiCreditsCycleStart: cycleStartKey,
+    },
+  }, { merge: true });
+
+  return {
+    remaining: Math.max(0, budget - (usedBefore + fromAllocation)),
+    topupLeft: Math.max(0, topupBefore - fromTopup),
+  };
+}
+
+// Thrown by callKieAI/callKieAIJson/callKieAIStream when a user is out of
+// credits — route handlers catch this specifically (via err.code) to return
+// the right upsell message instead of a generic 500.
+class CreditsExhaustedError extends Error {
+  constructor(status) {
+    super('AI credits exhausted for this cycle');
+    this.code = 'CREDITS_EXHAUSTED';
+    this.status = status;
+  }
+}
+
+
 
 // ─── Multi-currency FX rates (USD base) ───────────────────────────────────────
 // Supports NGN (Nigeria), GHS (Ghana), KES (Kenya), ZAR (South Africa), USD.
@@ -383,13 +450,19 @@ async function getUsdToNgnRate() { return (await getExchangeRates()).NGN; }
 
 // ─── Friendly, feature-specific upgrade / gate copy ───────────────────────────
 const UPGRADE_MESSAGES = {
-  // KIE chat — monthly limit hit
-  kieLimit: (plan) => {
+  // Fires on ANY AI call, anywhere on the platform, once a user is out of
+  // credits for this cycle — not just KIE chat. Wording follows the exact
+  // rule agreed: Free sees upgrade only, Pro sees topup-or-upgrade, Premier
+  // sees topup only (there's nowhere higher to upgrade to).
+  creditsExhausted: (plan) => {
     if (plan === 'free') {
-      return `You've used all your free KIE messages for this month. Upgrade to $7 or $15 to unlock more messages and smarter AI models.`;
+      return `You've used all your free AI credits for this cycle. Upgrade to $7 or $15 for a much bigger monthly credit allowance and smarter AI models.`;
     }
     const cfg = getPlanConfig(plan);
-    return `You've used all your KIE chat messages for this month. You can top up ${cfg.topupMessages} messages for $${cfg.topupPriceUSD} — unused messages won't carry over to next month.`;
+    if (plan === 'paid7') {
+      return `You're out of AI credits for this cycle. Top up ${cfg.topupCredits} credits for $${cfg.topupPriceUSD}, or upgrade to Premier for a bigger monthly allowance.`;
+    }
+    return `You're out of AI credits for this cycle. Top up ${cfg.topupCredits} credits for $${cfg.topupPriceUSD} — unused credits won't carry over when your plan renews.`;
   },
   // KIE chat — model not available on plan
   kieModel: (plan, requested) => {
@@ -513,14 +586,23 @@ RULES for recommending tools/pages:
 
 // Topup purchase messages (shown in the topup modal on billing.html)
 const TOPUP_MESSAGES = {
-  paid7:  `Top up 100 KIE chat messages for $1.50. These are added to your current month's balance — any unused messages expire when your plan renews next month.`,
-  paid15: `Top up 100 KIE chat messages for $5. These are added to your current month's balance — any unused messages expire when your plan renews next month.`,
+  paid7:  `Top up 150 AI credits for $1.50. These are added to your current cycle's balance — any unused credits expire when your plan renews.`,
+  paid15: `Top up 500 AI credits for $5. These are added to your current cycle's balance — any unused credits expire when your plan renews.`,
 };
 
 // ─── Universal AI caller — routes Groq vs Anthropic by model key ──────────────
 // Non-streaming (used by all non-KIE-chat endpoints: coach, cover-letter, etc.)
-async function callKieAI(modelKey, systemContent, messages, cfg) {
+// `billing` = { uid, planKey } — when provided, this is where credit gating
+// AND deduction actually happens, so every caller gets it for free just by
+// passing billing through. Omit billing only for genuinely internal/free
+// calls that should never touch a user's balance.
+async function callKieAI(modelKey, systemContent, messages, cfg, billing) {
   const m = KIE_MODELS[modelKey] || KIE_MODELS.spark;
+
+  if (billing?.uid) {
+    const status = await getCreditStatus(billing.uid, billing.planKey);
+    if (!status.allowed) throw new CreditsExhaustedError(status);
+  }
 
   if (m.provider === 'groq') {
     const key = process.env.GROQ_API_KEY;
@@ -544,6 +626,10 @@ async function callKieAI(modelKey, systemContent, messages, cfg) {
     }, 1); // BUG FIX: one quick retry on transient 429/5xx before throwing
     if (!res.ok) { const e = await res.text(); throw new Error('Groq error: ' + e); }
     const data = await res.json();
+    if (billing?.uid) {
+      const credits = tokensToCredits(modelKey, data.usage?.prompt_tokens, data.usage?.completion_tokens);
+      await deductCredits(billing.uid, billing.planKey, credits);
+    }
     return data.choices?.[0]?.message?.content || '';
 
   } else {
@@ -582,6 +668,10 @@ async function callKieAI(modelKey, systemContent, messages, cfg) {
     if (!res.ok) { const e = await res.text(); throw new Error('Anthropic error: ' + e); }
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
+    if (billing?.uid) {
+      const credits = tokensToCredits(modelKey, data.usage?.input_tokens, data.usage?.output_tokens);
+      await deductCredits(billing.uid, billing.planKey, credits);
+    }
     return cfg.jsonMode ? '{' + text : text;
   }
 }
@@ -639,19 +729,20 @@ function parseAIJson(raw) {
 // This replaces the old per-endpoint "if (m !== 'spark') retry on spark" logic,
 // which never actually ran (every tool already hardcodes model to spark, so
 // that condition was always false — dead code masking as a safety net).
-async function callKieAIJson(modelKey, systemContent, messages, cfg) {
+async function callKieAIJson(modelKey, systemContent, messages, cfg, billing) {
   const jsonCfg = { ...cfg, jsonMode: true };
   try {
-    const raw = await callKieAI(modelKey, systemContent, messages, jsonCfg);
+    const raw = await callKieAI(modelKey, systemContent, messages, jsonCfg, billing);
     return { data: parseAIJson(raw), retried: false };
   } catch (err) {
+    if (err.code === 'CREDITS_EXHAUSTED') throw err; // don't retry — retrying won't fix an empty balance
     console.error(`callKieAIJson: first attempt failed (${err.message}) — retrying with correction`);
     const correctiveMessages = [
       ...messages,
       { role: 'assistant', content: '(invalid output)' },
       { role: 'user', content: 'Your last response was not valid JSON and could not be parsed. Respond again with ONLY the JSON object — no markdown fences, no commentary before or after, no trailing commas.' },
     ];
-    const raw = await callKieAI(modelKey, systemContent, correctiveMessages, jsonCfg);
+    const raw = await callKieAI(modelKey, systemContent, correctiveMessages, jsonCfg, billing);
     return { data: parseAIJson(raw), retried: true };
   }
 }
@@ -660,8 +751,13 @@ async function callKieAIJson(modelKey, systemContent, messages, cfg) {
 // Calls onChunk(tokenText) for every token as it arrives. Returns full text.
 // This is how Claude.ai / ChatGPT / DeepSeek deliver answers — first token in
 // ~300ms instead of waiting 5-15s for the entire response to buffer.
-async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk) {
+async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk, billing) {
   const m = KIE_MODELS[modelKey] || KIE_MODELS.spark;
+
+  if (billing?.uid) {
+    const status = await getCreditStatus(billing.uid, billing.planKey);
+    if (!status.allowed) throw new CreditsExhaustedError(status);
+  }
 
   if (m.provider === 'groq') {
     const key = process.env.GROQ_API_KEY;
@@ -674,6 +770,7 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk) 
         max_tokens:  cfg.max_tokens,
         temperature: cfg.temperature,
         stream:      true,
+        stream_options: { include_usage: true }, // final chunk carries real prompt/completion token counts
         messages:    [{ role: 'system', content: systemContent }, ...messages],
       }),
     }, 1); // BUG FIX: one quick retry before falling back — only safe pre-stream, no tokens sent yet
@@ -682,6 +779,7 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk) 
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
+    let usage = null;
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -692,13 +790,24 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk) 
         const trimmed = line.trim();
         if (!trimmed.startsWith('data: ')) continue;
         const payload = trimmed.slice(6);
-        if (payload === '[DONE]') return;
+        if (payload === '[DONE]') {
+          if (billing?.uid) {
+            const credits = tokensToCredits(modelKey, usage?.prompt_tokens, usage?.completion_tokens);
+            await deductCredits(billing.uid, billing.planKey, credits);
+          }
+          return;
+        }
         try {
           const chunk = JSON.parse(payload);
+          if (chunk.usage) usage = chunk.usage; // arrives on the final chunk when stream_options.include_usage is set
           const token = chunk.choices?.[0]?.delta?.content || '';
           if (token) onChunk(token);
         } catch { /* malformed chunk — skip */ }
       }
+    }
+    if (billing?.uid) { // stream ended without an explicit [DONE] line — still bill what we saw
+      const credits = tokensToCredits(modelKey, usage?.prompt_tokens, usage?.completion_tokens);
+      await deductCredits(billing.uid, billing.planKey, credits);
     }
 
   } else {
@@ -726,6 +835,7 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk) 
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
+    let inputTokens = 0, outputTokens = 0;
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -737,6 +847,14 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk) 
         if (!trimmed.startsWith('data: ')) continue;
         try {
           const chunk = JSON.parse(trimmed.slice(6));
+          // message_start carries input token count for the whole request
+          if (chunk.type === 'message_start' && chunk.message?.usage?.input_tokens) {
+            inputTokens = chunk.message.usage.input_tokens;
+          }
+          // message_delta carries the running output token count, updated near the end
+          if (chunk.type === 'message_delta' && chunk.usage?.output_tokens) {
+            outputTokens = chunk.usage.output_tokens;
+          }
           // Anthropic streaming: content_block_delta carries text_delta
           if (chunk.type === 'content_block_delta' && chunk.delta?.type === 'text_delta') {
             const token = chunk.delta.text || '';
@@ -744,6 +862,10 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk) 
           }
         } catch { /* malformed chunk — skip */ }
       }
+    }
+    if (billing?.uid) {
+      const credits = tokensToCredits(modelKey, inputTokens, outputTokens);
+      await deductCredits(billing.uid, billing.planKey, credits);
     }
   }
 }
@@ -1239,7 +1361,7 @@ function _gmailExtractBody(payload) {
   return (text || '').trim().slice(0, 3000);
 }
 
-async function classifyCareerEmail(subject, snippet) {
+async function classifyCareerEmail(subject, snippet, uid) {
   const s = (subject + ' ' + snippet).toLowerCase();
   // Only an instant regex fast-path for the one category that's genuinely
   // unambiguous — a purely administrative "your application was received"
@@ -1276,6 +1398,7 @@ ${snippet}
 Reply with ONLY the category, nothing else.` }] })
     });
     const d = await r.json();
+    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens))).catch(() => {});
     const cat = (d.choices?.[0]?.message?.content || '').trim().toLowerCase();
     const VALID_CATEGORIES = ['application_confirmation', 'interview_invite', 'assessment', 'recruiter_outreach', 'rejection', 'offer', 'post_offer', 'general_update'];
     return VALID_CATEGORIES.includes(cat) ? cat : _classifyCareerEmailFallback(s);
@@ -1300,7 +1423,7 @@ function _classifyCareerEmailFallback(s) {
   return 'general_update';
 }
 
-async function extractEmailEntities(subject, snippet) {
+async function extractEmailEntities(subject, snippet, uid) {
   try {
     const groqKey = (process.env.GROQ_API_KEY || '').split(',')[0].trim();
     if (!groqKey) return { company: null, role: null };
@@ -1314,6 +1437,7 @@ ${snippet}
 --- END UNTRUSTED EMAIL CONTENT ---` }] })
     });
     const d = await r.json();
+    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens))).catch(() => {});
     const text = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
     return JSON.parse(text);
   } catch { return { company: null, role: null }; }
@@ -1321,7 +1445,7 @@ ${snippet}
 
 // Only called for emails already classified as interview_invite — keeps this
 // extra AI call cheap and rare rather than running it on every single email.
-async function extractInterviewDateTime(subject, snippet, emailDate) {
+async function extractInterviewDateTime(subject, snippet, emailDate, uid) {
   try {
     const groqKey = (process.env.GROQ_API_KEY || '').split(',')[0].trim();
     if (!groqKey) return null;
@@ -1335,6 +1459,7 @@ ${snippet}
 --- END UNTRUSTED EMAIL CONTENT ---` }] })
     });
     const d = await r.json();
+    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens))).catch(() => {});
     const text   = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
     return parsed && parsed.datetime ? parsed : null;
@@ -1372,11 +1497,11 @@ async function syncUserGmail(uid, tokens) {
     // rare email whose MIME parts don't decode cleanly.
     const bodyText = _gmailExtractBody(msg.data.payload) || snippet;
     const ts      = new Date(msg.data.internalDate ? Number(msg.data.internalDate) : getH('Date'));
-    const emailType           = await classifyCareerEmail(subject, bodyText);
-    const { company, role }   = await extractEmailEntities(subject, bodyText);
+    const emailType           = await classifyCareerEmail(subject, bodyText, uid);
+    const { company, role }   = await extractEmailEntities(subject, bodyText, uid);
     let interviewAt = null, interviewDurationMin = null;
     if (emailType === 'interview_invite') {
-      const idt = await extractInterviewDateTime(subject, bodyText, ts);
+      const idt = await extractInterviewDateTime(subject, bodyText, ts, uid);
       if (idt) { interviewAt = idt.datetime; interviewDurationMin = idt.durationMinutes || 60; }
     }
     parsed.push({ subject, snippet, threadId:msg.data.threadId, ts, emailType, company, role, interviewAt, interviewDurationMin });
@@ -1850,7 +1975,7 @@ async function syncGmailForUser(uid) {
 }
 
 // ─── Conversation Intelligence ────────────────────────────────────────────────
-async function generateConvSummary(messages, priorSummary) {
+async function generateConvSummary(uid, messages, priorSummary) {
   try {
     const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
     if (!groqKey||messages.length<2) return null;
@@ -1870,6 +1995,13 @@ async function generateConvSummary(messages, priorSummary) {
       })
     });
     const d = await r.json();
+    // Background maintenance call, still real cost — bill it like any other,
+    // just against 'spark' rate since it's always Groq regardless of plan.
+    if (uid && d.usage) {
+      getUserPlanKey(uid)
+        .then(planKey => deductCredits(uid, planKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens)))
+        .catch(() => {});
+    }
     const text = (d.choices?.[0]?.message?.content||'').trim().replace(/```json|```/g,'').trim();
     return JSON.parse(text);
   } catch { return null; }
@@ -1886,23 +2018,35 @@ async function getConvSummary(uid,convId) {
   catch { return null; }
 }
 
-// Background Gmail auto-sync every 2 hours (also fires the Sunday digest)
+// Gmail sync is now MANUAL — the user taps "Sync" (POST /api/gmail/sync in
+// gmail.js) instead of this running automatically every 2 hours for every
+// connected user. That was real, constant AI cost (up to 3 classification
+// calls per email, per user, every 2h) running whether or not anyone was
+// even using the app that day.
+//
+// The one thing still worth keeping automatic: the weekly digest email,
+// since that's a genuine "we did this for you while you weren't looking"
+// feature people expect. So this now runs ONCE a week (Sunday, UTC) instead
+// of every 2 hours — one sync pass right before sending each user's digest,
+// not a standing background job.
 setInterval(async()=>{
   try {
-    const snap = await db.collection('users').where('gmailConnected','==',true).limit(50).get();
     const isDigestDay = new Date().getUTCDay() === 0; // Sunday, UTC
+    if (!isDigestDay) return;
     const weekKey = getWeekKey();
+    const snap = await db.collection('users').where('gmailConnected','==',true).limit(50).get();
     for (const doc of snap.docs) {
       const u = doc.data();
-      const result = await syncGmailForUser(doc.id).catch(e=>{ console.error(`[gmail-cron] uid:${doc.id}:`,e.message); return null; });
-      if (isDigestDay && result && !u.gmailDigestOptOut && u.lastDigestWeek !== weekKey) {
+      if (u.gmailDigestOptOut || u.lastDigestWeek === weekKey) continue;
+      const result = await syncGmailForUser(doc.id).catch(e=>{ console.error(`[gmail-digest] uid:${doc.id}:`,e.message); return null; });
+      if (result) {
         await sendWeeklyDigest(u.email, u.name||u.displayName, result.enriched).catch(e=>console.error('[digest]',e.message));
         await db.collection('users').doc(doc.id).set({ lastDigestWeek: weekKey }, { merge:true }).catch(()=>{});
       }
       await new Promise(r=>setTimeout(r,2000));
     }
-  } catch(e) { console.error('[gmail-cron]:',e.message); }
-}, 2*60*60*1000);
+  } catch(e) { console.error('[gmail-digest]:',e.message); }
+}, 60*60*1000); // check hourly for whether it's Sunday yet — the sync/send itself still only actually runs once a week
 
 // ─── Shared logic: apply a successful Paystack transaction's metadata ────────
 // Called from BOTH the webhook (async, reliable but depends on Paystack's
@@ -1912,7 +2056,7 @@ setInterval(async()=>{
 // Idempotent: calling this twice for the same successful reference just
 // re-applies the same state, which is harmless.
 async function applyPaystackMetadata(metadata, reference) {
-  const { uid, plan, type, topupMessages } = metadata || {};
+  const { uid, plan, type, topupCredits } = metadata || {};
   if (!uid) { console.error('Paystack: missing uid in metadata', metadata); return { applied: false }; }
 
   if (type === 'topup') {
@@ -1922,17 +2066,17 @@ async function applyPaystackMetadata(metadata, reference) {
     const usage  = data.usage || {};
     const anchor = getCycleAnchorDate(data);
     const cycleStartKey = getCycleStart(anchor, new Date()).toISOString();
-    const sameCycle = usage.kieCycleStart === cycleStartKey;
-    const existing  = sameCycle ? (usage.kieTopupRemaining || 0) : 0;
-    const toAdd     = Number(topupMessages) || 100;
+    const sameCycle = usage.aiCreditsCycleStart === cycleStartKey;
+    const existing  = sameCycle ? (usage.aiCreditsTopup || 0) : 0;
+    const toAdd     = Number(topupCredits) || 150;
     await uRef.set({
       usage: {
-        kieTopupRemaining: existing + toAdd,
-        kieCycleStart: cycleStartKey,
-        kieCount: sameCycle ? (usage.kieCount || 0) : 0,
+        aiCreditsTopup: existing + toAdd,
+        aiCreditsCycleStart: cycleStartKey,
+        aiCreditsUsed: sameCycle ? (usage.aiCreditsUsed || 0) : 0,
       },
     }, { merge: true });
-    console.log(`💳 Paystack topup: ${uid} +${toAdd} messages (ref ${reference})`);
+    console.log(`💳 Paystack topup: ${uid} +${toAdd} AI credits (ref ${reference})`);
     return { applied: true, type: 'topup' };
   }
 
@@ -1940,7 +2084,7 @@ async function applyPaystackMetadata(metadata, reference) {
     await db.collection(USERS).doc(uid).set({
       plan,
       planUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      usage: { kieCount: 0, kieTopupRemaining: 0, kieCycleStart: admin.firestore.FieldValue.delete() },
+      usage: { aiCreditsUsed: 0, aiCreditsTopup: 0, aiCreditsCycleStart: admin.firestore.FieldValue.delete() },
     }, { merge: true });
     console.log(`💳 Paystack plan upgrade: ${uid} → ${plan} (ref ${reference})`);
     return { applied: true, type: 'plan', plan };
@@ -1971,7 +2115,9 @@ module.exports = {
   getDriveOAuthClient, DRIVE_REDIRECT_URI, DRIVE_API_KEY, DRIVE_APP_ID,
   admin, db, RESUMES, USERS,
   KIE_MODELS, KIE_TIERS, PLANS, DEFAULT_PLAN, getPlanConfig, getUserPlanKey,
-  getCycleAnchorDate, getCycleStart, checkAndIncrementKieUsage,
+  getCycleAnchorDate, getCycleStart,
+  getCreditStatus, deductCredits, tokensToCredits, CreditsExhaustedError,
+  AI_PRICING_PER_M_TOKENS, CREDIT_VALUE_USD,
   bustGmailActionsCache,
   COUNTRY_CURRENCY, FX_FALLBACKS, getExchangeRates, getUsdToNgnRate,
   UPGRADE_MESSAGES, TOPUP_MESSAGES, FREE_RESUME_UPSELL_CHANCE, KIE_TOOL_KB, buildKieToolsBlock,

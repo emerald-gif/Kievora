@@ -488,7 +488,8 @@ module.exports = function registerToolsRoutes(app) {
         planCfg.kieModel,
         'You are an expert resume analyst. Always respond with valid JSON only — no extra text, no markdown.',
         [{ role: 'user', content: prompt }],
-        { max_tokens: 2500, temperature: 0.15 }
+        { max_tokens: 2500, temperature: 0.15 },
+        { uid: req.user.uid, planKey }
       );
       if (retried) console.log('POST /api/analyze-resume — needed one self-correction retry');
 
@@ -520,6 +521,9 @@ module.exports = function registerToolsRoutes(app) {
       }
       res.json(analysis);
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/analyze-resume ERROR:', err.message);
       res.status(500).json({ error: 'Analysis failed: ' + err.message });
     }
@@ -1057,9 +1061,10 @@ module.exports = function registerToolsRoutes(app) {
     // failure, not an occasional one.
     const cfg = { max_tokens: 3500, temperature: isRebuild ? 0.55 : 0.78, jsonMode: true };
     const m   = KIE_MODELS[model] ? model : 'nova';
+    const billing = { uid: req.user.uid, planKey: _planKey };
 
     try {
-      const { data: resumeData } = await callKieAIJson(m, system, [{ role: 'user', content: `${isRebuild ? 'Restructure this existing resume' : 'Create a complete professional resume for'}: ${prompt}` }], cfg);
+      const { data: resumeData } = await callKieAIJson(m, system, [{ role: 'user', content: `${isRebuild ? 'Restructure this existing resume' : 'Create a complete professional resume for'}: ${prompt}` }], cfg, billing);
 
       // Safety net for rebuild mode: contact details are objectively
       // verifiable against the source text (unlike names/dates/companies,
@@ -1083,6 +1088,9 @@ module.exports = function registerToolsRoutes(app) {
       console.log(`POST /api/prompt-resume — mode:${isRebuild ? 'rebuild' : 'scratch'} model:${m} job:"${resumeData.jobTitle}"`);
       res.json({ resumeData, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/prompt-resume:', err.message);
       res.status(500).json({ error: 'Resume generation failed: ' + err.message });
     }
@@ -1098,7 +1106,8 @@ module.exports = function registerToolsRoutes(app) {
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!currentRole || !targetRole)
       return res.status(400).json({ error: 'currentRole and targetRole are required.' });
 
@@ -1134,10 +1143,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const skillStr = skills.length ? `\nCurrent skills: ${skills.join(', ')}` : '';
 
     try {
-      const { data: roadmap } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a ${tf} career roadmap.\nFrom: ${currentRole}\nTo: ${targetRole}${skillStr}` }], cfg);
+      const { data: roadmap } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a ${tf} career roadmap.\nFrom: ${currentRole}\nTo: ${targetRole}${skillStr}` }], cfg, billing);
       console.log(`POST /api/career-roadmap — ${currentRole}→${targetRole} model:${m}`);
       res.json({ roadmap, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/career-roadmap:', err.message);
       res.status(500).json({ error: 'Roadmap generation failed. Please try again.' });
     }
@@ -1153,7 +1165,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!jobTitle) return res.status(400).json({ error: 'jobTitle is required.' });
 
     const system = `You are a senior compensation analyst who translates pay data into real leverage for the person asking. Return only pure JSON, no markdown.
@@ -1186,10 +1199,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const skillStr = skills.length ? `, skills: ${skills.slice(0, 6).join(', ')}` : '';
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Salary analysis for: ${jobTitle}\nLocation: ${location}\nExperience: ${yearsExp} years\nEducation: ${education}${skillStr}${industry ? '\nIndustry: ' + industry : ''}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Salary analysis for: ${jobTitle}\nLocation: ${location}\nExperience: ${yearsExp} years\nEducation: ${education}${skillStr}${industry ? '\nIndustry: ' + industry : ''}` }], cfg, billing);
       console.log(`POST /api/salary-intel — "${jobTitle}" ${location} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/salary-intel:', err.message);
       res.status(500).json({ error: 'Salary analysis failed. Please try again.' });
     }
@@ -1205,7 +1221,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!industry) return res.status(400).json({ error: 'industry is required.' });
 
     const system = `You are a top industry research analyst who helps individuals, not just companies, see where they fit. Return only pure JSON, no markdown.
@@ -1239,10 +1256,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Comprehensive industry intelligence for: ${industry}${role ? '\nProfessional role focus: ' + role : ''}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Comprehensive industry intelligence for: ${industry}${role ? '\nProfessional role focus: ' + role : ''}` }], cfg, billing);
       console.log(`POST /api/industry-intel — "${industry}" model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/industry-intel:', err.message);
       res.status(500).json({ error: 'Industry analysis failed. Please try again.' });
     }
@@ -1258,7 +1278,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!headline) return res.status(400).json({ error: 'headline is required.' });
 
     const system = `You are a LinkedIn optimization expert and professional branding specialist. Return only pure JSON, no markdown.
@@ -1293,10 +1314,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const skillStr = skills.length ? `\nCurrent skills: ${skills.join(', ')}` : '';
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Optimize my LinkedIn profile.\nCurrent headline: "${headline}"\nAbout section: "${about || 'Not provided'}"\nCurrent role: ${currentRole || 'Not specified'}\nTarget role: ${targetRole || 'Same field'}${skillStr}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Optimize my LinkedIn profile.\nCurrent headline: "${headline}"\nAbout section: "${about || 'Not provided'}"\nCurrent role: ${currentRole || 'Not specified'}\nTarget role: ${targetRole || 'Same field'}${skillStr}` }], cfg, billing);
       console.log(`POST /api/linkedin-optimize — model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/linkedin-optimize:', err.message);
       res.status(500).json({ error: 'LinkedIn optimization failed. Please try again.' });
     }
@@ -1309,7 +1333,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_miqPlanKey) });
     }
     const { type = 'behavioral', jobTitle, level = 'mid', previousQuestions = [] } = req.body;
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_miqPlanKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _miqPlanKey };
     if (!jobTitle) return res.status(400).json({ error: 'jobTitle is required.' });
 
     const system = `You are a senior hiring manager conducting real interviews. Return only pure JSON, no markdown.
@@ -1334,10 +1359,13 @@ STRICTNESS RULES:
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Generate a ${type} interview question for: ${jobTitle} (${level} level)${prev}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Generate a ${type} interview question for: ${jobTitle} (${level} level)${prev}` }], cfg, billing);
       console.log(`POST /api/mock-interview-q — ${type} for "${jobTitle}" model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_miqPlanKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/mock-interview-q:', err.message);
       res.status(500).json({ error: 'Failed to generate question. Please try again.' });
     }
@@ -1350,7 +1378,8 @@ STRICTNESS RULES:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_mifbPlanKey) });
     }
     const { question, answer, jobTitle, type = 'behavioral' } = req.body;
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_mifbPlanKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _mifbPlanKey };
     if (!question || !answer || !jobTitle)
       return res.status(400).json({ error: 'question, answer, and jobTitle are required.' });
     if (answer.trim().length < 20)
@@ -1385,10 +1414,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const m   = KIE_MODELS[model] ? model : 'nova';
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Evaluate this ${type} interview answer for ${jobTitle}.\n\nQuestion: ${question}\n\nCandidate's Answer: ${answer}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Evaluate this ${type} interview answer for ${jobTitle}.\n\nQuestion: ${question}\n\nCandidate's Answer: ${answer}` }], cfg, billing);
       console.log(`POST /api/mock-interview-fb — score:${data.score} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_mifbPlanKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/mock-interview-fb:', err.message);
       res.status(500).json({ error: 'Feedback generation failed. Please try again.' });
     }
@@ -1404,7 +1436,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
 
     const system = `You are a world-class personal branding expert and professional writer. Return only pure JSON, no markdown.
 
@@ -1437,10 +1470,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       : 'No resume provided — create a generic but compelling template.';
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a ${bioType} personal brand package targeted at ${targetAudience}.\n${context}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Create a ${bioType} personal brand package targeted at ${targetAudience}.\n${context}` }], cfg, billing);
       console.log(`POST /api/personal-brand — type:${bioType} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/personal-brand:', err.message);
       res.status(500).json({ error: 'Brand generation failed. Please try again.' });
     }
@@ -1456,7 +1492,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!resumeData) return res.status(400).json({ error: 'resumeData is required.' });
 
     const system = `You are a career health analyst with the warmth and directness of a trusted mentor. Assess someone's overall career health from their resume and explain it in a way they can immediately understand and act on. Return only pure JSON, no markdown.
@@ -1492,10 +1529,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const ctx = `Name: ${d.fullName || 'N/A'}\nRole: ${d.jobTitle || jobTitle || 'N/A'}\nYears exp: ${yearsExp || 'unknown'}\nSummary length: ${(d.summary || '').length} chars\nSummary: ${(d.summary || '').slice(0, 200)}\nSkills: ${(d.skills || []).join(', ')}\nWork experience entries: ${(d.workExperience || []).length}\nExperience: ${(d.workExperience || []).slice(0, 3).map(e => `${e.position} at ${e.company}`).join(', ')}\nEducation: ${(d.education || []).map(e => `${e.degree} in ${e.field}`).join(', ') || 'N/A'}`;
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Comprehensive career health analysis:\n${ctx}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Comprehensive career health analysis:\n${ctx}` }], cfg, billing);
       console.log(`POST /api/career-health — score:${data.overallScore} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/career-health:', err.message);
       res.status(500).json({ error: 'Career health analysis failed. Please try again.' });
     }
@@ -1511,7 +1551,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!currentRole || !targetRole)
       return res.status(400).json({ error: 'currentRole and targetRole are required.' });
 
@@ -1549,10 +1590,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     }
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Assess promotion readiness:\n${ctx}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Assess promotion readiness:\n${ctx}` }], cfg, billing);
       console.log(`POST /api/promotion-readiness — ${currentRole}→${targetRole} score:${data.readinessScore} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/promotion-readiness:', err.message);
       res.status(500).json({ error: 'Promotion analysis failed. Please try again.' });
     }
@@ -1568,7 +1612,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!targetJob || !targetCompany)
       return res.status(400).json({ error: 'targetJob and targetCompany are required.' });
 
@@ -1603,10 +1648,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     }
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Generate a ${msgType} message:\n${ctx}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Generate a ${msgType} message:\n${ctx}` }], cfg, billing);
       console.log(`POST /api/professional-msg — type:${msgType} company:"${targetCompany}" model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/professional-msg:', err.message);
       res.status(500).json({ error: 'Message generation failed. Please try again.' });
     }
@@ -1626,7 +1674,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     }
 
     const { resumeData, targetRole = '' } = req.body;
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: planKey };
     if (!resumeData) return res.status(400).json({ error: 'resumeData is required.' });
 
     const system = `You are a senior technical recruiter with 15 years of experience reviewing thousands of resumes. Give brutally honest, specific feedback. Return only pure JSON, no markdown.
@@ -1661,10 +1710,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const ctx = `Target role: ${targetRole || d.jobTitle || 'N/A'}\nName: ${d.fullName || 'N/A'}\nSummary: ${(d.summary || '').slice(0, 200)}\nWork: ${(d.workExperience || []).map(e => `${e.position} at ${e.company}`).join(', ')}\nSkills: ${(d.skills || []).join(', ')}\nEducation: ${(d.education || []).map(e => e.degree).join(', ') || 'N/A'}`;
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Review this resume as a recruiter:\n${ctx}` }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: `Review this resume as a recruiter:\n${ctx}` }], cfg, billing);
       console.log(`POST /api/recruiter-intel — score:${data.recruiterScore} model:${m}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/recruiter-intel:', err.message);
       res.status(500).json({ error: 'Recruiter analysis failed. Please try again.' });
     }
@@ -1680,7 +1732,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.tool(_planKey) });
     }
 
-    const model = 'spark'; // ALL tools always use Groq Spark — permanent
+    const model = getPlanConfig(_planKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _planKey };
     if (!jobDescription || jobDescription.trim().length < 50)
       return res.status(400).json({ error: 'jobDescription is required (min 50 chars).' });
 
@@ -1729,10 +1782,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       const { data } = await callKieAIJson(m, system, [{
         role: 'user',
         content: `Job Description:\n${jdSlice}\n\n---\n${candidateCtx}`,
-      }], cfg);
+      }], cfg, billing);
       console.log(`POST /api/job-match — score:${data.matchScore} model:${m} uid:${req.user.uid}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_planKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/job-match:', err.message);
       res.status(500).json({ error: 'Job match analysis failed. Please try again.' });
     }
@@ -1752,7 +1808,6 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
       noticePeriod = '2 weeks',
       reason       = '',
       tone         = 'professional',
-      model        = 'spark',
     } = req.body;
 
     if (!currentRole || !currentRole.trim())
@@ -1789,7 +1844,8 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
 - Never hedge with "it depends" or "could vary" unless you also state the single most likely case given what's in front of you.`;
 
     const cfg = { max_tokens: 800, temperature: 0.65, jsonMode: true };
-    const m   = KIE_MODELS[model] ? model : 'spark';
+    const m   = getPlanConfig(_rlPlanKey).kieModel; // plan determines the model for every tool except KIE chat itself — never trust a client-supplied model
+    const billing = { uid: req.user.uid, planKey: _rlPlanKey };
 
     // Build context — only pass reason if it's positive/neutral so the AI can reference it
     const positiveReasons = ['new opportunity', 'new role', 'promotion', 'career growth', 'relocation', 'further study', 'education'];
@@ -1799,10 +1855,13 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     const userPrompt = `Write a resignation letter.\nRole: ${currentRole}\nCompany: ${company}\nNotice period: ${noticePeriod}${reasonCtx}`;
 
     try {
-      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: userPrompt }], cfg);
+      const { data } = await callKieAIJson(m, system, [{ role: 'user', content: userPrompt }], cfg, billing);
       console.log(`POST /api/resignation-letter — role:"${currentRole}" company:"${company}" model:${m} uid:${req.user.uid}`);
       res.json({ ...data, model: m });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_rlPlanKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/resignation-letter:', err.message);
       res.status(500).json({ error: 'Letter generation failed. Please try again.' });
     }
@@ -1833,7 +1892,9 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
     if (!instruction)
       return res.status(400).json({ error: 'Unknown action.' });
 
-    const m = 'spark'; // ALL tools always use Groq Spark — permanent
+    const _qePlanKey = await getUserPlanKey(req.user.uid);
+    const m = getPlanConfig(_qePlanKey).kieModel; // plan determines the model for every tool except KIE chat itself
+    const billing = { uid: req.user.uid, planKey: _qePlanKey };
     const system = `You revise an already-written document on request. Return only pure JSON, no markdown: {"text":""}
 
 Rules:
@@ -1846,10 +1907,13 @@ Rules:
     try {
       const { data } = await callKieAIJson(m, system, [
         { role: 'user', content: `Document type: ${label || 'document'}\n\nCurrent content:\n${content}` },
-      ], cfg);
+      ], cfg, billing);
       if (!data.text) throw new Error('Model returned no text.');
       res.json({ text: data.text });
     } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_qePlanKey), upsellType: err.status?.upsellType });
+      }
       console.error('POST /api/quick-edit:', err.message);
       res.status(500).json({ error: 'Edit failed. Please try again.' });
     }

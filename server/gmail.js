@@ -16,6 +16,7 @@ module.exports = function registerGmailRoutes(app) {
     getTrendComparison, detectGhostingPattern, buildKieBrainBlock,
     getGmailCareerBrainRaw, getGmailCareerBrain, getValidTokens, syncGmailForUser,
     RESUMES, normaliseStr, isSameApplication, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
+    getCreditStatus, deductCredits, tokensToCredits,
     bustGmailActionsCache,
   } = require('./lib');
 
@@ -145,6 +146,13 @@ module.exports = function registerGmailRoutes(app) {
       if (!company) return res.status(400).json({ error:'company required' });
       const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
       if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+
+      const planKey = await getUserPlanKey(req.user.uid);
+      const status  = await getCreditStatus(req.user.uid, planKey);
+      if (!status.allowed) {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: status.upsellType });
+      }
+
       const repeatNote = isRepeat
         ? ' This is a SECOND follow-up — they already sent one follow-up that went unanswered. Acknowledge that lightly without sounding annoyed, and keep it even shorter than a first follow-up would be.'
         : '';
@@ -155,6 +163,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d = await r.json();
+      if (d.usage) deductCredits(req.user.uid, planKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens)).catch(() => {});
       const draft = _gpipeSafeParseJson(d.choices?.[0]?.message?.content);
       if (!draft || !draft.body) { console.error('[gmail] draft-followup: no usable AI response —', JSON.stringify(d).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
       let to = null;
@@ -304,6 +313,12 @@ module.exports = function registerGmailRoutes(app) {
       const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
       if (!groqKey) return res.status(503).json({ error:'AI not configured' });
 
+      const _ipPlanKey = await getUserPlanKey(req.user.uid);
+      const _ipStatus  = await getCreditStatus(req.user.uid, _ipPlanKey);
+      if (!_ipStatus.allowed) {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_ipPlanKey), upsellType: _ipStatus.upsellType });
+      }
+
       let resumeContext = '';
       try {
         const snap = await db.collection(RESUMES).where('userId','==',req.user.uid).get();
@@ -327,6 +342,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d = await r.json();
+      if (d.usage) deductCredits(req.user.uid, _ipPlanKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens)).catch(() => {});
       const prep = _gpipeSafeParseJson(d.choices?.[0]?.message?.content);
       if (!prep || !prep.questions) { console.error('[gmail] interview-prep: no usable AI response —', JSON.stringify(d).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
       res.json({ success:true, prep });
@@ -375,6 +391,13 @@ module.exports = function registerGmailRoutes(app) {
       if (!body) return res.status(404).json({ error:"couldn't read that email's content" });
       const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
       if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+
+      const _drPlanKey = await getUserPlanKey(req.user.uid);
+      const _drStatus  = await getCreditStatus(req.user.uid, _drPlanKey);
+      if (!_drStatus.allowed) {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_drPlanKey), upsellType: _drStatus.upsellType });
+      }
+
       const rr = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
         body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:300, temperature:0.6,
@@ -382,6 +405,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const dd    = await rr.json();
+      if (dd.usage) deductCredits(req.user.uid, _drPlanKey, tokensToCredits('spark', dd.usage.prompt_tokens, dd.usage.completion_tokens)).catch(() => {});
       const draft = _gpipeSafeParseJson(dd.choices?.[0]?.message?.content);
       if (!draft || !draft.body) { console.error('[gmail] draft-reply: no usable AI response —', JSON.stringify(dd).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
       const fromHdr = lastMsg?.payload?.headers?.find(h=>h.name.toLowerCase()==='from')?.value || '';
@@ -415,6 +439,13 @@ module.exports = function registerGmailRoutes(app) {
 
       const groqKey = (process.env.GROQ_API_KEY||'').split(',')[0].trim();
       if (!groqKey) return res.status(503).json({ error:'AI not configured' });
+
+      const _rgPlanKey = await getUserPlanKey(req.user.uid);
+      const _rgStatus  = await getCreditStatus(req.user.uid, _rgPlanKey);
+      if (!_rgStatus.allowed) {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(_rgPlanKey), upsellType: _rgStatus.upsellType });
+      }
+
       const skills = (chosen.resumeData?.skills||[]).join(', ') || 'none listed';
       const emailContext = advanced.map(a => `${a.company}: ${(a.timeline||[]).map(t=>t.subject).join(' | ')}`).join('\n');
 
@@ -430,6 +461,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d2 = await r2.json();
+      if (d2.usage) deductCredits(req.user.uid, _rgPlanKey, tokensToCredits('spark', d2.usage.prompt_tokens, d2.usage.completion_tokens)).catch(() => {});
       const result = _gpipeSafeParseJson(d2.choices?.[0]?.message?.content);
       if (!result) { console.error('[gmail] resume-gap: no usable AI response —', JSON.stringify(d2).slice(0,400)); return res.json({ success:true, gap:null, reason:'ai_response_invalid' }); }
       res.json({ success:true, gap: result.found ? { skill:result.skill, companies:result.companies||[] } : null, resumeUsed: chosen.resumeName||'Untitled' });
