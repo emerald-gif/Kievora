@@ -10072,11 +10072,52 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const pw = g('pasteAreaWrap');   if (pw) { pw.classList.remove('show'); }
       const pt = g('pasteText');       if (pt) pt.value = '';
       const ab = g('analyzeBtn');
-      if (ab) { ab.disabled = true; ab.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Analyze My Resume`; }
+      if (ab) { ab.disabled = true; ab.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Check My Score`; }
       document.querySelectorAll('#uploadFlowDots .kie-flow-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
+      _atsShowPicker();
       showView('upload');
     }
     window.openUploadView = openUploadView;
+
+    // ATS Checker picker state — same visual/behavioral pattern as Optimize's
+    // Screen 1, just with a single always-selected "Upload New Resume" option
+    // (ATS Checker has no "pick an existing resume" path).
+    function _atsShowPicker() {
+      const p = g('uploadStatePicker');    if (p)  p.style.display = 'block';
+      const dz = g('uploadStateDropzone'); if (dz) dz.style.display = 'none';
+      const card = g('atsUploadCard');     if (card) card.classList.add('selected');
+      const btn = g('atsContinueBtn');     if (btn) btn.disabled = false;
+    }
+    window._atsShowPicker = _atsShowPicker;
+
+    function _atsShowDropzone() {
+      const p = g('uploadStatePicker');    if (p)  p.style.display = 'none';
+      const dz = g('uploadStateDropzone'); if (dz) dz.style.display = 'block';
+    }
+    window._atsShowDropzone = _atsShowDropzone;
+
+    // Tapping the card opens the native file picker immediately — same
+    // shortcut as Optimize's "Upload New Resume" tile. Picking a file jumps
+    // straight into analysis; canceling just leaves the user on this screen.
+    window._atsSelectUploadOption = function() {
+      const fi = g('uploadFileInput');
+      if (!fi) return;
+      fi.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        handleUploadFile(file);
+        _atsShowDropzone(); // land on the file-ready confirmation screen —
+                             // user taps "Check My Score" to actually run it.
+      };
+      fi.value = '';
+      fi.click();
+    };
+
+    // Continue button — fallback path to the classic dropzone/paste screen,
+    // for anyone who wants to browse manually instead of the native picker.
+    window._atsContinueFromPicker = function() {
+      _atsShowDropzone();
+    };
 
     async function handleUploadFile(file) {
       if (!file) return;
@@ -10190,9 +10231,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         showView('analysis');
       } catch (err) {
         if (scan) scan.finish();
+        _atsShowDropzone();
         if (!['too short','no input'].includes(err.message)) toast(err.message || 'Analysis failed — try again', 'err');
         btn.disabled = false;
-        btn.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Analyze My Resume`;
+        btn.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Check My Score`;
       }
     }
     window.runAnalysis = runAnalysis;
@@ -10637,6 +10679,20 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       document.querySelectorAll('#optResumePickerList .opt-picker-card').forEach(c => c.classList.remove('selected'));
       g('optUploadCard').classList.add('selected');
       const btn = g('optContinueBtn'); if (btn) btn.disabled = false;
+      // Skip the intermediate "Upload Your Resume" dropzone screen entirely —
+      // tapping this tile opens the native file picker immediately. Selecting
+      // a file jumps straight into the scan; canceling just leaves the user
+      // on this picker screen, untouched.
+      const fi = g('optFileInput');
+      if (!fi) return;
+      fi.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        _optHandleUploadFile(file);
+        _optRunUploadScan();
+      };
+      fi.value = '';
+      fi.click();
     };
     window._optContinueFromPicker = function() {
       if (!_optPickedId) return;
