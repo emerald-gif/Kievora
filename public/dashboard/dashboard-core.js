@@ -333,8 +333,8 @@
       }])),
       upload:      { label: 'ATS Checker',      locked: () => !isFeatureUnlocked('atsChecker'),
         open: () => showView('upload'), lock: () => lockTapped('atsChecker') },
-      resumeoptimize: { label: 'Optimize My Resume', locked: () => !isFeatureUnlocked('resumeOptimize'),
-        open: () => showView('upload'), lock: () => lockTapped('resumeOptimize') },
+      resumeoptimize: { label: 'Optimize My Resume', locked: () => false,
+        open: () => openOptimizeEntry() },
       coverletter: { label: 'Cover Letter',       locked: () => !isFeatureUnlocked('coverLetterFromResume'),
         open: () => { if (typeof window.openKieTool === 'function') window.openKieTool('coverletter'); }, lock: () => lockTapped('coverLetter') },
       builder:     { label: 'Resume Builder',    locked: () => false, open: () => showView('builder') },
@@ -10128,6 +10128,24 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       throw new Error('Unsupported format');
     }
 
+    function _atsStartScan() {
+      const steps = ['Checking ATS compatibility', 'Scanning keywords', 'Reviewing bullet points', 'Evaluating formatting'];
+      g('atsCheckList').innerHTML = steps.map(s =>
+        `<div class="opt-check-item"><span class="opt-check-dot"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>${esc(s)}</div>`
+      ).join('');
+      g('atsScanOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      const stepEls = Array.from(document.querySelectorAll('#atsCheckList .opt-check-item'));
+      let i = 0;
+      const interval = setInterval(() => { if (i < stepEls.length) { stepEls[i].classList.add('done'); i++; } }, 550);
+      return { finish: () => {
+        clearInterval(interval);
+        stepEls.forEach(el => el.classList.add('done'));
+        g('atsScanOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+      } };
+    }
+
     async function runAnalysis() {
       if (!isFeatureUnlocked('atsChecker')) {
         openPremiumDrawer('atsChecker');
@@ -10136,6 +10154,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const btn = g('analyzeBtn');
       btn.disabled = true;
       btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:sping .7s linear infinite;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Analyzing with KIE AI…`;
+      let scan = null;
       try {
         let text = '';
         const pw = g('pasteAreaWrap');
@@ -10150,11 +10169,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           toast('Upload a file or paste your resume text', 'err'); throw new Error('no input');
         }
         uploadedText = text;
+        scan = _atsStartScan(); // same AI-moment visual grammar as Optimize My Resume
         const result = await api('POST', '/api/analyze-resume', { resumeText: text, forceResume: true });
         analysisResult = result;
         window.renderAnalysis(result);  // calls patched version so cache write fires
+        scan.finish();
         showView('analysis');
       } catch (err) {
+        if (scan) scan.finish();
         if (!['too short','no input'].includes(err.message)) toast(err.message || 'Analysis failed — try again', 'err');
         btn.disabled = false;
         btn.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Analyze My Resume`;
@@ -10165,20 +10187,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function renderAnalysis(r) {
       const score  = Math.min(100, Math.max(0, r.atsScore || 0));
       const grade  = r.grade || 'C';
-      const R = 38, circum = 2 * Math.PI * R;
+      const circum = 2 * Math.PI * 52;
       const offset = circum - (score / 100) * circum;
-      const col = score >= 80 ? '#34d399' : score >= 60 ? '#fbbf24' : '#f87171';
+      const col = typeof atsColor === 'function' ? atsColor(score) : (score >= 80 ? '#16a34a' : score >= 60 ? '#f59e0b' : '#dc2626');
 
-      // Ring SVG
-      g('analysisScoreRing').innerHTML = `
-        <svg width="92" height="92" viewBox="0 0 92 92" style="transform:rotate(-90deg);display:block">
-          <circle cx="46" cy="46" r="${R}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="8"/>
-          <circle cx="46" cy="46" r="${R}" fill="none" stroke="${col}" stroke-width="8"
-            stroke-dasharray="${circum.toFixed(2)}" stroke-dashoffset="${circum.toFixed(2)}"
-            stroke-linecap="round" id="scoreRingPath"
-            style="transition:stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)"/>
-        </svg>`;
+      // Radial gauge — same math/markup pattern as Optimize's Screen 3 gauge
+      const fillEl = g('analysisGaugeFill');
+      fillEl.setAttribute('stroke', col);
+      fillEl.setAttribute('stroke-dasharray', circum);
+      fillEl.setAttribute('stroke-dashoffset', circum); // starts empty, animates in below
       g('analysisScoreNum').textContent  = score;
+      g('analysisScoreNum').style.color  = col;
       g('analysisGrade').textContent     = grade;
       const labels = {'A+':'Outstanding','A':'Excellent','B+':'Very Good','B':'Good','C+':'Fair','C':'Average','D':'Needs Work'};
       g('analysisGradeLbl').textContent  = labels[grade] || 'Your Score';
@@ -10232,10 +10251,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         `<span class="ext-skill">${esc(s)}</span>`
       ).join('') || `<span style="color:var(--mute);font-size:12px">None found</span>`;
 
-      // Animate ring
+      // Animate gauge fill in
       setTimeout(() => {
-        const path = document.getElementById('scoreRingPath');
-        if (path) path.style.strokeDashoffset = offset.toFixed(2);
+        const fill = document.getElementById('analysisGaugeFill');
+        if (fill) { fill.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)'; fill.style.strokeDashoffset = offset.toFixed(2); }
       }, 120);
     }
     window.renderAnalysis      = renderAnalysis;
@@ -10367,7 +10386,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (score >= 50) return "Needs work — let's fix the gaps.";
       return "Struggling to pass ATS filters right now.";
     }
-    function _optAllStates() { return ['optStateSelect','optStateDiag','optStateAnim','optStateResults']; }
+    function _optAllStates() { return ['optStateSelect','optStateUpload','optStateDiag','optStateAnim','optStateResults']; }
     function _optShow(id) { _optAllStates().forEach(s => g(s).classList.remove('show')); g(id).classList.add('show'); }
     function _optOpenPanel() { g('optimizePanel').classList.add('open'); document.body.style.overflow = 'hidden'; }
     function _optSetStep(n) {
@@ -10501,6 +10520,96 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
     }
 
+    // Screen 1b — Upload New Resume, entirely self-contained inside the
+    // Optimize panel (its own file state, own dropzone) — never hands off
+    // to ATS Checker's view/vars.
+    let _optUploadFile = null;
+    let _optUploadText = '';
+
+    function _optOpenUploadState() {
+      _optUploadFile = null; _optUploadText = '';
+      const fr = g('optUploadFileReady'); if (fr) fr.style.display = 'none';
+      const dz = g('optDropzone');        if (dz) dz.style.display = 'block';
+      const fi = g('optFileInput');       if (fi) fi.value = '';
+      const pw = g('optPasteWrap');       if (pw) pw.style.display = 'none';
+      const pt = g('optPasteText');       if (pt) pt.value = '';
+      const btn = g('optUploadContinueBtn'); if (btn) btn.disabled = true;
+      _optShow('optStateUpload');
+    }
+
+    function _optHandleUploadFile(file) {
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { toast('File too large — max 5 MB', 'err'); return; }
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['pdf','doc','docx','txt'].includes(ext)) { toast('Please use a PDF, DOCX, or TXT file', 'err'); return; }
+      _optUploadFile = file;
+      g('optUploadFileName').textContent = file.name;
+      g('optUploadFileSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
+      g('optUploadFileReady').style.display = 'flex';
+      g('optDropzone').style.display = 'none';
+      g('optUploadContinueBtn').disabled = false;
+    }
+    window._optHandleUploadFile = _optHandleUploadFile;
+
+    window._optClearUploadFile = function() {
+      _optUploadFile = null;
+      g('optUploadFileReady').style.display = 'none';
+      g('optDropzone').style.display = 'block';
+      g('optFileInput').value = '';
+      const pw = g('optPasteWrap');
+      g('optUploadContinueBtn').disabled = !(pw && pw.style.display !== 'none' && g('optPasteText').value.trim().length > 30);
+    };
+
+    window._optTogglePaste = function() {
+      const pw = g('optPasteWrap');
+      if (!pw) return;
+      const show = pw.style.display === 'none';
+      pw.style.display = show ? 'block' : 'none';
+      if (show) { g('optUploadContinueBtn').disabled = false; setTimeout(() => g('optPasteText').focus(), 50); }
+      else { g('optUploadContinueBtn').disabled = !_optUploadFile; }
+    };
+
+    window._optRunUploadScan = async function() {
+      let text = '';
+      const pw = g('optPasteWrap');
+      if (pw && pw.style.display !== 'none') {
+        text = g('optPasteText').value.trim();
+        if (text.length < 30) { toast('Please paste some resume text first', 'err'); return; }
+      } else if (_optUploadFile) {
+        toast('Reading your file…');
+        try { text = await extractTextFromFile(_optUploadFile); } catch (e) { toast(e.message || 'Could not read file', 'err'); return; }
+        if (text.length < 30) { toast('Could not extract text — try pasting instead', 'err'); return; }
+      } else {
+        toast('Upload a file or paste your resume text', 'err'); return;
+      }
+      _optUploadText = text;
+      _optSetStep(2);
+      const anim = _optStartChecklist({
+        title: 'Analyzing your resume…',
+        sub: 'Hang tight! Our AI is reviewing every detail.',
+        timing: 'This usually takes 2–4 seconds',
+        stepMs: 550,
+        steps: ['Checking ATS compatibility', 'Scanning keywords', 'Reviewing bullet points', 'Evaluating formatting'],
+      });
+      try {
+        const result = await api('POST', '/api/analyze-resume', { resumeText: text, forceResume: true });
+        anim.finish();
+        if (result.isResume === false) {
+          toast("Couldn't read this resume clearly — try again.", 'err');
+          _optSetStep(1);
+          _optShow('optStateUpload');
+          return;
+        }
+        analysisResult = result; // fresh upload — no _sourceResumeId, so Fix My Resume saves it as a brand-new resume
+        setTimeout(() => { _optSetStep(3); _optPopulateDiag(analysisResult); _optShow('optStateDiag'); }, 400);
+      } catch (err) {
+        anim.finish();
+        toast(err.message || 'Scan failed — try again', 'err');
+        _optSetStep(1);
+        _optShow('optStateUpload');
+      }
+    };
+
     // Screen 1 — select-then-continue, matching the reference flow exactly
     // (tapping a card just selects it; Continue is the explicit action).
     window._optSelectResumeCard = function(id) {
@@ -10518,19 +10627,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     };
     window._optContinueFromPicker = function() {
       if (!_optPickedId) return;
-      if (_optPickedId === 'upload') { closeOptimizePanel(); showView('upload'); return; }
+      if (_optPickedId === 'upload') { _optOpenUploadState(); return; }
       diagnoseExistingResume(_optPickedId);
     };
 
-    // Entry A — dashboard hero button. Skips the picker automatically when
-    // there's nothing to choose (per the brief: 0 resumes → straight to
-    // upload, 1 resume → straight to its diagnosis).
+    // Entry A — dashboard hero button. Always shows the picker so the user
+    // stays in control of which resume gets optimized — no auto-selecting
+    // even when there's only one resume on file.
     window.openOptimizeEntry = function() {
       const merged = getMergedResumes().filter(r => !r._isDraft);
-      if (!merged.length) { showView('upload'); return; }
       _optPickedId = null;
       _optOpenPanel();
-      if (merged.length === 1) { _optSetStep(2); diagnoseExistingResume(merged[0].id); return; }
       _optSetStep(1);
       g('optResumePickerList').innerHTML = merged.map(r => `
         <div class="opt-picker-card" data-id="${r.id}" onclick="_optSelectResumeCard('${r.id}')">
@@ -10875,8 +10982,29 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         updateDots();
       })();
 
+      // Dashboard 4-card swiper — dots sync with scroll position, tap a dot to jump
+      (function() {
+        const track = g('dsTrack');
+        const dots  = document.querySelectorAll('#dsDots .ds-dot');
+        if (!track || !dots.length) return;
+        dots.forEach(d => d.addEventListener('click', () => {
+          const slide = track.children[Number(d.dataset.i)];
+          if (slide) track.scrollTo({ left: slide.offsetLeft - track.offsetLeft, behavior: 'smooth' });
+        }));
+        let ticking = false;
+        track.addEventListener('scroll', () => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            const slideW = track.children[0] ? track.children[0].offsetWidth + 14 : 1;
+            const idx = Math.max(0, Math.min(dots.length - 1, Math.round(track.scrollLeft / slideW)));
+            dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+            ticking = false;
+          });
+        });
+      })();
+
       // Home
-      g('newResumeBtn').onclick = () => showView('tpick');
       // "+ New Resume" link beside My Resumes now opens the all-resumes screen
       const shLink = document.getElementById('shAllLink'); if (shLink) shLink.onclick = () => showView('allresumes');
       const allBack = document.getElementById('allBack'); if (allBack) allBack.onclick = () => showView('home');
@@ -10979,6 +11107,19 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // Paste textarea: enable analyze btn as user types
       g('pasteText').addEventListener('input', () => {
         g('analyzeBtn').disabled = g('pasteText').value.trim().length < 30;
+      });
+
+      // Optimize panel's own dropzone — independent of ATS Checker's
+      g('optFileInput').onchange = e => { if (e.target.files[0]) _optHandleUploadFile(e.target.files[0]); };
+      const optDropzone = g('optDropzone');
+      optDropzone.addEventListener('dragover',  e => { e.preventDefault(); optDropzone.classList.add('drag-over'); });
+      optDropzone.addEventListener('dragleave', ()  => optDropzone.classList.remove('drag-over'));
+      optDropzone.addEventListener('drop', e => {
+        e.preventDefault(); optDropzone.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) _optHandleUploadFile(e.dataTransfer.files[0]);
+      });
+      g('optPasteText').addEventListener('input', () => {
+        g('optUploadContinueBtn').disabled = g('optPasteText').value.trim().length < 30;
       });
 
       // ── COVER LETTER LOGIC ───────────────────────────────────────────────────

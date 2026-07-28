@@ -305,85 +305,135 @@
 <!-- ══ HOME ══ -->
 <div id="v-home" class="view active">
   <div class="home">
-    <div class="hero">
-      <div class="hero-inner">
+    <div class="dash-swiper-outer">
+      <div class="ds-track" id="dsTrack">
 
-        <!-- LEFT: text + buttons -->
-        <div class="hero-left">
-          <div class="hero-title">Fix your resume<br>before you apply</div>
-          <div class="hero-sub">KIE AI scans your resume, shows you what's<br>wrong, then fixes it for you.</div>
-          <div class="hero-btns">
-            <button id="optimizeHeroBtn" class="hbtn hbtn-pri" onclick="openOptimizeEntry()">
-              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>
-              Optimize My Resume
-            </button>
-            <button id="newResumeBtn" class="hbtn hbtn-sec">
-              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-              Create Resume
+        <!-- Slide 1: Optimize My Resume -->
+        <div class="ds-slide">
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#7c3aed">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>
+            </div>
+            <div class="ds-peek-title">Resume Optimizing</div>
+          </div>
+          <div class="ds-card" style="background:linear-gradient(160deg,#f3e8ff,#ede9fe)">
+            <div class="ds-doc-wrap">
+              <div class="ds-doc-mock">
+                <div class="ds-doc-line ds-doc-line-h"></div>
+                <div class="ds-doc-line" style="width:70%"></div>
+                <div class="ds-doc-line" style="width:90%"></div>
+                <div class="ds-doc-line" style="width:60%"></div>
+                <div class="ds-doc-line" style="width:80%"></div>
+              </div>
+              <div class="ds-doc-badge" style="background:#7c3aed">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+              </div>
+            </div>
+            <div class="ds-card-heading">Get a higher ATS score</div>
+            <div class="ds-card-sub">KIE AI scans your resume, shows you what's wrong, then fixes it for you.</div>
+            <button class="ds-card-cta" onclick="openOptimizeEntry()">
+              Optimize my resume
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </button>
           </div>
         </div>
 
-        <!-- RIGHT: clipboard illustration (exact Image 1 replica) -->
-        <div class="hero-illo">
-          <svg viewBox="0 0 148 210" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible">
-            <defs>
-              <filter id="clipShadow" x="-20%" y="-10%" width="160%" height="140%">
-                <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="rgba(0,0,0,0.22)"/>
-              </filter>
-              <filter id="penShadow">
-                <feDropShadow dx="1" dy="4" stdDeviation="4" flood-color="rgba(0,0,0,0.18)"/>
-              </filter>
-              <linearGradient id="boardGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
-                <stop offset="100%" stop-color="rgba(180,140,255,0.14)"/>
-              </linearGradient>
-              <linearGradient id="penGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#fde68a"/>
-                <stop offset="100%" stop-color="#f59e0b"/>
-              </linearGradient>
-              <linearGradient id="mugGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
-                <stop offset="100%" stop-color="rgba(255,255,255,0.08)"/>
-              </linearGradient>
-            </defs>
-            <path d="M136 14 l2.5 7 l7 2.5 l-7 2.5 l-2.5 7 l-2.5-7 l-7-2.5 l7-2.5z" fill="rgba(255,255,255,0.9)"/>
-            <path d="M12 38 l1.5 4.5 l4.5 1.5 l-4.5 1.5 l-1.5 4.5 l-1.5-4.5 l-4.5-1.5 l4.5-1.5z" fill="rgba(255,255,255,0.6)"/>
-            <circle cx="143" cy="68" r="3.5" fill="rgba(255,255,255,0.4)"/>
-            <path d="M130 90 l1 3 l3 1 l-3 1 l-1 3 l-1-3 l-3-1 l3-1z" fill="rgba(255,255,255,0.55)"/>
-            <rect x="8" y="22" width="94" height="124" rx="12" fill="url(#boardGrad)" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" filter="url(#clipShadow)"/>
-            <rect x="35" y="14" width="40" height="15" rx="5" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-            <rect x="49" y="18" width="12" height="7" rx="3.5" fill="rgba(255,255,255,0.15)"/>
-            <circle cx="55" cy="62" r="20" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-            <circle cx="55" cy="57" r="7.5" fill="rgba(255,255,255,0.75)"/>
-            <path d="M36 80 Q36 71 55 71 Q74 71 74 80" fill="rgba(255,255,255,0.75)"/>
-            <rect x="18" y="90" width="74" height="5" rx="2.5" fill="rgba(255,255,255,0.6)"/>
-            <rect x="18" y="102" width="58" height="3.5" rx="2" fill="rgba(255,255,255,0.3)"/>
-            <rect x="18" y="112" width="66" height="3.5" rx="2" fill="rgba(255,255,255,0.25)"/>
-            <rect x="18" y="122" width="48" height="3.5" rx="2" fill="rgba(255,255,255,0.2)"/>
-            <rect x="18" y="132" width="62" height="3.5" rx="2" fill="rgba(255,255,255,0.15)"/>
-            <g transform="translate(118,30) rotate(18)" filter="url(#penShadow)">
-              <rect x="-5.5" y="-8" width="11" height="7" rx="1.5" fill="#d1d5db"/>
-              <rect x="-5.5" y="-12" width="11" height="5" rx="2" fill="#fca5a5"/>
-              <rect x="-5.5" y="-1" width="11" height="68" rx="3" fill="url(#penGrad)"/>
-              <rect x="-1.5" y="-1" width="3" height="68" rx="1" fill="rgba(255,255,255,0.28)"/>
-              <polygon points="-5.5,67 5.5,67 0,82" fill="#92400e"/>
-              <polygon points="-4,63 4,63 0,70" fill="#b45309"/>
-              <polygon points="-1.5,70 1.5,70 0,78" fill="#1f2937"/>
-            </g>
-            <g transform="translate(2,158)">
-              <path d="M4 14 Q2 38 6 38 L38 38 Q42 38 40 14z" fill="url(#mugGrad)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-              <ellipse cx="22" cy="14" rx="18" ry="4.5" fill="rgba(255,255,255,0.18)"/>
-              <ellipse cx="22" cy="14" rx="15" ry="3" fill="rgba(255,255,255,0.1)"/>
-              <path d="M40 20 Q52 20 52 28 Q52 36 40 36" stroke="rgba(255,255,255,0.2)" stroke-width="5" fill="none" stroke-linecap="round"/>
-              <path d="M40 20 Q50 20 50 28 Q50 36 40 36" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none" stroke-linecap="round"/>
-              <path d="M14 8 Q17 2 14 -5" stroke="rgba(255,255,255,0.35)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-              <path d="M22 6 Q25 0 22 -7" stroke="rgba(255,255,255,0.35)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-              <path d="M30 8 Q33 2 30 -5" stroke="rgba(255,255,255,0.35)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-            </g>
-          </svg>
+        <!-- Slide 2: Create New Resume -->
+        <div class="ds-slide">
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>
+            </div>
+            <div class="ds-peek-title">Resume Building</div>
+          </div>
+          <div class="ds-card" style="background:linear-gradient(160deg,#eff6ff,#dbeafe)">
+            <div class="ds-doc-wrap">
+              <div class="ds-doc-mock">
+                <div class="ds-doc-line ds-doc-line-h"></div>
+                <div class="ds-doc-line" style="width:65%"></div>
+                <div class="ds-doc-line" style="width:85%"></div>
+                <div class="ds-doc-line" style="width:55%"></div>
+                <div class="ds-doc-line" style="width:75%"></div>
+              </div>
+              <div class="ds-doc-badge" style="background:#2563eb">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              </div>
+            </div>
+            <div class="ds-card-heading">Get a new resume in 20 mins</div>
+            <div class="ds-card-sub">Quickly build a resume that works. It's easy with AI.</div>
+            <button class="ds-card-cta" onclick="showView('tpick')">
+              Quick-build your resume
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
         </div>
 
+        <!-- Slide 3: ATS Checker -->
+        <div class="ds-slide">
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#16a34a">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+            </div>
+            <div class="ds-peek-title">ATS Checking</div>
+          </div>
+          <div class="ds-card" style="background:linear-gradient(160deg,#f0fdf4,#dcfce7)">
+            <div class="ds-doc-wrap">
+              <div class="ds-doc-mock">
+                <div class="ds-doc-line ds-doc-line-h"></div>
+                <div class="ds-doc-line" style="width:70%"></div>
+                <div class="ds-doc-line" style="width:90%"></div>
+                <div class="ds-doc-line" style="width:60%"></div>
+                <div class="ds-doc-line" style="width:80%"></div>
+              </div>
+              <div class="ds-doc-badge" style="background:#16a34a">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+              </div>
+            </div>
+            <div class="ds-card-heading">Beat the ATS filters</div>
+            <div class="ds-card-sub">Get your ATS score, strengths, and weaknesses in seconds.</div>
+            <button class="ds-card-cta" onclick="openUploadView()">
+              Check my resume
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Slide 4: Cover Letter Generator -->
+        <div class="ds-slide">
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#db2777">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div class="ds-peek-title">Cover Letter Crafting</div>
+          </div>
+          <div class="ds-card" style="background:linear-gradient(160deg,#fdf2f8,#fce7f3)">
+            <div class="ds-doc-wrap">
+              <div class="ds-doc-mock">
+                <div class="ds-doc-line ds-doc-line-h"></div>
+                <div class="ds-doc-line" style="width:40%"></div>
+                <div class="ds-doc-line" style="width:90%"></div>
+                <div class="ds-doc-line" style="width:85%"></div>
+                <div class="ds-doc-line" style="width:75%"></div>
+              </div>
+              <div class="ds-doc-badge" style="background:#db2777">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+            </div>
+            <div class="ds-card-heading">Craft a cover letter</div>
+            <div class="ds-card-sub">Use AI to generate a strong cover letter in minutes.</div>
+            <button class="ds-card-cta" onclick="openKieTool('coverletter')">
+              Craft a cover letter
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <div class="ds-dots" id="dsDots">
+        <span class="ds-dot active" data-i="0"></span>
+        <span class="ds-dot" data-i="1"></span>
+        <span class="ds-dot" data-i="2"></span>
+        <span class="ds-dot" data-i="3"></span>
       </div>
     </div>
 
@@ -2292,20 +2342,23 @@
       </div>
     </div>
 
-    <!-- Score hero banner -->
-    <div class="score-hero">
-      <div class="score-ring-wrap">
-        <div id="analysisScoreRing"></div>
-        <div class="score-ring-overlay">
-          <div class="sn" id="analysisScoreNum">0</div>
-          <div class="sl">/ 100</div>
+    <!-- Score panel — same radial-gauge visual grammar as Optimize My
+         Resume's diagnosis screen (consistent AI-scoring language across
+         the app), with ATS Checker's own extra content around it. -->
+    <div class="ats-score-panel">
+      <div class="score-ring-wrap-tool">
+        <svg class="score-ring-svg" width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/>
+          <circle id="analysisGaugeFill" cx="60" cy="60" r="52" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"/>
+        </svg>
+        <div class="score-ring-overlay-tool">
+          <div class="score-ring-val" id="analysisScoreNum" style="color:#f59e0b">—</div>
+          <div style="font-size:10.5px;color:var(--sub);font-weight:800;letter-spacing:.3px">/ 100</div>
         </div>
       </div>
-      <div class="score-info">
-        <div class="score-grade" id="analysisGrade">—</div>
-        <div class="score-grade-lbl" id="analysisGradeLbl">Score</div>
-        <div class="score-pills" id="analysisPills"></div>
-      </div>
+      <div class="ats-score-grade" id="analysisGrade">—</div>
+      <div class="ats-score-gradelbl" id="analysisGradeLbl">Score</div>
+      <div class="score-pills" id="analysisPills"></div>
     </div>
 
     <!-- Strengths + Weaknesses side by side -->
@@ -2369,16 +2422,30 @@
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         Recruiter View
       </button>
-      <button class="aa-btn aa-btn-sec" onclick="useAnalyzedResume()">
-        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-        Edit in Kievora
-      </button>
       <button class="aa-btn aa-btn-sec" onclick="chatAboutResume()">
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Ask KIE to Help
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ ATS CHECKER SCAN OVERLAY — reuses the same "AI moment" visual grammar
+     (orb, pulsing ring, checklist) as Optimize My Resume for consistency,
+     but is its own independent overlay with its own copy. ══ -->
+<div id="atsScanOverlay" class="opt-panel" style="z-index:270">
+  <div class="opt-panel-body" style="padding-top:64px">
+    <div class="opt-anim-wrap">
+      <div class="opt-anim-orb-lg">
+        <div class="opt-anim-orb-ring"></div>
+        <svg width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+      </div>
+      <div class="opt-anim-title">Analyzing your resume…</div>
+      <div class="opt-anim-sub">KIE AI is scanning every detail against real ATS filters.</div>
+      <div class="opt-check-list" id="atsCheckList"></div>
+      <div class="opt-anim-timing">This usually takes 10–20 seconds</div>
+    </div>
   </div>
 </div>
 
@@ -2430,6 +2497,50 @@
       </div>
       <button class="opt-continue-btn" id="optContinueBtn" onclick="_optContinueFromPicker()" disabled>
         Continue
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <!-- Screen 1b: Upload New Resume — self-contained, Optimize never hands
+         off to ATS Checker's own screen for this. -->
+    <div id="optStateUpload" class="opt-state">
+      <div class="opt-step-badge">1</div>
+      <div class="opt-diag-title">Upload Your Resume</div>
+      <div class="opt-diag-sub">We'll scan it and show you what to fix.</div>
+
+      <div id="optUploadFileReady" class="opt-file-ready" style="display:none">
+        <div class="opt-file-ico">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div style="min-width:0;flex:1">
+          <div class="opt-file-name" id="optUploadFileName">file.pdf</div>
+          <div class="opt-file-size" id="optUploadFileSize">—</div>
+        </div>
+        <button class="opt-file-rm" onclick="_optClearUploadFile()" title="Remove">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="opt-dropzone" id="optDropzone">
+        <input type="file" id="optFileInput" accept=".pdf,.doc,.docx,.txt"/>
+        <div class="opt-dropzone-ico">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        </div>
+        <div class="opt-dropzone-title">Drop your resume here</div>
+        <div class="opt-dropzone-sub">or tap to browse — PDF, DOCX, TXT</div>
+      </div>
+
+      <div class="opt-or">or</div>
+      <button class="opt-paste-toggle" onclick="_optTogglePaste()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Paste resume text instead
+      </button>
+      <div class="opt-paste-wrap" id="optPasteWrap" style="display:none">
+        <textarea id="optPasteText" placeholder="Paste your full resume — name, work history, education, skills…"></textarea>
+      </div>
+
+      <button class="opt-continue-btn" id="optUploadContinueBtn" onclick="_optRunUploadScan()" disabled style="margin-top:18px">
+        Analyze &amp; Continue
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
     </div>
