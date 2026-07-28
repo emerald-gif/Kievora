@@ -98,6 +98,40 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-upgrade:disabled{opacity:.5;cursor:default}
 .btn-upgrade:not(:disabled):active{transform:scale(.98)}
 
+/* ═══ Upgrade hero — shown above the plan cards for anyone not already on
+   Premier. Same structural idea as a platform "unlock everything" paywall
+   screen, built entirely from Kievora's own purple identity, not borrowed
+   colors/type. ═══ */
+.upsell-hero{padding:36px 24px 30px;text-align:center;position:relative;overflow:hidden}
+.upsell-hero::before{content:'';position:absolute;inset:-60% -20% auto -20%;height:340px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.16),transparent 65%);pointer-events:none}
+.upsell-mark{width:68px;height:68px;border-radius:20px;margin:0 auto 20px;position:relative;
+  background:var(--card);box-shadow:0 14px 32px -10px rgba(124,58,237,.45),0 0 0 1px var(--border2);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.upsell-mark::before{content:'';position:absolute;inset:-40% -40% auto -40%;height:140%;
+  background:var(--g);opacity:.14;pointer-events:none}
+.upsell-mark img{width:44px;height:44px;object-fit:contain;border-radius:12px;position:relative}
+.upsell-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--p);margin-bottom:10px}
+.upsell-title{font-size:27px;font-weight:900;letter-spacing:-.8px;line-height:1.12;color:var(--txt);max-width:300px;margin:0 auto}
+.upsell-title em{font-style:normal;background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent}
+.upsell-sub{font-size:13.5px;color:var(--sub);line-height:1.55;max-width:280px;margin:12px auto 0}
+.upsell-tools{display:flex;justify-content:center;gap:9px;margin-top:24px;flex-wrap:wrap;padding:0 8px}
+.upsell-tool-ico{width:38px;height:38px;border-radius:11px;background:var(--card);
+  border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(15,10,30,.05)}
+.upsell-tool-ico svg{width:18px;height:18px}
+
+/* Kievora-flavored signature element: a horizontal credit meter comparing
+   the three tiers at a glance, doing the job Copilot's price line did but
+   encoding the thing that actually differs between Kievora's plans. */
+.upsell-meter{margin:26px auto 0;max-width:300px;background:var(--card);border:1.5px solid var(--border2);
+  border-radius:16px;padding:14px 16px;box-shadow:0 4px 20px rgba(15,10,30,.05)}
+.upsell-meter-row{display:flex;align-items:center;gap:10px;padding:6px 0}
+.upsell-meter-label{font-size:11.5px;font-weight:700;color:var(--sub);width:52px;text-align:left;flex-shrink:0}
+.upsell-meter-track{flex:1;height:6px;border-radius:99px;background:var(--border2);overflow:hidden}
+.upsell-meter-fill{height:100%;border-radius:99px;background:var(--g)}
+.upsell-meter-val{font-size:11.5px;font-weight:800;color:var(--txt);width:34px;text-align:right;flex-shrink:0}
+
 .note{font-size:12px;color:var(--mute);line-height:1.6;padding:0 4px;margin-top:8px}
 
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end}
@@ -182,15 +216,30 @@ body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
   </a>
 </div>
 
+<div class="upsell-hero" id="upsellHero" style="display:none">
+  <div class="upsell-mark"><img src="logo.jpg" alt=""></div>
+  <div class="upsell-eyebrow">Kievora AI</div>
+  <div class="upsell-title" id="upsellTitle">Unlock the best of <em>KIE</em></div>
+  <div class="upsell-sub" id="upsellSub">More AI credits, sharper models, and every tool unlocked — Gmail &amp; Drive built in.</div>
+  <div class="upsell-tools" aria-hidden="true">
+    <div class="upsell-tool-ico" title="Resume Builder"><svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+    <div class="upsell-tool-ico" title="Cover Letters"><svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg></div>
+    <div class="upsell-tool-ico" title="KIE Chat"><svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-8.5 8.5H4l3.4-3.4A8.4 8.4 0 1121 11.5z"/></svg></div>
+    <div class="upsell-tool-ico" title="Gmail Intelligence"><svg viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg></div>
+    <div class="upsell-tool-ico" title="Google Drive"><svg viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg></div>
+  </div>
+  <div class="upsell-meter" id="upsellMeter"></div>
+</div>
+
 <div class="section">
   <div class="plan-summary" id="planSummary">
     <div class="plan-summary-label">Your current plan</div>
     <div class="plan-summary-name" id="planName"><span class="skel" style="display:inline-block;width:110px;height:22px;vertical-align:middle"></span></div>
     <div class="plan-summary-sub" id="planSub"></div>
     <div class="usage-block">
-      <div class="usage-title">KIE Chat Usage</div>
+      <div class="usage-title">AI Credit Usage</div>
       <div class="usage-row">
-        <div class="usage-label" id="usageMainLabel">Messages used this month</div>
+        <div class="usage-label" id="usageMainLabel">Credits used this cycle</div>
         <div class="usage-val" id="usageMainVal">—</div>
       </div>
       <div class="usage-bar-track"><div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div></div>
@@ -201,7 +250,7 @@ body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
         <svg viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12l7-7 7 7"/></svg>
       </div>
       <div class="topup-banner-text">
-        <div class="topup-banner-title" id="topupBannerTitle">Top up KIE Chat</div>
+        <div class="topup-banner-title" id="topupBannerTitle">Top up AI Credits</div>
         <div class="topup-banner-sub" id="topupBannerSub"></div>
       </div>
       <div class="topup-banner-arrow">›</div>
@@ -232,11 +281,11 @@ body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="sheet-top"><button class="sheet-close" aria-label="Close" onclick="closeTopup()"><svg viewBox="0 0 24 24"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg></button></div>
     <div class="sheet-handle"></div>
-    <div class="sheet-title">Top Up KIE Chat</div>
-    <div class="sheet-sub" id="sheetSub">Add more messages to your KIE chat for this month.</div>
+    <div class="sheet-title">Top Up AI Credits</div>
+    <div class="sheet-sub" id="sheetSub">Add more AI credits to your account for this cycle.</div>
     <div class="sheet-price-box">
       <div class="sheet-price-main" id="sheetPrice">—</div>
-      <div class="sheet-price-label" id="sheetPriceLabel">for 100 messages</div>
+      <div class="sheet-price-label" id="sheetPriceLabel">for 150 credits</div>
     </div>
     <div class="sheet-warn" id="sheetWarn"></div>
     <button class="btn-topup" id="btnDoTopup" onclick="doTopup()">Pay &amp; Top Up</button>
@@ -275,7 +324,7 @@ const PLAN_COPY = {
       'ATS score on every resume you create',
       'Upload &amp; Analyze — full ATS score, strengths &amp; weaknesses',
       'Create a cover letter from scratch',
-      '50 KIE chat messages per month · KIE Spark',
+      '30 AI credits/cycle · KIE Spark',
       'Job Match Analyzer — paste any job description &amp; score your fit',
       'Resignation Letter generator',
       '50MB document storage',
@@ -289,7 +338,7 @@ const PLAN_COPY = {
       'Sharper Analyzer (KIE Core) — full breakdown of exactly what to fix and why',
       'Auto-build cover letter from an existing resume',
       '3 more AI Tools: Career Roadmap, LinkedIn AI, Pro Message',
-      'KIE Spark + Core · more messages per month',
+      'KIE Spark + Core · 315 AI credits/cycle',
       'Open &amp; apply to every job listing',
       'Good priority support',
       '5GB document storage',
@@ -301,7 +350,7 @@ const PLAN_COPY = {
       'Everything in Pro',
       'Sharpest Analyzer (KIE Nova) — deepest breakdown &amp; suggestions',
       'All 10 AI Tools incl. Salary Intel, Mock Interview, Promotion Ready, Personal Brand',
-      'KIE Spark, Core &amp; Nova · highest message allocation',
+      'KIE Spark, Core &amp; Nova · 675 AI credits/cycle',
       'Full Recruiter View report',
       'Instant priority support',
       'Unlimited document storage',
@@ -363,9 +412,45 @@ function priceFor(planKey) {
   return `$${usd}`;
 }
 
+const CREDIT_BUDGETS = { free: 30, paid7: 315, paid15: 675 };
+
+function renderUpsellHero(currentPlan) {
+  const hero = document.getElementById('upsellHero');
+  if (currentPlan === 'paid15') { hero.style.display = 'none'; return; } // top tier — nothing left to unlock
+  hero.style.display = '';
+
+  const titleEl = document.getElementById('upsellTitle');
+  const subEl   = document.getElementById('upsellSub');
+  if (currentPlan === 'paid7') {
+    titleEl.innerHTML = 'Go further with <em>Premier</em>';
+    subEl.textContent  = 'KIE Nova, Recruiter View, and more than double the AI credits.';
+  } else {
+    titleEl.innerHTML = 'Unlock the best of <em>KIE</em>';
+    subEl.textContent  = 'More AI credits, sharper models, and every tool unlocked — Gmail & Drive built in.';
+  }
+
+  // Signature element: a real, honest comparison of what actually differs
+  // between the three tiers — the AI credit budget — instead of a generic
+  // price line. Current tier's bar is filled solid; the others give a sense
+  // of how much more room the higher tiers have.
+  const max = CREDIT_BUDGETS.paid15;
+  const rows = [['free','Free'],['paid7','Pro'],['paid15','Premier']].map(([key,label]) => {
+    const val = CREDIT_BUDGETS[key];
+    const pct = Math.round((val / max) * 100);
+    const isCurrent = key === currentPlan;
+    return `<div class="upsell-meter-row" style="${isCurrent ? '' : 'opacity:.45'}">
+      <div class="upsell-meter-label">${label}${isCurrent ? ' · you' : ''}</div>
+      <div class="upsell-meter-track"><div class="upsell-meter-fill" style="width:${pct}%"></div></div>
+      <div class="upsell-meter-val">${val}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('upsellMeter').innerHTML = rows;
+}
+
 function renderSummary(d) {
   const copy = PLAN_COPY[d.plan] || PLAN_COPY.free;
   document.getElementById('planName').textContent = copy.name;
+  renderUpsellHero(d.plan);
   document.getElementById('planSub').textContent  = copy.tagline;
 
   const used   = d.usage.aiCreditsUsed;
@@ -435,8 +520,8 @@ function renderPlans(currentPlan) {
 
   const notes = {
     paid15: "You're on Kievora's top plan — every feature is unlocked.",
-    paid7:  "Upgrading to Premier adds Recruiter View, KIE Nova, 5 more AI Tools, and higher monthly KIE messages.",
-    free:   "Upgrading to Pro unlocks all templates, a sharper analyzer, 3 more AI Tools, and more KIE messages — Premier unlocks everything.",
+    paid7:  "Upgrading to Premier adds Recruiter View, KIE Nova, 5 more AI Tools, and a bigger AI credit allowance.",
+    free:   "Upgrading to Pro unlocks all templates, a sharper analyzer, 3 more AI Tools, and more AI credits — Premier unlocks everything.",
   };
   document.getElementById('planNote').textContent = notes[currentPlan] || '';
 
@@ -462,12 +547,12 @@ window.startCheckout = async function(plan) {
 
 window.openTopup = function() {
   if (!billingData?.topup) return;
-  const { priceUSD, messages, message } = billingData.topup;
+  const { priceUSD, credits, message } = billingData.topup;
   const localPrice = rateData?.topup?.[billingData.plan]?.display || `$${priceUSD}`;
   document.getElementById('sheetPrice').textContent     = localPrice;
-  document.getElementById('sheetPriceLabel').textContent = `for ${messages} extra KIE chat messages`;
-  document.getElementById('sheetSub').textContent       = message || `Top up ${messages} KIE chat messages.`;
-  document.getElementById('sheetWarn').textContent      = '⚠️ Unused topup messages expire at your next renewal — they don\'t carry over.';
+  document.getElementById('sheetPriceLabel').textContent = `for ${credits} extra AI credits`;
+  document.getElementById('sheetSub').textContent       = message || `Top up ${credits} AI credits.`;
+  document.getElementById('sheetWarn').textContent      = '⚠️ Unused topup credits expire at your next renewal — they don\'t carry over.';
   document.getElementById('topupOverlay').classList.add('open');
 };
 window.closeTopup = function() {
