@@ -1251,62 +1251,44 @@
         const delAction  = isDraft ? `deleteDraft('${r.id}')` : `confirmDel('${r.id}')`;
 
         const score = isDraft ? null : (typeof r.atsScore === 'number' ? r.atsScore : computeATSScore(d));
+        const sc = score !== null ? atsColor(score) : '#94a3b8';
 
         if (!isDraft && score !== null) {
           window._atsResumeData[r.id] = { score, d, name: r.resumeName };
         }
 
-        // Theme the card like the hero swiper above: pastel gradient tied to ATS tier
-        let theme;
-        if (isDraft) {
-          theme = { bg: 'linear-gradient(160deg,#eff6ff,#dbeafe)', badge: '#2563eb', ico: 'linear-gradient(135deg,#dbeafe,#bfdbfe)', icoColor: '#2563eb' };
-        } else if (score >= 80) {
-          theme = { bg: 'linear-gradient(160deg,#f0fdf4,#dcfce7)', badge: '#16a34a', ico: 'linear-gradient(135deg,#dcfce7,#bbf7d0)', icoColor: '#16a34a' };
-        } else if (score >= 55) {
-          theme = { bg: 'linear-gradient(160deg,#fffbeb,#fef3c7)', badge: '#d97706', ico: 'linear-gradient(135deg,#fef3c7,#fde68a)', icoColor: '#d97706' };
-        } else {
-          theme = { bg: 'linear-gradient(160deg,#fdf2f8,#fce7f3)', badge: '#db2777', ico: 'linear-gradient(135deg,#fce7f3,#fbcfe8)', icoColor: '#db2777' };
-        }
-
-        const peekPill = isDraft
-          ? `<span class="rr-peek-pill" style="background:#dbeafe;color:#2563eb">Draft</span>`
-          : `<span class="rr-peek-pill" style="background:${theme.badge}18;color:${theme.badge}"
+        const pill = isDraft
+          ? `<span class="rr-pill" style="background:#dbeafe;color:#2563eb">Draft</span>`
+          : `<span class="rr-pill" style="background:${sc}18;color:${sc}"
                onclick="event.stopPropagation();openATSDrawer('${r.id}')"
                title="ATS Score — tap for details">${score} ATS</span>`;
 
         const badgeInner = isDraft
-          ? `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`
+          ? `<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`
           : `${score}`;
 
         return `<div class="rr-slide" onclick="${openAction}">
-          <div class="rr-peek">
-            <div class="rr-peek-ico" style="background:${theme.ico};color:${theme.icoColor}">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <div class="rr-peek-title">${esc(r.resumeName)}</div>
-            ${peekPill}
-          </div>
-          <div class="rr-card" style="background:${theme.bg}">
-            <div class="rr-doc-wrap">
-              <div class="rr-doc-mock">
+          <div class="rr-card">
+            <div class="rr-thumb">
+              <div class="rr-thumb-mock">
                 <div class="rr-doc-line rr-doc-line-h"></div>
                 <div class="rr-doc-line" style="width:70%"></div>
                 <div class="rr-doc-line" style="width:90%"></div>
                 <div class="rr-doc-line" style="width:60%"></div>
-                <div class="rr-doc-line" style="width:80%"></div>
               </div>
-              <div class="rr-doc-badge" style="background:${theme.badge}">${badgeInner}</div>
+              <div class="rr-doc-badge">${badgeInner}</div>
             </div>
-            <div class="rr-card-name">${esc(r.resumeName)}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}</div>
-            <div class="rr-card-date">Updated ${fmtDate(r.updatedAt)}</div>
-            <div class="rr-card-actions">
-              <button class="rr-card-btn" onclick="event.stopPropagation();${editAction}" title="Edit">
+            <div class="rr-info">
+              <div class="rr-name">${esc(r.resumeName)}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}</div>
+              <div class="rr-date">Updated ${fmtDate(r.updatedAt)}</div>
+              ${pill}
+            </div>
+            <div class="rr-actions">
+              <button class="rr-btn rr-btn-edit" onclick="event.stopPropagation();${editAction}" title="Edit">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                Edit
               </button>
-              <button class="rr-card-btn rr-card-btn-del" onclick="event.stopPropagation();${delAction}" title="Delete">
+              <button class="rr-btn rr-btn-del" onclick="event.stopPropagation();${delAction}" title="Delete">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16"/></svg>
-                Delete
               </button>
             </div>
           </div>

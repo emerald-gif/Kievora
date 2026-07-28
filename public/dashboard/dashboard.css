@@ -275,25 +275,25 @@
     .ds-card-cta:active{transform:scale(.98)}
     .ds-dots{display:flex;justify-content:center;gap:6px;margin-top:14px}
 
-    /* ── RECENT RESUMES — hero-card style (matches ds-card family above) ── */
-    .rr-slide{flex:0 0 calc(85vw - 24px);max-width:290px;min-width:240px;scroll-snap-align:start;display:flex;flex-direction:column;cursor:pointer}
-    .rr-peek{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border2);border-bottom:none;border-radius:16px 16px 0 0;padding:12px 14px;position:relative;z-index:2}
-    .rr-peek-ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .rr-peek-title{font-size:13px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
-    .rr-peek-pill{flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:-.1px}
-    .rr-card{border-radius:0 0 18px 18px;padding:18px 16px 16px;text-align:center;border:1.5px solid var(--border2);border-top:none;box-shadow:0 3px 16px rgba(124,58,237,.07);transition:all .22s}
-    .rr-slide:hover .rr-card{box-shadow:0 8px 26px rgba(124,58,237,.13);transform:translateY(-2px)}
-    .rr-doc-wrap{position:relative;width:92px;margin:0 auto 14px}
-    .rr-doc-mock{background:#fff;border-radius:10px;padding:12px 11px;box-shadow:0 8px 20px rgba(15,14,23,.12)}
-    .rr-doc-line{height:4px;border-radius:2px;background:#e9e7f5;margin-bottom:6px}
-    .rr-doc-line-h{width:75%;height:6px;margin-bottom:8px}
-    .rr-doc-badge{position:absolute;top:-8px;right:-10px;min-width:30px;height:30px;padding:0 5px;border-radius:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.18);color:#fff;font-size:10px;font-weight:900;letter-spacing:-.2px}
-    .rr-card-name{font-size:14.5px;font-weight:800;color:var(--txt);letter-spacing:-.2px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .rr-card-date{font-size:11px;color:var(--sub);font-weight:600;margin-bottom:14px}
-    .rr-card-actions{display:flex;gap:8px}
-    .rr-card-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:#fff;border:none;border-radius:11px;padding:10px 8px;font-size:12px;font-weight:800;color:var(--txt);cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(15,14,23,.08);transition:transform .12s}
-    .rr-card-btn:active{transform:scale(.97)}
-    .rr-card-btn-del{color:#e11d48}
+    /* ── RECENT RESUMES — small card, rhymes with the hero swiper above ── */
+    .rr-slide{flex:0 0 calc(85vw - 24px);max-width:290px;min-width:240px;scroll-snap-align:start;cursor:pointer}
+    .rr-card{display:flex;align-items:center;gap:13px;background:#fff;border:1.5px solid var(--border2);border-radius:18px;padding:12px 14px;box-shadow:0 3px 16px rgba(124,58,237,.07);transition:all .22s}
+    .rr-slide:hover .rr-card{border-color:var(--p2);box-shadow:0 8px 26px rgba(124,58,237,.13);transform:translateY(-1px)}
+    .rr-thumb{position:relative;width:52px;height:60px;flex-shrink:0;background:linear-gradient(160deg,#f3e8ff,#ede9fe);border-radius:12px;display:flex;align-items:center;justify-content:center}
+    .rr-thumb-mock{width:34px}
+    .rr-doc-line{height:3px;border-radius:1.5px;background:#c4b5fd;margin-bottom:4px;opacity:.8}
+    .rr-doc-line-h{width:75%;height:4px;margin-bottom:5px}
+    .rr-doc-badge{position:absolute;top:-6px;right:-8px;min-width:22px;height:22px;padding:0 4px;border-radius:11px;background:var(--g);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(124,58,237,.3);color:#fff;font-size:9px;font-weight:900}
+    .rr-info{flex:1;min-width:0}
+    .rr-name{font-size:14px;font-weight:800;color:var(--txt);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rr-date{font-size:11px;color:var(--sub);font-weight:600;margin:2px 0 6px}
+    .rr-pill{display:inline-flex;align-items:center;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:-.1px}
+    .rr-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+    .rr-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;border:none;cursor:pointer;transition:all .15s;flex-shrink:0}
+    .rr-btn-edit{background:#ede9fe;color:var(--p)}
+    .rr-btn-edit:hover{background:#ddd6fe}
+    .rr-btn-del{background:#fff1f2;color:#e11d48}
+    .rr-btn-del:hover{background:#ffe4e6}
     .ds-dot{width:6px;height:6px;border-radius:99px;background:var(--border2);border:none;padding:0;cursor:pointer;transition:all .25s}
     .ds-dot.active{width:20px;background:var(--g)}
 
