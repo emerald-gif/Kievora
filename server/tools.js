@@ -244,7 +244,7 @@ module.exports = function registerToolsRoutes(app) {
   3. KIE AI — the assistant woven through the app
   - Two ways users experience KIE: (a) inline assist — quiet in-context help while building (summary suggestions, bullet rewrites, skill suggestions, no chat window), and (b) full KIE chat — open conversation via "Ask KIE AI," for anything from rewriting a bullet to career decisions
   - 5 chat modes: Default, Deep Think, Web Search, Quick Answer, Creative — user picks per conversation
-  - Message tiers by plan: Free = KIE Spark only; Pro = Spark + Core (more messages/month); Premier = Spark + Core + Nova (highest allocation)
+  - AI credit tiers by plan: Free = KIE Spark only, 30 AI credits/cycle; Pro = Spark + Core, 315 AI credits/cycle; Premier = Spark + Core + Nova, 675 AI credits/cycle. Credits are spent by every AI feature on the platform (chat, tools, Gmail Intelligence), not just chat — pricier models spend credits faster per message
   - Supports resume upload for personalized coaching
   - 10 AI Career Tools (gated by plan): Health Score, Roadmap, LinkedIn AI, Pro Message, AI Resume Builder (Pro & up); Salary Intel, Mock Interview, Promotion Ready, Personal Brand, Recruiter View (Premier only)
 
@@ -254,9 +254,9 @@ module.exports = function registerToolsRoutes(app) {
   - Each listing has an "Apply for this role" action that opens the employer's real application page
 
   5. GMAIL INTELLIGENCE (KIE × Gmail)
-  - User connects their Gmail account from the Gmail AI page
-  - KIE scans the inbox and auto-tracks job applications, interviews, offers, and recruiter emails — no manual entry
-  - The Dashboard updates itself as new relevant emails arrive
+  - User connects their Gmail account from the Gmail AI page, then taps "Sync" to scan the inbox
+  - KIE reads the inbox on each sync and tracks job applications, interviews, offers, and recruiter emails — no manual data entry required, but the user does need to tap Sync to pull in anything new (it's not continuously live in the background)
+  - The Dashboard updates after each sync with whatever's new
   - KIE also tailors its coaching advice using this inbox context (e.g. "I see you have an interview with X — want to prep?")
   - Fully optional and disconnectable at any time from Settings
 
@@ -266,10 +266,11 @@ module.exports = function registerToolsRoutes(app) {
   - Onboarding can be skipped and completed later
 
   7. BILLING & PLANS
-  - Free ($0): 5 templates, AI bullet/skill suggestions in the builder, ATS score, cover letter from scratch, 50 KIE (Spark) messages/month, Job Match Analyzer, Resignation Letter generator, 50MB storage
-  - Pro ($7/mo): everything in Free + all 13 templates, AI Image Analyzer + Upload & Analyze, full ATS breakdown, auto-build cover letter from resume, 5 AI Career Tools, Spark + Core messages, apply to every job listing, priority support, 5GB storage
-  - Premier ($15/mo): everything in Pro + all 10 AI Tools, highest KIE message allocation (Spark, Core & Nova), full Recruiter View report, instant priority support, unlimited storage
-  - Users can also buy one-off message top-ups if they run out mid-cycle
+  - Free ($0): 5 templates, AI bullet/skill suggestions in the builder, ATS score, cover letter from scratch, 30 AI credits/cycle (KIE Spark only), Job Match Analyzer, Resignation Letter generator, 50MB storage
+  - Pro ($7/mo): everything in Free + all 13 templates, AI Image Analyzer + Upload & Analyze, full ATS breakdown, auto-build cover letter from resume, 5 AI Career Tools, 315 AI credits/cycle (Spark + Core), apply to every job listing, priority support, 5GB storage
+  - Premier ($15/mo): everything in Pro + all 10 AI Tools, 675 AI credits/cycle (Spark, Core & Nova), full Recruiter View report, instant priority support, unlimited storage
+  - AI credits cover every AI feature on the platform, not just chat — resume analysis, career tools, and Gmail Intelligence all draw from the same balance
+  - Users can also buy one-off AI credit top-ups if they run out mid-cycle
   - Payments are processed securely (card payments supported); billing/usage is managed from the Billing page
 
   8. ACCOUNT & PROFILE
@@ -283,7 +284,7 @@ module.exports = function registerToolsRoutes(app) {
   - Photo not on resume: switch to a photo-supported template (Classic, Modern, Elegant, Slate, Split, Executive, Nova, Tribune)
   - Resume not saving: check internet connection, confirm logged in
   - App not loading: refresh, clear cache, try a different browser
-  - Gmail not tracking emails: confirm it's connected in Settings, and that Gmail permissions weren't revoked
+  - Gmail not tracking emails: confirm it's connected in Settings, that Gmail permissions weren't revoked, and try tapping Sync — it doesn't update automatically in the background anymore
   - Job applying is locked: user is on Free — applying to every listing requires Pro or Premier
   - Newsletter/billing/payment issue: suggest checking the Billing page first, then contacting support@kievora.app if it persists
 

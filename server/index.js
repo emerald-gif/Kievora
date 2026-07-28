@@ -12,6 +12,7 @@ const crypto  = require('crypto'); // Paystack webhook signature verification
 const {
   admin, db, authenticate, upload, cloudinary,
   callKieAI, getUserPlanKey, getPlanConfig, UPGRADE_MESSAGES,
+  getCreditStatus, deductCredits, tokensToCredits,
   KIE_MODELS, USERS, sendWelcomeEmail, sendOtpEmail, sendTicketConfirmationEmail, sendNewsletterConfirmationEmail, applyPaystackMetadata, PLANS,
   serviceAccount,
 } = require('./lib');
@@ -377,16 +378,22 @@ app.get('/index',     (_req, res) => res.sendFile(path.join(__dirname, '..', 'pu
 app.post('/api/cover-letter', authenticate, async (req, res) => {
   const uid = req.user.uid;
   const { resumeSource, resumeId, resumeData, resumeText, template, jobTitle, companyName } = req.body;
-  const model = 'spark'; // ALL tools always use Groq Spark — permanent
+
+  const planKey = await getUserPlanKey(uid);
+  const model   = getPlanConfig(planKey).kieModel; // plan determines the model for every tool except KIE chat itself — never hardcode this
 
   // Plan gate: "from scratch" (no resume context) is free for everyone.
   // Using an existing resume (resumeId or resumeData) is a paid feature.
   const fromResume = !!(resumeId || resumeData || resumeText);
   if (fromResume) {
-    const planKey = await getUserPlanKey(uid);
     if (!getPlanConfig(planKey).coverLetterFromResume) {
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.coverLetter() });
     }
+  }
+
+  const creditStatus = await getCreditStatus(uid, planKey);
+  if (!creditStatus.allowed) {
+    return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: creditStatus.upsellType });
   }
 
   if (!template) return res.status(400).json({ error: 'template is required' });
@@ -435,10 +442,11 @@ app.post('/api/cover-letter', authenticate, async (req, res) => {
 
   const cfg = { max_tokens: 700, temperature: 0.75 };
   const effectiveModel = KIE_MODELS[model] ? model : 'spark';
+  const billing = { uid, planKey };
 
   try {
     console.log(`POST /api/cover-letter — uid:${uid} model:${effectiveModel} tpl:${template} job:"${jobTitle}" company:"${companyName}"`);
-    const letter = await callKieAI(effectiveModel, systemPrompt, [{ role: 'user', content: userPrompt }], cfg);
+    const letter = await callKieAI(effectiveModel, systemPrompt, [{ role: 'user', content: userPrompt }], cfg, billing);
 
     // Save to Firestore for history
     await db.collection('coverLetterQueue').add({
@@ -455,11 +463,14 @@ app.post('/api/cover-letter', authenticate, async (req, res) => {
 
     res.json({ letter: letter.trim(), template, model: effectiveModel });
   } catch (err) {
+    if (err.code === 'CREDITS_EXHAUSTED') {
+      return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
+    }
     console.error('POST /api/cover-letter ERROR:', err.message);
     // Fallback to Spark if Claude fails
     if (effectiveModel !== 'spark') {
       try {
-        const letter = await callKieAI('spark', systemPrompt, [{ role: 'user', content: userPrompt }], cfg);
+        const letter = await callKieAI('spark', systemPrompt, [{ role: 'user', content: userPrompt }], cfg, billing);
         return res.json({ letter: letter.trim(), template, model: 'spark', fallback: true });
       } catch (fe) { console.error('Cover letter fallback failed:', fe.message); }
     }

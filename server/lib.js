@@ -181,7 +181,7 @@ const PLANS = {
   free: {
     key: 'free', label: 'Free', priceUSD: 0,
     kieMonthlyLimit: 50,        // legacy — no longer enforced, kept for reference/display only
-    aiCreditBudget: 50,         // real cap: 50 credits ($0.50) across EVERY AI call on the platform, this cycle
+    aiCreditBudget: 30,         // real cap: 30 credits ($0.30) across EVERY AI call on the platform, this cycle
     kieModel: 'spark',           // model that powers KIE chat for this plan
     models: ['spark'],           // models visible in KIE selector
     // Free tier: the core resume loop (upload → diagnose → build) is now
@@ -270,7 +270,7 @@ async function getUserPlanKey(uid) {
 }
 
 // ─── Billing-cycle anchor date ──────────────────────────────────────────────
-// The KIE message cycle (and top-up expiry) resets on the day-of-month the
+// The AI credit cycle (and top-up expiry) resets on the day-of-month the
 // user actually subscribed/upgraded — NOT the 1st of the calendar month.
 // Paid users anchor to planUpdatedAt (set fresh on every subscribe/upgrade).
 // Free users anchor to createdAt (their signup date), so even Free gets a
