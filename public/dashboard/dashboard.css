@@ -72,10 +72,10 @@
     .kie-dot{display:none}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     /* ── JOBS HOME SECTION ── */
-    .jobs-home-section{margin-bottom:28px}
-    .job-snap-card{background:#fff;border:1.5px solid #ece8f8;border-radius:16px;padding:14px;width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:all .18s;text-decoration:none;position:relative}
+    .jobs-home-section{margin-bottom:24px}
+    .job-snap-card{background:#fff;border:1.5px solid var(--border2);border-radius:18px;padding:14px;width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:all .18s;text-decoration:none;position:relative;box-shadow:0 3px 16px rgba(124,58,237,.07)}
     .job-snap-card.job-snap-locked{opacity:.75}
-    .job-snap-card:hover{border-color:#7c3aed;box-shadow:0 4px 18px rgba(124,58,237,.12);transform:translateY(-2px)}
+    .job-snap-card:hover{border-color:var(--p2);box-shadow:0 8px 26px rgba(124,58,237,.13);transform:translateY(-2px)}
     .job-snap-logo{width:36px;height:36px;border-radius:9px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #e5e7eb;flex-shrink:0}
     .job-snap-logo img{width:100%;height:100%;object-fit:contain}
     .job-snap-title{font-size:12.5px;font-weight:800;color:#1a1a2e;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -88,8 +88,8 @@
 
     /* ── JOBS SKELETON ── */
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-    .job-snap-skel{width:220px;flex-shrink:0;border-radius:16px;overflow:hidden;background:#f3f0ff;height:140px;animation:shimmer 1.4s linear infinite;background:linear-gradient(90deg,#f3f0ff 25%,#ede9fe 50%,#f3f0ff 75%);background-size:200% 100%}
-    .job-snap-more{background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:16px;padding:14px;width:140px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:all .18s;text-decoration:none;color:#fff;text-align:center}
+    .job-snap-skel{width:220px;flex-shrink:0;border-radius:18px;overflow:hidden;background:#f3f0ff;height:140px;animation:shimmer 1.4s linear infinite;background:linear-gradient(90deg,#f3f0ff 25%,#ede9fe 50%,#f3f0ff 75%);background-size:200% 100%}
+    .job-snap-more{background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:18px;padding:14px;width:140px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:all .18s;text-decoration:none;color:#fff;text-align:center}
     .job-snap-more:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(124,58,237,.35)}
     .job-snap-more-circle{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
     .job-snap-more-txt{font-size:12px;font-weight:800;line-height:1.3}
@@ -905,9 +905,10 @@
     .opt-picker-check svg{opacity:0;transition:opacity .15s}
     .opt-picker-card.selected .opt-picker-check svg{opacity:1}
     .opt-picker-upload-card{border-style:dashed;border-color:rgba(124,58,237,.3)}
-    .opt-continue-btn{width:100%;background:var(--g);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(124,58,237,.32);transition:opacity .15s,transform .12s;margin-top:16px}
+    .opt-continue-btn{width:100%;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 24px rgba(124,58,237,.35),inset 0 1px 0 rgba(255,255,255,.15);transition:all .22s;margin-top:16px}
+    .opt-continue-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 36px rgba(124,58,237,.45),inset 0 1px 0 rgba(255,255,255,.15)}
     .opt-continue-btn:active{transform:scale(.98)}
-    .opt-continue-btn:disabled{opacity:.4;box-shadow:none;cursor:not-allowed}
+    .opt-continue-btn:disabled{opacity:.4;box-shadow:none;cursor:not-allowed;transform:none}
 
     /* Upload New Resume (screen 1b) — self-contained dropzone, matches the
        card language of the picker screen instead of ATS Checker's dark hero. */
@@ -2010,6 +2011,32 @@
     .analyze-btn{width:100%;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:900;cursor:pointer;transition:all .22s;box-shadow:0 6px 24px rgba(124,58,237,.35),inset 0 1px 0 rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;gap:9px;margin-top:20px;font-family:inherit;letter-spacing:-.2px}
     .analyze-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 36px rgba(124,58,237,.45),inset 0 1px 0 rgba(255,255,255,.15)}
     .analyze-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+    .upload-hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1;margin-bottom:14px}
+    .upload-hero-top .upload-hero-badge{margin-bottom:0}
+    .kie-flow-dots{display:flex;align-items:center;gap:5px;flex-shrink:0}
+    .kie-flow-dot{height:6px;width:6px;border-radius:99px;background:rgba(255,255,255,.25);transition:all .3s cubic-bezier(.32,.72,0,1)}
+    .kie-flow-dot.active{width:18px;background:#fff}
+    .kie-flow-dot.done{width:6px;background:rgba(255,255,255,.6)}
+
+    /* ── Optimizer step-1 hero — same visual language as ATS Checker's hero,
+       compact so it fits inside the stepped panel flow ── */
+    .opt-hero{background:linear-gradient(140deg,#1a0540 0%,#3b0f8c 45%,#5c1fd4 100%);border-radius:20px;padding:22px 20px;margin:-22px -16px 20px;position:relative;overflow:hidden}
+    .opt-hero::before{content:'';position:absolute;right:-60px;top:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(168,85,247,.22) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+    .opt-hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:4px 12px;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:12px;position:relative;z-index:1}
+    .opt-hero-badge-dot{width:6px;height:6px;border-radius:50%;background:#a855f7;box-shadow:0 0 8px rgba(168,85,247,.8);animation:pulse 2s infinite}
+    .opt-hero-title{font-size:20px;font-weight:900;color:#fff;line-height:1.2;letter-spacing:-.4px;position:relative;z-index:1}
+    .opt-hero-title span{background:linear-gradient(90deg,#c084fc,#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .opt-hero-stats{display:flex;gap:16px;margin-top:16px;position:relative;z-index:1}
+    .opt-hero-stat{text-align:center}
+    .opt-hero-stat-num{font-size:15px;font-weight:900;color:#fff;line-height:1}
+    .opt-hero-stat-lbl{font-size:9.5px;color:rgba(255,255,255,.55);font-weight:600;margin-top:2px;line-height:1.35}
+    .opt-hero-stat-div{width:1px;background:rgba(255,255,255,.12);flex-shrink:0}
+    /* file-type badges + spacing to match ATS Checker's dropzone exactly */
+    .opt-dropzone{padding:32px 16px 24px}
+    .opt-dropzone-title{font-size:16px}
+    .opt-dropzone-sub{font-size:12px}
+    .opt-dropzone-types{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px}
+    .opt-type-badge{display:flex;align-items:center;gap:4px;background:#f8f7ff;border:1.5px solid var(--border2);border-radius:8px;padding:5px 10px;font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.2px}
     .upload-trust{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px}
     .upload-trust-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mute);font-weight:600}
 

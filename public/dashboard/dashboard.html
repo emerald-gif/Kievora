@@ -455,20 +455,18 @@
 
     <!-- ══ JOBS SWIPER ══ -->
     <div class="jobs-home-section" id="jobsHomeSection" style="display:none">
-      <div class="sh" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <div style="width:22px;height:22px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.25)">
-              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-            </div>
-            <div class="sh-title" style="margin-bottom:0">Jobs for You</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.25)">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <div id="jobsHomeProfPill" style="font-size:11px;color:#7c3aed;font-weight:700;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:99px;padding:2px 10px;display:inline-block"></div>
-            <a href="/find-jobs" style="font-size:11px;color:#9ca3af;font-weight:600;text-decoration:none">Change →</a>
-          </div>
+          <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Jobs for You</span>
         </div>
-        <a href="/find-jobs" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        <a href="/find-jobs" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <div id="jobsHomeProfPill" style="font-size:11px;color:#7c3aed;font-weight:700;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:99px;padding:2px 10px;display:inline-block"></div>
+        <a href="/find-jobs" style="font-size:11px;color:#9ca3af;font-weight:600;text-decoration:none">Change →</a>
       </div>
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:none" id="jobsHomeTrack">
         <div style="display:flex;gap:12px;width:max-content" id="jobsHomeCards">
@@ -2224,9 +2222,15 @@
     <!-- Dark hero header -->
     <div id="uploadBackWrap" style="display:none"><button id="uploadBack"></button></div>
     <div class="upload-hero">
-      <div class="upload-hero-badge">
-        <span class="upload-hero-badge-dot"></span>
-        KIE AI · Resume Intelligence
+      <div class="upload-hero-top">
+        <div class="upload-hero-badge">
+          <span class="upload-hero-badge-dot"></span>
+          KIE AI · Resume Intelligence
+        </div>
+        <div class="kie-flow-dots" id="uploadFlowDots">
+          <span class="kie-flow-dot active"></span>
+          <span class="kie-flow-dot"></span>
+        </div>
       </div>
       <div class="upload-hero-title">ATS <span>Checker</span></div>
       <div class="upload-hero-sub">KIE AI reads your resume, scores it against ATS filters, and tells you exactly what to fix.</div>
@@ -2481,6 +2485,17 @@
 
     <!-- Screen 1: Select Resume -->
     <div id="optStateSelect" class="opt-state">
+      <div class="opt-hero">
+        <div class="opt-hero-badge"><span class="opt-hero-badge-dot"></span>KIE AI · Resume Intelligence</div>
+        <div class="opt-hero-title">Optimize Your <span>Resume</span></div>
+        <div class="opt-hero-stats">
+          <div class="opt-hero-stat"><div class="opt-hero-stat-num">3x</div><div class="opt-hero-stat-lbl">More interview<br>callbacks</div></div>
+          <div class="opt-hero-stat-div"></div>
+          <div class="opt-hero-stat"><div class="opt-hero-stat-num">~20s</div><div class="opt-hero-stat-lbl">AI rewrite<br>turnaround</div></div>
+          <div class="opt-hero-stat-div"></div>
+          <div class="opt-hero-stat"><div class="opt-hero-stat-num">100%</div><div class="opt-hero-stat-lbl">Private &amp;<br>secure</div></div>
+        </div>
+      </div>
       <div class="opt-step-badge">1</div>
       <div class="opt-diag-title">Optimize Your Resume</div>
       <div class="opt-diag-sub">Choose a resume to optimize with AI.</div>
@@ -2504,6 +2519,10 @@
     <!-- Screen 1b: Upload New Resume — self-contained, Optimize never hands
          off to ATS Checker's own screen for this. -->
     <div id="optStateUpload" class="opt-state">
+      <div class="opt-hero">
+        <div class="opt-hero-badge"><span class="opt-hero-badge-dot"></span>KIE AI · Resume Intelligence</div>
+        <div class="opt-hero-title">Upload Your <span>Resume</span></div>
+      </div>
       <div class="opt-step-badge">1</div>
       <div class="opt-diag-title">Upload Your Resume</div>
       <div class="opt-diag-sub">We'll scan it and show you what to fix.</div>
@@ -2527,7 +2546,12 @@
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
         </div>
         <div class="opt-dropzone-title">Drop your resume here</div>
-        <div class="opt-dropzone-sub">or tap to browse — PDF, DOCX, TXT</div>
+        <div class="opt-dropzone-sub">or tap to browse your files</div>
+        <div class="opt-dropzone-types">
+          <div class="opt-type-badge" style="color:#dc2626;border-color:#fecaca"><svg width="10" height="10" fill="#dc2626" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>PDF</div>
+          <div class="opt-type-badge" style="color:#2563eb;border-color:#bfdbfe"><svg width="10" height="10" fill="#2563eb" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>DOCX</div>
+          <div class="opt-type-badge"><svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>TXT</div>
+        </div>
       </div>
 
       <div class="opt-or">or</div>
@@ -2543,6 +2567,22 @@
         Analyze &amp; Continue
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
+      <div class="upload-trust" style="margin-top:14px">
+        <div class="upload-trust-item">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Private
+        </div>
+        <div style="width:3px;height:3px;border-radius:50%;background:var(--mute)"></div>
+        <div class="upload-trust-item">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Not stored
+        </div>
+        <div style="width:3px;height:3px;border-radius:50%;background:var(--mute)"></div>
+        <div class="upload-trust-item">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg>
+          ~20 sec
+        </div>
+      </div>
     </div>
 
     <!-- Screen 2 / 4: shared AI moment — scanning or optimizing, same component -->
