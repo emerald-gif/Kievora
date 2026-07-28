@@ -267,7 +267,7 @@ module.exports = function registerToolsRoutes(app) {
 
   7. BILLING & PLANS
   - Free ($0): 5 templates, AI bullet/skill suggestions in the builder, ATS score, cover letter from scratch, 30 AI credits/cycle (KIE Spark only), Job Match Analyzer, Resignation Letter generator, 50MB storage
-  - Pro ($7/mo): everything in Free + all 13 templates, AI Image Analyzer + Upload & Analyze, full ATS breakdown, auto-build cover letter from resume, 5 AI Career Tools, 315 AI credits/cycle (Spark + Core), apply to every job listing, priority support, 5GB storage
+  - Pro ($7/mo): everything in Free + all 13 templates, AI Image Analyzer + ATS Checker, full ATS breakdown, Fix My Resume (AI optimization), auto-build cover letter from resume, 5 AI Career Tools, 315 AI credits/cycle (Spark + Core), apply to every job listing, priority support, 5GB storage
   - Premier ($15/mo): everything in Pro + all 10 AI Tools, 675 AI credits/cycle (Spark, Core & Nova), full Recruiter View report, instant priority support, unlimited storage
   - AI credits cover every AI feature on the platform, not just chat — resume analysis, career tools, and Gmail Intelligence all draw from the same balance
   - Users can also buy one-off AI credit top-ups if they run out mid-cycle
@@ -418,7 +418,7 @@ module.exports = function registerToolsRoutes(app) {
       return res.status(400).json({ error: 'Resume content is too short to analyze.' });
     }
 
-    // forceResume=true is sent by the dedicated "Upload & Analyze" tool and the
+    // forceResume=true is sent by the dedicated "ATS Checker" tool and the
     // job-matching upload flow — the user explicitly opened those specifically
     // to analyze a resume, so there's nothing to classify, treat it as one.
     // Plain KIE chat attachments (forceResume unset) get honestly classified
@@ -527,6 +527,122 @@ module.exports = function registerToolsRoutes(app) {
       }
       console.error('POST /api/analyze-resume ERROR:', err.message);
       res.status(500).json({ error: 'Analysis failed: ' + err.message });
+    }
+  });
+
+  // ─── POST /api/resume-optimize — "Fix My Resume" (Pro+ only) ─────────────────
+  // Called from the Optimize My Resume screen after ATS Checker has already
+  // scored the resume for free. Rewrites bullets/summary/keywords with AI,
+  // re-scores the result, and ALWAYS saves it as a brand-new resume doc —
+  // the source resume (upload or an existing saved one) is never touched.
+  app.post('/api/resume-optimize', authenticate, async (req, res) => {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) return res.status(503).json({ error: 'AI optimization not configured.' });
+
+    const planKey = await getUserPlanKey(req.user.uid);
+    const planCfg = getPlanConfig(planKey);
+    if (!planCfg.resumeOptimize) {
+      return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.resumeOptimize() });
+    }
+
+    const { resumeData, oldScore, sourceResumeId, sourceResumeName, templateType, primaryColor, fontFamily } = req.body;
+    if (!resumeData) return res.status(400).json({ error: 'resumeData is required.' });
+
+    const prompt = `You are an expert ATS resume writer. Rewrite the resume JSON below to raise its ATS score — never invent employers, job titles, dates, degrees, or metrics that aren't truthfully implied by the original content.
+
+  Improve:
+  - Professional summary: sharper, role-specific, keyword-rich, 40-60 words
+  - Every work experience bullet in "description": strong action verbs, quantify impact wherever plausible, cut filler words
+  - Skills: add clearly-implied but missing keywords relevant to the role
+  - Keep the structure identical — same number of jobs/education/skills entries as the original, just rewritten
+
+  Return ONLY valid JSON in this exact shape — no markdown, no commentary:
+  {
+    "fullName": "", "jobTitle": "", "email": "", "phone": "", "location": "",
+    "summary": "",
+    "workExperience": [{"position":"","company":"","startDate":"","endDate":"","description":""}],
+    "education": [{"degree":"","field":"","school":"","graduationDate":""}],
+    "skills": [],
+    "certifications": [{"name":"","issuer":"","date":""}],
+    "projects": [{"name":"","url":"","description":""}],
+    "languages": [{"language":"","proficiency":""}],
+    "atsScore": 0,
+    "grade": "",
+    "beforeAfter": [{"before":"","after":""}]
+  }
+
+  "beforeAfter": pick the 2-3 bullet rewrites with the clearest visible improvement — "before" is the exact original text, "after" is the rewritten version.
+  "atsScore": score the REWRITTEN resume 0-100 (integer) using the same rubric ATS Checker uses (contact info, summary, experience, education, skills, formatting) — it should be meaningfully higher than the original score of ${oldScore || 0}, unless the original was already excellent.
+  "grade": "A+" >=90, "A" 80-89, "B+" 75-79, "B" 65-74, "C+" 55-64, "C" 45-54, "D" <45.
+
+  ORIGINAL RESUME JSON:
+  ${JSON.stringify(resumeData).slice(0, 6000)}`;
+
+    try {
+      const { data: result } = await callKieAIJson(
+        planCfg.kieModel,
+        'You are an expert resume writer and ATS analyst. Always respond with valid JSON only — no extra text, no markdown.',
+        [{ role: 'user', content: prompt }],
+        { max_tokens: 3000, temperature: 0.4 },
+        { uid: req.user.uid, planKey }
+      );
+
+      const newScore = Math.min(100, Math.max(0, Math.round(result.atsScore || 0)));
+      const optimizedResumeData = {
+        fullName: result.fullName || resumeData.fullName || '',
+        jobTitle: result.jobTitle || resumeData.jobTitle || '',
+        email:    result.email    || resumeData.email    || '',
+        phone:    result.phone    || resumeData.phone    || '',
+        location: result.location || resumeData.location || '',
+        summary:  result.summary  || '',
+        workExperience: Array.isArray(result.workExperience) && result.workExperience.length ? result.workExperience : (resumeData.workExperience || []),
+        education:      Array.isArray(result.education)      ? result.education      : (resumeData.education || []),
+        skills:         Array.isArray(result.skills)          ? result.skills         : (resumeData.skills || []),
+        certifications: Array.isArray(result.certifications)  ? result.certifications : (resumeData.certifications || []),
+        projects:       Array.isArray(result.projects)        ? result.projects       : (resumeData.projects || []),
+        languages:      Array.isArray(result.languages)       ? result.languages      : (resumeData.languages || []),
+      };
+
+      // Never overwrite the source resume — always a new doc, clearly labeled
+      // with the score jump and linked back via sourceResumeId for lineage.
+      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\(Optimized.*?\)\s*$/i, '');
+      const oldScoreNum = Math.min(100, Math.max(0, Math.round(oldScore || 0)));
+      const newName = `${baseName} (Optimized \u00b7 ${oldScoreNum}\u2192${newScore})`;
+
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      const docData = {
+        userId:       req.user.uid,
+        resumeName:   newName,
+        templateType: templateType || 'classic',
+        primaryColor: primaryColor || '#7c3aed',
+        fontFamily:   fontFamily   || 'sans',
+        resumeData:   optimizedResumeData,
+        atsScore:     newScore,
+        grade:        result.grade || '',
+        createdAt: now,
+        updatedAt: now,
+      };
+      if (sourceResumeId) docData.sourceResumeId = sourceResumeId;
+      docData.optimizedFromScore = oldScoreNum; // powers the "Optimized · 72→91" badge on the resume card
+
+      const docRef  = await db.collection(RESUMES).add(docData);
+      const created = await docRef.get();
+
+      console.log(`POST /api/resume-optimize — uid:${req.user.uid} ${oldScoreNum}->${newScore} newDoc:${docRef.id} plan:${planKey}`);
+
+      res.status(201).json({
+        id: docRef.id,
+        ...created.data(),
+        oldScore: oldScoreNum,
+        newScore,
+        beforeAfter: Array.isArray(result.beforeAfter) ? result.beforeAfter.slice(0, 3) : [],
+      });
+    } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
+      }
+      console.error('POST /api/resume-optimize ERROR:', err.message);
+      res.status(500).json({ error: 'Resume optimization failed. Please try again.' });
     }
   });
 
@@ -1663,12 +1779,12 @@ STRICTNESS RULES — apply to every field, not just the summary ones:
 
   // ─── POST /api/recruiter-intel ────────────────────────────────────────────────
   app.post('/api/recruiter-intel', authenticate, async (req, res) => {
-    // Plan gate: free → blocked entirely (no upload/analyze), paid7 → blocked here
-    // (they can upload/analyze in /api/analyze-resume but Recruiter View itself is $15 only).
+    // Plan gate: free → blocked entirely (no ATS Checker), paid7 → blocked here
+    // (they can scan in /api/analyze-resume but Recruiter View itself is $15 only).
     const planKey = await getUserPlanKey(req.user.uid);
     const planCfg = getPlanConfig(planKey);
-    if (!planCfg.uploadAnalyze) {
-      return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.uploadAnalyze() });
+    if (!planCfg.atsChecker) {
+      return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.atsChecker() });
     }
     if (!planCfg.recruiterView) {
       return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.recruiterView(planKey) });

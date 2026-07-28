@@ -68,7 +68,7 @@ module.exports = function registerBillingRoutes(app) {
 
   // ─── GET /api/upgrade-message?feature=tool — friendly, context-specific copy ──
   // Call this whenever a user taps something locked, pass the feature key
-  // (kieLimit | kieModel | tool | uploadAnalyze | recruiterView | findJobs |
+  // (kieLimit | kieModel | tool | atsChecker | resumeOptimize | recruiterView | findJobs |
   // coverLetter | atsExplanation | articleDownload), and show the returned
   // message in a toast/modal. Keeps every upgrade nudge in the app consistent
   // with what the server actually enforces.

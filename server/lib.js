@@ -191,7 +191,8 @@ const PLANS = {
     // are full deliverables, not diagnostics — that's the real paywall now.
     tools: ['aibuild', 'careerhealth'],
     templates: 5,
-    uploadAnalyze: true,
+    atsChecker: true,
+    resumeOptimize: false,
     recruiterView: false,
     findJobsClick: false,
     coverLetterFromResume: false,
@@ -213,7 +214,8 @@ const PLANS = {
     models: ['spark', 'core'],
     tools: ['aibuild', 'careerhealth', 'roadmap', 'linkedin', 'messaging'],
     templates: 'all',
-    uploadAnalyze: true,
+    atsChecker: true,
+    resumeOptimize: true,
     recruiterView: false,
     findJobsClick: true,
     coverLetterFromResume: true,
@@ -237,7 +239,8 @@ const PLANS = {
     models: ['spark', 'core', 'nova'],
     tools: ['aibuild', 'careerhealth', 'roadmap', 'linkedin', 'messaging', 'salary', 'industry', 'interview', 'branding', 'promotion'],
     templates: 'all',
-    uploadAnalyze: true,
+    atsChecker: true,
+    resumeOptimize: true,
     recruiterView: true,
     findJobsClick: true,
     coverLetterFromResume: true,
@@ -478,11 +481,13 @@ const UPGRADE_MESSAGES = {
   tool: (plan) => plan === 'free'
     ? `Career Roadmap, LinkedIn Optimizer, and Professional Messaging are part of Pro ($7) — on top of the Resume Builder and Career Health Score you already have free. Premier ($15) unlocks all 10.`
     : `This tool is part of the $15 plan — it unlocks Salary Intel, Industry Intel, Mock Interview, Personal Brand, and Promotion Ready on top of your existing 5 tools.`,
-  // Upload & Analyze
-  uploadAnalyze: () => `Your resume has been analyzed. Upgrade to any paid plan to see your full score, strengths, weaknesses, and specific suggestions to improve it. $7 or $15 both unlock it.`,
+  // ATS Checker
+  atsChecker: () => `Your resume has been scanned. Upgrade to any paid plan to see your full score, strengths, weaknesses, and specific suggestions to improve it. $7 or $15 both unlock it.`,
+  // Fix My Resume (AI optimization pass from ATS Checker results)
+  resumeOptimize: () => `Fixing your resume with AI is a paid feature. Upgrade to $7 or $15 to let KIE rewrite your bullet points, add missing keywords, and push your ATS score up automatically.`,
   // Recruiter View
   recruiterView: (plan) => plan === 'paid7'
-    ? `Recruiter View is a $15 feature. You already have Upload & Analyze — this just adds the full recruiter-perspective report on top.`
+    ? `Recruiter View is a $15 feature. You already have ATS Checker — this just adds the full recruiter-perspective report on top.`
     : `Recruiter View is part of the $15 plan.`,
   // Find Jobs
   findJobs: () => `Upgrade to any paid plan to open and apply to jobs. $7 or $15 both give you full access.`,
@@ -542,7 +547,8 @@ const KIE_TOOL_KB = {
   branding:     { label: 'Personal Branding',     desc: 'Builds a personal brand that gets noticed for the right reasons.', gate: 'tool' },
   promotion:    { label: 'Promotion Readiness',   desc: 'Builds a clear, data-backed case for the next promotion.',         gate: 'tool' },
   // Resume flow — not "AI Tools" in the plan sense, but still real destinations
-  upload:       { label: 'Upload & Analyze',      desc: 'Dedicated resume-upload flow with the full ATS report.',           gate: 'uploadAnalyze' },
+  upload:       { label: 'ATS Checker',           desc: 'Scans an existing resume and gives a full ATS score, strengths, weaknesses, and a Recruiter View.', gate: 'atsChecker' },
+  resumeoptimize: { label: 'Optimize My Resume',  desc: 'AI rewrites a scanned resume — new bullet points, keywords, and a higher ATS score — saved as a new resume.', gate: 'resumeOptimize' },
   coverletter:  { label: 'Cover Letter',          desc: 'Writes or auto-generates a cover letter from an existing resume.', gate: 'coverLetterFromResume' },
   builder:      { label: 'Resume Builder',        desc: 'Build or edit a resume section by section, manually.',            gate: null },
   tpick:        { label: 'Choose a Template',     desc: 'Browse and apply any of the 13 Kievora templates.',                gate: null },
