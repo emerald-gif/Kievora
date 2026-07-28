@@ -859,6 +859,11 @@
     .opt-step-dot.done{width:7px;background:#c4b5fd}
     .opt-step-dot.active{width:22px;background:var(--g)}
     .opt-step-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9px;background:var(--g);color:#fff;font-size:12px;font-weight:900;margin-bottom:14px;box-shadow:0 4px 12px rgba(124,58,237,.28)}
+    /* Badge sits inline beside the heading (not stacked above it) so it never
+       crowds into the title text below. */
+    .opt-diag-hdr{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .opt-diag-hdr .opt-step-badge{margin-bottom:0;flex-shrink:0}
+    .opt-diag-hdr .opt-diag-title{margin-bottom:0}
 
     .opt-diag-title{font-size:21px;font-weight:900;color:var(--txt);letter-spacing:-.4px;margin-bottom:2px}
     .opt-diag-sub{font-size:13px;color:var(--sub);margin-bottom:18px}
@@ -1969,7 +1974,7 @@
     /* ── UPLOAD SCREEN (premium redesign) ── */
     .upload-wrap{max-width:620px;margin:0 auto;padding:0 0 48px}
     /* Dark hero header */
-    .upload-hero{background:linear-gradient(140deg,#1a0540 0%,#3b0f8c 45%,#5c1fd4 100%);padding:76px 24px 28px;position:relative;overflow:hidden}
+    .upload-hero{background:linear-gradient(140deg,#1a0540 0%,#3b0f8c 45%,#5c1fd4 100%);border-radius:20px;padding:22px 20px;margin:76px 16px 20px;position:relative;overflow:hidden}
     .upload-hero::before{content:'';position:absolute;right:-80px;top:-80px;width:260px;height:260px;background:radial-gradient(circle,rgba(168,85,247,.2) 0%,transparent 70%);border-radius:50%;pointer-events:none}
     .upload-hero::after{content:'';position:absolute;left:-40px;bottom:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(124,58,237,.15) 0%,transparent 65%);border-radius:50%;pointer-events:none}
     .upload-hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:14px;position:relative;z-index:1}
@@ -2020,7 +2025,7 @@
 
     /* ── Optimizer step-1 hero — same visual language as ATS Checker's hero,
        compact so it fits inside the stepped panel flow ── */
-    .opt-hero{background:linear-gradient(140deg,#1a0540 0%,#3b0f8c 45%,#5c1fd4 100%);border-radius:20px;padding:22px 20px;margin:-22px -16px 20px;position:relative;overflow:hidden}
+    .opt-hero{background:linear-gradient(140deg,#1a0540 0%,#3b0f8c 45%,#5c1fd4 100%);border-radius:20px;padding:22px 20px;margin:-22px 0 20px;position:relative;overflow:hidden}
     .opt-hero::before{content:'';position:absolute;right:-60px;top:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(168,85,247,.22) 0%,transparent 70%);border-radius:50%;pointer-events:none}
     .opt-hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:4px 12px;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:12px;position:relative;z-index:1}
     .opt-hero-badge-dot{width:6px;height:6px;border-radius:50%;background:#a855f7;box-shadow:0 0 8px rgba(168,85,247,.8);animation:pulse 2s infinite}
