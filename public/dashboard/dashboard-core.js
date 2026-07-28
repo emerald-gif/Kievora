@@ -10341,7 +10341,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // From Screen 3, "Fix My Resume" is the resumeOptimize paywall moment →
     // Screen 4 animated AI pass → Screen 5/6 results + next step. The AI call
     // always creates a NEW resume doc server-side — nothing is ever overwritten.
+    // Deliberately its own look (step dots, radial gauge, card picker) rather
+    // than a reskin of ATS Checker — the only real link between them is the
+    // "Optimize My Resume" button on ATS Checker's results screen.
     let _optNewResume = null;
+    let _optPickedId  = null; // resume id selected on Screen 1, or 'upload'
 
     function _optIssuesFromAnalysis(r) {
       const issues = [...(r.weaknesses||[]).slice(0,3), ...(r.missingItems||[]).slice(0,2)];
@@ -10352,35 +10356,77 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const hasSk  = (r.skills||[]).length >= 5;
       const hasExp = (r.workExperience||[]).some(w => /\d/.test(w.description||''));
       return [
-        { label: 'Skills',     pct: hasSk  ? 80 : 45 },
-        { label: 'Experience', pct: hasExp ? 75 : 40 },
-        { label: 'Keywords',   pct: Math.max(20, Math.min(90, score)) },
+        { label: 'Skills',     pct: hasSk  ? 80 : 45, color: '#16a34a', icon: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>' },
+        { label: 'Experience', pct: hasExp ? 75 : 40, color: '#ea580c', icon: '<path d="M3 20h18M6 20V10m6 10V4m6 16v-7"/>' },
+        { label: 'Keywords',   pct: Math.max(20, Math.min(90, score)), color: '#7c3aed', icon: '<path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/>' },
       ];
+    }
+    function _optVerdict(score) {
+      if (score >= 85) return "Excellent — you're in great shape!";
+      if (score >= 70) return 'Good start, but can be better!';
+      if (score >= 50) return "Needs work — let's fix the gaps.";
+      return "Struggling to pass ATS filters right now.";
     }
     function _optAllStates() { return ['optStateSelect','optStateDiag','optStateAnim','optStateResults']; }
     function _optShow(id) { _optAllStates().forEach(s => g(s).classList.remove('show')); g(id).classList.add('show'); }
     function _optOpenPanel() { g('optimizePanel').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function _optSetStep(n) {
+      document.querySelectorAll('#optSteps .opt-step-dot').forEach(dot => {
+        const d = Number(dot.dataset.n);
+        dot.classList.toggle('done', d < n);
+        dot.classList.toggle('active', d === n);
+      });
+    }
 
     function _optPopulateDiag(r) {
-      g('optDiagScore').textContent = Math.min(100, Math.max(0, r.atsScore||0));
+      const score = Math.min(100, Math.max(0, r.atsScore||0));
+      const sc = typeof atsColor === 'function' ? atsColor(score) : (score >= 70 ? '#16a34a' : score >= 50 ? '#f59e0b' : '#dc2626');
+      const circumference = 2 * Math.PI * 52;
+      const dash = circumference - (score / 100) * circumference;
+      const gaugeFill = g('optGaugeFill');
+      gaugeFill.setAttribute('stroke', sc);
+      gaugeFill.setAttribute('stroke-dasharray', circumference);
+      gaugeFill.setAttribute('stroke-dashoffset', dash);
+      g('optDiagScore').textContent = score;
+      g('optDiagScore').style.color = sc;
+      g('optGaugeVerdict').textContent = _optVerdict(score);
+
       g('optIssueList').innerHTML = _optIssuesFromAnalysis(r).map(i =>
-        `<div class="opt-issue-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><span>${esc(i)}</span></div>`
+        `<div class="opt-issue-item">
+           <div class="opt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+           <div class="opt-issue-title">${esc(i)}</div>
+         </div>`
       ).join('');
-      g('optBars').innerHTML = _optBarsFromAnalysis(r).map(b =>
-        `<div class="opt-bar-row"><div class="opt-bar-lbl"><span>${esc(b.label)}</span><span>${b.pct}%</span></div><div class="opt-bar-track"><div class="opt-bar-fill" style="width:${b.pct}%"></div></div></div>`
+      g('optBars').innerHTML = _optBarsFromAnalysis(r).map(b => `
+        <div class="opt-bar-row">
+          <div class="opt-bar-ico" style="background:${b.color}18;color:${b.color}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${b.icon}</svg></div>
+          <div class="opt-bar-main">
+            <div class="opt-bar-lbl"><span>${esc(b.label)}</span><span>${b.pct}%</span></div>
+            <div class="opt-bar-track"><div class="opt-bar-fill" style="width:${b.pct}%;background:${b.color}"></div></div>
+          </div>
+        </div>`
       ).join('');
     }
 
-    // Shared checklist animation — used for both "scanning" (screen 2) and
-    // "optimizing" (screen 4), just with different copy. Returns a control
-    // object so the caller can stop it early once its real API call resolves.
-    function _optStartChecklist(title, steps, stepMs) {
-      g('optAnimTitle').textContent = title;
-      g('optCheckList').innerHTML = steps.map(s => `<div class="opt-check-item"><span class="opt-check-dot"></span>${esc(s)}</div>`).join('');
+    // Shared AI moment (screens 2 & 4) — same orb/checklist component, just
+    // relabeled copy so "scanning" and "optimizing" each feel purpose-built.
+    function _optStartChecklist(opts) {
+      g('optAnimTitle').textContent = opts.title;
+      g('optAnimSub').textContent   = opts.sub || '';
+      g('optAnimTiming').textContent = opts.timing || '';
+      g('optCheckList').innerHTML = opts.steps.map(s =>
+        `<div class="opt-check-item"><span class="opt-check-dot"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>${esc(s)}</div>`
+      ).join('');
+      const existingTip = document.getElementById('optAiTip');
+      if (existingTip) existingTip.remove();
+      if (opts.tip) {
+        g('optCheckList').insertAdjacentHTML('afterend',
+          `<div class="opt-ai-tip" id="optAiTip"><span class="opt-ai-tip-star">✦</span><div class="opt-ai-tip-text"><b>AI Tip:</b> ${esc(opts.tip)}</div></div>`);
+      }
       _optShow('optStateAnim');
       const stepEls = Array.from(document.querySelectorAll('#optCheckList .opt-check-item'));
       let i = 0;
-      const interval = setInterval(() => { if (i < stepEls.length) { stepEls[i].classList.add('done'); i++; } }, stepMs);
+      const interval = setInterval(() => { if (i < stepEls.length) { stepEls[i].classList.add('done'); i++; } }, opts.stepMs || 650);
       return { finish: () => { clearInterval(interval); stepEls.forEach(el => el.classList.add('done')); } };
     }
 
@@ -10428,8 +10474,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         closeOptimizePanel();
         return;
       }
-      const anim = _optStartChecklist('Analyzing your resume…',
-        ['Checking ATS compatibility', 'Scanning keywords', 'Reviewing bullet points', 'Evaluating formatting'], 550);
+      _optSetStep(2);
+      const anim = _optStartChecklist({
+        title: 'Analyzing your resume…',
+        sub: 'Hang tight! Our AI is reviewing every detail.',
+        timing: 'This usually takes 2–4 seconds',
+        stepMs: 550,
+        steps: ['Checking ATS compatibility', 'Scanning keywords', 'Reviewing bullet points', 'Evaluating formatting'],
+      });
       try {
         const result = await api('POST', '/api/analyze-resume', { resumeText: text, forceResume: true });
         anim.finish();
@@ -10441,14 +10493,34 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         analysisResult = result;
         analysisResult._sourceResumeId   = resumeId;
         analysisResult._sourceResumeName = r.resumeName;
-        setTimeout(() => { _optPopulateDiag(analysisResult); _optShow('optStateDiag'); }, 400);
+        setTimeout(() => { _optSetStep(3); _optPopulateDiag(analysisResult); _optShow('optStateDiag'); }, 400);
       } catch (err) {
         anim.finish();
         toast(err.message || 'Scan failed — try again', 'err');
         closeOptimizePanel();
       }
     }
-    window._optPickerSelect = function(id) { diagnoseExistingResume(id); };
+
+    // Screen 1 — select-then-continue, matching the reference flow exactly
+    // (tapping a card just selects it; Continue is the explicit action).
+    window._optSelectResumeCard = function(id) {
+      _optPickedId = id;
+      document.querySelectorAll('#optResumePickerList .opt-picker-card, #optUploadCard').forEach(c => c.classList.remove('selected'));
+      const card = document.querySelector(`#optResumePickerList .opt-picker-card[data-id="${id}"]`);
+      if (card) card.classList.add('selected');
+      const btn = g('optContinueBtn'); if (btn) btn.disabled = false;
+    };
+    window._optSelectUploadOption = function() {
+      _optPickedId = 'upload';
+      document.querySelectorAll('#optResumePickerList .opt-picker-card').forEach(c => c.classList.remove('selected'));
+      g('optUploadCard').classList.add('selected');
+      const btn = g('optContinueBtn'); if (btn) btn.disabled = false;
+    };
+    window._optContinueFromPicker = function() {
+      if (!_optPickedId) return;
+      if (_optPickedId === 'upload') { closeOptimizePanel(); showView('upload'); return; }
+      diagnoseExistingResume(_optPickedId);
+    };
 
     // Entry A — dashboard hero button. Skips the picker automatically when
     // there's nothing to choose (per the brief: 0 resumes → straight to
@@ -10456,20 +10528,29 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     window.openOptimizeEntry = function() {
       const merged = getMergedResumes().filter(r => !r._isDraft);
       if (!merged.length) { showView('upload'); return; }
+      _optPickedId = null;
       _optOpenPanel();
-      if (merged.length === 1) { diagnoseExistingResume(merged[0].id); return; }
+      if (merged.length === 1) { _optSetStep(2); diagnoseExistingResume(merged[0].id); return; }
+      _optSetStep(1);
       g('optResumePickerList').innerHTML = merged.map(r => `
-        <div class="opt-picker-card" onclick="_optPickerSelect('${r.id}')">
-          <div class="opt-picker-name">${esc(r.resumeName)}</div>
-          <div class="opt-picker-score">${typeof r.atsScore === 'number' ? r.atsScore + ' ATS' : 'Not scored yet'}</div>
-          <svg class="opt-picker-arr" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        <div class="opt-picker-card" data-id="${r.id}" onclick="_optSelectResumeCard('${r.id}')">
+          <div class="opt-picker-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+          <div class="opt-picker-body">
+            <div class="opt-picker-name">${esc(r.resumeName)}</div>
+            <div class="opt-picker-meta">${esc(r.resumeData?.jobTitle || 'Updated ' + fmtDate(r.updatedAt))}</div>
+          </div>
+          <div class="opt-picker-score">${typeof r.atsScore === 'number' ? r.atsScore + ' ATS' : 'Not scored'}</div>
+          <div class="opt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
         </div>`).join('');
+      g('optUploadCard').classList.remove('selected');
+      g('optContinueBtn').disabled = true;
       _optShow('optStateSelect');
     };
 
     // Entry B — ATS Checker results screen, analysisResult already scanned.
     window.openOptimizeScreen = function() {
       if (!analysisResult) { toast('Scan a resume with ATS Checker first.', 'err'); return; }
+      _optSetStep(3);
       _optPopulateDiag(analysisResult);
       _optOpenPanel();
       _optShow('optStateDiag');
@@ -10486,8 +10567,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (!isFeatureUnlocked('resumeOptimize')) { lockTapped('resumeOptimize'); return; }
       if (!analysisResult) { toast('Scan a resume first.', 'err'); return; }
 
-      const anim = _optStartChecklist('Optimizing your resume…',
-        ['Rewriting bullet points', 'Adding missing keywords', 'Improving clarity', 'Strengthening achievements'], 700);
+      _optSetStep(4);
+      const anim = _optStartChecklist({
+        title: 'Optimizing your resume…',
+        sub: "Our AI is making powerful improvements.",
+        stepMs: 700,
+        tip: "We're using proven frameworks that help your resume pass ATS and impress recruiters.",
+        steps: ['Rewriting bullet points', 'Adding missing keywords', 'Improving clarity', 'Strengthening achievements'],
+      });
 
       try {
         const r = await fetch('/api/resume-optimize', {
@@ -10507,19 +10594,39 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _optNewResume = data;
 
         setTimeout(() => {
+          _optSetStep(5);
           g('optOldScore').textContent = data.oldScore || 0;
           g('optNewScore').textContent = data.newScore || 0;
+
           const ba = Array.isArray(data.beforeAfter) ? data.beforeAfter : [];
-          g('optBeforeAfterList').innerHTML = ba.map(pair => `
-            <div class="opt-ba-card">
-              <div class="opt-ba-before"><div class="opt-ba-lbl">Before</div><div class="opt-ba-text">${esc(pair.before||'')}</div></div>
-              <div class="opt-ba-after"><div class="opt-ba-lbl">After</div><div class="opt-ba-text">${esc(pair.after||'')}</div></div>
-            </div>`).join('');
+          const improvements = [
+            'Stronger, impact-driven bullet points',
+            ba.length ? `Rewrote ${ba.length} key bullet point${ba.length > 1 ? 's' : ''}` : 'Improved clarity & readability',
+            'Better alignment with industry standards',
+            'ATS compatibility boosted',
+          ];
+          g('optImproveList').innerHTML = improvements.map(t =>
+            `<div class="opt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>${esc(t)}</div>`
+          ).join('');
+
+          const baWrap = g('optBeforeAfterWrap');
+          if (ba.length) {
+            baWrap.style.display = '';
+            g('optBeforeAfterList').innerHTML = ba.map(pair => `
+              <div class="opt-ba-card">
+                <div class="opt-ba-before"><div class="opt-ba-lbl">Before</div><div class="opt-ba-text">${esc(pair.before||'')}</div></div>
+                <div class="opt-ba-after"><div class="opt-ba-lbl">After</div><div class="opt-ba-text">${esc(pair.after||'')}</div></div>
+              </div>`).join('');
+          } else {
+            baWrap.style.display = 'none';
+          }
+
           _optShow('optStateResults');
           loadResumes(); // new resume now exists — refresh so My Resumes/home reflect it
         }, 500);
       } catch (err) {
         anim.finish();
+        _optSetStep(3);
         _optShow('optStateDiag');
         toast(err.message || 'Optimization failed — try again', 'err');
       }

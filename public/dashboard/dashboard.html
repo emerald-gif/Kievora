@@ -2393,22 +2393,85 @@
   <div class="rec-panel-body" id="recPanelBody"></div>
 </div>
 
-<!-- ══ OPTIMIZE MY RESUME PANEL ══ -->
+<!-- ══ OPTIMIZE MY RESUME PANEL — deliberately its own visual identity, not a
+     reskin of ATS Checker. Step dots up top, a radial gauge for the score,
+     card-based resume picker with explicit Continue, richer AI moments. ══ -->
 <div id="optimizePanel" class="opt-panel">
   <div class="opt-panel-hdr">
     <button class="opt-panel-back" onclick="closeOptimizePanel()">
       <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </button>
-    <span class="opt-panel-title">Optimize My Resume</span>
+    <div class="opt-steps" id="optSteps">
+      <span class="opt-step-dot" data-n="1"></span>
+      <span class="opt-step-dot" data-n="2"></span>
+      <span class="opt-step-dot" data-n="3"></span>
+      <span class="opt-step-dot" data-n="4"></span>
+      <span class="opt-step-dot" data-n="5"></span>
+    </div>
+    <span style="width:38px;flex-shrink:0"></span>
   </div>
   <div class="opt-panel-body">
 
+    <!-- Screen 1: Select Resume -->
+    <div id="optStateSelect" class="opt-state">
+      <div class="opt-step-badge">1</div>
+      <div class="opt-diag-title">Optimize Your Resume</div>
+      <div class="opt-diag-sub">Choose a resume to optimize with AI.</div>
+      <div class="opt-picker-list" id="optResumePickerList"></div>
+      <div class="opt-picker-card opt-picker-upload-card" id="optUploadCard" onclick="_optSelectUploadOption()">
+        <div class="opt-picker-ico opt-picker-ico-upload">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </div>
+        <div class="opt-picker-body">
+          <div class="opt-picker-name">Upload New Resume</div>
+          <div class="opt-picker-meta">PDF, DOCX (Max 10MB)</div>
+        </div>
+        <div class="opt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+      </div>
+      <button class="opt-continue-btn" id="optContinueBtn" onclick="_optContinueFromPicker()" disabled>
+        Continue
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <!-- Screen 2 / 4: shared AI moment — scanning or optimizing, same component -->
+    <div id="optStateAnim" class="opt-state">
+      <div class="opt-anim-wrap">
+        <div class="opt-anim-orb-lg">
+          <div class="opt-anim-orb-ring"></div>
+          <svg width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" id="optAnimIconSvg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+        </div>
+        <div class="opt-anim-title" id="optAnimTitle">Optimizing your resume…</div>
+        <div class="opt-anim-sub" id="optAnimSub">Our AI is making powerful improvements.</div>
+        <div class="opt-check-list" id="optCheckList"></div>
+        <div class="opt-anim-timing" id="optAnimTiming"></div>
+      </div>
+    </div>
+
     <!-- Screen 3: Diagnosis -->
     <div id="optStateDiag" class="opt-state">
-      <div class="opt-diag-title">Your Resume Score: <span id="optDiagScore">—</span> ATS</div>
-      <div class="opt-diag-sub">Here's what's holding your score back — KIE can fix all of it.</div>
+      <div class="opt-step-badge">3</div>
+      <div class="opt-diag-title" style="text-align:center;margin-bottom:16px">Your Resume Score</div>
+      <div class="opt-gauge-wrap">
+        <div class="score-ring-wrap-tool">
+          <svg class="score-ring-svg" width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/>
+            <circle id="optGaugeFill" cx="60" cy="60" r="52" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <div class="score-ring-overlay-tool">
+            <div class="score-ring-val" id="optDiagScore" style="color:#f59e0b">—</div>
+            <div style="font-size:10.5px;color:var(--sub);font-weight:800;letter-spacing:.3px">ATS</div>
+          </div>
+        </div>
+        <div class="opt-gauge-verdict" id="optGaugeVerdict">Good start, but can be better!</div>
+      </div>
+
+      <div class="opt-section-lbl">Issues Found</div>
       <div class="opt-issue-list" id="optIssueList"></div>
+
+      <div class="opt-section-lbl">Skills &amp; Content Breakdown</div>
       <div class="opt-bars" id="optBars"></div>
+
       <button class="opt-fix-btn" id="optFixBtn" onclick="runFixMyResume()">
         <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>
         Fix My Resume
@@ -2416,41 +2479,31 @@
       <div class="opt-fix-note">Your original resume is never changed — this saves a brand-new, optimized copy.</div>
     </div>
 
-    <!-- Screen 1: Select Resume (only entry point that can skip itself) -->
-    <div id="optStateSelect" class="opt-state">
-      <div class="opt-diag-title">Optimize Your Resume</div>
-      <div class="opt-diag-sub">Select a resume to improve</div>
-      <div class="opt-picker-list" id="optResumePickerList"></div>
-      <button class="opt-picker-upload" onclick="closeOptimizePanel();showView('upload')">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-        Upload New Resume
-      </button>
-    </div>
-
-    <!-- Screen 2 / Screen 4: shared animated checklist (scanning OR optimizing) -->
-    <div id="optStateAnim" class="opt-state">
-      <div class="opt-anim-wrap">
-        <div class="opt-anim-orb">
-          <svg width="34" height="34" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
-        </div>
-        <div class="opt-anim-title" id="optAnimTitle">Optimizing your resume…</div>
-        <div class="opt-check-list" id="optCheckList"></div>
-      </div>
-    </div>
-
     <!-- Screen 5+6: Results & next step -->
     <div id="optStateResults" class="opt-state">
-      <div class="opt-results-hero">
-        <div class="opt-results-title">Your Resume is Now Optimized 🎉</div>
-        <div class="opt-score-jump">
-          <span class="opt-score-old" id="optOldScore">0</span>
-          <span class="opt-score-arrow">→</span>
-          <span class="opt-score-new" id="optNewScore">0</span>
+      <div class="opt-step-badge">5</div>
+      <div class="opt-diag-title" style="text-align:center">Your Resume is Now Optimized 🎉</div>
+      <div class="opt-diag-sub" style="text-align:center;margin-bottom:20px">Your ATS score has improved</div>
+
+      <div class="opt-score-boxes">
+        <div class="opt-score-box opt-score-box-old">
+          <div class="opt-score-box-val" id="optOldScore">0</div>
+          <div class="opt-score-box-lbl">Before</div>
         </div>
-        <div class="opt-results-sub">ATS Score</div>
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.8" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <div class="opt-score-box opt-score-box-new">
+          <div class="opt-score-box-val" id="optNewScore">0</div>
+          <div class="opt-score-box-lbl">ATS · After</div>
+        </div>
       </div>
 
-      <div id="optBeforeAfterList"></div>
+      <div class="opt-section-lbl">Key Improvements</div>
+      <div class="opt-improve-list" id="optImproveList"></div>
+
+      <div id="optBeforeAfterWrap">
+        <div class="opt-section-lbl">Before vs After</div>
+        <div id="optBeforeAfterList"></div>
+      </div>
 
       <div class="opt-results-actions">
         <button class="aa-btn aa-btn-pri" onclick="useOptimizedResume()" style="grid-column:1/-1">

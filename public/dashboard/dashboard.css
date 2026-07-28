@@ -797,69 +797,121 @@
     .rec-panel-title{font-size:16px;font-weight:800;color:#0f0e17;letter-spacing:-.35px;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none}
     .rec-panel-body{padding:16px;flex:1}
 
-    /* -- OPTIMIZE MY RESUME PANEL -- */
-    .opt-panel{position:fixed;inset:0;z-index:260;background:#f8f7ff;transform:translateX(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
+    /* -- OPTIMIZE MY RESUME PANEL — its own visual identity, not an ATS
+       Checker reskin: step dots, a light airy background, a radial gauge
+       for the score, card-based picker with explicit Continue. -- */
+    .opt-panel{position:fixed;inset:0;z-index:260;background:#faf9ff;transform:translateX(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
     .opt-panel.open{transform:translateX(0)}
-    .opt-panel-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid rgba(124,58,237,.1);position:sticky;top:0;z-index:10;flex-shrink:0}
+    .opt-panel-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid rgba(124,58,237,.1);position:sticky;top:0;z-index:10;flex-shrink:0}
     .opt-panel-back{width:38px;height:38px;border:none;background:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f0e17;transition:background .15s;flex-shrink:0}
     .opt-panel-back:hover{background:rgba(124,58,237,.07)}
-    .opt-panel-title{font-size:16px;font-weight:800;color:#0f0e17;letter-spacing:-.35px;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none}
-    .opt-panel-body{padding:18px 16px 32px;flex:1}
+    .opt-panel-body{padding:22px 16px 32px;flex:1}
     .opt-state{display:none}
     .opt-state.show{display:block;animation:optFadeIn .35s ease}
     @keyframes optFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-    /* Diagnosis (screen 3) */
+    /* Step progress dots — the signature that says "this is a guided flow",
+       distinct from ATS Checker which has no stepper at all. */
+    .opt-steps{display:flex;align-items:center;gap:6px}
+    .opt-step-dot{height:7px;width:7px;border-radius:99px;background:var(--border2);transition:all .3s cubic-bezier(.32,.72,0,1)}
+    .opt-step-dot.done{width:7px;background:#c4b5fd}
+    .opt-step-dot.active{width:22px;background:var(--g)}
+    .opt-step-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9px;background:var(--g);color:#fff;font-size:12px;font-weight:900;margin-bottom:14px;box-shadow:0 4px 12px rgba(124,58,237,.28)}
+
     .opt-diag-title{font-size:21px;font-weight:900;color:var(--txt);letter-spacing:-.4px;margin-bottom:2px}
     .opt-diag-sub{font-size:13px;color:var(--sub);margin-bottom:18px}
-    .opt-issue-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-    .opt-issue-item{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1.5px solid var(--border2);border-radius:14px;padding:12px 14px;font-size:13.5px;font-weight:600;color:var(--txt)}
-    .opt-issue-item svg{flex-shrink:0;margin-top:1px;color:#ea580c}
-    .opt-bars{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
-    .opt-bar-row{display:flex;flex-direction:column;gap:5px}
-    .opt-bar-lbl{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--sub)}
+    .opt-section-lbl{font-size:12.5px;font-weight:800;color:var(--txt);text-transform:uppercase;letter-spacing:.4px;margin:20px 0 10px}
+
+    /* Radial score gauge (screen 3) — reuses the same ring math as the rest
+       of the app's AI-tool score rings, but this is the only place in the
+       Optimize flow that uses it, so it reads as a distinct "diagnosis"
+       moment rather than a copy of ATS Checker's solid-purple score-hero. */
+    .opt-gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:6px}
+    .opt-gauge-verdict{font-size:13px;font-weight:700;color:var(--sub);margin-top:8px}
+
+    .opt-issue-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+    .opt-issue-item{display:flex;align-items:flex-start;gap:11px;background:#fff;border:1.5px solid var(--border2);border-radius:14px;padding:12px 14px}
+    .opt-issue-ico{width:26px;height:26px;border-radius:9px;background:#fef3e2;color:#ea580c;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+    .opt-issue-title{font-size:13.5px;font-weight:800;color:var(--txt);line-height:1.3}
+    .opt-issue-desc{font-size:11.5px;color:var(--mute);margin-top:1px;line-height:1.4}
+
+    .opt-bars{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
+    .opt-bar-row{display:flex;align-items:center;gap:11px}
+    .opt-bar-ico{width:26px;height:26px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+    .opt-bar-main{flex:1;min-width:0}
+    .opt-bar-lbl{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--sub);margin-bottom:5px}
     .opt-bar-track{height:8px;border-radius:99px;background:rgba(124,58,237,.09);overflow:hidden}
-    .opt-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#a78bfa,#7c3aed);transition:width .6s cubic-bezier(.32,.72,0,1)}
+    .opt-bar-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.32,.72,0,1)}
     .opt-fix-btn{width:100%;background:var(--g);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(124,58,237,.32);transition:transform .12s}
     .opt-fix-btn:active{transform:scale(.98)}
     .opt-fix-note{text-align:center;font-size:11.5px;color:var(--mute);margin-top:10px}
 
-    /* Select Resume (screen 1) */
-    .opt-picker-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
-    .opt-picker-card{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--border2);border-radius:16px;padding:14px 16px;cursor:pointer;transition:border-color .15s,transform .1s}
-    .opt-picker-card:hover{border-color:rgba(124,58,237,.35)}
+    /* Select Resume (screen 1) — card picker with explicit selection state,
+       then a Continue button, instead of ATS Checker's single dropzone. */
+    .opt-picker-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+    .opt-picker-card{position:relative;display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--border2);border-radius:16px;padding:13px 16px;cursor:pointer;transition:border-color .15s,transform .1s,background .15s}
     .opt-picker-card:active{transform:scale(.99)}
-    .opt-picker-name{flex:1;min-width:0;font-size:14px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .opt-picker-score{font-size:12px;font-weight:800;color:#7c3aed;background:rgba(124,58,237,.09);padding:4px 10px;border-radius:99px;flex-shrink:0}
-    .opt-picker-arr{color:var(--mute);flex-shrink:0}
-    .opt-picker-upload{width:100%;background:#fff;border:1.5px dashed rgba(124,58,237,.35);color:#7c3aed;border-radius:16px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+    .opt-picker-card.selected{border-color:#7c3aed;background:rgba(124,58,237,.04)}
+    .opt-picker-ico{width:40px;height:40px;border-radius:12px;background:linear-gradient(140deg,#ede9fe,#ddd6fe);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#7c3aed}
+    .opt-picker-ico-upload{background:none;border:1.5px dashed rgba(124,58,237,.4);color:#7c3aed}
+    .opt-picker-body{flex:1;min-width:0}
+    .opt-picker-name{font-size:14px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .opt-picker-meta{font-size:11.5px;color:var(--mute);margin-top:2px}
+    .opt-picker-score{font-size:11.5px;font-weight:800;color:#7c3aed;background:rgba(124,58,237,.09);padding:3px 9px;border-radius:99px;flex-shrink:0;white-space:nowrap}
+    .opt-picker-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .opt-picker-card.selected .opt-picker-check{background:#7c3aed;border-color:#7c3aed}
+    .opt-picker-check svg{opacity:0;transition:opacity .15s}
+    .opt-picker-card.selected .opt-picker-check svg{opacity:1}
+    .opt-picker-upload-card{border-style:dashed;border-color:rgba(124,58,237,.3)}
+    .opt-continue-btn{width:100%;background:var(--g);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(124,58,237,.32);transition:opacity .15s,transform .12s;margin-top:16px}
+    .opt-continue-btn:active{transform:scale(.98)}
+    .opt-continue-btn:disabled{opacity:.4;box-shadow:none;cursor:not-allowed}
 
-    /* Optimizing animation (screen 4) */
-    .opt-anim-wrap{display:flex;flex-direction:column;align-items:center;padding:50px 10px 20px;text-align:center}
-    .opt-anim-orb{width:84px;height:84px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;margin-bottom:22px;box-shadow:0 0 0 0 rgba(124,58,237,.4);animation:optPulse 1.4s ease-in-out infinite}
-    @keyframes optPulse{0%{box-shadow:0 0 0 0 rgba(124,58,237,.4)}70%{box-shadow:0 0 0 20px rgba(124,58,237,0)}100%{box-shadow:0 0 0 0 rgba(124,58,237,0)}}
-    .opt-anim-title{font-size:18px;font-weight:900;color:var(--txt);margin-bottom:22px}
-    .opt-check-list{display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px}
-    .opt-check-item{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--mute);opacity:.4;transition:opacity .3s,color .3s}
+    /* Shared AI moment (screens 2 & 4) — bigger orb with a pulsing ring
+       halo, distinct from ATS Checker's plain spinner. */
+    .opt-anim-wrap{display:flex;flex-direction:column;align-items:center;padding:44px 10px 20px;text-align:center}
+    .opt-anim-orb-lg{position:relative;width:88px;height:88px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;margin-bottom:22px;box-shadow:0 10px 30px rgba(124,58,237,.35)}
+    .opt-anim-orb-ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(124,58,237,.25);animation:optRingPulse 1.8s ease-out infinite}
+    @keyframes optRingPulse{0%{transform:scale(.8);opacity:1}100%{transform:scale(1.35);opacity:0}}
+    .opt-anim-title{font-size:18px;font-weight:900;color:var(--txt);margin-bottom:4px}
+    .opt-anim-sub{font-size:12.5px;color:var(--sub);margin-bottom:26px;max-width:260px}
+    .opt-check-list{display:flex;flex-direction:column;gap:14px;width:100%;max-width:300px}
+    .opt-check-item{display:flex;align-items:center;gap:11px;font-size:13.5px;font-weight:600;color:var(--mute);opacity:.45;transition:opacity .3s,color .3s;text-align:left}
     .opt-check-item.done{opacity:1;color:var(--txt)}
-    .opt-check-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .3s}
+    .opt-check-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .3s}
     .opt-check-item.done .opt-check-dot{background:#16a34a;border-color:#16a34a}
+    .opt-check-dot svg{opacity:0;transition:opacity .15s}
+    .opt-check-item.done .opt-check-dot svg{opacity:1}
+    .opt-anim-timing{font-size:11px;color:var(--mute);margin-top:24px;font-weight:600}
 
-    /* Results (screen 5+6) */
-    .opt-results-hero{background:linear-gradient(135deg,#0f0e17,#1e1040);border-radius:22px;padding:26px 22px;color:#fff;margin-bottom:18px;text-align:center}
-    .opt-results-title{font-size:19px;font-weight:900;margin-bottom:14px}
-    .opt-score-jump{display:flex;align-items:center;justify-content:center;gap:14px;font-weight:900}
-    .opt-score-old{font-size:22px;color:rgba(255,255,255,.45);text-decoration:line-through}
-    .opt-score-arrow{color:#a78bfa}
-    .opt-score-new{font-size:34px;color:#fff}
-    .opt-results-sub{font-size:11.5px;color:rgba(255,255,255,.6);margin-top:8px;font-weight:600}
+    /* AI Tip callout — a little bonus that makes screen 4 feel considered */
+    .opt-ai-tip{display:flex;gap:10px;background:linear-gradient(135deg,#f5f3ff,#faf5ff);border:1.5px solid rgba(124,58,237,.15);border-radius:14px;padding:12px 14px;margin-top:24px;max-width:300px;text-align:left}
+    .opt-ai-tip-star{flex-shrink:0;color:#7c3aed;font-size:14px}
+    .opt-ai-tip-text{font-size:11.5px;color:var(--sub);line-height:1.5}
+    .opt-ai-tip-text b{color:var(--txt)}
+
+    /* Results (screens 5+6) — two distinct score boxes instead of ATS
+       Checker's dark solid hero card, plus a Key Improvements checklist. */
+    .opt-score-boxes{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px}
+    .opt-score-box{flex:1;max-width:130px;border-radius:16px;padding:16px 10px;text-align:center}
+    .opt-score-box-old{background:#f1f5f9;border:1.5px solid var(--border2)}
+    .opt-score-box-new{background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border:1.5px solid #bbf7d0}
+    .opt-score-box-val{font-size:26px;font-weight:900;line-height:1}
+    .opt-score-box-old .opt-score-box-val{color:#94a3b8}
+    .opt-score-box-new .opt-score-box-val{color:#16a34a}
+    .opt-score-box-lbl{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--mute);margin-top:4px}
+
+    .opt-improve-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+    .opt-improve-item{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--border2);border-radius:13px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--txt)}
+    .opt-improve-item svg{flex-shrink:0;color:#16a34a}
+
     .opt-ba-card{background:#fff;border:1.5px solid var(--border2);border-radius:16px;padding:14px 16px;margin-bottom:10px}
     .opt-ba-lbl{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px}
     .opt-ba-before .opt-ba-lbl{color:#dc2626}
     .opt-ba-after  .opt-ba-lbl{color:#16a34a}
     .opt-ba-text{font-size:13px;color:var(--txt);line-height:1.5}
     .opt-ba-before{opacity:.7;margin-bottom:8px}
-    .opt-results-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+    .opt-results-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
     .opt-next-step{margin-top:26px;padding-top:22px;border-top:1px solid var(--border2)}
     .opt-next-title{font-size:14.5px;font-weight:800;color:var(--txt);margin-bottom:12px;text-align:center}
     .opt-next-actions{display:flex;flex-direction:column;gap:10px}
