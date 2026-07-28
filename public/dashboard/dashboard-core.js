@@ -9698,7 +9698,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       // Show skeletons only on real fetch
       if (cards) {
-        cards.innerHTML = Array(3).fill(0).map(() => `<div class="job-snap-skel"></div>`).join('');
+        const widths = [['92%','60%','40%','55%'],['85%','65%','35%','48%'],['95%','55%','45%','60%']];
+        cards.innerHTML = widths.map(w => `<div class="job-snap-card" style="pointer-events:none">
+          <div class="job-snap-logo skel-shimmer"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:${w[0]};height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:${w[1]};height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:${w[2]};height:10px"></div>
+          <div class="job-snap-tags">
+            <div class="job-skel-tag skel-shimmer"></div>
+            <div class="job-skel-tag skel-shimmer" style="width:58px"></div>
+          </div>
+          <div class="job-skel-bar skel-shimmer" style="width:${w[3]};height:10px;margin-top:auto"></div>
+        </div>`).join('');
       }
 
       try {

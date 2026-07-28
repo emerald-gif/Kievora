@@ -296,6 +296,16 @@
     .rr-btn-edit:hover{background:#ddd6fe}
     .rr-btn-del{background:#fff1f2;color:#e11d48}
     .rr-btn-del:hover{background:#ffe4e6}
+
+    /* ── DETAILED SKELETONS — reuse the real card containers (.rr-card / .job-snap-card)
+       so size, padding, radius and shadow match exactly; only the inner content is
+       swapped for shimmering bones instead of a single flat rectangle ── */
+    .skel-shimmer{background:linear-gradient(90deg,#f3f0ff 25%,#ede9fe 50%,#f3f0ff 75%)!important;background-size:200% 100%;animation:shimmer 1.4s linear infinite}
+    .rr-skel-bar{border-radius:5px}
+    .rr-skel-pill{width:56px;height:18px;border-radius:99px}
+    .rr-skel-btn{width:28px;height:28px;border-radius:9px}
+    .job-skel-bar{border-radius:4px}
+    .job-skel-tag{width:46px;height:18px;border-radius:99px}
     .ds-dot{width:6px;height:6px;border-radius:99px;background:var(--border2);border:none;padding:0;cursor:pointer;transition:all .25s}
     .ds-dot.active{width:20px;background:var(--g)}
 

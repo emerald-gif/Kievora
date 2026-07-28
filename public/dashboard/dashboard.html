@@ -330,7 +330,7 @@
               </div>
             </div>
             <div class="ds-card-heading">Get a higher ATS score</div>
-            <div class="ds-card-sub">KIE AI scans your resume, shows you what's wrong, then fixes it for you.</div>
+            <div class="ds-card-sub">KIE scans your resume, shows you what's wrong, then fixes it for you.</div>
             <button class="ds-card-cta" onclick="openOptimizeEntry()">
               Optimize my resume
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -449,7 +449,36 @@
       <a id="shAllLink" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px;transition:all .15s" onmouseover="this.style.background='rgba(124,58,237,.14)'" onmouseout="this.style.background='rgba(124,58,237,.08)'">View all<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
     </div>
     <div class="rswiper-outer" style="margin-bottom:0">
-      <div id="rGrid" class="rswiper-track"><div class="resume-snap-skel"></div><div class="resume-snap-skel"></div></div>
+      <div id="rGrid" class="rswiper-track">
+        <div class="rr-slide">
+          <div class="rr-card">
+            <div class="rr-thumb skel-shimmer"></div>
+            <div class="rr-info">
+              <div class="rr-skel-bar skel-shimmer" style="width:72%;height:13px;margin-bottom:7px"></div>
+              <div class="rr-skel-bar skel-shimmer" style="width:42%;height:10px;margin-bottom:8px"></div>
+              <div class="rr-skel-pill skel-shimmer"></div>
+            </div>
+            <div class="rr-actions">
+              <div class="rr-skel-btn skel-shimmer"></div>
+              <div class="rr-skel-btn skel-shimmer"></div>
+            </div>
+          </div>
+        </div>
+        <div class="rr-slide">
+          <div class="rr-card">
+            <div class="rr-thumb skel-shimmer"></div>
+            <div class="rr-info">
+              <div class="rr-skel-bar skel-shimmer" style="width:60%;height:13px;margin-bottom:7px"></div>
+              <div class="rr-skel-bar skel-shimmer" style="width:38%;height:10px;margin-bottom:8px"></div>
+              <div class="rr-skel-pill skel-shimmer"></div>
+            </div>
+            <div class="rr-actions">
+              <div class="rr-skel-btn skel-shimmer"></div>
+              <div class="rr-skel-btn skel-shimmer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="rswiper-dots" id="rswipDots"></div>
 
@@ -462,9 +491,39 @@
         <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px">Jobs for You</span>
       </div>
       <div style="display:flex;gap:12px;overflow:hidden">
-        <div class="job-snap-skel"></div>
-        <div class="job-snap-skel"></div>
-        <div class="job-snap-skel"></div>
+        <div class="job-snap-card" style="pointer-events:none">
+          <div class="job-snap-logo skel-shimmer"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:92%;height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:60%;height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:40%;height:10px"></div>
+          <div class="job-snap-tags">
+            <div class="job-skel-tag skel-shimmer"></div>
+            <div class="job-skel-tag skel-shimmer" style="width:58px"></div>
+          </div>
+          <div class="job-skel-bar skel-shimmer" style="width:55%;height:10px;margin-top:auto"></div>
+        </div>
+        <div class="job-snap-card" style="pointer-events:none">
+          <div class="job-snap-logo skel-shimmer"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:85%;height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:65%;height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:35%;height:10px"></div>
+          <div class="job-snap-tags">
+            <div class="job-skel-tag skel-shimmer"></div>
+            <div class="job-skel-tag skel-shimmer" style="width:58px"></div>
+          </div>
+          <div class="job-skel-bar skel-shimmer" style="width:48%;height:10px;margin-top:auto"></div>
+        </div>
+        <div class="job-snap-card" style="pointer-events:none">
+          <div class="job-snap-logo skel-shimmer"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:95%;height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:55%;height:12px"></div>
+          <div class="job-skel-bar skel-shimmer" style="width:45%;height:10px"></div>
+          <div class="job-snap-tags">
+            <div class="job-skel-tag skel-shimmer"></div>
+            <div class="job-skel-tag skel-shimmer" style="width:58px"></div>
+          </div>
+          <div class="job-skel-bar skel-shimmer" style="width:60%;height:10px;margin-top:auto"></div>
+        </div>
       </div>
     </div>
 
