@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="tcard${_etSelected === t.id ? ' sel' : ''}${locked ? ' tcard-locked' : ''}" id="_et_${t.id}" onclick="window._etPick('${t.id}')">
         <div class="tcard-thumb">
           <div class="tpl-scaler">${bph ? bph(_etSample, t.id, t.bg, 'rf-sans') : ''}</div>
-          ${locked ? '<div class="premium-lock-corner">🔒 Premium</div>' : ''}
+          ${locked ? '<div class="premium-lock-corner">👑 Premium</div>' : ''}
           <button class="tcard-use" onclick="event.stopPropagation();window._etPick('${t.id}');${locked ? '' : "g('_etConfirm').click()"}">${locked ? 'Unlock →' : 'Use Template →'}</button>
         </div>
         <div class="tcard-foot">

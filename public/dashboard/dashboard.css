@@ -89,6 +89,8 @@
     /* ── JOBS SKELETON ── */
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
     .job-snap-skel{width:220px;flex-shrink:0;border-radius:18px;overflow:hidden;background:#f3f0ff;height:140px;animation:shimmer 1.4s linear infinite;background:linear-gradient(90deg,#f3f0ff 25%,#ede9fe 50%,#f3f0ff 75%);background-size:200% 100%}
+    /* ── RESUME CARD SKELETON (shown on first paint, before data loads) ── */
+    .resume-snap-skel{flex:0 0 calc(85vw - 24px);max-width:290px;min-width:240px;height:236px;border-radius:20px;flex-shrink:0;scroll-snap-align:start;animation:shimmer 1.4s linear infinite;background:linear-gradient(90deg,#f3f0ff 25%,#ede9fe 50%,#f3f0ff 75%);background-size:200% 100%}
     .job-snap-more{background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:18px;padding:14px;width:140px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:all .18s;text-decoration:none;color:#fff;text-align:center}
     .job-snap-more:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(124,58,237,.35)}
     .job-snap-more-circle{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}

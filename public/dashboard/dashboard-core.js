@@ -1663,7 +1663,7 @@
         const isSecondary = quizRec.secondary === t.id;
         const locked = !isTemplateUnlocked(t.id);
         const badge = locked
-          ? `<div class="premium-lock-corner">🔒 Premium</div>`
+          ? `<div class="premium-lock-corner">👑 Premium</div>`
           : isPrimary
           ? `<div class="rec-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5z"/></svg>Recommended</div>`
           : isSecondary
@@ -4216,7 +4216,7 @@
       el.classList.add('active');
     };
 
-    // Adds a small "🔒 Premium" badge to the Recruiter View button when locked.
+    // Adds a small "👑 Premium" badge to the Recruiter View button when locked.
     // Tapping is already handled inside runRecruiterIntel() above.
     function renderRecruiterViewLock() {
       const btn = g('recruiterIntelBtn');
@@ -4227,14 +4227,14 @@
       if (locked && !badge) {
         badge = document.createElement('span');
         badge.className = 'pill-lock-badge';
-        badge.textContent = '🔒';
+        badge.textContent = '👑';
         btn.appendChild(badge);
       } else if (!locked && badge) {
         badge.remove();
       }
     }
 
-    // Adds a small "🔒 Premium" suffix to the ATS "What does this mean?" button
+    // Adds a small "👑 Premium" suffix to the ATS "What does this mean?" button
     // when the explanation itself is locked. Tapping is already handled inside
     // openATSDrawer() above — this is just the visual cue.
     function renderAtsExplanationLock() {
@@ -4245,7 +4245,7 @@
         if (locked && !badge) {
           badge = document.createElement('span');
           badge.className = 'pill-lock-badge';
-          badge.textContent = '🔒';
+          badge.textContent = '👑';
           btn.appendChild(badge);
         } else if (!locked && badge) {
           badge.remove();
@@ -4268,7 +4268,7 @@
         if (locked && !badge) {
           badge = document.createElement('span');
           badge.className = 'pill-lock-badge';
-          badge.textContent = '🔒';
+          badge.textContent = '👑';
           pill.appendChild(badge);
         } else if (!locked && badge) {
           badge.remove();
@@ -4276,7 +4276,7 @@
       });
     }
 
-    // Adds/removes a small "🔒 Premium" badge in the corner of any AI Tools Hub
+    // Adds/removes a small "👑 Premium" badge in the corner of any AI Tools Hub
     // card the user's plan doesn't include — tapping is already blocked inside
     // showView() above, this is just the visual "you're missing this" cue.
     // Returns the right badge text for a locked tool: generic "Premium" for a
@@ -4285,8 +4285,8 @@
     // something they already paid for is still locked.
     function lockBadgeLabel(toolKey) {
       const minPlan = minPlanForTool(toolKey);
-      if (PLAN_KEY === 'paid7' && minPlan === 'paid15') return '🔒 Premier';
-      return '🔒 Premium';
+      if (PLAN_KEY === 'paid7' && minPlan === 'paid15') return '👑 Premier';
+      return '👑 Premium';
     }
 
     function renderToolHubLocks() {
@@ -4331,7 +4331,7 @@
       });
     }
 
-    // Adds/removes a "🔒 Premium" badge on the "existing resume" and "upload"
+    // Adds/removes a "👑 Premium" badge on the "existing resume" and "upload"
     // cover-letter source cards when the user's plan doesn't include
     // coverLetterFromResume. "From scratch" stays free and is never touched.
     function renderCoverLetterSourceLocks() {
@@ -4344,7 +4344,7 @@
         if (locked && !badge) {
           badge = document.createElement('div');
           badge.className = 'premium-lock-corner';
-          badge.innerHTML = '🔒 Premium';
+          badge.innerHTML = '👑 Premium';
           card.appendChild(badge);
         } else if (!locked && badge) {
           badge.remove();
@@ -4441,7 +4441,7 @@
         const rightIcon = isActive
           ? '<div class="kmd-active-dot"></div>'
           : locked
-            ? '<span class="kmd-lock-badge">🔒 Premium</span>'
+            ? '<span class="kmd-lock-badge">👑 Premium</span>'
             : '<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#cbd5e1" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>';
         return `<div class="kmd-item ${isActive?'active':''} ${locked?'locked':''}" onclick="selectKieModel('${key}')">
           <div class="kmd-item-body">
@@ -5720,7 +5720,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         const locked = !j.url;
         return `
         <div class="job-snap-card${locked ? ' job-snap-locked' : ''}" onclick="${locked ? `lockTapped('findJobs')` : `openKieJobDetail('${rowId}', ${i})`}" style="cursor:pointer">
-          ${locked ? '<div class="premium-lock-corner">🔒 Premium</div>' : ''}
+          ${locked ? '<div class="premium-lock-corner">👑 Premium</div>' : ''}
           <div style="display:flex;align-items:center;gap:10px">
             <div class="job-snap-logo">
               ${j.logo
@@ -9660,6 +9660,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const section = document.getElementById('jobsHomeSection');
       const pill    = document.getElementById('jobsHomeProfPill');
       const cards   = document.getElementById('jobsHomeCards');
+      const skel    = document.getElementById('jobsHomeSkeleton');
+
+      if (skel) skel.style.display = 'none';
 
       if (!prof || !prof.title) {
         if (cta)     cta.style.display     = '';
@@ -9725,7 +9728,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const locked = !j.url;
         return `
         <div class="job-snap-card${locked?' job-snap-locked':''}" onclick="${locked?`lockTapped('findJobs')`:`openJobDetail(${i},'home')`}" style="cursor:pointer">
-          ${locked ? '<div class="premium-lock-corner">🔒 Premium</div>' : ''}
+          ${locked ? '<div class="premium-lock-corner">👑 Premium</div>' : ''}
           <div style="display:flex;align-items:center;gap:10px">
             <div class="job-snap-logo">
               ${j.logo
@@ -9918,7 +9921,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const dest = KIE_GOTO_DESTINATIONS[key];
         if (!dest) return '';
         const locked = dest.locked();
-        return `<button type="button" class="kie-goto-btn${locked ? ' kie-goto-locked' : ''}" onclick="_kieGotoClick('${key}')">${esc(dest.label)}${locked ? ' 🔒' : ''}</button>`;
+        return `<button type="button" class="kie-goto-btn${locked ? ' kie-goto-locked' : ''}" onclick="_kieGotoClick('${key}')">${esc(dest.label)}${locked ? ' 👑' : ''}</button>`;
       });
     }
 
