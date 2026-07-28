@@ -99,7 +99,7 @@
     // UI reads to decide what to show locked vs unlocked — every actual
     // enforcement happens server-side regardless of what this object says.
     let PLAN_KEY   = 'free';
-    let PLAN_GATES = null; // shape: { models, tools, templates, uploadAnalyze, recruiterView, findJobsClick, coverLetterFromResume, atsExplanation, articleDownload, verifiedBadgeEligible, kieWebSearch, kieCreativeMode, ... }
+    let PLAN_GATES = null; // shape: { models, tools, templates, atsChecker, resumeOptimize, recruiterView, findJobsClick, coverLetterFromResume, atsExplanation, articleDownload, verifiedBadgeEligible, kieWebSearch, kieCreativeMode, ... }
 
     let _planGatesLoadedOnce = false;
     async function loadPlanGates() {
@@ -183,8 +183,10 @@
     // Static copy for every locked-feature drawer — title/icon/description never
     // need a network call, so the drawer opens instantly with zero lag.
     const PREMIUM_FEATURE_INFO = {
-      uploadAnalyze:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h6"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="3.2"/><path d="M19 19l2.5 2.5"/></svg>', title: 'Upload & Analyze', minPlan: 'paid7',
-        desc: 'Upload any resume and get a full ATS score, strengths, weaknesses, and exactly what to fix — plus our AI Image Analyzer for scanned or photographed resumes.' },
+      atsChecker:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h6"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="3.2"/><path d="M19 19l2.5 2.5"/></svg>', title: 'ATS Checker', minPlan: 'paid7',
+        desc: 'Scan any resume and get a full ATS score, strengths, weaknesses, and exactly what to fix — plus our AI Image Analyzer for scanned or photographed resumes.' },
+      resumeOptimize: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/><path d="M19 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>', title: 'Fix My Resume', minPlan: 'paid7',
+        desc: 'Let KIE rewrite your bullet points, add missing keywords, and push your ATS score up automatically — saved as a brand-new resume, your original stays untouched.' },
       recruiterView:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>', title: 'Recruiter View', minPlan: 'paid15',
         desc: "See your resume exactly the way a recruiter does on a 6-second skim — first impressions, red flags, and what makes them keep reading." },
       templates:      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>', title: 'All Templates', minPlan: 'paid7',
@@ -329,8 +331,10 @@
         open: () => { if (typeof window.openKieTool === 'function') window.openKieTool(key); },
         lock: () => lockTapped('tool', key),
       }])),
-      upload:      { label: 'Upload & Analyze',  locked: () => !isFeatureUnlocked('uploadAnalyze'),
-        open: () => showView('upload'), lock: () => lockTapped('uploadAnalyze') },
+      upload:      { label: 'ATS Checker',      locked: () => !isFeatureUnlocked('atsChecker'),
+        open: () => showView('upload'), lock: () => lockTapped('atsChecker') },
+      resumeoptimize: { label: 'Optimize My Resume', locked: () => !isFeatureUnlocked('resumeOptimize'),
+        open: () => showView('upload'), lock: () => lockTapped('resumeOptimize') },
       coverletter: { label: 'Cover Letter',       locked: () => !isFeatureUnlocked('coverLetterFromResume'),
         open: () => { if (typeof window.openKieTool === 'function') window.openKieTool('coverletter'); }, lock: () => lockTapped('coverLetter') },
       builder:     { label: 'Resume Builder',    locked: () => false, open: () => showView('builder') },
@@ -1072,7 +1076,7 @@
       tpick:        { title: 'Choose Template',   back: 'home'   },
       success:      { title: 'Resume Saved',      back: 'home'   },
       detail:       { title: 'Resume',            back: 'home'   },
-      upload:       { title: 'Upload & Analyze',  back: 'home'   },
+      upload:       { title: 'ATS Checker',  back: 'home'   },
       analysis:     { title: 'Resume Analysis',   back: 'upload' },
       builder:      { title: 'Resume Builder',    back: () => window.editId ? 'home' : 'tpick' },
       coverletter:  { title: 'Cover Letter',      back: 'home'   },
@@ -1279,7 +1283,7 @@
             </svg>
           </div>
           <div class="rlist-info">
-            <div class="rlist-name">${esc(r.resumeName)}</div>
+            <div class="rlist-name">${esc(r.resumeName)}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}</div>
             <div class="rlist-date">Updated ${fmtDate(r.updatedAt)}</div>
             <div class="rlist-score" style="margin-top:5px">${atsBadge}</div>
           </div>
@@ -1547,7 +1551,7 @@
             <div class="rcard-thumb-scaler">${buildPrevHTML(d, t.id, t.bg, 'rf-sans')}</div>
           </div>
           <div class="rcard-body">
-            <div class="rcard-name">${esc(r.resumeName)}${isDraft?'<span class="draft-badge">Draft</span>':''}</div>
+            <div class="rcard-name">${esc(r.resumeName)}${isDraft?'<span class="draft-badge">Draft</span>':''}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}</div>
             <div class="rcard-role">${esc(d.jobTitle || 'No job title')}</div>
             <div class="rcard-date">Modified ${fmtDate(r.updatedAt)}</div>
           </div>
@@ -4056,7 +4060,7 @@
         try { tok = await usr.getIdToken(); } catch (_) { /* use existing */ }
 
         // forceResume is deliberately omitted here — this is a plain KIE chat
-        // attachment, not the dedicated Upload & Analyze tool, so the server
+        // attachment, not the dedicated ATS Checker tool, so the server
         // honestly classifies what the file actually is first instead of
         // assuming every upload is a resume.
         const analysisRes = await fetch('/api/analyze-resume', {
@@ -10125,8 +10129,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     async function runAnalysis() {
-      if (!isFeatureUnlocked('uploadAnalyze')) {
-        openPremiumDrawer('uploadAnalyze');
+      if (!isFeatureUnlocked('atsChecker')) {
+        openPremiumDrawer('atsChecker');
         return; // never extract text or call the API for a plan that can't see the result
       }
       const btn = g('analyzeBtn');
@@ -10327,6 +10331,218 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const panel = g('recPanel');
       if (panel) panel.classList.remove('open');
       document.body.style.overflow = '';
+    };
+
+    // ── OPTIMIZE MY RESUME ──────────────────────────────────────────────────────
+    // Two entry points converge on the same panel:
+    //  A) Dashboard hero "Optimize My Resume" → Screen 1 pick/upload → Screen 3
+    //  B) ATS Checker results "Optimize My Resume" button → straight to Screen 3
+    //     (analysisResult already exists, so the select/scan step is skipped)
+    // From Screen 3, "Fix My Resume" is the resumeOptimize paywall moment →
+    // Screen 4 animated AI pass → Screen 5/6 results + next step. The AI call
+    // always creates a NEW resume doc server-side — nothing is ever overwritten.
+    let _optNewResume = null;
+
+    function _optIssuesFromAnalysis(r) {
+      const issues = [...(r.weaknesses||[]).slice(0,3), ...(r.missingItems||[]).slice(0,2)];
+      return (issues.length ? issues : ['Low-impact bullet points', 'Missing industry keywords']).slice(0,4);
+    }
+    function _optBarsFromAnalysis(r) {
+      const score = Math.min(100, Math.max(0, r.atsScore||0));
+      const hasSk  = (r.skills||[]).length >= 5;
+      const hasExp = (r.workExperience||[]).some(w => /\d/.test(w.description||''));
+      return [
+        { label: 'Skills',     pct: hasSk  ? 80 : 45 },
+        { label: 'Experience', pct: hasExp ? 75 : 40 },
+        { label: 'Keywords',   pct: Math.max(20, Math.min(90, score)) },
+      ];
+    }
+    function _optAllStates() { return ['optStateSelect','optStateDiag','optStateAnim','optStateResults']; }
+    function _optShow(id) { _optAllStates().forEach(s => g(s).classList.remove('show')); g(id).classList.add('show'); }
+    function _optOpenPanel() { g('optimizePanel').classList.add('open'); document.body.style.overflow = 'hidden'; }
+
+    function _optPopulateDiag(r) {
+      g('optDiagScore').textContent = Math.min(100, Math.max(0, r.atsScore||0));
+      g('optIssueList').innerHTML = _optIssuesFromAnalysis(r).map(i =>
+        `<div class="opt-issue-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><span>${esc(i)}</span></div>`
+      ).join('');
+      g('optBars').innerHTML = _optBarsFromAnalysis(r).map(b =>
+        `<div class="opt-bar-row"><div class="opt-bar-lbl"><span>${esc(b.label)}</span><span>${b.pct}%</span></div><div class="opt-bar-track"><div class="opt-bar-fill" style="width:${b.pct}%"></div></div></div>`
+      ).join('');
+    }
+
+    // Shared checklist animation — used for both "scanning" (screen 2) and
+    // "optimizing" (screen 4), just with different copy. Returns a control
+    // object so the caller can stop it early once its real API call resolves.
+    function _optStartChecklist(title, steps, stepMs) {
+      g('optAnimTitle').textContent = title;
+      g('optCheckList').innerHTML = steps.map(s => `<div class="opt-check-item"><span class="opt-check-dot"></span>${esc(s)}</div>`).join('');
+      _optShow('optStateAnim');
+      const stepEls = Array.from(document.querySelectorAll('#optCheckList .opt-check-item'));
+      let i = 0;
+      const interval = setInterval(() => { if (i < stepEls.length) { stepEls[i].classList.add('done'); i++; } }, stepMs);
+      return { finish: () => { clearInterval(interval); stepEls.forEach(el => el.classList.add('done')); } };
+    }
+
+    // Converts a saved resume's structured data into plain text so it can go
+    // through the same /api/analyze-resume pipeline ATS Checker already uses —
+    // one scoring engine, one diagnosis format, everywhere in the app.
+    function _resumeDataToText(d) {
+      const lines = [];
+      if (d.fullName) lines.push(d.fullName);
+      if (d.jobTitle) lines.push(d.jobTitle);
+      const contact = [d.email, d.phone, d.location].filter(Boolean).join(' | ');
+      if (contact) lines.push(contact);
+      if (d.summary) lines.push('\nSummary:\n' + d.summary);
+      if ((d.workExperience||[]).length) {
+        lines.push('\nExperience:');
+        d.workExperience.forEach(w => {
+          lines.push(`${w.position||''} at ${w.company||''} (${w.startDate||''} - ${w.endDate||''})`);
+          if (w.description) lines.push(w.description);
+        });
+      }
+      if ((d.education||[]).length) {
+        lines.push('\nEducation:');
+        d.education.forEach(e => lines.push(`${e.degree||''} ${e.field||''}, ${e.school||''} (${e.graduationDate||''})`));
+      }
+      if ((d.skills||[]).length) lines.push('\nSkills: ' + d.skills.join(', '));
+      if ((d.certifications||[]).length) {
+        lines.push('\nCertifications:');
+        d.certifications.forEach(c => lines.push(`${c.name||''} - ${c.issuer||''} (${c.date||''})`));
+      }
+      if ((d.projects||[]).length) {
+        lines.push('\nProjects:');
+        d.projects.forEach(p => lines.push(`${p.name||''}: ${p.description||''}`));
+      }
+      if ((d.languages||[]).length) lines.push('\nLanguages: ' + d.languages.map(l => `${l.language||''} (${l.proficiency||''})`).join(', '));
+      return lines.join('\n');
+    }
+
+    async function diagnoseExistingResume(resumeId) {
+      const merged = getMergedResumes();
+      const r = merged.find(x => x.id === resumeId);
+      if (!r) { toast('Resume not found', 'err'); closeOptimizePanel(); return; }
+      const text = _resumeDataToText(r.resumeData || {});
+      if (text.trim().length < 30) {
+        toast('This resume needs more content before it can be optimized.', 'err');
+        closeOptimizePanel();
+        return;
+      }
+      const anim = _optStartChecklist('Analyzing your resume…',
+        ['Checking ATS compatibility', 'Scanning keywords', 'Reviewing bullet points', 'Evaluating formatting'], 550);
+      try {
+        const result = await api('POST', '/api/analyze-resume', { resumeText: text, forceResume: true });
+        anim.finish();
+        if (result.isResume === false) {
+          toast("Couldn't read this resume clearly — try uploading it fresh.", 'err');
+          closeOptimizePanel();
+          return;
+        }
+        analysisResult = result;
+        analysisResult._sourceResumeId   = resumeId;
+        analysisResult._sourceResumeName = r.resumeName;
+        setTimeout(() => { _optPopulateDiag(analysisResult); _optShow('optStateDiag'); }, 400);
+      } catch (err) {
+        anim.finish();
+        toast(err.message || 'Scan failed — try again', 'err');
+        closeOptimizePanel();
+      }
+    }
+    window._optPickerSelect = function(id) { diagnoseExistingResume(id); };
+
+    // Entry A — dashboard hero button. Skips the picker automatically when
+    // there's nothing to choose (per the brief: 0 resumes → straight to
+    // upload, 1 resume → straight to its diagnosis).
+    window.openOptimizeEntry = function() {
+      const merged = getMergedResumes().filter(r => !r._isDraft);
+      if (!merged.length) { showView('upload'); return; }
+      _optOpenPanel();
+      if (merged.length === 1) { diagnoseExistingResume(merged[0].id); return; }
+      g('optResumePickerList').innerHTML = merged.map(r => `
+        <div class="opt-picker-card" onclick="_optPickerSelect('${r.id}')">
+          <div class="opt-picker-name">${esc(r.resumeName)}</div>
+          <div class="opt-picker-score">${typeof r.atsScore === 'number' ? r.atsScore + ' ATS' : 'Not scored yet'}</div>
+          <svg class="opt-picker-arr" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </div>`).join('');
+      _optShow('optStateSelect');
+    };
+
+    // Entry B — ATS Checker results screen, analysisResult already scanned.
+    window.openOptimizeScreen = function() {
+      if (!analysisResult) { toast('Scan a resume with ATS Checker first.', 'err'); return; }
+      _optPopulateDiag(analysisResult);
+      _optOpenPanel();
+      _optShow('optStateDiag');
+    };
+
+    window.closeOptimizePanel = function() {
+      g('optimizePanel').classList.remove('open');
+      document.body.style.overflow = '';
+    };
+
+    window.runFixMyResume = async function() {
+      // This is the real paywall moment — everything before it (scan +
+      // diagnosis) is free, the AI rewrite itself is Pro+.
+      if (!isFeatureUnlocked('resumeOptimize')) { lockTapped('resumeOptimize'); return; }
+      if (!analysisResult) { toast('Scan a resume first.', 'err'); return; }
+
+      const anim = _optStartChecklist('Optimizing your resume…',
+        ['Rewriting bullet points', 'Adding missing keywords', 'Improving clarity', 'Strengthening achievements'], 700);
+
+      try {
+        const r = await fetch('/api/resume-optimize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+          body: JSON.stringify({
+            resumeData: analysisResult,
+            oldScore: Math.min(100, Math.max(0, analysisResult.atsScore || 0)),
+            sourceResumeId:   analysisResult._sourceResumeId || null,
+            sourceResumeName: analysisResult._sourceResumeName || (analysisResult.fullName ? analysisResult.fullName + ' Resume' : 'Resume'),
+            templateType: typeof _getSelTpl === 'function' ? _getSelTpl() : 'classic',
+          }),
+        });
+        if (!r.ok) { const errBody = await r.json().catch(() => ({})); throw new Error(errBody.message || errBody.error || 'Optimization failed'); }
+        const data = await r.json();
+        anim.finish();
+        _optNewResume = data;
+
+        setTimeout(() => {
+          g('optOldScore').textContent = data.oldScore || 0;
+          g('optNewScore').textContent = data.newScore || 0;
+          const ba = Array.isArray(data.beforeAfter) ? data.beforeAfter : [];
+          g('optBeforeAfterList').innerHTML = ba.map(pair => `
+            <div class="opt-ba-card">
+              <div class="opt-ba-before"><div class="opt-ba-lbl">Before</div><div class="opt-ba-text">${esc(pair.before||'')}</div></div>
+              <div class="opt-ba-after"><div class="opt-ba-lbl">After</div><div class="opt-ba-text">${esc(pair.after||'')}</div></div>
+            </div>`).join('');
+          _optShow('optStateResults');
+          loadResumes(); // new resume now exists — refresh so My Resumes/home reflect it
+        }, 500);
+      } catch (err) {
+        anim.finish();
+        _optShow('optStateDiag');
+        toast(err.message || 'Optimization failed — try again', 'err');
+      }
+    };
+
+    window.useOptimizedResume = function() {
+      closeOptimizePanel();
+      showView('allresumes');
+      renderAllResumes();
+      toast('Optimized resume saved to My Resumes ✨');
+    };
+    window.editOptimizedResume = function() {
+      if (!_optNewResume || !_optNewResume.id) return;
+      closeOptimizePanel();
+      openBuilder(_optNewResume.id);
+    };
+    window.downloadOptimizedResume = function() {
+      if (!_optNewResume || !_optNewResume.id) return;
+      dlResume(_optNewResume.id);
+    };
+    window.tailorOptimizedForJob = function() {
+      closeOptimizePanel();
+      if (typeof window.openKieTool === 'function') window.openKieTool('jobmatch');
     };
 
     // ── DOM READY ─────────────────────────────────────────────────────────────
