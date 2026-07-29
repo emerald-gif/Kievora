@@ -583,7 +583,7 @@ module.exports = function registerToolsRoutes(app) {
         planCfg.kieModel,
         'You are an expert resume writer and ATS analyst. Always respond with valid JSON only — no extra text, no markdown.',
         [{ role: 'user', content: prompt }],
-        { max_tokens: 3000, temperature: 0.4 },
+        { max_tokens: 4096, temperature: 0.4 },
         { uid: req.user.uid, planKey }
       );
 
