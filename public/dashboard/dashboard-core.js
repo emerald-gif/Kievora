@@ -5272,7 +5272,7 @@ Current resume data (JSON):
 ${JSON.stringify(currentResumeData, null, 2)}
 
 Return ONLY valid JSON with the fields to update. Only include a field if you have REAL information for it.
-Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array), certifications (array), changeSummary (string).
+Supported fields: summary, jobTitle, fullName, resumeName, workExperience (array), skills (array), education (array), certifications (array), changeSummary (string), atsScore (integer), grade (string).
 
 CRITICAL RULES:
 1. If the user asks you to ADD a new experience entry (e.g. "add a 4th experience about X"), build a new workExperience entry using the details they described and APPEND it to the existing workExperience array. Include ALL existing entries plus the new one.
@@ -5283,6 +5283,8 @@ CRITICAL RULES:
 6. GENERAL IMPROVEMENT REQUESTS ("improve it", "make this better", "optimize my resume", "polish it", "analyze and improve", "strengthen it", "make it more ATS-friendly") are NOT the same as rule 4 — the user isn't withholding new facts, they're asking you to make the EXISTING content stronger. For these, proactively rewrite using only what's already in the current resume data above: tighten and punch up the summary, lead each bullet with a strong action verb, quantify impact wherever the existing data already implies a number or scope, cut filler words, and make phrasing more ATS-friendly. Rewrite summary, workExperience, and skills as appropriate — do NOT return {} just because no new facts were given; you already have everything you need to make it measurably better without inventing anything untrue.
 7. If the user asks to ADD a certification/certificate, build a new certifications entry — object shape {name, issuer, date} — using the real details they gave (certification name, issuing org, year). APPEND it to the existing certifications array, keeping all existing entries. If they gave a certification name but no issuer, use their stated issuer/platform (e.g. a company or platform name is a valid issuer) — do not withhold the whole field just because one sub-detail like an exact date format is informal.
 8. ALWAYS include "changeSummary": a short, specific, honest description of the actual coaching work you did — 1-3 sentences, plain language, naming the real thing you changed (e.g. "Rewrote your summary to lead with your 5 years in digital marketing instead of a generic opener. Added a measurable result to your Senior Analyst bullet. Trimmed your skills list down to the ones ATS systems actually scan for in marketing roles."). Never write a vague summary like "made improvements" — name the specific weak spot you found and what you did about it. If you genuinely changed nothing, set changeSummary to explain why (e.g. "Your resume already reads strong — I didn't find anything worth changing without more detail from you.").
+
+9. ALWAYS include "atsScore" (integer 0-100) and "grade" scoring the resume AFTER your edits are applied — use the same rubric Kievora's ATS Checker uses: contact info, professional summary quality, work experience (every bullet quantified with a real metric, strong action verbs), education, skills relevance, formatting. BE STRICT — most real resumes score 55-75; reserve 85+ for something with almost nothing left to improve. Never inflate the score just because you made edits — if the edit was minor, the score moves accordingly. Grade: "A+" >=90, "A" 80-89, "B+" 75-79, "B" 65-74, "C+" 55-64, "C" 45-54, "D" <45. Score the FULL resume as it will exist after your changes (including any fields you did NOT touch), not just the edited section.
 
 Return ONLY JSON, no markdown, no explanation. If there is nothing you can confidently update, return {}.`;
 
@@ -5308,7 +5310,13 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       // must never get merged into the resume object itself.
       const changeSummary = typeof patchFields.changeSummary === 'string' ? patchFields.changeSummary : '';
       delete patchFields.changeSummary;
-      return { patchFields, changeSummary };
+      // atsScore/grade describe the resume DOC, not resumeData itself — pull them
+      // out here so they never get merged into resumeData by the ...spread below.
+      const newAtsScore = typeof patchFields.atsScore === 'number' ? Math.min(100, Math.max(0, Math.round(patchFields.atsScore))) : null;
+      const newGrade = typeof patchFields.grade === 'string' ? patchFields.grade : null;
+      delete patchFields.atsScore;
+      delete patchFields.grade;
+      return { patchFields, changeSummary, newAtsScore, newGrade };
     }
 
     // Figures out which fields the user clearly asked about but that didn't make it
@@ -5392,13 +5400,25 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
       try {
         // Step 1: Ask AI to generate the patch
-        const { patchFields, changeSummary } = await kieRequestResumePatch(userRequest, kieSelectedResume.resumeData);
+        const { patchFields, changeSummary, newAtsScore, newGrade } = await kieRequestResumePatch(userRequest, kieSelectedResume.resumeData);
         const missingFields = kieRequestedFieldsNotInPatch(userRequest, patchFields);
 
         // Step 2: Apply changes
         const updatedData = { ...kieSelectedResume.resumeData, ...patchFields };
         const updatedResume = { ...kieSelectedResume, resumeData: updatedData };
         if (patchFields.resumeName) updatedResume.resumeName = patchFields.resumeName;
+        const priorScore = typeof kieSelectedResume.atsScore === 'number' ? kieSelectedResume.atsScore : null;
+        // Re-score after the edit — without this, every chat-based edit left the
+        // resume's ATS score stale (or wiped, per the PUT route's own safeguard)
+        // even though the whole point of "Optimize My Resume" is that the score
+        // updates to reflect the new content. Only apply it if the AI actually
+        // returned one; otherwise leave the existing score untouched rather than
+        // guessing.
+        if (typeof newAtsScore === 'number') {
+          updatedResume.atsScore = newAtsScore;
+          if (newGrade) updatedResume.grade = newGrade;
+          if (priorScore !== null) updatedResume.optimizedFromScore = priorScore;
+        }
 
         // Step 3: Save to Firestore if it's a saved resume
         if (kieSelectedResume.id) {
@@ -5446,6 +5466,9 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         let intro = changeSummary
           ? `${changeSummary}\n\nTap the button below to download your updated resume. 📄`
           : `Done — I've updated your ${changedKeys.length ? changedKeys.join(', ') : 'resume'}. Tap the button below to download. 📄`;
+        if (typeof updatedResume.atsScore === 'number' && priorScore !== null && updatedResume.atsScore !== priorScore) {
+          intro += `\n\nATS score: ${priorScore} → ${updatedResume.atsScore}${updatedResume.atsScore > priorScore ? ' 📈' : ''}`;
+        }
         if (missingFields.length) {
           intro += `\n\nOne thing — I still need real details for your ${missingFields.join(' and ')} to add ${missingFields.length > 1 ? 'those' : 'that'} in. Share them and I'll update and resend.`;
         }
