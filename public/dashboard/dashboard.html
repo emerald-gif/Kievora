@@ -2686,12 +2686,26 @@
     <div id="optStateAnim" class="opt-state">
       <div class="opt-anim-wrap">
         <div class="opt-anim-orb-lg">
+          <svg class="opt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
+            <defs>
+              <linearGradient id="optAnimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7c3aed"/>
+                <stop offset="100%" stop-color="#c084fc"/>
+              </linearGradient>
+            </defs>
+            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
+            <circle id="optAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#optAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
+          </svg>
           <div class="opt-anim-orb-ring"></div>
-          <svg width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" id="optAnimIconSvg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+          <div class="opt-anim-orb-core">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" id="optAnimIconSvg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+          </div>
+          <div class="opt-anim-pct" id="optAnimPct">0%</div>
         </div>
         <div class="opt-anim-title" id="optAnimTitle">Optimizing your resume…</div>
         <div class="opt-anim-sub" id="optAnimSub">Our AI is making powerful improvements.</div>
         <div class="opt-check-list" id="optCheckList"></div>
+        <div class="opt-anim-progress-track"><div class="opt-anim-progress-fill" id="optAnimProgressFill"></div></div>
         <div class="opt-anim-timing" id="optAnimTiming"></div>
       </div>
     </div>
@@ -2760,14 +2774,6 @@
         </button>
         <button class="aa-btn aa-btn-sec" onclick="editOptimizedResume()">Edit Further</button>
         <button class="aa-btn aa-btn-sec" onclick="downloadOptimizedResume()">Download PDF</button>
-      </div>
-
-      <div class="opt-next-step">
-        <div class="opt-next-title">Want to improve your chances even more?</div>
-        <div class="opt-next-actions">
-          <button class="aa-btn aa-btn-sec" onclick="tailorOptimizedForJob()">Tailor this resume for a job</button>
-          <button class="aa-btn aa-btn-sec" onclick="window.location.href='/find-jobs'">Browse Jobs</button>
-        </div>
       </div>
     </div>
 

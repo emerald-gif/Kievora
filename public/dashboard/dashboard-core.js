@@ -10474,9 +10474,44 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
       _optShow('optStateAnim');
       const stepEls = Array.from(document.querySelectorAll('#optCheckList .opt-check-item'));
+      const ring = document.getElementById('optAnimProgressRing');
+      const pct = document.getElementById('optAnimPct');
+      const fill = document.getElementById('optAnimProgressFill');
+      const RING_CIRC = 358.14;
+
+      const setActive = (idx) => {
+        stepEls.forEach((el, n) => el.classList.toggle('active', n === idx));
+      };
+      const setProgress = (done) => {
+        const p = stepEls.length ? Math.round((done / stepEls.length) * 100) : 0;
+        if (ring) ring.style.strokeDashoffset = String(RING_CIRC * (1 - p / 100));
+        if (pct) pct.textContent = p + '%';
+        if (fill) fill.style.width = p + '%';
+      };
+
+      setProgress(0);
+      setActive(0);
       let i = 0;
-      const interval = setInterval(() => { if (i < stepEls.length) { stepEls[i].classList.add('done'); i++; } }, opts.stepMs || 650);
-      return { finish: () => { clearInterval(interval); stepEls.forEach(el => el.classList.add('done')); } };
+      const interval = setInterval(() => {
+        if (i < stepEls.length) {
+          stepEls[i].classList.remove('active');
+          stepEls[i].classList.add('done');
+          i++;
+          setActive(i);
+          setProgress(i);
+        } else {
+          clearInterval(interval);
+        }
+      }, opts.stepMs || 650);
+
+      return {
+        finish: () => {
+          clearInterval(interval);
+          stepEls.forEach(el => el.classList.remove('active'));
+          stepEls.forEach(el => el.classList.add('done'));
+          setProgress(stepEls.length);
+        }
+      };
     }
 
     // Converts a saved resume's structured data into plain text so it can go

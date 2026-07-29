@@ -949,20 +949,43 @@
 
     /* Shared AI moment (screens 2 & 4) — bigger orb with a pulsing ring
        halo, distinct from ATS Checker's plain spinner. */
-    .opt-anim-wrap{display:flex;flex-direction:column;align-items:center;padding:44px 10px 20px;text-align:center}
-    .opt-anim-orb-lg{position:relative;width:88px;height:88px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;margin-bottom:22px;box-shadow:0 10px 30px rgba(124,58,237,.35)}
-    .opt-anim-orb-ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(124,58,237,.25);animation:optRingPulse 1.8s ease-out infinite}
-    @keyframes optRingPulse{0%{transform:scale(.8);opacity:1}100%{transform:scale(1.35);opacity:0}}
-    .opt-anim-title{font-size:18px;font-weight:900;color:var(--txt);margin-bottom:4px}
-    .opt-anim-sub{font-size:12.5px;color:var(--sub);margin-bottom:26px;max-width:260px}
-    .opt-check-list{display:flex;flex-direction:column;gap:14px;width:100%;max-width:300px}
-    .opt-check-item{display:flex;align-items:center;gap:11px;font-size:13.5px;font-weight:600;color:var(--mute);opacity:.45;transition:opacity .3s,color .3s;text-align:left}
-    .opt-check-item.done{opacity:1;color:var(--txt)}
-    .opt-check-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .3s}
-    .opt-check-item.done .opt-check-dot{background:#16a34a;border-color:#16a34a}
+    .opt-anim-wrap{display:flex;flex-direction:column;align-items:center;padding:40px 10px 20px;text-align:center}
+
+    /* Orb + progress ring */
+    .opt-anim-orb-lg{position:relative;width:128px;height:128px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+    .opt-anim-ring-svg{position:absolute;inset:0;transform:rotate(-90deg)}
+    .opt-anim-progress-ring{transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1)}
+    .opt-anim-orb-ring{position:absolute;inset:18px;border-radius:50%;border:2px solid rgba(124,58,237,.25);animation:optRingPulse 1.8s ease-out infinite}
+    @keyframes optRingPulse{0%{transform:scale(.85);opacity:1}100%{transform:scale(1.28);opacity:0}}
+    .opt-anim-orb-core{position:relative;width:80px;height:80px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(124,58,237,.35);animation:optOrbBreathe 2.4s ease-in-out infinite}
+    @keyframes optOrbBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .opt-anim-orb-core svg{animation:optIconSpin 2.6s linear infinite}
+    @keyframes optIconSpin{to{transform:rotate(360deg)}}
+    .opt-anim-pct{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:#fff;border:1.5px solid var(--border2);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:800;color:#7c3aed;box-shadow:0 4px 12px rgba(124,58,237,.15);transition:all .2s}
+
+    .opt-anim-title{font-size:18px;font-weight:900;color:var(--txt);margin-bottom:4px;margin-top:8px}
+    .opt-anim-sub{font-size:12.5px;color:var(--sub);margin-bottom:24px;max-width:260px}
+
+    /* Checklist */
+    .opt-check-list{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px}
+    .opt-check-item{display:flex;align-items:center;gap:11px;font-size:13.5px;font-weight:600;color:var(--mute);opacity:.4;transform:translateX(-4px);transition:opacity .35s ease,color .3s,transform .35s ease;text-align:left}
+    .opt-check-item.active{opacity:1;color:var(--txt);transform:translateX(0)}
+    .opt-check-item.done{opacity:1;color:var(--txt);transform:translateX(0)}
+    .opt-check-dot{position:relative;width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+    .opt-check-item.active .opt-check-dot{border-color:#a855f7}
+    .opt-check-item.active .opt-check-dot::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid transparent;border-top-color:#a855f7;border-right-color:#a855f7;animation:optDotSpin .7s linear infinite}
+    @keyframes optDotSpin{to{transform:rotate(360deg)}}
+    .opt-check-item.done .opt-check-dot{background:#16a34a;border-color:#16a34a;transform:scale(1.08)}
     .opt-check-dot svg{opacity:0;transition:opacity .15s}
     .opt-check-item.done .opt-check-dot svg{opacity:1}
-    .opt-anim-timing{font-size:11px;color:var(--mute);margin-top:24px;font-weight:600}
+
+    /* Progress bar */
+    .opt-anim-progress-track{width:100%;max-width:300px;height:6px;border-radius:6px;background:var(--border2);margin-top:22px;overflow:hidden;position:relative}
+    .opt-anim-progress-fill{height:100%;width:0%;border-radius:6px;background:linear-gradient(90deg,#7c3aed,#c084fc);transition:width .5s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+    .opt-anim-progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:optShimmer 1.4s ease-in-out infinite}
+    @keyframes optShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+    .opt-anim-timing{font-size:11px;color:var(--mute);margin-top:14px;font-weight:600}
 
     /* AI Tip callout — a little bonus that makes screen 4 feel considered */
     .opt-ai-tip{display:flex;gap:10px;background:linear-gradient(135deg,#f5f3ff,#faf5ff);border:1.5px solid rgba(124,58,237,.15);border-radius:14px;padding:12px 14px;margin-top:24px;max-width:300px;text-align:left}
@@ -992,9 +1015,6 @@
     .opt-ba-text{font-size:13px;color:var(--txt);line-height:1.5}
     .opt-ba-before{opacity:.7;margin-bottom:8px}
     .opt-results-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
-    .opt-next-step{margin-top:26px;padding-top:22px;border-top:1px solid var(--border2)}
-    .opt-next-title{font-size:14.5px;font-weight:800;color:var(--txt);margin-bottom:12px;text-align:center}
-    .opt-next-actions{display:flex;flex-direction:column;gap:10px}
     .rec-score-hero{background:linear-gradient(135deg,#0f0e17,#1e1040);border-radius:20px;padding:24px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:20px}
     .rec-score-ring{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;border:3px solid rgba(255,255,255,.15)}
     .rec-score-num{font-size:24px;font-weight:900;line-height:1}
