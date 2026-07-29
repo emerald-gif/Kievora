@@ -192,7 +192,7 @@ const PLANS = {
     tools: ['aibuild', 'careerhealth'],
     templates: 5,
     atsChecker: true,
-    resumeOptimize: false,
+    resumeOptimize: true,  // TEMP: unlocked for free plan too — flip back to false to re-lock
     recruiterView: false,
     findJobsClick: false,
     coverLetterFromResume: false,
