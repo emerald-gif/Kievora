@@ -462,17 +462,19 @@ module.exports = function registerToolsRoutes(app) {
     "missingItems": []
   }
 
-  Scoring rules — atsScore must be an integer 0–100, only meaningful when isResume is true:
+  Scoring rules — atsScore must be an integer 0–100, only meaningful when isResume is true.
+  BE A STRICT, SKEPTICAL GRADER. Real ATS/recruiter-screening tools are harsh — the average real-world resume scores in the 55-70 range. Do not award a sub-score just because a section exists; award it only for genuine QUALITY at that level. A section that is present but generic, unquantified, or thin earns roughly half its points, not full credit. Reserve 85+ for a resume that would genuinely impress a recruiter with almost nothing left to improve — if you can still list 2+ concrete "suggestions", the score should not be above 80. Do not inflate to be encouraging; an honest lower score with clear fixes is more useful to the user than a flattering one.
   - Contact info (15 pts): name(5) + email(5) + phone(3) + location(2)
-  - Professional summary (15 pts): present(8) + 40+ words(4) + role-specific(3)
-  - Work experience (30 pts): has entries(10) + descriptions present(8) + quantified result/metric(8) + action verbs(4)
+  - Professional summary (15 pts): present(4) + 40+ words(2) + role-specific(2) + actually differentiates the candidate with specifics rather than generic filler like "hardworking team player" (7 — withhold most of this if the summary is boilerplate)
+  - Work experience (30 pts): has entries(5) + descriptions present(5) + EVERY bullet (not just some) carries a quantified result/metric — numbers, %, $, scale(12, scale linearly by the fraction of bullets that are quantified) + strong action verbs throughout, not passive/duty-listing language(8)
   - Education (15 pts): has entries(10) + degree and field present(5)
-  - Skills (15 pts): has skills(5) + 5 or more skills(5) + mix technical and soft(5)
+  - Skills (15 pts): has skills(5) + 5 or more skills(5) + mix technical and soft, each skill relevant to the stated job title rather than generic keyword-stuffing(5)
   - certifications: extract EVERY certification/license mentioned anywhere in the document (name, issuing org, date if present) — do not skip these even if listed briefly in a single line
   - projects: extract EVERY named project (personal, academic, or professional side-projects distinct from work history), with a URL if one is given and a short description
   - languages: extract EVERY spoken/written language listed with its proficiency level if stated (e.g. "Fluent", "Native", "Conversational")
   - Formatting signals (10 pts): LinkedIn/website present(3) + consistent dates(3) + no obvious errors(4)
   - Grade: "A+" ≥90, "A" 80–89, "B+" 75–79, "B" 65–74, "C+" 55–64, "C" 45–54, "D" <45
+  - Before finalizing atsScore, silently re-check: if you were tempted to round up, round down instead — err toward the stricter number.
   - strengths: 2–4 SPECIFIC things done well — reference actual content, not generic praise
   - weaknesses: 2–3 SPECIFIC problems (e.g. "No summary", "Bullets lack metrics", "Only 2 skills listed")
   - suggestions: 3–5 CONCRETE fixes with exact guidance (e.g. "Turn 'managed team' into 'Managed a team of [X], delivering [result]'")
@@ -572,7 +574,7 @@ module.exports = function registerToolsRoutes(app) {
   }
 
   "beforeAfter": pick the 2-3 bullet rewrites with the clearest visible improvement — "before" is the exact original text, "after" is the rewritten version.
-  "atsScore": score the REWRITTEN resume 0-100 (integer) using the same rubric ATS Checker uses (contact info, summary, experience, education, skills, formatting) — it should be meaningfully higher than the original score of ${oldScore || 0}, unless the original was already excellent.
+  "atsScore": score the REWRITTEN resume 0-100 (integer) using the SAME STRICT rubric the ATS Checker uses (contact info, summary, experience, education, skills, formatting) — grade on quality, not presence, and hold this to the exact same skeptical standard: real ATS tools rarely give 85+, most well-written resumes land 70-84. It should be meaningfully higher than the original score of ${oldScore || 0} (since bullets are now quantified and keyword-rich) — but do not hand out an inflated number just to show a bigger jump. If a fair strict grade isn't meaningfully higher, that's fine — never fabricate metrics or embellish to force the score up.
   "grade": "A+" >=90, "A" 80-89, "B+" 75-79, "B" 65-74, "C+" 55-64, "C" 45-54, "D" <45.
 
   ORIGINAL RESUME JSON:
