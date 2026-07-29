@@ -4884,8 +4884,7 @@
       const cardId = 'kcc-' + Date.now();
       const w = document.createElement('div');
       w.className = 'km km-ai';
-      const isDiagram  = _kieIsDiagramBlock(content);
-      const isSendable = !isDiagram && _kieIsSendableDocument(label);
+      const isDiagram = _kieIsDiagramBlock(content);
       w.innerHTML = `
         <div class="km-ai-body">
           <div class="kie-code-card" id="${cardId}">
@@ -4895,11 +4894,11 @@
                 ${label || 'Content'}
               </span>
               <span class="kie-code-card-btns">
-                ${isSendable ? `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>` : ''}
+                ${isDiagram ? '' : `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`}
                 <button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
                   <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 </button>
-                ${isSendable ? `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>` : ''}
+                ${isDiagram ? '' : `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>`}
               </span>
             </div>
             <div class="kie-code-card-body${isDiagram ? ' kie-code-card-body-diagram' : ''}">${content.replace(/</g,'&lt;')}</div>
@@ -4943,23 +4942,11 @@
       return /[├└│]/.test(content || '');
     }
 
-    // Edit (tone rewrites) and Gmail (send-as-email) only make sense on an
-    // actual standalone document — a letter, bio, message, statement — not
-    // on a plan/breakdown/summary that's just KIE structuring an answer for
-    // readability. "Make it more casual" or "email this" doesn't mean
-    // anything for a roadmap or a comparison writeup, so those labels are
-    // excluded even though they're not ASCII diagrams.
-    function _kieIsSendableDocument(label) {
-      const l = (label || '').toLowerCase();
-      const nonDocument = /(plan|breakdown|roadmap|timeline|hierarchy|steps?|checklist|guide|tips|ideas|summary|overview|comparison|analysis|list|outline)/;
-      return !nonDocument.test(l);
-    }
-
     // Best-effort geometric recreation of the Gmail mark in Google's actual
     // brand colors (not pulled from Google's official asset — swap in the
     // exact SVG from their brand kit if pixel accuracy matters more than
     // "immediately recognizable as Gmail").
-    const KIE_GMAIL_ICON = '<img src="/gmail.jpg" alt="Gmail" width="19" height="19" style="object-fit:contain" onerror="this.outerHTML=\'<svg width=&quot;19&quot; height=&quot;19&quot; viewBox=&quot;0 0 20 20&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;><path d=&quot;M2.5 5.5A2 2 0 0 1 4.5 3.5h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-9z&quot; fill=&quot;#fff&quot;/><path d=&quot;M2.5 5.7v8.8a2 2 0 0 0 2 2h1.8V9.6l-3.8-3.9z&quot; fill=&quot;#4285F4&quot;/><path d=&quot;M17.5 5.7v8.8a2 2 0 0 1-2 2h-1.8V9.6l3.8-3.9z&quot; fill=&quot;#34A853&quot;/><path d=&quot;M2.5 5.5a2 2 0 0 1 2-2h.6L10 8 2.5 5.5z&quot; fill=&quot;#EA4335&quot;/><path d=&quot;M17.5 5.5a2 2 0 0 0-2-2h-.6L10 8l7.5-2.5z&quot; fill=&quot;#FBBC05&quot;/><path d=&quot;M6.1 3.5h7.8L10 8 6.1 3.5z&quot; fill=&quot;#EA4335&quot;/></svg>\'">';
+    const KIE_GMAIL_ICON = '<svg width="19" height="19" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 5.5A2 2 0 0 1 4.5 3.5h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-9z" fill="#fff"/><path d="M2.5 5.7v8.8a2 2 0 0 0 2 2h1.8V9.6l-3.8-3.9z" fill="#4285F4"/><path d="M17.5 5.7v8.8a2 2 0 0 1-2 2h-1.8V9.6l3.8-3.9z" fill="#34A853"/><path d="M2.5 5.5a2 2 0 0 1 2-2h.6L10 8 2.5 5.5z" fill="#EA4335"/><path d="M17.5 5.5a2 2 0 0 0-2-2h-.6L10 8l7.5-2.5z" fill="#FBBC05"/><path d="M6.1 3.5h7.8L10 8 6.1 3.5z" fill="#EA4335"/></svg>';
 
     // "Open in Gmail" — a plain mailto: link, which every mail app
     // (Gmail included) registers itself as a handler for, so this opens
@@ -5071,27 +5058,27 @@
       const actionsHtml = proposing
         ? `<button type="button" class="kie-canvas-reject" onclick="_kieCanvasReject('${cardId}')">Reject</button>
            <button type="button" class="kie-canvas-accept" onclick="_kieCanvasAccept('${cardId}')">Accept</button>`
-        : loading
-          ? `<div class="kie-canvas-loading"><span class="kie-canvas-spinner"></span>Rewriting…</div>`
-          : _kiePickQuickActions(state.label).map(a => `
-             <button type="button" class="kie-canvas-quick" onclick="_kieCanvasQuickAction('${cardId}','${a}')">${esc(QUICK_ACTION_INFO[a].label)}</button>
-            `).join('');
+        : _kiePickQuickActions(state.label).map(a => `
+           <button type="button" class="kie-canvas-quick" ${loading ? 'disabled' : ''} onclick="_kieCanvasQuickAction('${cardId}','${a}')">${esc(QUICK_ACTION_INFO[a].label)}</button>
+          `).join('');
 
       const undoIcon    = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
       const redoIcon    = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>';
       const copyIcon    = '<svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
       const minimizeIcon= '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+      const closeIcon   = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
       overlay.innerHTML = `
         <div class="kie-canvas" onclick="event.stopPropagation()">
           <div class="kie-canvas-topbar">
-            <button type="button" class="kie-canvas-icon-btn kie-canvas-icon-minimize" onclick="_kieCanvasClose('${cardId}')" title="Minimize">${minimizeIcon}</button>
+            <button type="button" class="kie-canvas-icon-btn kie-canvas-icon-close" onclick="_kieCanvasClose('${cardId}')" title="Close">${closeIcon}</button>
             <div class="kie-canvas-topbar-title">${esc(state.label)}</div>
             <div class="kie-canvas-topbar-right">
               <button type="button" class="kie-canvas-icon-btn" ${canUndo ? '' : 'disabled'} onclick="_kieCanvasUndo('${cardId}')" title="Undo">${undoIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" ${canRedo ? '' : 'disabled'} onclick="_kieCanvasRedo('${cardId}')" title="Redo">${redoIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" onclick="_kieCanvasCopy('${cardId}')" title="Copy">${copyIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" onclick="_kieOpenGmailFromCanvas('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>
+              <button type="button" class="kie-canvas-icon-btn kie-canvas-icon-minimize" onclick="_kieCanvasClose('${cardId}')" title="Minimize">${minimizeIcon}</button>
             </div>
           </div>
           <div class="kie-canvas-body">${bodyHtml}</div>
@@ -5227,6 +5214,7 @@
         .kie-canvas-icon-btn:active{opacity:.55}
         .kie-canvas-icon-btn:disabled{color:#cbd5e1}
         .kie-canvas-icon-btn:disabled:active{opacity:1}
+        .kie-canvas-icon-close{color:#1a1a2e}
         .kie-canvas-icon-minimize{color:#7c3aed}
         .kie-canvas-body{flex:1;overflow-y:auto;padding:18px 18px 8px;font-size:14px;line-height:1.75;color:#1a1a2e}
         .kie-canvas-body p{margin:0 0 14px}
@@ -5235,9 +5223,6 @@
         .kie-canvas-quick{flex:1;min-width:90px;padding:11px 10px;border-radius:12px;border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;font:600 12.5px/1.2 inherit;cursor:pointer}
         .kie-canvas-quick:active{transform:scale(.97)}
         .kie-canvas-quick:disabled{opacity:.5;cursor:default}
-        .kie-canvas-loading{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 10px;color:#6d28d9;font:600 12.5px/1.2 inherit}
-        .kie-canvas-spinner{width:15px;height:15px;border-radius:50%;border:2px solid #ddd6fe;border-top-color:#7c3aed;animation:kie-canvas-spin .7s linear infinite}
-        @keyframes kie-canvas-spin{to{transform:rotate(360deg)}}
         .kie-canvas-reject{flex:1;padding:12px 10px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;color:#475569;font:600 13px/1.2 inherit;cursor:pointer}
         .kie-canvas-accept{flex:1;padding:12px 10px;border-radius:12px;border:none;background:#18181b;color:#fff;font:600 13px/1.2 inherit;cursor:pointer}
         .kie-canvas-reject:active,.kie-canvas-accept:active{transform:scale(.97)}
@@ -7910,12 +7895,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // accept/reject) — only once the block is done streaming, and only
           // for sendable documents, not ASCII diagrams (a timeline doesn't
           // have a "make it more casual" version).
-          const isDiagram  = _kieIsDiagramBlock(content);
-          const isSendable = !isDiagram && _kieIsSendableDocument(label);
-          const editBtn = (closed || isFinal) && isSendable
+          const isDiagram = _kieIsDiagramBlock(content);
+          const editBtn = (closed || isFinal) && !isDiagram
             ? `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`
             : '';
-          const gmailBtn = (closed || isFinal) && isSendable
+          const gmailBtn = (closed || isFinal) && !isDiagram
             ? `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>`
             : '';
           // Prose documents wrap like normal text — no reason a cover letter
@@ -10197,6 +10181,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     }
 
     function _atsStartScan() {
+      // Same "AI moment" grammar as Optimize My Resume (ring, %, fill bar) so
+      // ATS Checker feels like the same system doing the same caliber of work.
       const steps = ['Checking ATS compatibility', 'Scanning keywords', 'Reviewing bullet points', 'Evaluating formatting'];
       g('atsCheckList').innerHTML = steps.map(s =>
         `<div class="opt-check-item"><span class="opt-check-dot"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>${esc(s)}</div>`
@@ -10204,13 +10190,40 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       g('atsScanOverlay').classList.add('open');
       document.body.style.overflow = 'hidden';
       const stepEls = Array.from(document.querySelectorAll('#atsCheckList .opt-check-item'));
+      const ring = document.getElementById('atsAnimProgressRing');
+      const pct  = document.getElementById('atsAnimPct');
+      const fill = document.getElementById('atsAnimProgressFill');
+      const RING_CIRC = 358.14;
+      // Steps cap at 90% — the real API call is what earns the last 10%, so
+      // the bar never lies by sitting at "done" while a slow response is
+      // still in flight (and never stalls if the response beats the timer).
+      const STEP_CAP = 90;
+
+      const setProgress = (p) => {
+        if (ring) ring.style.strokeDashoffset = String(RING_CIRC * (1 - p / 100));
+        if (pct) pct.textContent = p + '%';
+        if (fill) fill.style.width = p + '%';
+      };
+
+      setProgress(0);
       let i = 0;
-      const interval = setInterval(() => { if (i < stepEls.length) { stepEls[i].classList.add('done'); i++; } }, 550);
+      const interval = setInterval(() => {
+        if (i < stepEls.length) {
+          stepEls[i].classList.add('done');
+          i++;
+          setProgress(Math.round((i / stepEls.length) * STEP_CAP));
+        } else {
+          clearInterval(interval);
+        }
+      }, 550);
       return { finish: () => {
         clearInterval(interval);
         stepEls.forEach(el => el.classList.add('done'));
-        g('atsScanOverlay').classList.remove('open');
-        document.body.style.overflow = '';
+        setProgress(100);
+        setTimeout(() => {
+          g('atsScanOverlay').classList.remove('open');
+          document.body.style.overflow = '';
+        }, 200); // brief beat on 100% so it reads as "done", not cut off
       } };
     }
 
@@ -10288,14 +10301,16 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         `<div class="an-item"><div class="an-ico grn"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><span>${esc(s)}</span></div>`
       ).join('') || `<div class="an-item" style="color:var(--mute);font-style:italic">None detected</div>`;
 
-      // Weaknesses
+      // Weaknesses — clamp to 2 lines by default, tap to expand. KIE's notes
+      // can run long (exact rewrite examples etc.); most people just want the
+      // headline, the full detail is one tap away for anyone who wants it.
       g('analysisWeaknesses').innerHTML = (r.weaknesses||[]).map(w =>
-        `<div class="an-item"><div class="an-ico red"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></div><span>${esc(w)}</span></div>`
+        `<div class="an-item"><div class="an-ico red"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></div><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(w)}</span></div>`
       ).join('') || `<div class="an-item" style="color:var(--mute);font-style:italic">No critical issues</div>`;
 
       // Suggestions
       g('analysisSuggestions').innerHTML = (r.suggestions||[]).map((s,i) =>
-        `<div class="an-item"><div class="an-ico pur">${i+1}</div><span>${esc(s)}</span></div>`
+        `<div class="an-item"><div class="an-ico pur">${i+1}</div><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(s)}</span></div>`
       ).join('') || `<div class="an-item" style="color:var(--mute);font-style:italic">No suggestions</div>`;
 
       // Missing
@@ -10479,10 +10494,13 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       g('optDiagScore').style.color = sc;
       g('optGaugeVerdict').textContent = _optVerdict(score);
 
+      // Issue text stays short by default (2-line clamp) — tap to see the
+      // AI's full note if it runs long, so casual users aren't hit with a
+      // wall of text but the detail is still there for anyone who wants it.
       g('optIssueList').innerHTML = _optIssuesFromAnalysis(r).map(i =>
         `<div class="opt-issue-item">
            <div class="opt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
-           <div class="opt-issue-title">${esc(i)}</div>
+           <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')">${esc(i)}</div>
          </div>`
       ).join('');
       g('optBars').innerHTML = _optBarsFromAnalysis(r).map(b => `
@@ -10521,13 +10539,16 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const setActive = (idx) => {
         stepEls.forEach((el, n) => el.classList.toggle('active', n === idx));
       };
-      const setProgress = (done) => {
-        const p = stepEls.length ? Math.round((done / stepEls.length) * 100) : 0;
+      const setProgress = (p) => {
         if (ring) ring.style.strokeDashoffset = String(RING_CIRC * (1 - p / 100));
         if (pct) pct.textContent = p + '%';
         if (fill) fill.style.width = p + '%';
       };
 
+      // Steps cap at 90% on the timer — the real API response earns the last
+      // 10%, so the ring/bar never falsely reads "done" while KIE is still
+      // working (and never stalls at 100% waiting on a slow response either).
+      const STEP_CAP = 90;
       setProgress(0);
       setActive(0);
       let i = 0;
@@ -10537,7 +10558,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           stepEls[i].classList.add('done');
           i++;
           setActive(i);
-          setProgress(i);
+          setProgress(Math.round((i / stepEls.length) * STEP_CAP));
         } else {
           clearInterval(interval);
         }
@@ -10548,7 +10569,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           clearInterval(interval);
           stepEls.forEach(el => el.classList.remove('active'));
           stepEls.forEach(el => el.classList.add('done'));
-          setProgress(stepEls.length);
+          setProgress(100);
         }
       };
     }
@@ -11299,6 +11320,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       let clSource       = null;  // 'existing' | 'upload' | 'scratch'
       let clResume       = null;  // selected resume object or null
       let clUploadFile   = null;  // uploaded file
+      let clUploadedText = '';    // extracted text from clUploadFile (was never populated before — fixed below)
       let clTemplate     = null;  // selected template id
       let clFromSuccessId = null; // resume id when navigating from success screen
 
@@ -11383,6 +11405,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const file = input.files[0];
         if (!file) return;
         clUploadFile = file;
+        clUploadedText = '';
         const ready = g('clUploadReady');
         const zone  = g('clUploadZone');
         const nameEl = g('clFileName');
@@ -11390,10 +11413,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (ready) ready.classList.add('show');
         if (zone)  zone.style.opacity = '.5';
         clCheckStep1Ready();
+
+        // Extract real text so the AI actually has the resume content (not
+        // just the filename) — same extractor ATS Checker already uses.
+        if (nameEl) nameEl.textContent = file.name + ' · reading…';
+        extractTextFromFile(file).then(text => {
+          clUploadedText = text || '';
+          if (nameEl) nameEl.textContent = file.name;
+        }).catch(err => {
+          if (nameEl) nameEl.textContent = file.name + ' · could not read file';
+          toast(err.message || 'Could not read file — you can still continue', 'err');
+        });
       };
 
       window.clClearFile = function() {
         clUploadFile = null;
+        clUploadedText = '';
         const ready = g('clUploadReady');
         const zone  = g('clUploadZone');
         const inp   = g('clFileInput');
@@ -11416,8 +11451,38 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       window.clGoStep2 = function() {
         if (!clSource) return;
         if (clSource === 'existing' && !clResume && !(resumes && resumes.length === 0)) return;
+        clPrefillPersonal();
         clUpdateSteps(2);
+        clCheckStep2Ready();
       };
+
+      // Fills Personal Details from whatever resume context we have, so
+      // "upload" and "existing" don't force someone to retype what's already
+      // on their resume. Never overwrites something the person already typed
+      // (e.g. if they go Back and forth between steps).
+      function clPrefillPersonal() {
+        const setIfEmpty = (id, val) => {
+          const el = g(id);
+          if (el && !el.value.trim() && val) el.value = val;
+        };
+        if (clSource === 'existing' && clResume?.resumeData) {
+          const d = clResume.resumeData;
+          setIfEmpty('clFullName', d.fullName);
+          setIfEmpty('clJobTitle', d.jobTitle);
+          setIfEmpty('clAddress',  d.location);
+          setIfEmpty('clEmail',    d.email);
+          setIfEmpty('clPhone',    d.phone);
+        } else if (clSource === 'upload' && clUploadedText) {
+          // No structured resume object for an upload — pull what we
+          // reasonably can with simple pattern matching so at least email/
+          // phone don't need retyping; name/title are too unreliable to
+          // guess from raw text, so those stay blank for the person to fill.
+          const emailMatch = clUploadedText.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+          const phoneMatch = clUploadedText.match(/(\+?\d[\d\s().-]{7,}\d)/);
+          if (emailMatch) setIfEmpty('clEmail', emailMatch[0]);
+          if (phoneMatch) setIfEmpty('clPhone', phoneMatch[0].trim());
+        }
+      }
 
       window.clGoStep1 = function() {
         clUpdateSteps(1);
@@ -11434,22 +11499,33 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function clCheckStep2Ready() {
         const btn = g('clNextBtn2');
         if (!btn) return;
-        const jobTitle   = (g('clJobTitle')?.value   || '').trim();
+        const fullName    = (g('clFullName')?.value    || '').trim();
+        const email       = (g('clEmail')?.value       || '').trim();
+        const jobTitle    = (g('clJobTitle')?.value    || '').trim();
         const companyName = (g('clCompanyName')?.value || '').trim();
-        btn.disabled = !(clTemplate && jobTitle && companyName);
+        btn.disabled = !(clTemplate && fullName && email && jobTitle && companyName);
       }
 
       window.clGoStep3 = async function() {
         if (!clTemplate) return;
-        const jobTitle    = (g('clJobTitle')?.value   || '').trim();
-        const companyName = (g('clCompanyName')?.value || '').trim();
-        if (!jobTitle || !companyName) return;
+        const fields = {
+          fullName:          (g('clFullName')?.value       || '').trim(),
+          jobTitle:          (g('clJobTitle')?.value       || '').trim(),
+          address:           (g('clAddress')?.value        || '').trim(),
+          email:             (g('clEmail')?.value           || '').trim(),
+          phone:             (g('clPhone')?.value           || '').trim(),
+          companyName:       (g('clCompanyName')?.value     || '').trim(),
+          hiringManagerName: (g('clHiringManager')?.value   || '').trim(),
+          keyDetails:        (g('clKeyDetails')?.value       || '').trim(),
+        };
+        if (!fields.fullName || !fields.email || !fields.jobTitle || !fields.companyName) return;
 
         clUpdateSteps(3);
-        await clGenerate(jobTitle, companyName);
+        await clGenerate(fields);
       };
 
-      async function clGenerate(jobTitle, companyName) {
+      async function clGenerate(fields) {
+        const { fullName, jobTitle, address, email, phone, companyName, hiringManagerName, keyDetails } = fields;
         // Show loading, hide result
         const loading = g('clGenLoading');
         const result  = g('clGenResult');
@@ -11487,7 +11563,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           if (clSource === 'existing' && clResume) {
             resumeData = clResume.resumeData || null;
           } else if (clSource === 'upload' && clUploadFile) {
-            // Use already-extracted text if available, else send file name as fallback
+            // Now genuinely extracted text (see clHandleFile) — filename-only
+            // fallback stays only for the rare case extraction failed.
             resumeText = clUploadedText || clUploadFile.name;
           }
 
@@ -11499,6 +11576,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             template:    clTemplate,
             jobTitle,
             companyName,
+            fullName,
+            address,
+            email,
+            phone,
+            hiringManagerName,
+            keyDetails,
             model:       kieModel,
           };
 
@@ -11525,18 +11608,24 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           const tplNames = { classic:'Classic', modern:'Modern', executive:'Executive', minimal:'Minimal' };
 
           if (metaEl) {
-            const rLabel = clSource === 'existing' && clResume
-              ? (clResume.resumeName || clResume.resumeData?.fullName || 'Your Resume')
-              : clSource === 'upload' ? (clUploadFile?.name || 'Uploaded Resume') : 'Scratch';
             metaEl.textContent = `${jobTitle} · ${companyName} · ${tplNames[clTemplate]}`;
           }
 
-          // Store for PDF
-          window._clCurrentLetter   = letter;
-          window._clCurrentTemplate = clTemplate;
-          window._clCurrentJobTitle = jobTitle;
-          window._clCurrentCompany  = companyName;
-          window._clCurrentResume   = clResume;
+          // Store for PDF / regenerate / preview — these manually-entered
+          // fields now take priority over resumeData in clCurrentOpts, since
+          // they're always collected (even for "scratch") and kept in sync
+          // with whatever the person actually confirmed on screen.
+          window._clCurrentLetter    = letter;
+          window._clCurrentTemplate  = clTemplate;
+          window._clCurrentJobTitle  = jobTitle;
+          window._clCurrentCompany   = companyName;
+          window._clCurrentResume    = clResume;
+          window._clCurrentFullName  = fullName;
+          window._clCurrentAddress   = address;
+          window._clCurrentEmail     = email;
+          window._clCurrentPhone     = phone;
+          window._clCurrentHiringMgr = hiringManagerName;
+          window._clCurrentKeyDetails = keyDetails;
 
           // Render into the smaller A4-style template preview
           clRenderPreview(letter);
@@ -11596,7 +11685,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           <p${clFieldAttrs('clDate', editable)} style="font-size:10px;color:#94a3b8;margin-bottom:18px">${esc(o.date)}</p>
           <p${clFieldAttrs('clReTitle', editable)} style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px">${o.jobTitle ? `Re: Application for ${esc(o.jobTitle)}` : ''}</p>
           <p${clFieldAttrs('clCompanyLine', editable)} style="font-size:10px;color:#64748b;margin-bottom:18px">${esc(o.company || '')}</p>
-          <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;color:#1e293b;margin-bottom:14px">Dear Hiring Manager,</p>
+          <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;color:#1e293b;margin-bottom:14px">${esc(o.salutation || 'Dear Hiring Manager,')}</p>
           <div${clBodyAttrs(editable)}>${paras}</div>
           <p${clFieldAttrs('clClosing', editable)} style="margin-top:20px;font-size:10px;color:#64748b">Sincerely,</p>
           <p${clFieldAttrs('clSigName', editable)} style="font-size:11.5px;font-weight:700;color:#1e293b;margin-top:2px">${esc(o.name || '')}</p>
@@ -11613,7 +11702,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           <div style="padding:30px 40px;line-height:1.75">
             <p${clFieldAttrs('clDate', editable)} style="font-size:10px;color:#94a3b8;margin-bottom:4px">${esc(o.date)}</p>
             <p${clFieldAttrs('clReTitle', editable)} style="font-size:10px;color:#94a3b8;margin-bottom:18px">${[o.jobTitle ? `Re: ${o.jobTitle}` : '', o.company].filter(Boolean).join(' · ')}</p>
-            <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;color:#1e293b;margin-bottom:14px">Dear Hiring Manager,</p>
+            <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;color:#1e293b;margin-bottom:14px">${esc(o.salutation || 'Dear Hiring Manager,')}</p>
             <div${clBodyAttrs(editable)}>${paras}</div>
             <p${clFieldAttrs('clClosing', editable)} style="margin-top:20px;font-size:10px;color:#94a3b8">Yours sincerely,</p>
             <p${clFieldAttrs('clSigName', editable)} style="font-size:11.5px;font-weight:700;color:${c};margin-top:2px">${esc(o.name || '')}</p>
@@ -11633,7 +11722,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             <p${clFieldAttrs('clDate', editable)} style="font-size:10px;color:#64748b;margin-bottom:18px">${esc(o.date)}</p>
             <p${clFieldAttrs('clReTitle', editable)} style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px">${o.jobTitle ? `Re: Application for ${esc(o.jobTitle)}` : ''}</p>
             <p${clFieldAttrs('clCompanyLine', editable)} style="font-size:10px;color:#64748b;margin-bottom:18px">${esc(o.company || '')}</p>
-            <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;margin-bottom:14px">Dear Hiring Manager,</p>
+            <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;margin-bottom:14px">${esc(o.salutation || 'Dear Hiring Manager,')}</p>
             <div${clBodyAttrs(editable)}>${paras}</div>
             <p${clFieldAttrs('clClosing', editable)} style="margin-top:20px;font-size:10px;color:#64748b">Respectfully yours,</p>
             <p${clFieldAttrs('clSigName', editable)} style="font-size:11.5px;font-weight:700;margin-top:2px">${esc(o.name || '')}</p>
@@ -11648,7 +11737,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           <div style="border-top:1px solid #f3f4f6;margin:18px 0"></div>
           <p${clFieldAttrs('clDate', editable)} style="font-size:10px;color:#9ca3af;margin-bottom:4px">${esc(o.date)}</p>
           <p${clFieldAttrs('clReTitle', editable)} style="font-size:10px;color:#9ca3af;margin-bottom:18px">${[o.jobTitle ? `Re: ${o.jobTitle}` : '', o.company].filter(Boolean).join(' · ')}</p>
-          <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;margin-bottom:14px">Dear Hiring Manager,</p>
+          <p${clFieldAttrs('clSalutation', editable)} style="font-size:11.5px;font-weight:700;margin-bottom:14px">${esc(o.salutation || 'Dear Hiring Manager,')}</p>
           <div${clBodyAttrs(editable)}>${paras}</div>
           <p${clFieldAttrs('clClosing', editable)} style="margin-top:20px;font-size:10px;color:#9ca3af">Best regards,</p>
           <p${clFieldAttrs('clSigName', editable)} style="font-size:11.5px;font-weight:700;margin-top:2px">${esc(o.name || '')}</p>
@@ -11667,16 +11756,18 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       function clCurrentOpts(letter) {
         const resume = window._clCurrentResume;
+        const hiringMgr = window._clCurrentHiringMgr;
         return {
-          name:       resume?.resumeData?.fullName || '',
-          email:      resume?.resumeData?.email    || '',
-          phone:      resume?.resumeData?.phone    || '',
-          location:   resume?.resumeData?.location || '',
+          name:        window._clCurrentFullName || resume?.resumeData?.fullName || '',
+          email:       window._clCurrentEmail    || resume?.resumeData?.email    || '',
+          phone:       window._clCurrentPhone    || resume?.resumeData?.phone    || '',
+          location:    window._clCurrentAddress  || resume?.resumeData?.location || '',
           resumeTitle: resume?.resumeData?.jobTitle || '',
-          jobTitle:   window._clCurrentJobTitle || '',
-          company:    window._clCurrentCompany  || '',
-          date:       new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          letter:     letter,
+          jobTitle:    window._clCurrentJobTitle || '',
+          company:     window._clCurrentCompany  || '',
+          salutation:  hiringMgr ? `Dear ${hiringMgr},` : 'Dear Hiring Manager,',
+          date:        new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          letter:      letter,
         };
       }
 
@@ -11703,12 +11794,20 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       });
 
       window.clRegenerate = async function() {
-        const jobTitle    = window._clCurrentJobTitle || (g('clJobTitle')?.value || '').trim();
-        const companyName = window._clCurrentCompany  || (g('clCompanyName')?.value || '').trim();
-        if (!jobTitle || !companyName) return;
+        const fields = {
+          fullName:          window._clCurrentFullName  || '',
+          jobTitle:          window._clCurrentJobTitle  || '',
+          address:           window._clCurrentAddress   || '',
+          email:             window._clCurrentEmail     || '',
+          phone:             window._clCurrentPhone     || '',
+          companyName:       window._clCurrentCompany   || '',
+          hiringManagerName: window._clCurrentHiringMgr || '',
+          keyDetails:        window._clCurrentKeyDetails || '',
+        };
+        if (!fields.fullName || !fields.email || !fields.jobTitle || !fields.companyName) return;
         const result = g('clGenResult');
         if (result) result.style.display = 'none';
-        await clGenerate(jobTitle, companyName);
+        await clGenerate(fields);
       };
 
       window.clDownloadPDF = function() {
@@ -11823,9 +11922,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // Init cover letter view
       function initCoverLetter(fromResumeId) {
         // Reset state
-        clSource = null; clResume = null; clUploadFile = null; clTemplate = null;
+        clSource = null; clResume = null; clUploadFile = null; clUploadedText = ''; clTemplate = null;
         window._clCurrentLetter = null; window._clCurrentTemplate = null;
         window._clCurrentJobTitle = null; window._clCurrentCompany = null;
+        window._clCurrentFullName = null; window._clCurrentAddress = null;
+        window._clCurrentEmail = null; window._clCurrentPhone = null;
+        window._clCurrentHiringMgr = null; window._clCurrentKeyDetails = null;
         document.querySelectorAll('.cl-src-card').forEach(c => c.classList.remove('sel'));
         document.querySelectorAll('.cl-tcard').forEach(c => c.classList.remove('sel'));
         const rp = g('clResPicker');   if (rp) rp.className = 'cl-res-picker';
@@ -11834,6 +11936,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const fi = g('clFileInput');   if (fi) fi.value = '';
         const jt = g('clJobTitle');    if (jt) jt.value = '';
         const cn = g('clCompanyName'); if (cn) cn.value = '';
+        const fn = g('clFullName');    if (fn) fn.value = '';
+        const ad = g('clAddress');     if (ad) ad.value = '';
+        const em = g('clEmail');       if (em) em.value = '';
+        const ph = g('clPhone');       if (ph) ph.value = '';
+        const hm = g('clHiringManager'); if (hm) hm.value = '';
+        const kd = g('clKeyDetails');  if (kd) kd.value = '';
         const gl = g('clGenLoading'); if (gl) gl.style.display = 'none';
         const gr = g('clGenResult');  if (gr) gr.style.display = 'none';
         const ps = g('clPrevScaler'); if (ps) ps.innerHTML = '';

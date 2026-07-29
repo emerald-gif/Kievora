@@ -894,6 +894,7 @@
     .opt-issue-item{display:flex;align-items:flex-start;gap:11px;background:#fff;border:1.5px solid var(--border2);border-radius:14px;padding:12px 14px}
     .opt-issue-ico{width:26px;height:26px;border-radius:9px;background:#fef3e2;color:#ea580c;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
     .opt-issue-title{font-size:13.5px;font-weight:800;color:var(--txt);line-height:1.3}
+    .opt-issue-title.detail-clamp{-webkit-line-clamp:2}
     .opt-issue-desc{font-size:11.5px;color:var(--mute);margin-top:1px;line-height:1.4}
 
     .opt-bars{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
@@ -2223,6 +2224,12 @@
     .an-card-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
     .an-item{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--txt);line-height:1.5;margin-bottom:9px}
     .an-item:last-child{margin-bottom:0}
+    /* Detail-on-demand: keep the default read short and scannable, let anyone
+       who wants the fuller AI explanation tap to expand it — not everyone
+       wants to read a full technical breakdown up front. */
+    .detail-clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+    .detail-clamp.expanded{-webkit-line-clamp:unset;display:block}
+    .detail-clamp-hint{font-size:10.5px;font-weight:700;color:#7c3aed;margin-top:2px;opacity:.85}
     .an-ico{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
     .an-ico.grn{background:#dcfce7;color:#16a34a}
     .an-ico.red{background:#fee2e2;color:#dc2626}
