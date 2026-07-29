@@ -4884,7 +4884,8 @@
       const cardId = 'kcc-' + Date.now();
       const w = document.createElement('div');
       w.className = 'km km-ai';
-      const isDiagram = _kieIsDiagramBlock(content);
+      const isDiagram  = _kieIsDiagramBlock(content);
+      const isSendable = !isDiagram && _kieIsSendableDocument(label);
       w.innerHTML = `
         <div class="km-ai-body">
           <div class="kie-code-card" id="${cardId}">
@@ -4894,11 +4895,11 @@
                 ${label || 'Content'}
               </span>
               <span class="kie-code-card-btns">
-                ${isDiagram ? '' : `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`}
+                ${isSendable ? `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>` : ''}
                 <button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy">
                   <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 </button>
-                ${isDiagram ? '' : `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>`}
+                ${isSendable ? `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>` : ''}
               </span>
             </div>
             <div class="kie-code-card-body${isDiagram ? ' kie-code-card-body-diagram' : ''}">${content.replace(/</g,'&lt;')}</div>
@@ -4942,11 +4943,23 @@
       return /[├└│]/.test(content || '');
     }
 
+    // Edit (tone rewrites) and Gmail (send-as-email) only make sense on an
+    // actual standalone document — a letter, bio, message, statement — not
+    // on a plan/breakdown/summary that's just KIE structuring an answer for
+    // readability. "Make it more casual" or "email this" doesn't mean
+    // anything for a roadmap or a comparison writeup, so those labels are
+    // excluded even though they're not ASCII diagrams.
+    function _kieIsSendableDocument(label) {
+      const l = (label || '').toLowerCase();
+      const nonDocument = /(plan|breakdown|roadmap|timeline|hierarchy|steps?|checklist|guide|tips|ideas|summary|overview|comparison|analysis|list|outline)/;
+      return !nonDocument.test(l);
+    }
+
     // Best-effort geometric recreation of the Gmail mark in Google's actual
     // brand colors (not pulled from Google's official asset — swap in the
     // exact SVG from their brand kit if pixel accuracy matters more than
     // "immediately recognizable as Gmail").
-    const KIE_GMAIL_ICON = '<svg width="19" height="19" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 5.5A2 2 0 0 1 4.5 3.5h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-9z" fill="#fff"/><path d="M2.5 5.7v8.8a2 2 0 0 0 2 2h1.8V9.6l-3.8-3.9z" fill="#4285F4"/><path d="M17.5 5.7v8.8a2 2 0 0 1-2 2h-1.8V9.6l3.8-3.9z" fill="#34A853"/><path d="M2.5 5.5a2 2 0 0 1 2-2h.6L10 8 2.5 5.5z" fill="#EA4335"/><path d="M17.5 5.5a2 2 0 0 0-2-2h-.6L10 8l7.5-2.5z" fill="#FBBC05"/><path d="M6.1 3.5h7.8L10 8 6.1 3.5z" fill="#EA4335"/></svg>';
+    const KIE_GMAIL_ICON = '<img src="/gmail.jpg" alt="Gmail" width="19" height="19" style="object-fit:contain" onerror="this.outerHTML=\'<svg width=&quot;19&quot; height=&quot;19&quot; viewBox=&quot;0 0 20 20&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;><path d=&quot;M2.5 5.5A2 2 0 0 1 4.5 3.5h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-9z&quot; fill=&quot;#fff&quot;/><path d=&quot;M2.5 5.7v8.8a2 2 0 0 0 2 2h1.8V9.6l-3.8-3.9z&quot; fill=&quot;#4285F4&quot;/><path d=&quot;M17.5 5.7v8.8a2 2 0 0 1-2 2h-1.8V9.6l3.8-3.9z&quot; fill=&quot;#34A853&quot;/><path d=&quot;M2.5 5.5a2 2 0 0 1 2-2h.6L10 8 2.5 5.5z&quot; fill=&quot;#EA4335&quot;/><path d=&quot;M17.5 5.5a2 2 0 0 0-2-2h-.6L10 8l7.5-2.5z&quot; fill=&quot;#FBBC05&quot;/><path d=&quot;M6.1 3.5h7.8L10 8 6.1 3.5z&quot; fill=&quot;#EA4335&quot;/></svg>\'">';
 
     // "Open in Gmail" — a plain mailto: link, which every mail app
     // (Gmail included) registers itself as a handler for, so this opens
@@ -5058,27 +5071,27 @@
       const actionsHtml = proposing
         ? `<button type="button" class="kie-canvas-reject" onclick="_kieCanvasReject('${cardId}')">Reject</button>
            <button type="button" class="kie-canvas-accept" onclick="_kieCanvasAccept('${cardId}')">Accept</button>`
-        : _kiePickQuickActions(state.label).map(a => `
-           <button type="button" class="kie-canvas-quick" ${loading ? 'disabled' : ''} onclick="_kieCanvasQuickAction('${cardId}','${a}')">${esc(QUICK_ACTION_INFO[a].label)}</button>
-          `).join('');
+        : loading
+          ? `<div class="kie-canvas-loading"><span class="kie-canvas-spinner"></span>Rewriting…</div>`
+          : _kiePickQuickActions(state.label).map(a => `
+             <button type="button" class="kie-canvas-quick" onclick="_kieCanvasQuickAction('${cardId}','${a}')">${esc(QUICK_ACTION_INFO[a].label)}</button>
+            `).join('');
 
       const undoIcon    = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
       const redoIcon    = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>';
       const copyIcon    = '<svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
       const minimizeIcon= '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
-      const closeIcon   = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
       overlay.innerHTML = `
         <div class="kie-canvas" onclick="event.stopPropagation()">
           <div class="kie-canvas-topbar">
-            <button type="button" class="kie-canvas-icon-btn kie-canvas-icon-close" onclick="_kieCanvasClose('${cardId}')" title="Close">${closeIcon}</button>
+            <button type="button" class="kie-canvas-icon-btn kie-canvas-icon-minimize" onclick="_kieCanvasClose('${cardId}')" title="Minimize">${minimizeIcon}</button>
             <div class="kie-canvas-topbar-title">${esc(state.label)}</div>
             <div class="kie-canvas-topbar-right">
               <button type="button" class="kie-canvas-icon-btn" ${canUndo ? '' : 'disabled'} onclick="_kieCanvasUndo('${cardId}')" title="Undo">${undoIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" ${canRedo ? '' : 'disabled'} onclick="_kieCanvasRedo('${cardId}')" title="Redo">${redoIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" onclick="_kieCanvasCopy('${cardId}')" title="Copy">${copyIcon}</button>
               <button type="button" class="kie-canvas-icon-btn" onclick="_kieOpenGmailFromCanvas('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>
-              <button type="button" class="kie-canvas-icon-btn kie-canvas-icon-minimize" onclick="_kieCanvasClose('${cardId}')" title="Minimize">${minimizeIcon}</button>
             </div>
           </div>
           <div class="kie-canvas-body">${bodyHtml}</div>
@@ -5214,7 +5227,6 @@
         .kie-canvas-icon-btn:active{opacity:.55}
         .kie-canvas-icon-btn:disabled{color:#cbd5e1}
         .kie-canvas-icon-btn:disabled:active{opacity:1}
-        .kie-canvas-icon-close{color:#1a1a2e}
         .kie-canvas-icon-minimize{color:#7c3aed}
         .kie-canvas-body{flex:1;overflow-y:auto;padding:18px 18px 8px;font-size:14px;line-height:1.75;color:#1a1a2e}
         .kie-canvas-body p{margin:0 0 14px}
@@ -5223,6 +5235,9 @@
         .kie-canvas-quick{flex:1;min-width:90px;padding:11px 10px;border-radius:12px;border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;font:600 12.5px/1.2 inherit;cursor:pointer}
         .kie-canvas-quick:active{transform:scale(.97)}
         .kie-canvas-quick:disabled{opacity:.5;cursor:default}
+        .kie-canvas-loading{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 10px;color:#6d28d9;font:600 12.5px/1.2 inherit}
+        .kie-canvas-spinner{width:15px;height:15px;border-radius:50%;border:2px solid #ddd6fe;border-top-color:#7c3aed;animation:kie-canvas-spin .7s linear infinite}
+        @keyframes kie-canvas-spin{to{transform:rotate(360deg)}}
         .kie-canvas-reject{flex:1;padding:12px 10px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;color:#475569;font:600 13px/1.2 inherit;cursor:pointer}
         .kie-canvas-accept{flex:1;padding:12px 10px;border-radius:12px;border:none;background:#18181b;color:#fff;font:600 13px/1.2 inherit;cursor:pointer}
         .kie-canvas-reject:active,.kie-canvas-accept:active{transform:scale(.97)}
@@ -7895,11 +7910,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // accept/reject) — only once the block is done streaming, and only
           // for sendable documents, not ASCII diagrams (a timeline doesn't
           // have a "make it more casual" version).
-          const isDiagram = _kieIsDiagramBlock(content);
-          const editBtn = (closed || isFinal) && !isDiagram
+          const isDiagram  = _kieIsDiagramBlock(content);
+          const isSendable = !isDiagram && _kieIsSendableDocument(label);
+          const editBtn = (closed || isFinal) && isSendable
             ? `<button class="kie-code-card-edit" onclick="_kieOpenCanvas('${cardId}')" title="Edit"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>`
             : '';
-          const gmailBtn = (closed || isFinal) && !isDiagram
+          const gmailBtn = (closed || isFinal) && isSendable
             ? `<button class="kie-code-card-gmail" onclick="_kieOpenGmailFromCard('${cardId}')" title="Open in Gmail">${KIE_GMAIL_ICON}</button>`
             : '';
           // Prose documents wrap like normal text — no reason a cover letter
