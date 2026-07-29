@@ -377,7 +377,10 @@ app.get('/index',     (_req, res) => res.sendFile(path.join(__dirname, '..', 'pu
 // ─── POST /api/cover-letter — Full AI generation ──────────────────────────────
 app.post('/api/cover-letter', authenticate, async (req, res) => {
   const uid = req.user.uid;
-  const { resumeSource, resumeId, resumeData, resumeText, template, jobTitle, companyName } = req.body;
+  const {
+    resumeSource, resumeId, resumeData, resumeText, template, jobTitle, companyName,
+    fullName, address, email, phone, hiringManagerName, keyDetails,
+  } = req.body;
 
   const planKey = await getUserPlanKey(uid);
   const model   = getPlanConfig(planKey).kieModel; // plan determines the model for every tool except KIE chat itself — never hardcode this
@@ -402,16 +405,16 @@ app.post('/api/cover-letter', authenticate, async (req, res) => {
   }
   if (!jobTitle || !jobTitle.trim()) return res.status(400).json({ error: 'jobTitle is required' });
   if (!companyName || !companyName.trim()) return res.status(400).json({ error: 'companyName is required' });
+  // Personal Details are now collected on every path (scratch/upload/existing)
+  // — "from scratch" used to send NOTHING about the candidate, so the AI had
+  // no name/contact to work with at all.
+  if (!fullName || !fullName.trim()) return res.status(400).json({ error: 'fullName is required' });
+  if (!email || !email.trim()) return res.status(400).json({ error: 'email is required' });
 
   // Build resume context string from available data
   let resumeCtx = '';
   if (resumeData) {
     const d = resumeData;
-    const name   = d.fullName || '';
-    const title  = d.jobTitle || '';
-    const email  = d.email    || '';
-    const phone  = d.phone    || '';
-    const loc    = d.location || '';
     const summ   = d.summary  || '';
     const skills = (d.skills  || []).join(', ');
     const exp    = (d.workExperience || []).map(e =>
@@ -420,10 +423,15 @@ app.post('/api/cover-letter', authenticate, async (req, res) => {
     const edu = (d.education || []).map(e =>
       `${e.degree} in ${e.field} — ${e.school} (${e.graduationDate})`
     ).join('\n');
-    resumeCtx = `Name: ${name}\nJob Title: ${title}\nEmail: ${email}\nPhone: ${phone}\nLocation: ${loc}\nSummary: ${summ}\nSkills: ${skills}\nExperience:\n${exp}\nEducation:\n${edu}`;
+    resumeCtx = `Summary: ${summ}\nSkills: ${skills}\nExperience:\n${exp}\nEducation:\n${edu}`;
   } else if (resumeText) {
     resumeCtx = resumeText.slice(0, 3000);
   }
+
+  // The candidate's own name/contact is now always collected directly
+  // (Personal Details step) regardless of source — "from scratch" used to
+  // send the AI nothing about who's applying, so letters came out anonymous.
+  const candidateLine = [fullName, address, email, phone].filter(Boolean).join(' · ');
 
   // Template tone guide
   const toneGuide = {
@@ -433,12 +441,19 @@ app.post('/api/cover-letter', authenticate, async (req, res) => {
     minimal:   'clean, concise, direct — no fluff, every word earns its place',
   };
 
-  const systemPrompt = `You are an expert cover letter writer. You write compelling, personalized cover letters that sound like a thoughtful human wrote them — never generic, never templated. Return ONLY the cover letter text with no extra commentary, no subject line, no date, no address block. Just 3 paragraphs: (1) strong opening with the role and a hook, (2) relevant experience and skills matched to the company, (3) confident closing with a call to action. Keep it under 280 words.`;
+  const systemPrompt = `You are an expert cover letter writer. You write compelling, personalized cover letters that sound like a thoughtful human wrote them — never generic, never templated. Return ONLY the cover letter text with no extra commentary, no subject line, no date, no address block, no greeting/salutation line, no sign-off. Just 3 paragraphs: (1) strong opening with the role and a hook, (2) relevant experience and skills matched to the company, (3) confident closing with a call to action. Keep it under 280 words.`;
 
   const hasResume = resumeCtx.trim().length > 20;
+  const hiringMgrNote = hiringManagerName && hiringManagerName.trim()
+    ? `The hiring manager's name is ${hiringManagerName.trim()} — you may reference them naturally if it fits, though the greeting itself is handled outside this text.`
+    : '';
+  const keyDetailsNote = keyDetails && keyDetails.trim()
+    ? `The candidate specifically wants these points woven in naturally (do not just list them verbatim — integrate them): ${keyDetails.trim()}`
+    : '';
+
   const userPrompt = hasResume
-    ? `Write a cover letter for ${jobTitle} at ${companyName}. Tone: ${toneGuide[template]}.\n\nCandidate's resume:\n${resumeCtx}\n\nUse their actual experience and skills. Make it specific, compelling, and authentic.`
-    : `Write a cover letter for ${jobTitle} at ${companyName}. Tone: ${toneGuide[template]}. No resume provided — write a strong general letter showcasing enthusiasm and professional approach for this role.`;
+    ? `Write a cover letter for ${jobTitle} at ${companyName}. Tone: ${toneGuide[template]}.\n\nCandidate: ${candidateLine}\n\nCandidate's resume:\n${resumeCtx}\n\n${keyDetailsNote}\n${hiringMgrNote}\n\nUse their actual experience and skills. Make it specific, compelling, and authentic.`
+    : `Write a cover letter for ${jobTitle} at ${companyName}. Tone: ${toneGuide[template]}.\n\nCandidate: ${candidateLine}\n\nNo resume was provided — write a strong letter showcasing genuine enthusiasm and a professional approach for this role.\n${keyDetailsNote}\n${hiringMgrNote}\n${!keyDetailsNote ? 'Since there are no specifics to draw on, keep claims general (professionalism, work ethic, eagerness to contribute) rather than inventing fake achievements or experience.' : ''}`;
 
   const cfg = { max_tokens: 700, temperature: 0.75 };
   const effectiveModel = KIE_MODELS[model] ? model : 'spark';
@@ -456,6 +471,8 @@ app.post('/api/cover-letter', authenticate, async (req, res) => {
       template,
       jobTitle,
       companyName,
+      fullName:          fullName || null,
+      hiringManagerName: hiringManagerName || null,
       model:        effectiveModel,
       status:       'generated',
       createdAt:    admin.firestore.FieldValue.serverTimestamp(),
