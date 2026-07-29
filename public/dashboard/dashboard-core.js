@@ -5719,7 +5719,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         ].filter(Boolean).join('');
         const locked = !j.url;
         return `
-        <div class="job-snap-card${locked ? ' job-snap-locked' : ''}" onclick="${locked ? `lockTapped('findJobs')` : `openKieJobDetail('${rowId}', ${i})`}" style="cursor:pointer">
+        <div class="job-snap-card" onclick="openKieJobDetail('${rowId}', ${i})" style="cursor:pointer">
           ${locked ? '<div class="premium-lock-corner">👑 Premium</div>' : ''}
           <div style="display:flex;align-items:center;gap:10px">
             <div class="job-snap-logo">
@@ -5735,7 +5735,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           <div class="job-snap-title">${esc(j.title)}</div>
           <div style="font-size:11px;color:#9ca3af;font-weight:500">${esc(j.location)}</div>
           ${tags ? `<div class="job-snap-tags">${tags}</div>` : ''}
-          <div class="job-snap-apply">${locked ? 'Upgrade to view' : 'View details'} <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+          <div class="job-snap-apply">View details <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
         </div>`;
       }).join('') + `
         <a class="job-snap-more" href="/find-jobs?q=${encodeURIComponent(query)}">
@@ -9738,7 +9738,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         ].filter(Boolean).join('');
         const locked = !j.url;
         return `
-        <div class="job-snap-card${locked?' job-snap-locked':''}" onclick="${locked?`lockTapped('findJobs')`:`openJobDetail(${i},'home')`}" style="cursor:pointer">
+        <div class="job-snap-card" onclick="openJobDetail(${i},'home')" style="cursor:pointer">
           ${locked ? '<div class="premium-lock-corner">👑 Premium</div>' : ''}
           <div style="display:flex;align-items:center;gap:10px">
             <div class="job-snap-logo">
