@@ -10067,38 +10067,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function openUploadView() {
       uploadedFile = null; uploadedText = '';
       const fr = g('uploadFileReady'); if (fr) fr.style.display = 'none';
-      const uz = g('uploadZone');      if (uz) uz.style.display = 'block';
+      const card = g('atsUploadCard'); if (card) { card.style.display = 'flex'; card.classList.add('selected'); }
       const fi = g('uploadFileInput'); if (fi) fi.value = '';
       const pw = g('pasteAreaWrap');   if (pw) { pw.classList.remove('show'); }
       const pt = g('pasteText');       if (pt) pt.value = '';
       const ab = g('analyzeBtn');
       if (ab) { ab.disabled = true; ab.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Check My Score`; }
       document.querySelectorAll('#uploadFlowDots .kie-flow-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
-      _atsShowPicker();
       showView('upload');
     }
     window.openUploadView = openUploadView;
 
-    // ATS Checker picker state — same visual/behavioral pattern as Optimize's
-    // Screen 1, just with a single always-selected "Upload New Resume" option
-    // (ATS Checker has no "pick an existing resume" path).
-    function _atsShowPicker() {
-      const p = g('uploadStatePicker');    if (p)  p.style.display = 'block';
-      const dz = g('uploadStateDropzone'); if (dz) dz.style.display = 'none';
-      const card = g('atsUploadCard');     if (card) card.classList.add('selected');
-      const btn = g('atsContinueBtn');     if (btn) btn.disabled = false;
-    }
-    window._atsShowPicker = _atsShowPicker;
-
-    function _atsShowDropzone() {
-      const p = g('uploadStatePicker');    if (p)  p.style.display = 'none';
-      const dz = g('uploadStateDropzone'); if (dz) dz.style.display = 'block';
-    }
-    window._atsShowDropzone = _atsShowDropzone;
-
     // Tapping the card opens the native file picker immediately — same
-    // shortcut as Optimize's "Upload New Resume" tile. Picking a file jumps
-    // straight into analysis; canceling just leaves the user on this screen.
+    // shortcut as Optimize's "Upload New Resume" tile. Picking a file stays
+    // right here on this same screen (the card swaps for a file-ready badge
+    // and "Check My Score" becomes enabled); canceling just leaves the user
+    // on this screen, untouched.
     window._atsSelectUploadOption = function() {
       const fi = g('uploadFileInput');
       if (!fi) return;
@@ -10106,17 +10090,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const file = e.target.files[0];
         if (!file) return;
         handleUploadFile(file);
-        _atsShowDropzone(); // land on the file-ready confirmation screen —
-                             // user taps "Check My Score" to actually run it.
       };
       fi.value = '';
       fi.click();
-    };
-
-    // Continue button — fallback path to the classic dropzone/paste screen,
-    // for anyone who wants to browse manually instead of the native picker.
-    window._atsContinueFromPicker = function() {
-      _atsShowDropzone();
     };
 
     async function handleUploadFile(file) {
@@ -10128,7 +10104,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       g('uploadFileName').textContent = file.name;
       g('uploadFileSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
       g('uploadFileReady').style.display = 'flex';
-      g('uploadZone').style.display = 'none';
+      const card = g('atsUploadCard'); if (card) card.style.display = 'none';
       g('analyzeBtn').disabled = false;
     }
     window.handleUploadFile = handleUploadFile;
@@ -10136,7 +10112,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function clearUploadFile() {
       uploadedFile = null;
       g('uploadFileReady').style.display = 'none';
-      g('uploadZone').style.display = 'block';
+      const card = g('atsUploadCard'); if (card) card.style.display = 'flex';
       g('uploadFileInput').value = '';
       const pw = g('pasteAreaWrap');
       g('analyzeBtn').disabled = !(pw && pw.classList.contains('show') && g('pasteText').value.trim().length > 30);
@@ -10231,7 +10207,6 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         showView('analysis');
       } catch (err) {
         if (scan) scan.finish();
-        _atsShowDropzone();
         if (!['too short','no input'].includes(err.message)) toast(err.message || 'Analysis failed — try again', 'err');
         btn.disabled = false;
         btn.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Check My Score`;
@@ -10615,6 +10590,50 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       g('optUploadContinueBtn').disabled = !(pw && pw.style.display !== 'none' && g('optPasteText').value.trim().length > 30);
     };
 
+    // Screen-1 file-ready state — the picker screen (optStateSelect) handles
+    // its own "file picked" display now, so Optimize never hands off to the
+    // old standalone "Upload Your Resume" dropzone screen below.
+    function _optHandleSelectUploadFile(file) {
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { toast('File too large — max 5 MB', 'err'); return; }
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['pdf','doc','docx','txt'].includes(ext)) { toast('Please use a PDF, DOCX, or TXT file', 'err'); return; }
+      _optUploadFile = file;
+      const card = g('optUploadCard'); if (card) card.style.display = 'none';
+      const fr = g('optSelectFileReady');
+      if (fr) {
+        const nm = g('optSelectFileName'); if (nm) nm.textContent = file.name;
+        const sz = g('optSelectFileSize'); if (sz) sz.textContent = (file.size / 1024).toFixed(0) + ' KB';
+        fr.style.display = 'flex';
+      }
+      _optSyncContinueBtn();
+    }
+    window._optHandleSelectUploadFile = _optHandleSelectUploadFile;
+
+    window._optClearSelectUploadFile = function() {
+      _optUploadFile = null;
+      const fr = g('optSelectFileReady'); if (fr) fr.style.display = 'none';
+      const card = g('optUploadCard');    if (card) card.style.display = 'flex';
+      const fi = g('optFileInput');       if (fi) fi.value = '';
+      _optSyncContinueBtn();
+    };
+
+    // Repaints the Continue button based on what's picked: an existing resume
+    // keeps the plain "Continue" arrow; the upload option becomes "Optimize
+    // My Resume" once a file's actually attached (same lightbulb icon used
+    // on ATS Checker's "Check My Score", for a consistent AI-action look).
+    function _optSyncContinueBtn() {
+      const btn = g('optContinueBtn');
+      if (!btn) return;
+      if (_optPickedId === 'upload' && _optUploadFile) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Optimize My Resume`;
+      } else {
+        btn.disabled = !_optPickedId;
+        btn.innerHTML = `Continue <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+      }
+    }
+
     window._optTogglePaste = function() {
       const pw = g('optPasteWrap');
       if (!pw) return;
@@ -10652,7 +10671,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (result.isResume === false) {
           toast("Couldn't read this resume clearly — try again.", 'err');
           _optSetStep(1);
-          _optShow('optStateUpload');
+          _optShow('optStateSelect');
           return;
         }
         analysisResult = result; // fresh upload — no _sourceResumeId, so Fix My Resume saves it as a brand-new resume
@@ -10661,7 +10680,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         anim.finish();
         toast(err.message || 'Scan failed — try again', 'err');
         _optSetStep(1);
-        _optShow('optStateUpload');
+        _optShow('optStateSelect');
       }
     };
 
@@ -10672,31 +10691,38 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       document.querySelectorAll('#optResumePickerList .opt-picker-card, #optUploadCard').forEach(c => c.classList.remove('selected'));
       const card = document.querySelector(`#optResumePickerList .opt-picker-card[data-id="${id}"]`);
       if (card) card.classList.add('selected');
-      const btn = g('optContinueBtn'); if (btn) btn.disabled = false;
+      // Switching away from the upload option clears any in-progress upload,
+      // so the "Upload New Resume" card comes back if they change their mind.
+      window._optClearSelectUploadFile();
     };
     window._optSelectUploadOption = function() {
       _optPickedId = 'upload';
       document.querySelectorAll('#optResumePickerList .opt-picker-card').forEach(c => c.classList.remove('selected'));
       g('optUploadCard').classList.add('selected');
-      const btn = g('optContinueBtn'); if (btn) btn.disabled = false;
-      // Skip the intermediate "Upload Your Resume" dropzone screen entirely —
-      // tapping this tile opens the native file picker immediately. Selecting
-      // a file jumps straight into the scan; canceling just leaves the user
-      // on this picker screen, untouched.
+      _optSyncContinueBtn();
+      // Same shortcut as ATS Checker: tapping this tile opens the native file
+      // picker immediately. Picking a file stays right here on Screen 1 — the
+      // card swaps for a file-ready badge and Continue becomes "Optimize My
+      // Resume". Canceling just leaves the user on this screen, untouched.
       const fi = g('optFileInput');
       if (!fi) return;
       fi.onchange = e => {
         const file = e.target.files[0];
         if (!file) return;
-        _optHandleUploadFile(file);
-        _optRunUploadScan();
+        _optHandleSelectUploadFile(file);
       };
       fi.value = '';
       fi.click();
     };
     window._optContinueFromPicker = function() {
       if (!_optPickedId) return;
-      if (_optPickedId === 'upload') { _optOpenUploadState(); return; }
+      if (_optPickedId === 'upload') {
+        if (_optUploadFile) { _optRunUploadScan(); return; }
+        // No file attached yet (e.g. Continue tapped before a file was
+        // picked) — same shortcut as tapping the card itself.
+        window._optSelectUploadOption();
+        return;
+      }
       diagnoseExistingResume(_optPickedId);
     };
 
@@ -10719,6 +10745,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           <div class="opt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
         </div>`).join('');
       g('optUploadCard').classList.remove('selected');
+      window._optClearSelectUploadFile(); // resets file-ready badge, card visibility, button label
       g('optContinueBtn').disabled = true;
       _optShow('optStateSelect');
     };
@@ -11164,14 +11191,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // File input change
       g('uploadFileInput').onchange = e => { if (e.target.files[0]) handleUploadFile(e.target.files[0]); };
 
-      // Drag & drop
-      const uploadZone = g('uploadZone');
-      uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-      uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag-over'));
-      uploadZone.addEventListener('drop', e => {
-        e.preventDefault(); uploadZone.classList.remove('drag-over');
-        if (e.dataTransfer.files[0]) handleUploadFile(e.dataTransfer.files[0]);
-      });
+      // Drag & drop — now targets the upload card itself since the old
+      // illustrated dropzone box was removed from this screen.
+      const uploadZone = g('atsUploadCard');
+      if (uploadZone) {
+        uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag-over'));
+        uploadZone.addEventListener('drop', e => {
+          e.preventDefault(); uploadZone.classList.remove('drag-over');
+          if (e.dataTransfer.files[0]) handleUploadFile(e.dataTransfer.files[0]);
+        });
+      }
 
       // Paste textarea: enable analyze btn as user types
       g('pasteText').addEventListener('input', () => {

@@ -2329,15 +2329,18 @@
     <!-- Upload body -->
     <div class="upload-body">
 
-      <!-- Picker state — same visual pattern as Optimize's Screen 1, just
-           with a single option since ATS Checker only works from a fresh
-           upload (no "pick an existing resume" choice). -->
+      <!-- Screen 1 — same visual pattern as Optimize's Screen 1, just with a
+           single option since ATS Checker only works from a fresh upload (no
+           "pick an existing resume" choice). Everything happens right here:
+           tap the card, native picker opens, file comes back to this same
+           screen, and "Check My Score" becomes the one action button. -->
       <div id="uploadStatePicker">
         <div class="opt-diag-hdr">
           <div class="opt-step-badge">1</div>
           <div class="opt-diag-title">Upload Your Resume</div>
         </div>
         <div class="opt-diag-sub">Choose your resume to check against ATS filters.</div>
+
         <div class="opt-picker-card opt-picker-upload-card selected" id="atsUploadCard" onclick="_atsSelectUploadOption()">
           <div class="opt-picker-ico opt-picker-ico-upload">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -2348,87 +2351,56 @@
           </div>
           <div class="opt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
         </div>
-        <button class="opt-continue-btn" id="atsContinueBtn" onclick="_atsContinueFromPicker()">
-          Continue
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+
+        <!-- Shown in place of the card above once a file's been picked. -->
+        <div id="uploadFileReady" class="upload-file-ready" style="display:none;margin-bottom:16px">
+          <div class="upload-file-ico">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div style="min-width:0;flex:1">
+            <div class="upload-file-name" id="uploadFileName">file.pdf</div>
+            <div class="upload-file-size" id="uploadFileSize">—</div>
+          </div>
+          <button class="upload-file-rm" onclick="clearUploadFile()" title="Remove">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <input type="file" id="uploadFileInput" accept=".pdf,.doc,.docx,.txt" style="display:none"/>
+
+        <!-- Paste fallback -->
+        <div class="upload-or">or</div>
+        <button class="upload-paste-btn" onclick="togglePasteArea()">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Paste resume text instead
         </button>
-      </div>
-
-      <!-- Dropzone state — fallback if the native picker is canceled from the
-           card above, reached via "Continue", or shown again to let the user
-           retry after a failed scan. -->
-      <div id="uploadStateDropzone" style="display:none">
-
-      <!-- File ready badge -->
-      <div id="uploadFileReady" class="upload-file-ready" style="display:none;margin-bottom:16px">
-        <div class="upload-file-ico">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <div class="paste-area-wrap" id="pasteAreaWrap">
+          <textarea id="pasteText" placeholder="Paste your full resume — name, work history, education, skills…"></textarea>
         </div>
-        <div style="min-width:0;flex:1">
-          <div class="upload-file-name" id="uploadFileName">file.pdf</div>
-          <div class="upload-file-size" id="uploadFileSize">—</div>
-        </div>
-        <button class="upload-file-rm" onclick="clearUploadFile()" title="Remove">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+
+        <!-- CTA — the one action button for this whole screen -->
+        <button class="analyze-btn" id="analyzeBtn" disabled>
+          <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          Check My Score
         </button>
-      </div>
 
-      <!-- Drop zone -->
-      <div class="upload-zone" id="uploadZone">
-        <input type="file" id="uploadFileInput" accept=".pdf,.doc,.docx,.txt"/>
-        <div class="upload-zone-illo">
-          <div class="upload-zone-illo-bg">
-            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <!-- Trust row -->
+        <div class="upload-trust">
+          <div class="upload-trust-item">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Private
+          </div>
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--mute)"></div>
+          <div class="upload-trust-item">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Not stored
+          </div>
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--mute)"></div>
+          <div class="upload-trust-item">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg>
+            ~30 sec
           </div>
         </div>
-        <div class="upload-zone-title">Drop your resume here</div>
-        <div class="upload-zone-sub">or tap to browse your files</div>
-        <div class="upload-types">
-          <div class="upload-type-badge" style="color:#dc2626;border-color:#fecaca">
-            <svg width="10" height="10" fill="#dc2626" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>PDF
-          </div>
-          <div class="upload-type-badge" style="color:#2563eb;border-color:#bfdbfe">
-            <svg width="10" height="10" fill="#2563eb" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>DOCX
-          </div>
-          <div class="upload-type-badge">
-            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>TXT
-          </div>
-        </div>
-      </div>
-
-      <!-- Paste fallback -->
-      <div class="upload-or">or</div>
-      <button class="upload-paste-btn" onclick="togglePasteArea()">
-        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        Paste resume text instead
-      </button>
-      <div class="paste-area-wrap" id="pasteAreaWrap">
-        <textarea id="pasteText" placeholder="Paste your full resume — name, work history, education, skills…"></textarea>
-      </div>
-
-      <!-- CTA -->
-      <button class="analyze-btn" id="analyzeBtn" disabled>
-        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-        Check My Score
-      </button>
-
-      <!-- Trust row -->
-      <div class="upload-trust">
-        <div class="upload-trust-item">
-          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-          Private
-        </div>
-        <div style="width:3px;height:3px;border-radius:50%;background:var(--mute)"></div>
-        <div class="upload-trust-item">
-          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          Not stored
-        </div>
-        <div style="width:3px;height:3px;border-radius:50%;background:var(--mute)"></div>
-        <div class="upload-trust-item">
-          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg>
-          ~30 sec
-        </div>
-      </div>
 
       </div>
     </div>
@@ -2617,6 +2589,21 @@
           <div class="opt-picker-meta">PDF, DOCX (Max 10MB)</div>
         </div>
         <div class="opt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+      </div>
+      <!-- Shown in place of the card above once a file's been picked — same
+           picker screen the whole time, no hand-off to a separate dropzone
+           screen. -->
+      <div id="optSelectFileReady" class="opt-file-ready" style="display:none">
+        <div class="opt-file-ico">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div style="min-width:0;flex:1">
+          <div class="opt-file-name" id="optSelectFileName">file.pdf</div>
+          <div class="opt-file-size" id="optSelectFileSize">—</div>
+        </div>
+        <button class="opt-file-rm" onclick="_optClearSelectUploadFile()" title="Remove">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
       </div>
       <button class="opt-continue-btn" id="optContinueBtn" onclick="_optContinueFromPicker()" disabled>
         Continue
