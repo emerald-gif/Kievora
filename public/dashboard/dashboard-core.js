@@ -5178,6 +5178,14 @@
         const card = document.getElementById(cardId);
         const body = card?.querySelector('.kie-code-card-body');
         if (body) body.textContent = state.history[state.historyIndex];
+        // Once the user has accepted at least one AI rewrite, mark the card
+        // so it reads as their edited version, not KIE's original draft.
+        if (state.historyIndex > 0) {
+          const label = card?.querySelector('.kie-code-card-label');
+          if (label && !label.querySelector('.kie-code-card-edited-badge')) {
+            label.insertAdjacentHTML('beforeend', '<span class="kie-code-card-edited-badge">Edited</span>');
+          }
+        }
       }
       if (overlay) overlay.style.display = 'none';
     }
@@ -5196,6 +5204,7 @@
            left, plain icons right — no background chrome behind them. */
         .kie-code-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(124,58,237,.12)}
         .kie-code-card-label{display:flex;align-items:center;gap:7px;font-weight:700;color:#6d28d9}
+        .kie-code-card-edited-badge{font-size:10px;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:999px;padding:2px 8px;letter-spacing:.2px}
         .kie-code-card-btns{display:flex;align-items:center;gap:14px}
         .kie-code-card-edit,.kie-code-card-copy,.kie-code-card-gmail{background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0}
         .kie-code-card-edit{color:#6b7280}
