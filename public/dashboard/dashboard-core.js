@@ -11016,14 +11016,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           g('optNewScore').textContent = data.newScore || 0;
 
           const ba = Array.isArray(data.beforeAfter) ? data.beforeAfter : [];
-          const improvements = [
-            'Stronger, impact-driven bullet points',
-            ba.length ? `Rewrote ${ba.length} key bullet point${ba.length > 1 ? 's' : ''}` : 'Improved clarity & readability',
-            'Better alignment with industry standards',
-            'ATS compatibility boosted',
-          ];
+          // Real, resume-specific improvements from the AI — this used to be
+          // 4 hardcoded generic lines shown identically for every resume,
+          // which read as vague/fake. Now it reflects what actually changed.
+          const improvements = Array.isArray(data.improvements) && data.improvements.length
+            ? data.improvements
+            : [
+                ba.length ? `Rewrote ${ba.length} key bullet point${ba.length > 1 ? 's' : ''} with stronger, quantified language` : 'Strengthened bullet points with more impact-driven language',
+                'Improved keyword alignment for ATS scanning',
+              ];
           g('optImproveList').innerHTML = improvements.map(t =>
-            `<div class="opt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>${esc(t)}</div>`
+            `<div class="opt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(t)}</span></div>`
           ).join('');
 
           const baWrap = g('optBeforeAfterWrap');
