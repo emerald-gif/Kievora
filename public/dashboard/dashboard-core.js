@@ -11326,22 +11326,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       // Step indicators
       function clUpdateSteps(step) {
-        const states = [
-          { s:'cl-stp-done', l:'done' },  // step 1
-          { s:'cl-stp-done', l:'done' },  // step 2
-          { s:'cl-stp-done', l:'done' },  // step 3
-        ];
         const cur = step - 1;
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
           const el = g('clS' + (i + 1));
           if (!el) continue;
           el.className = 'cl-stp ' + (i < cur ? 'cl-stp-done' : i === cur ? 'cl-stp-cur' : 'cl-stp-idle');
         }
-        for (let i = 1; i <= 2; i++) {
+        for (let i = 1; i <= 3; i++) {
           const ln = g('clL' + i);
           if (ln) ln.className = 'cl-stp-line' + (i < step ? ' done' : '');
         }
-        ['clStep1','clStep2','clStep3'].forEach((id, idx) => {
+        ['clStep1','clStep2','clStep3','clStep4'].forEach((id, idx) => {
           const el = g(id); if (el) el.className = 'cl-step-panel' + (idx === cur ? ' active' : '');
         });
       }
@@ -11448,12 +11443,32 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         btn.disabled = !ok;
       }
 
+      // Step 1 → Step 2 (template picker only)
       window.clGoStep2 = function() {
         if (!clSource) return;
         if (clSource === 'existing' && !clResume && !(resumes && resumes.length === 0)) return;
-        clPrefillPersonal();
         clUpdateSteps(2);
-        clCheckStep2Ready();
+      };
+
+      window.clGoStep1 = function() {
+        clUpdateSteps(1);
+      };
+
+      window.clPickTpl = function(id) {
+        clTemplate = id;
+        document.querySelectorAll('.cl-tcard').forEach(c => c.classList.remove('sel'));
+        const el = g('clt_' + id);
+        if (el) el.classList.add('sel');
+        const btn = g('clNextBtn2');
+        if (btn) btn.disabled = !clTemplate;
+      };
+
+      // Step 2 → Step 3 (Your Details — Personal/Employer/Letter)
+      window.clGoStep3 = function() {
+        if (!clTemplate) return;
+        clPrefillPersonal();
+        clUpdateSteps(3);
+        clCheckStep3Ready();
       };
 
       // Fills Personal Details from whatever resume context we have, so
@@ -11484,30 +11499,27 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         }
       }
 
-      window.clGoStep1 = function() {
-        clUpdateSteps(1);
+      window.clToggleKeyDetails = function() {
+        const wrap = g('clKeyDetailsWrap');
+        const chev = g('clKeyDetailsChevron');
+        if (!wrap) return;
+        const open = wrap.style.display !== 'none';
+        wrap.style.display = open ? 'none' : 'block';
+        if (chev) chev.style.transform = open ? '' : 'rotate(90deg)';
       };
 
-      window.clPickTpl = function(id) {
-        clTemplate = id;
-        document.querySelectorAll('.cl-tcard').forEach(c => c.classList.remove('sel'));
-        const el = g('clt_' + id);
-        if (el) el.classList.add('sel');
-        clCheckStep2Ready();
-      };
-
-      function clCheckStep2Ready() {
-        const btn = g('clNextBtn2');
+      function clCheckStep3Ready() {
+        const btn = g('clNextBtn3');
         if (!btn) return;
         const fullName    = (g('clFullName')?.value    || '').trim();
         const email       = (g('clEmail')?.value       || '').trim();
         const jobTitle    = (g('clJobTitle')?.value    || '').trim();
         const companyName = (g('clCompanyName')?.value || '').trim();
-        btn.disabled = !(clTemplate && fullName && email && jobTitle && companyName);
+        btn.disabled = !(fullName && email && jobTitle && companyName);
       }
 
-      window.clGoStep3 = async function() {
-        if (!clTemplate) return;
+      // Step 3 → Step 4 (Generate)
+      window.clGoStep4 = async function() {
         const fields = {
           fullName:          (g('clFullName')?.value       || '').trim(),
           jobTitle:          (g('clJobTitle')?.value       || '').trim(),
@@ -11520,34 +11532,64 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         };
         if (!fields.fullName || !fields.email || !fields.jobTitle || !fields.companyName) return;
 
-        clUpdateSteps(3);
+        clUpdateSteps(4);
         await clGenerate(fields);
       };
+
+      // Same "AI moment" grammar as Optimize My Resume / ATS Checker: ring +
+      // % + checklist + progress bar, capped at 90% until the real API
+      // response comes back so it never falsely reads "done" while KIE is
+      // still working.
+      function _clStartAnim() {
+        const steps = ['Reading your details', 'Matching your experience', 'Writing your letter', 'Polishing the tone'];
+        g('clCheckList').innerHTML = steps.map(s =>
+          `<div class="opt-check-item"><span class="opt-check-dot"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>${esc(s)}</div>`
+        ).join('');
+        const stepEls = Array.from(document.querySelectorAll('#clCheckList .opt-check-item'));
+        const ring = document.getElementById('clAnimProgressRing');
+        const pct  = document.getElementById('clAnimPct');
+        const fill = document.getElementById('clAnimProgressFill');
+        const RING_CIRC = 358.14;
+        const STEP_CAP = 90;
+
+        const setProgress = (p) => {
+          if (ring) ring.style.strokeDashoffset = String(RING_CIRC * (1 - p / 100));
+          if (pct) pct.textContent = p + '%';
+          if (fill) fill.style.width = p + '%';
+        };
+
+        setProgress(0);
+        let i = 0;
+        const interval = setInterval(() => {
+          if (i < stepEls.length) {
+            stepEls[i].classList.add('done');
+            i++;
+            setProgress(Math.round((i / stepEls.length) * STEP_CAP));
+          } else {
+            clearInterval(interval);
+          }
+        }, 600);
+
+        return { finish: () => {
+          clearInterval(interval);
+          stepEls.forEach(el => el.classList.add('done'));
+          setProgress(100);
+        } };
+      }
 
       async function clGenerate(fields) {
         const { fullName, jobTitle, address, email, phone, companyName, hiringManagerName, keyDetails } = fields;
         // Show loading, hide result
         const loading = g('clGenLoading');
         const result  = g('clGenResult');
-        const back    = g('clStep3Back');
+        const back    = g('clStep4Back');
         const regenBtn = g('clRegenBtn');
         if (loading) loading.style.display = 'block';
         if (result)  result.style.display  = 'none';
         if (back)    back.style.display    = 'none';
         if (regenBtn) regenBtn.disabled = true;
 
-        // Rotate loading messages
-        const statusMsgs = [
-          'Writing your cover letter…',
-          'Matching your experience to the role…',
-          'Crafting the perfect opening…',
-          'Polishing the final paragraph…',
-        ];
-        let si = 0;
-        const statusEl = g('clGenStatus');
-        const statusInterval = setInterval(() => {
-          if (statusEl) { si = (si + 1) % statusMsgs.length; statusEl.textContent = statusMsgs[si]; }
-        }, 2200);
+        const anim = _clStartAnim();
 
         // Loading label — never mentions which model; cover letters always run on
         // Groq regardless of plan, so naming a model here would wrongly imply the
@@ -11591,7 +11633,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             body:    JSON.stringify(body),
           });
 
-          clearInterval(statusInterval);
+          anim.finish();
 
           if (!resp.ok) {
             const err = await resp.json().catch(() => ({ error: 'Unknown error' }));
@@ -11630,13 +11672,16 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           // Render into the smaller A4-style template preview
           clRenderPreview(letter);
 
-          if (loading) loading.style.display = 'none';
-          if (result)  result.style.display  = 'block';
-          if (back)    back.style.display    = '';
-          if (regenBtn) regenBtn.disabled = false;
+          // Brief beat on 100% so it reads as "done", not cut off mid-fill.
+          setTimeout(() => {
+            if (loading) loading.style.display = 'none';
+            if (result)  result.style.display  = 'block';
+            if (back)    back.style.display    = '';
+            if (regenBtn) regenBtn.disabled = false;
+          }, 250);
 
         } catch (err) {
-          clearInterval(statusInterval);
+          anim.finish();
           if (loading) loading.style.display = 'none';
           if (back)    back.style.display    = '';
           // Show error in result area
@@ -11646,7 +11691,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
               <div style="font-size:32px;margin-bottom:12px">⚠️</div>
               <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">Generation failed</div>
               <div style="font-size:13px;color:var(--sub);margin-bottom:20px">${esc(err.message)}</div>
-              <button onclick="clGoStep2()" style="padding:12px 28px;background:var(--g);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">← Try Again</button>
+              <button onclick="clGoStep3()" style="padding:12px 28px;background:var(--g);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">← Try Again</button>
             </div>`;
           }
         }
@@ -11942,11 +11987,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const ph = g('clPhone');       if (ph) ph.value = '';
         const hm = g('clHiringManager'); if (hm) hm.value = '';
         const kd = g('clKeyDetails');  if (kd) kd.value = '';
+        const kdw = g('clKeyDetailsWrap'); if (kdw) kdw.style.display = 'none';
+        const kdc = g('clKeyDetailsChevron'); if (kdc) kdc.style.transform = '';
         const gl = g('clGenLoading'); if (gl) gl.style.display = 'none';
         const gr = g('clGenResult');  if (gr) gr.style.display = 'none';
         const ps = g('clPrevScaler'); if (ps) ps.innerHTML = '';
         const b1 = g('clNextBtn1');    if (b1) b1.disabled = true;
         const b2 = g('clNextBtn2');    if (b2) b2.disabled = true;
+        const b3 = g('clNextBtn3');    if (b3) b3.disabled = true;
         clUpdateSteps(1);
 
         // If coming from a specific resume, pre-select it

@@ -1027,6 +1027,8 @@
         <div class="cl-stp cl-stp-idle" id="clS2">2</div>
         <div class="cl-stp-line" id="clL2"></div>
         <div class="cl-stp cl-stp-idle" id="clS3">3</div>
+        <div class="cl-stp-line" id="clL3"></div>
+        <div class="cl-stp cl-stp-idle" id="clS4">4</div>
       </div>
     </div>
 
@@ -1250,95 +1252,136 @@
         </div>
       </div>
 
-      <!-- Personal, Employer & Letter details — same 3 sections for every
-           source (scratch/upload/existing). For scratch there's no resume to
-           draw on, so this is the only place the AI gets the candidate's own
-           name/contact + any specifics — without it "from scratch" letters
-           came out anonymous and generic. For upload/existing, these fields
-           are pre-filled from the resume (clPrefillPersonal) but stay
-           editable so anyone can correct or fill a gap. -->
-      <div class="cl-panel-card" style="padding:20px;margin-top:14px">
-        <div style="font-size:14px;font-weight:800;color:var(--txt);margin-bottom:4px;letter-spacing:-.2px">Personal Details</div>
-        <div style="font-size:12px;color:var(--sub);margin-bottom:16px">Who's applying?</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Full Name *</label>
-            <input id="clFullName" type="text" placeholder="e.g. Alex Johnson" oninput="clCheckStep2Ready()"
-              style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Title *</label>
-            <input id="clJobTitle" type="text" placeholder="e.g. Product Manager" oninput="clCheckStep2Ready()"
-              style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Address</label>
-            <input id="clAddress" type="text" placeholder="e.g. Lagos, Nigeria"
-              style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Email *</label>
-            <input id="clEmail" type="email" placeholder="e.g. alex@email.com" oninput="clCheckStep2Ready()"
-              style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Phone Number</label>
-            <input id="clPhone" type="tel" placeholder="e.g. +234 801 234 5678"
-              style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
-          </div>
-        </div>
-      </div>
-
-      <div class="cl-panel-card" style="padding:20px;margin-top:14px">
-        <div style="font-size:14px;font-weight:800;color:var(--txt);margin-bottom:4px;letter-spacing:-.2px">Employer Details</div>
-        <div style="font-size:12px;color:var(--sub);margin-bottom:16px">Who are you applying to?</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Company Name *</label>
-            <input id="clCompanyName" type="text" placeholder="e.g. Google" oninput="clCheckStep2Ready()"
-              style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Hiring Manager Name</label>
-            <input id="clHiringManager" type="text" placeholder="Leave blank to use \"Hiring Manager\""
-              style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
-          </div>
-        </div>
-      </div>
-
-      <div class="cl-panel-card" style="padding:20px;margin-top:14px">
-        <div style="font-size:14px;font-weight:800;color:var(--txt);margin-bottom:4px;letter-spacing:-.2px">Letter Details</div>
-        <div style="font-size:12px;color:var(--sub);margin-bottom:16px">Optional — anything specific KIE should weave in (key achievements, why this company, must-mention skills)</div>
-        <textarea id="clKeyDetails" rows="5" placeholder="e.g. Led a 6-person team that shipped X ahead of schedule; drawn to this company's focus on Y; want to highlight my Z certification"
-          style="width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:12px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;resize:vertical;line-height:1.5"
-          onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
-      </div>
-
       <div class="cl-step-nav" style="justify-content:space-between">
         <button class="btn btn-ghost" onclick="clGoStep1()" style="padding:12px 20px">← Back</button>
         <button id="clNextBtn2" class="btn btn-pri" onclick="clGoStep3()" disabled style="padding:12px 28px;font-size:14px;font-weight:800">
+          Next: Your Details →
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Personal / Employer / Letter details — one compact card,
+         not three separate ones, so it doesn't read as a bulky wall of forms.
+         Same screen for every source (scratch/upload/existing); "scratch" has
+         no resume to draw on, so this is the only place the AI gets the
+         candidate's own name/contact + any specifics. For upload/existing,
+         fields are pre-filled (clPrefillPersonal) but stay editable. -->
+    <div id="clStep3" class="cl-step-panel">
+      <div class="cl-panel-card">
+        <div style="font-size:16px;font-weight:900;color:var(--txt);margin-bottom:4px;letter-spacing:-.3px">Your Details</div>
+        <div style="font-size:12.5px;color:var(--sub);margin-bottom:18px">Who's applying, and to whom</div>
+
+        <div style="font-size:10.5px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Personal</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Full Name *</label>
+              <input id="clFullName" type="text" placeholder="Alex Johnson" oninput="clCheckStep3Ready()"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
+            </div>
+            <div>
+              <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Job Title *</label>
+              <input id="clJobTitle" type="text" placeholder="Product Manager" oninput="clCheckStep3Ready()"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Email *</label>
+              <input id="clEmail" type="email" placeholder="alex@email.com" oninput="clCheckStep3Ready()"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
+            </div>
+            <div>
+              <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Phone</label>
+              <input id="clPhone" type="tel" placeholder="+234 801 234 5678"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Address</label>
+            <input id="clAddress" type="text" placeholder="Lagos, Nigeria"
+              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border2);margin-bottom:16px"></div>
+
+        <div style="font-size:10.5px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Employer</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div>
+            <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Company Name *</label>
+            <input id="clCompanyName" type="text" placeholder="Google" oninput="clCheckStep3Ready()"
+              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
+          </div>
+          <div>
+            <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Hiring Manager</label>
+            <input id="clHiringManager" type="text" placeholder="Optional"
+              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border2);margin-bottom:14px"></div>
+
+        <!-- Collapsed by default — keeps the screen from feeling bulky; most
+             people don't need this, so it's a tap-away extra rather than
+             another open textarea taking up space by default. -->
+        <div id="clKeyDetailsToggle" onclick="clToggleKeyDetails()" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--p);cursor:pointer;user-select:none">
+          <svg id="clKeyDetailsChevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transition:transform .15s"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          Add specific details to mention (optional)
+        </div>
+        <div id="clKeyDetailsWrap" style="display:none;margin-top:10px">
+          <textarea id="clKeyDetails" rows="4" placeholder="e.g. Led a 6-person team that shipped X ahead of schedule; drawn to this company's focus on Y; want to highlight my Z certification"
+            style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;resize:vertical;line-height:1.5"
+            onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+        </div>
+      </div>
+
+      <div class="cl-step-nav" style="justify-content:space-between">
+        <button class="btn btn-ghost" onclick="clGoStep2()" style="padding:12px 20px">← Back</button>
+        <button id="clNextBtn3" class="btn btn-pri" onclick="clGoStep4()" disabled style="padding:12px 28px;font-size:14px;font-weight:800">
           Generate Letter →
         </button>
       </div>
     </div>
 
-    <!-- Step 3: AI Generation + Result -->
-    <div id="clStep3" class="cl-step-panel">
+    <!-- Step 4: AI Generation + Result -->
+    <div id="clStep4" class="cl-step-panel">
 
-      <!-- Loading state -->
-      <div id="clGenLoading" style="display:none;text-align:center;padding:40px 20px">
-        <div style="width:56px;height:56px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="animation:sping 1.2s linear infinite"><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      <!-- Loading state — same "AI moment" as Optimize My Resume / ATS Checker
+           (ring, %, checklist, progress bar) so every KIE-powered screen in
+           the app feels like the same system at work, not a plain spinner. -->
+      <div id="clGenLoading" style="display:none;padding:24px 4px">
+        <div class="opt-anim-wrap">
+          <div class="opt-anim-orb-lg">
+            <svg class="opt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
+              <defs>
+                <linearGradient id="clAnimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7c3aed"/>
+                  <stop offset="100%" stop-color="#c084fc"/>
+                </linearGradient>
+              </defs>
+              <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
+              <circle id="clAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#clAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
+            </svg>
+            <div class="opt-anim-orb-ring"></div>
+            <div class="opt-anim-orb-core">
+              <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </div>
+            <div class="opt-anim-pct" id="clAnimPct">0%</div>
+          </div>
+          <div class="opt-anim-title" id="clGenStatus">Writing your cover letter…</div>
+          <div class="opt-anim-sub" id="clGenModelLabel">KIE is crafting your letter</div>
+          <div class="opt-check-list" id="clCheckList"></div>
+          <div class="opt-anim-progress-track"><div class="opt-anim-progress-fill" id="clAnimProgressFill"></div></div>
+          <div class="opt-anim-timing">This usually takes 10–20 seconds</div>
         </div>
-        <div id="clGenStatus" style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px">Writing your cover letter…</div>
-        <div style="font-size:13px;color:var(--sub)" id="clGenModelLabel">KIE is crafting your letter</div>
       </div>
 
       <!-- Result state -->
@@ -1385,7 +1428,7 @@
       </div>
 
       <div style="margin-top:16px;display:flex;justify-content:flex-start">
-        <button class="btn btn-ghost" id="clStep3Back" onclick="clGoStep2()" style="padding:10px 18px">← Back</button>
+        <button class="btn btn-ghost" id="clStep4Back" onclick="clGoStep3()" style="padding:10px 18px">← Back</button>
       </div>
     </div>
 
