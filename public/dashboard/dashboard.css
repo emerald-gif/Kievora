@@ -1015,6 +1015,21 @@
     .opt-ba-after  .opt-ba-lbl{color:#16a34a}
     .opt-ba-text{font-size:13px;color:var(--txt);line-height:1.5}
     .opt-ba-before{opacity:.7;margin-bottom:8px}
+    .opt-res-tabs{display:flex;gap:6px;background:#f1f5f9;border-radius:14px;padding:4px;margin:18px 0 4px}
+    .opt-res-tab{flex:1;text-align:center;padding:9px 10px;border-radius:11px;font-size:13px;font-weight:800;color:var(--mute);cursor:pointer;transition:all .15s;user-select:none}
+    .opt-res-tab.active{background:#fff;color:var(--txt);box-shadow:0 2px 6px rgba(15,23,42,.08)}
+    .opt-res-panel{display:none}
+    .opt-res-panel.active{display:block}
+    /* Persistent Diagnosis/Results ↔ My Resume tab bar (in the panel header,
+       not tied to any single .opt-state) */
+    .opt-top-tabs{display:flex;gap:6px;background:#f1f5f9;border-radius:14px;padding:4px;margin:14px 20px 10px;flex-shrink:0}
+    .opt-top-tab{flex:1;text-align:center;padding:10px 10px;border-radius:11px;font-size:13.5px;font-weight:800;color:var(--mute);cursor:pointer;transition:all .15s;user-select:none}
+    .opt-top-tab.active{background:#fff;color:var(--p);box-shadow:0 2px 8px rgba(124,58,237,.12)}
+    /* Scaled-down full resume preview — same technique as the cover letter
+       preview: render at full width, scale the whole thing down with a
+       transform to fit a small card. */
+    .opt-res-prev-wrap{background:#f8f7ff;border-radius:14px;border:1.5px solid var(--border2);overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,.08);max-width:300px;margin:0 auto 20px}
+    .opt-res-prev-scaler{width:600px;transform-origin:top left}
     .opt-results-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
     .rec-score-hero{background:linear-gradient(135deg,#0f0e17,#1e1040);border-radius:20px;padding:24px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:20px}
     .rec-score-ring{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;border:3px solid rgba(255,255,255,.15)}

@@ -10449,6 +10449,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // "Optimize My Resume" button on ATS Checker's results screen.
     let _optNewResume = null;
     let _optPickedId  = null; // resume id selected on Screen 1, or 'upload'
+    let _optChosenTpl   = 'classic'; // AI-recommended template, set once diagnosis runs
+    let _optLastMainState = 'optStateDiag'; // remembers which screen "My Resume" tab should return to
 
     function _optIssuesFromAnalysis(r) {
       const issues = [...(r.weaknesses||[]).slice(0,3), ...(r.missingItems||[]).slice(0,2)];
@@ -10470,8 +10472,46 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       if (score >= 50) return "Needs work — let's fix the gaps.";
       return "Struggling to pass ATS filters right now.";
     }
-    function _optAllStates() { return ['optStateSelect','optStateUpload','optStateDiag','optStateAnim','optStateResults']; }
-    function _optShow(id) { _optAllStates().forEach(s => g(s).classList.remove('show')); g(id).classList.add('show'); }
+    function _optAllStates() { return ['optStateSelect','optStateUpload','optStateDiag','optStateAnim','optStateResults','optStatePreview']; }
+    function _optShow(id) {
+      _optAllStates().forEach(s => g(s).classList.remove('show'));
+      g(id).classList.add('show');
+      // The top "Diagnosis/Results ↔ My Resume" tab bar only makes sense once
+      // there's actually a resume to look at — hidden during picking/upload/
+      // scanning, shown from the diagnosis screen onward, and it always lands
+      // back on the "main" tab whenever we arrive here from elsewhere (e.g.
+      // straight after the fix finishes).
+      const tabs = g('optTopTabs');
+      if (!tabs) return;
+      if (id === 'optStateDiag' || id === 'optStateResults') {
+        _optLastMainState = id;
+        tabs.style.display = '';
+        const mainTabLbl = g('optTopTabMainLbl');
+        if (mainTabLbl) mainTabLbl.textContent = id === 'optStateResults' ? 'Results' : 'Diagnosis';
+        const mainTab = g('optTopTabMain'), resTab = g('optTopTabResume');
+        if (mainTab) mainTab.classList.add('active');
+        if (resTab)  resTab.classList.remove('active');
+      } else if (id !== 'optStatePreview') {
+        tabs.style.display = 'none';
+      }
+    }
+
+    // Switching tabs never re-runs the diagnosis/results population logic —
+    // it just changes which already-populated panel is visible, so it can't
+    // recurse back through _optShow.
+    window._optSwitchTopTab = function(which) {
+      const mainTab = g('optTopTabMain');
+      const resTab  = g('optTopTabResume');
+      if (mainTab) mainTab.classList.toggle('active', which === 'main');
+      if (resTab)  resTab.classList.toggle('active', which === 'resume');
+      _optAllStates().forEach(s => g(s).classList.remove('show'));
+      if (which === 'resume') {
+        _optRenderResumePreviewPanel();
+        g('optStatePreview').classList.add('show');
+      } else {
+        g(_optLastMainState).classList.add('show');
+      }
+    };
     function _optOpenPanel() { g('optimizePanel').classList.add('open'); document.body.style.overflow = 'hidden'; }
     function _optSetStep(n) {
       document.querySelectorAll('#optSteps .opt-step-dot').forEach(dot => {
@@ -10480,6 +10520,55 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         dot.classList.toggle('active', d === n);
       });
     }
+
+    // The AI already picks a best-fit template per resume (templateSuggestion,
+    // set by /api/analyze-resume) — but the Optimize flow was ignoring it and
+    // always using the global `selTpl` default ('classic'), so every fixed
+    // resume came out in the same template regardless of what actually suited
+    // the content. This is the single source of truth for "which template" now.
+    function _optBestTpl(d) {
+      return (window.TPLS_REF || []).some(t => t.id === d?.templateSuggestion) ? d.templateSuggestion : 'classic';
+    }
+
+    // Renders one scaled-down resume page into a wrap/scaler pair — same
+    // technique the cover letter preview uses (full-size content, scaled
+    // down with a CSS transform to fit a small card).
+    function _optRenderPreviewInto(scalerId, wrapId, resumeData, tplId) {
+      const scaler = g(scalerId);
+      if (!scaler || !resumeData) return;
+      const tpl = (window.TPLS_REF || []).find(t => t.id === tplId) || { bg: '#7c3aed' };
+      scaler.innerHTML = buildPrevHTML(resumeData, tplId, tpl.bg, 'rf-sans');
+      requestAnimationFrame(() => {
+        const wrap = g(wrapId);
+        if (!wrap) return;
+        const w = wrap.offsetWidth || 300;
+        const scale = w / 600;
+        scaler.style.transform = 'scale(' + scale + ')';
+        wrap.style.height = Math.round(scale * 840) + 'px';
+      });
+    }
+
+    // "My Resume" tab content — one preview while still on the diagnosis
+    // screen (the resume about to be fixed), both the original AND the fixed
+    // version once results are in, so the improvement is something you can
+    // actually see, not just a score number going up.
+    function _optRenderResumePreviewPanel() {
+      const single = g('optPrevSingleGroup');
+      const both   = g('optPrevBothGroup');
+      if (_optLastMainState === 'optStateResults' && _optNewResume) {
+        if (single) single.style.display = 'none';
+        if (both)   both.style.display   = '';
+        _optRenderPreviewInto('optPrevBeforeScaler', 'optPrevBeforeWrap', analysisResult, _optChosenTpl);
+        _optRenderPreviewInto('optPrevAfterScaler',  'optPrevAfterWrap',  _optNewResume.resumeData, _optNewResume.templateType || _optChosenTpl);
+      } else {
+        if (both)   both.style.display   = 'none';
+        if (single) single.style.display = '';
+        _optRenderPreviewInto('optPrevSingleScaler', 'optPrevSingleWrap', analysisResult, _optChosenTpl);
+      }
+    }
+    window.addEventListener('resize', () => {
+      if (g('optStatePreview')?.classList.contains('show')) _optRenderResumePreviewPanel();
+    });
 
     function _optPopulateDiag(r) {
       const score = Math.min(100, Math.max(0, r.atsScore||0));
@@ -10493,6 +10582,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       g('optDiagScore').textContent = score;
       g('optDiagScore').style.color = sc;
       g('optGaugeVerdict').textContent = _optVerdict(score);
+
+      // Now actually uses the AI's own template recommendation instead of
+      // silently defaulting to Classic every time.
+      _optChosenTpl = _optBestTpl(r);
+      selTpl = _optChosenTpl;
 
       // Issue text stays short by default (2-line clamp) — tap to see the
       // AI's full note if it runs long, so casual users aren't hit with a
@@ -10883,7 +10977,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             oldScore: Math.min(100, Math.max(0, analysisResult.atsScore || 0)),
             sourceResumeId:   analysisResult._sourceResumeId || null,
             sourceResumeName: analysisResult._sourceResumeName || (analysisResult.fullName ? analysisResult.fullName + ' Resume' : 'Resume'),
-            templateType: typeof _getSelTpl === 'function' ? _getSelTpl() : 'classic',
+            templateType: _optChosenTpl || _optBestTpl(analysisResult),
           }),
         });
         if (!r.ok) { const errBody = await r.json().catch(() => ({})); throw new Error(errBody.message || errBody.error || 'Optimization failed'); }
@@ -10919,6 +11013,21 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             baWrap.style.display = 'none';
           }
 
+          // "Before" tab — what the original diagnosis actually flagged, so
+          // switching back gives real substance (not just a vague "before").
+          const origIssues = _optIssuesFromAnalysis(analysisResult);
+          const origEl = g('optOrigIssueList');
+          if (origEl) {
+            origEl.innerHTML = origIssues.length
+              ? origIssues.map(i => `
+                  <div class="opt-issue-item">
+                    <div class="opt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+                    <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')">${esc(i)}</div>
+                  </div>`).join('')
+              : `<div style="font-size:13px;color:var(--sub);padding:8px 0">No major issues were flagged — KIE focused on tightening wording and keyword coverage.</div>`;
+          }
+          _optSwitchResultTab('after'); // always land on "what changed" first
+
           _optShow('optStateResults');
           loadResumes(); // new resume now exists — refresh so My Resumes/home reflect it
         }, 500);
@@ -10928,6 +11037,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _optShow('optStateDiag');
         toast(err.message || 'Optimization failed — try again', 'err');
       }
+    };
+
+    window._optSwitchResultTab = function(which) {
+      const isAfter = which === 'after';
+      g('optTabAfter').classList.toggle('active', isAfter);
+      g('optTabBefore').classList.toggle('active', !isAfter);
+      g('optPanelAfter').classList.toggle('active', isAfter);
+      g('optPanelBefore').classList.toggle('active', !isAfter);
     };
 
     window.useOptimizedResume = function() {
