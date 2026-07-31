@@ -609,7 +609,7 @@ module.exports = function registerToolsRoutes(app) {
 
       // Never overwrite the source resume — always a new doc, clearly labeled
       // with the score jump and linked back via sourceResumeId for lineage.
-      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\(Optimized.*?\)\s*$/i, '');
+      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\((Optimized|Tailored)[^)]*\)\s*/gi, '').trim();
       const oldScoreNum = Math.min(100, Math.max(0, Math.round(oldScore || 0)));
       const newName = `${baseName} (Optimized \u00b7 ${oldScoreNum}\u2192${newScore})`;
 
@@ -805,7 +805,13 @@ module.exports = function registerToolsRoutes(app) {
       // Never overwrite the source resume, and never let this become pickable
       // as a normal resume elsewhere in the app — isJobTailored + tailoredForJob
       // are what every resume picker in the client filters on.
-      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\(Tailored.*?\)\s*$/i, '');
+      // Strip ANY existing decorated suffix (Optimized or Tailored) — the
+      // source for tailoring is often itself a Fix My Resume output like
+      // "Jane Doe Resume (Optimized · 65→78)", and without stripping that
+      // first the new name stacked both suffixes: "...(Optimized · 65→78)
+      // (Tailored for X)". Only job-tailored resumes are excluded as a
+      // tailoring source, so an already-optimized source is real and reachable.
+      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\((Optimized|Tailored)[^)]*\)\s*/gi, '').trim();
       const oldScoreNum = Math.min(100, Math.max(0, Math.round(oldMatchScore || 0)));
       const newName = `${baseName} (Tailored for ${jobTitle})`;
 
