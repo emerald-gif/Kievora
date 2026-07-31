@@ -585,7 +585,112 @@
   .toast-item .toast-x{flex-shrink:0;width:20px;height:20px;border:none;background:none;color:#b7b2c4;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0}
   .toast-item .toast-x:hover{background:#f5f4fa;color:#6b6478}
   @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+/* ══ TAILOR MY RESUME FOR THIS JOB — self-contained panel styles ══ */
+.jt-panel{position:fixed;inset:0;z-index:400;background:#faf9ff;transform:translateX(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
+.jt-panel.open{transform:translateX(0)}
+.jt-panel-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid rgba(124,58,237,.1);position:sticky;top:0;z-index:10;flex-shrink:0}
+.jt-panel-back{width:38px;height:38px;border-radius:50%;border:none;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.jt-steps{display:flex;align-items:center;gap:6px}
+.jt-step-dot{width:8px;height:8px;border-radius:50%;background:#e5e0f5;transition:all .25s}
+.jt-step-dot.active{background:#7c3aed;width:20px;border-radius:5px}
+.jt-step-dot.done{background:#a78bfa}
+.jt-panel-body{padding:22px 16px 32px;flex:1}
+.jt-state{display:none}
+.jt-state.show{display:block;animation:jtFadeIn .35s ease}
+@keyframes jtFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.jt-step-badge{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 3px 10px rgba(124,58,237,.25)}
+.jt-diag-title{font-size:20px;font-weight:900;color:#0f172a;letter-spacing:-.3px;margin-bottom:4px}
+.jt-diag-sub{font-size:13px;color:#64748b;margin-bottom:20px}
+.jt-section-lbl{font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px}
+.jt-step-nav{display:flex;align-items:center;margin-top:22px}
+.jt-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 24px;border-radius:14px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;border:none;transition:opacity .15s}
+.jt-btn:disabled{opacity:.4;cursor:default}
+.jt-btn-pri{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.28)}
+.jt-btn-ghost{background:#f1f5f9;color:#475569}
 
+/* Resume picker cards */
+.jt-picker-card{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:13px 14px;margin-bottom:10px;cursor:pointer;transition:all .15s;position:relative}
+.jt-picker-card.selected{border-color:#7c3aed;background:#faf9ff;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.jt-picker-ico{width:38px;height:38px;border-radius:11px;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.jt-picker-body{flex:1;min-width:0}
+.jt-picker-name{font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jt-picker-meta{font-size:11.5px;color:#94a3b8;font-weight:600;margin-top:2px}
+.jt-picker-score{font-size:11px;font-weight:800;color:#7c3aed;background:#f5f3ff;padding:4px 9px;border-radius:99px;flex-shrink:0}
+.jt-picker-check{width:20px;height:20px;border-radius:50%;background:#7c3aed;display:none;align-items:center;justify-content:center;flex-shrink:0}
+.jt-picker-card.selected .jt-picker-check{display:flex}
+
+/* Loading "AI moment" — ring + orb + checklist + progress bar */
+.jt-anim-wrap{text-align:center;padding:20px 4px}
+.jt-anim-orb-lg{position:relative;width:128px;height:128px;margin:0 auto 18px}
+.jt-anim-ring-svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.jt-anim-progress-ring{transition:stroke-dashoffset .5s ease}
+.jt-anim-orb-ring{position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle,#a855f7,#7c3aed);animation:jtPulse 2s ease-in-out infinite}
+@keyframes jtPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:.9}}
+.jt-anim-orb-core{position:absolute;inset:40px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(124,58,237,.4)}
+.jt-anim-pct{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:#fff;border:1.5px solid #ede9fe;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:800;color:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,.15)}
+.jt-anim-title{font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px}
+.jt-anim-sub{font-size:12.5px;color:#64748b;margin-bottom:18px}
+.jt-check-list{display:flex;flex-direction:column;gap:8px;text-align:left;max-width:280px;margin:0 auto 16px}
+.jt-check-list .opt-check-item,.jt-check-list .jt-check-item{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:#cbd5e1;transition:color .2s}
+.jt-check-list .jt-check-item.done{color:#0f172a}
+.jt-check-dot{width:18px;height:18px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
+.jt-check-item.done .jt-check-dot{background:#16a34a}
+.jt-anim-progress-track{height:5px;background:#f1f5f9;border-radius:99px;overflow:hidden;max-width:280px;margin:0 auto}
+.jt-anim-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px;transition:width .5s ease}
+.jt-anim-timing{font-size:11px;color:#94a3b8;margin-top:10px}
+
+/* Score gauge */
+.jt-gauge-wrap{text-align:center;margin-bottom:8px}
+.jt-ring-wrap{position:relative;width:120px;height:120px;margin:0 auto}
+.jt-ring-wrap svg{transform:rotate(-90deg)}
+.jt-ring-wrap circle{transition:stroke-dashoffset 1s ease}
+.jt-ring-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.jt-ring-val{font-size:26px;font-weight:900;color:#0f172a;line-height:1}
+.jt-ring-lbl{font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.4px;margin-top:2px}
+.jt-gauge-verdict{font-size:13px;font-weight:700;color:#475569;margin-top:10px}
+
+/* Keywords */
+.jt-kw-block{margin-bottom:6px}
+.jt-kw-sub{font-size:11.5px;font-weight:800;margin:10px 0 8px}
+.jt-kw-sub.jt-kw-good{color:#16a34a}
+.jt-kw-sub.jt-kw-bad{color:#dc2626}
+.jt-kw-chips{display:flex;flex-wrap:wrap;gap:7px}
+.jt-kw-chip{font-size:12px;font-weight:700;padding:6px 12px;border-radius:99px;border:1.5px solid}
+.jt-kw-chip.matched{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a}
+.jt-kw-chip.missing{background:#fef2f2;border-color:#fecaca;color:#dc2626}
+
+/* Requirements / issues list */
+.jt-issue-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.jt-issue-item{display:flex;align-items:flex-start;gap:11px;background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:12px 14px}
+.jt-issue-ico{width:26px;height:26px;border-radius:9px;background:#fef3e2;color:#ea580c;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+.jt-issue-title{font-size:13px;color:#0f172a;line-height:1.4}
+.jt-issue-title.detail-clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.jt-issue-title.detail-clamp.expanded{-webkit-line-clamp:unset;display:block}
+
+/* Results screen */
+.jt-score-boxes{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0 6px}
+.jt-score-box{flex:1;max-width:130px;text-align:center;border-radius:16px;padding:16px 10px}
+.jt-score-box-old{background:#f1f5f9}
+.jt-score-box-new{background:#f0fdf4}
+.jt-score-box-val{font-size:28px;font-weight:900;color:#0f172a;line-height:1}
+.jt-score-box-new .jt-score-box-val{color:#16a34a}
+.jt-score-box-lbl{font-size:10.5px;font-weight:800;color:#94a3b8;letter-spacing:.3px;margin-top:4px}
+.jt-res-tabs{display:flex;gap:6px;background:#f1f5f9;border-radius:14px;padding:4px;margin:18px 0 4px}
+.jt-res-tab{flex:1;text-align:center;padding:9px 10px;border-radius:11px;font-size:13px;font-weight:800;color:#94a3b8;cursor:pointer;transition:all .15s}
+.jt-res-tab.active{background:#fff;color:#0f172a;box-shadow:0 2px 6px rgba(15,23,42,.08)}
+.jt-res-panel{display:none}
+.jt-res-panel.active{display:block}
+.jt-improve-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.jt-improve-item{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid #ede9fe;border-radius:13px;padding:11px 14px;font-size:13px;font-weight:600;color:#0f172a}
+.jt-improve-item svg{flex-shrink:0;color:#16a34a}
+.jt-ba-card{background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:14px;margin-bottom:10px}
+.jt-ba-before,.jt-ba-after{padding:8px 0}
+.jt-ba-before{border-bottom:1px dashed #ede9fe;opacity:.75}
+.jt-ba-lbl{font-size:10px;font-weight:800;letter-spacing:.4px;margin-bottom:4px}
+.jt-ba-before .jt-ba-lbl{color:#dc2626}
+.jt-ba-after .jt-ba-lbl{color:#16a34a}
+.jt-ba-text{font-size:12.5px;color:#334155;line-height:1.5}
+.jt-results-actions{margin-top:20px}
 </style>
 <link rel="stylesheet" href="/dashboard/app-sidebar.css"/>
 <style>@media(min-width:900px){body.has-app-sb .hdr{left:var(--app-sb-w)}}</style>
@@ -895,6 +1000,165 @@
       </button>
       <a id="fjdApplyBtn" class="fjd-apply" target="_blank" rel="noopener">Apply for this role →</a>
     </div>
+  </div>
+</div>
+
+<!-- ══ TAILOR MY RESUME FOR THIS JOB — opens in place, no navigation ══ -->
+<div id="jtPanel" class="jt-panel">
+  <div class="jt-panel-hdr">
+    <button class="jt-panel-back" onclick="closeJobTailorPanel()">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="jt-steps" id="jtSteps">
+      <span class="jt-step-dot" data-n="1"></span>
+      <span class="jt-step-dot" data-n="2"></span>
+      <span class="jt-step-dot" data-n="3"></span>
+    </div>
+    <span style="width:38px;flex-shrink:0"></span>
+  </div>
+
+  <div class="jt-panel-body">
+
+    <!-- Screen 1: pick a resume -->
+    <div id="jtStateSelect" class="jt-state show">
+      <div class="jt-step-badge">1</div>
+      <div class="jt-diag-title">Tailor My Resume</div>
+      <div class="jt-diag-sub" id="jtJobLine">for this job</div>
+      <div class="jt-section-lbl">Choose a resume</div>
+      <div id="jtResumePickerList"></div>
+      <div class="jt-step-nav" style="justify-content:flex-end">
+        <button id="jtContinueBtn" class="jt-btn jt-btn-pri" onclick="_jtContinueFromPicker()" disabled>
+          Continue <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Screen 2a: reviewing (loading) -->
+    <div id="jtStateReviewAnim" class="jt-state">
+      <div class="jt-anim-wrap">
+        <div class="jt-anim-orb-lg">
+          <svg class="jt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
+            <defs><linearGradient id="jtAnimGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs>
+            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
+            <circle id="jtAnimProgressRing" class="jt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#jtAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
+          </svg>
+          <div class="jt-anim-orb-ring"></div>
+          <div class="jt-anim-orb-core"><svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg></div>
+          <div class="jt-anim-pct" id="jtAnimPct">0%</div>
+        </div>
+        <div class="jt-anim-title">Calculating match score…</div>
+        <div class="jt-anim-sub">Comparing your resume against this job's requirements.</div>
+        <div class="jt-check-list" id="jtCheckList"></div>
+        <div class="jt-anim-progress-track"><div class="jt-anim-progress-fill" id="jtAnimProgressFill"></div></div>
+        <div class="jt-anim-timing">This usually takes a few seconds</div>
+      </div>
+    </div>
+
+    <!-- Screen 2b: review — match score, keywords, requirements fit -->
+    <div id="jtStateReview" class="jt-state">
+      <div class="jt-step-badge">2</div>
+      <div class="jt-diag-title" style="text-align:center;margin-bottom:16px">Job Match Score</div>
+      <div class="jt-gauge-wrap">
+        <div class="jt-ring-wrap">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/>
+            <circle id="jtGaugeFill" cx="60" cy="60" r="52" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <div class="jt-ring-overlay">
+            <div class="jt-ring-val" id="jtMatchScore">—</div>
+            <div class="jt-ring-lbl">MATCH</div>
+          </div>
+        </div>
+        <div class="jt-gauge-verdict" id="jtGaugeVerdict"></div>
+      </div>
+
+      <div class="jt-section-lbl">Keywords</div>
+      <div class="jt-kw-block">
+        <div class="jt-kw-sub jt-kw-good">✓ Found on your resume</div>
+        <div class="jt-kw-chips" id="jtKwMatched"></div>
+        <div class="jt-kw-sub jt-kw-bad">✗ Missing from your resume</div>
+        <div class="jt-kw-chips" id="jtKwMissing"></div>
+      </div>
+
+      <div class="jt-section-lbl">Requirements Fit</div>
+      <div id="jtReqFitList" class="jt-issue-list"></div>
+
+      <div class="jt-step-nav" style="justify-content:space-between">
+        <button class="jt-btn jt-btn-ghost" onclick="closeJobTailorPanel()">Cancel</button>
+        <button class="jt-btn jt-btn-pri" onclick="runJobTailor()">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          Start Tailoring
+        </button>
+      </div>
+    </div>
+
+    <!-- Screen 3a: tailoring (loading) -->
+    <div id="jtStateTailorAnim" class="jt-state">
+      <div class="jt-anim-wrap">
+        <div class="jt-anim-orb-lg">
+          <svg class="jt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
+            <defs><linearGradient id="jtAnimGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs>
+            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
+            <circle id="jtAnimProgressRing2" class="jt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#jtAnimGrad2)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
+          </svg>
+          <div class="jt-anim-orb-ring"></div>
+          <div class="jt-anim-orb-core"><svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
+          <div class="jt-anim-pct" id="jtAnimPct2">0%</div>
+        </div>
+        <div class="jt-anim-title">Tailoring your resume…</div>
+        <div class="jt-anim-sub">Reframing your experience to match this job.</div>
+        <div class="jt-check-list" id="jtCheckList2"></div>
+        <div class="jt-anim-progress-track"><div class="jt-anim-progress-fill" id="jtAnimProgressFill2"></div></div>
+        <div class="jt-anim-timing">This usually takes 10–20 seconds</div>
+      </div>
+    </div>
+
+    <!-- Screen 3b: results — before/after match score, what changed, save/discard -->
+    <div id="jtStateResults" class="jt-state">
+      <div class="jt-step-badge">3</div>
+      <div class="jt-diag-title">Resume Tailored ✨</div>
+      <div class="jt-diag-sub" id="jtResultJobLine">for this job</div>
+
+      <div class="jt-score-boxes">
+        <div class="jt-score-box jt-score-box-old">
+          <div class="jt-score-box-val" id="jtOldScore">0</div>
+          <div class="jt-score-box-lbl">Before</div>
+        </div>
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.8" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <div class="jt-score-box jt-score-box-new">
+          <div class="jt-score-box-val" id="jtNewScore">0</div>
+          <div class="jt-score-box-lbl">Match · After</div>
+        </div>
+      </div>
+
+      <div class="jt-res-tabs">
+        <div class="jt-res-tab" id="jtTabBefore" onclick="_jtSwitchResultTab('before')">Before — What We Found</div>
+        <div class="jt-res-tab active" id="jtTabAfter" onclick="_jtSwitchResultTab('after')">After — What Changed</div>
+      </div>
+
+      <div id="jtPanelAfter" class="jt-res-panel active">
+        <div class="jt-section-lbl">Key Improvements</div>
+        <div class="jt-improve-list" id="jtImproveList"></div>
+        <div id="jtBeforeAfterWrap">
+          <div class="jt-section-lbl">Before vs After</div>
+          <div id="jtBeforeAfterList"></div>
+        </div>
+      </div>
+
+      <div id="jtPanelBefore" class="jt-res-panel">
+        <div class="jt-section-lbl">Requirements Not Met</div>
+        <div class="jt-issue-list" id="jtOrigIssueList"></div>
+      </div>
+
+      <div class="jt-results-actions">
+        <button class="jt-btn jt-btn-pri" style="width:100%;justify-content:center" onclick="saveJobTailoredResume()">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Save Tailored Resume
+        </button>
+        <button class="jt-btn jt-btn-ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="discardJobTailoredResume()">Discard Changes</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2191,27 +2455,350 @@ window.closeJobDetail = function() {
   if (!anyPanelOpen(['fjDetailScreen'])) document.body.style.overflow = '';
 };
 
-// Hands the job off to the dashboard's Job Tailor panel — this page has its
-// own script context (no shared state with dashboard-core.js), so the
-// cleanest bridge is a full navigation carrying just the job data. Review
-// (match score/keywords) runs free; the actual tailoring is gated inside the
-// dashboard panel, same "diagnostics free, deep action paid" split as ATS
-// Checker → Fix My Resume.
-window.tailorResumeForJob = function() {
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ═══ TAILOR MY RESUME FOR THIS JOB — fully in-page, no navigation ══════════
+// ═══════════════════════════════════════════════════════════════════════════
+// Runs entirely within find-jobs.html now (was previously a full-page handoff
+// to the dashboard, which meant a visible loading flash before the picker
+// even appeared). This page already has its own auth token and api() helper,
+// so it can call the same server endpoints directly. Review (match score/
+// keywords) runs free; the actual tailoring is gated, same "diagnostics
+// free, deep action paid" split as ATS Checker → Fix My Resume.
+let _jtJob          = null;
+let _jtPickedId     = null;
+let _jtSourceResume = null;
+let _jtReview       = null;
+let _jtNewResume    = null;
+let _jtAllResumes   = null; // cached from /api/resumes, fetched once per panel open
+
+function _jtSetStep(n) {
+  document.querySelectorAll('#jtSteps .jt-step-dot').forEach(dot => {
+    const d = Number(dot.dataset.n);
+    dot.classList.toggle('done', d < n);
+    dot.classList.toggle('active', d === n);
+  });
+}
+function _jtAllStates() { return ['jtStateSelect','jtStateReviewAnim','jtStateReview','jtStateTailorAnim','jtStateResults']; }
+function _jtShow(id) { _jtAllStates().forEach(s => g(s).classList.remove('show')); g(id).classList.add('show'); }
+
+function _jtStartAnim(opts) {
+  const steps = opts.steps || [];
+  const checklistEl = g(opts.checklistId);
+  if (checklistEl) {
+    checklistEl.innerHTML = steps.map(s =>
+      `<div class="jt-check-item"><span class="jt-check-dot"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>${esc(s)}</div>`
+    ).join('');
+  }
+  const stepEls = checklistEl ? Array.from(checklistEl.querySelectorAll('.jt-check-item')) : [];
+  const ring = document.getElementById(opts.ringId);
+  const pct  = document.getElementById(opts.pctId);
+  const fill = document.getElementById(opts.fillId);
+  const RING_CIRC = 358.14;
+  const STEP_CAP = 90;
+  const setProgress = (p) => {
+    if (ring) ring.style.strokeDashoffset = String(RING_CIRC * (1 - p / 100));
+    if (pct) pct.textContent = p + '%';
+    if (fill) fill.style.width = p + '%';
+  };
+  setProgress(0);
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < stepEls.length) {
+      stepEls[i].classList.add('done');
+      i++;
+      setProgress(Math.round((i / stepEls.length) * STEP_CAP));
+    } else {
+      clearInterval(interval);
+    }
+  }, 600);
+  return { finish: () => {
+    clearInterval(interval);
+    stepEls.forEach(el => el.classList.add('done'));
+    setProgress(100);
+  } };
+}
+
+// Entry point — opens the panel immediately; resumes are fetched right as
+// it opens (fast single GET), no separate loading screen beforehand.
+window.tailorResumeForJob = async function() {
   const j = window._fjCurrentJob;
   if (!j) return;
+  _jtJob = {
+    title:        j.title || '',
+    company:      j.company || '',
+    location:     j.location || '',
+    description:  j.description || j.snippet || '',
+    requirements: j.requirements || '',
+  };
+  _jtPickedId = null;
+  _jtSourceResume = null;
+  _jtReview = null;
+  _jtNewResume = null;
+
+  const jl = g('jtJobLine');
+  if (jl) jl.textContent = `${_jtJob.title}${_jtJob.company ? ' at ' + _jtJob.company : ''}`;
+
+  g('jtPanel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  _jtSetStep(1);
+  _jtShow('jtStateSelect');
+
+  const listEl = g('jtResumePickerList');
+  listEl.innerHTML = `<div style="text-align:center;padding:24px 0;color:#94a3b8;font-size:13px">Loading your resumes…</div>`;
+  g('jtContinueBtn').disabled = true;
+
   try {
-    sessionStorage.setItem('kievora_jobtailor_pending', JSON.stringify({
-      title:        j.title || '',
-      company:      j.company || '',
-      location:     j.location || '',
-      description:  j.description || j.snippet || '',
-      requirements: j.requirements || '',
-    }));
-  } catch (e) {}
-  window.location.href = '/dashboard#jobtailor';
+    const data = await api('GET', '/api/resumes');
+    // Job-tailored resumes never appear here — only general-purpose ones can
+    // be the source for a new tailoring pass.
+    _jtAllResumes = (data.resumes || data || []).filter(r => !r.isJobTailored);
+    _jtRenderPicker();
+  } catch (err) {
+    listEl.innerHTML = `<div style="text-align:center;padding:24px 0;color:#dc2626;font-size:13px">Couldn't load your resumes — try again.</div>`;
+  }
+};
+
+function _jtRenderPicker() {
+  const listEl = g('jtResumePickerList');
+  const merged = _jtAllResumes || [];
+  if (!merged.length) {
+    listEl.innerHTML = `<div style="font-size:13px;color:#64748b;padding:16px 0;text-align:center">No resumes yet — <a href="/dashboard" style="color:#7c3aed;font-weight:700;text-decoration:none">create one first</a></div>`;
+    return;
+  }
+  listEl.innerHTML = merged.map(r => `
+    <div class="jt-picker-card" data-id="${r.id}" onclick="_jtSelectResumeCard('${r.id}')">
+      <div class="jt-picker-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+      <div class="jt-picker-body">
+        <div class="jt-picker-name">${esc(r.resumeName)}</div>
+        <div class="jt-picker-meta">${esc(r.resumeData?.jobTitle || 'Updated ' + fmtDate(r.updatedAt))}</div>
+      </div>
+      <div class="jt-picker-score">${typeof r.atsScore === 'number' ? r.atsScore + ' ATS' : 'Not scored'}</div>
+      <div class="jt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+    </div>`).join('');
+}
+
+window._jtSelectResumeCard = function(id) {
+  _jtPickedId = id;
+  document.querySelectorAll('#jtResumePickerList .jt-picker-card').forEach(c => c.classList.remove('selected'));
+  const card = document.querySelector(`#jtResumePickerList .jt-picker-card[data-id="${id}"]`);
+  if (card) card.classList.add('selected');
+  g('jtContinueBtn').disabled = false;
+};
+
+window.closeJobTailorPanel = function() {
+  g('jtPanel').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+window._jtContinueFromPicker = async function() {
+  if (!_jtPickedId) return;
+  _jtSourceResume = (_jtAllResumes || []).find(r => r.id === _jtPickedId);
+  if (!_jtSourceResume) { toast('Resume not found', 'err'); return; }
+
+  _jtSetStep(2);
+  _jtShow('jtStateReviewAnim');
+  const anim = _jtStartAnim({
+    checklistId: 'jtCheckList', ringId: 'jtAnimProgressRing', pctId: 'jtAnimPct', fillId: 'jtAnimProgressFill',
+    steps: ['Reading job requirements', 'Scanning your resume', 'Matching keywords', 'Scoring your fit'],
+  });
+
+  try {
+    const result = await api('POST', '/api/job-tailor-review', {
+      resumeData: _jtSourceResume.resumeData,
+      jobTitle: _jtJob.title, jobCompany: _jtJob.company,
+      jobDescription: _jtJob.description, jobRequirements: _jtJob.requirements,
+    });
+    anim.finish();
+    _jtReview = result;
+    setTimeout(() => { _jtSetStep(2); _jtPopulateReview(result); _jtShow('jtStateReview'); }, 400);
+  } catch (err) {
+    anim.finish();
+    toast(err.message || 'Match review failed — try again', 'err');
+    _jtSetStep(1);
+    _jtShow('jtStateSelect');
+  }
+};
+
+function _jtVerdict(score) {
+  if (score >= 80) return "Excellent match — you're a strong fit for this role!";
+  if (score >= 60) return 'Good match — tailoring can push this further.';
+  if (score >= 40) return 'Moderate match — tailoring will help close the gaps.';
+  return 'Low match — tailoring can meaningfully improve your fit.';
+}
+
+function _jtColorForScore(score) {
+  if (score >= 70) return '#16a34a';
+  if (score >= 50) return '#f59e0b';
+  return '#dc2626';
+}
+
+function _jtPopulateReview(r) {
+  const score = Math.min(100, Math.max(0, r.matchScore || 0));
+  const sc = _jtColorForScore(score);
+  const circumference = 2 * Math.PI * 52;
+  const dash = circumference - (score / 100) * circumference;
+  const gaugeFill = g('jtGaugeFill');
+  gaugeFill.setAttribute('stroke', sc);
+  gaugeFill.setAttribute('stroke-dasharray', circumference);
+  gaugeFill.setAttribute('stroke-dashoffset', dash);
+  g('jtMatchScore').textContent = score;
+  g('jtMatchScore').style.color = sc;
+  g('jtGaugeVerdict').textContent = _jtVerdict(score);
+
+  const matched = r.keywordsMatched || [];
+  const missing = r.keywordsMissing || [];
+  g('jtKwMatched').innerHTML = matched.length
+    ? matched.map(k => `<span class="jt-kw-chip matched">${esc(k)}</span>`).join('')
+    : `<span style="font-size:12px;color:#94a3b8">None found</span>`;
+  g('jtKwMissing').innerHTML = missing.length
+    ? missing.map(k => `<span class="jt-kw-chip missing">${esc(k)}</span>`).join('')
+    : `<span style="font-size:12px;color:#94a3b8">Nothing missing — great coverage!</span>`;
+
+  const fit = r.requirementsFit || [];
+  g('jtReqFitList').innerHTML = fit.length
+    ? fit.map(f => `
+        <div class="jt-issue-item">
+          <div class="jt-issue-ico" style="background:${f.met ? '#f0fdf4' : '#fef3e2'};color:${f.met ? '#16a34a' : '#ea580c'}">
+            ${f.met
+              ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+              : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`}
+          </div>
+          <div class="jt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')"><strong>${esc(f.requirement||'')}</strong> — ${esc(f.note||'')}</div>
+        </div>`).join('')
+    : `<div style="font-size:13px;color:#64748b;padding:8px 0">No specific requirements extracted from this posting.</div>`;
+}
+
+// The real paywall moment — the review above (match score/gaps) is free,
+// same split as ATS Checker → Fix My Resume.
+window.runJobTailor = async function() {
+  if (!_jtSourceResume || !_jtReview) { toast('Something went wrong — try again.', 'err'); return; }
+
+  _jtSetStep(3);
+  _jtShow('jtStateTailorAnim');
+  const anim = _jtStartAnim({
+    checklistId: 'jtCheckList2', ringId: 'jtAnimProgressRing2', pctId: 'jtAnimPct2', fillId: 'jtAnimProgressFill2',
+    steps: ['Reframing your title', 'Rewriting your summary', 'Reordering your skills', 'Sharpening your bullet points'],
+  });
+
+  try {
+    const r = await fetch('/api/job-tailor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+      body: JSON.stringify({
+        resumeData:        _jtSourceResume.resumeData,
+        oldMatchScore:      _jtReview.matchScore || 0,
+        sourceResumeId:    _jtSourceResume.id,
+        sourceResumeName:  _jtSourceResume.resumeName,
+        jobTitle:          _jtJob.title,
+        jobCompany:        _jtJob.company,
+        jobLocation:       _jtJob.location,
+        jobDescription:    _jtJob.description,
+        jobRequirements:   _jtJob.requirements,
+        templateType:      _jtSourceResume.templateType || 'classic',
+        primaryColor:      _jtSourceResume.primaryColor || '#7c3aed',
+        fontFamily:        _jtSourceResume.fontFamily   || 'sans',
+      }),
+    });
+    if (!r.ok) {
+      const errBody = await r.json().catch(() => ({}));
+      if (errBody.error === 'plan_locked') {
+        anim.finish();
+        toast(errBody.message || 'Tailoring your resume to a specific job is a paid feature.', 'err');
+        _jtSetStep(2);
+        _jtShow('jtStateReview');
+        return;
+      }
+      throw new Error(errBody.message || errBody.error || 'Tailoring failed');
+    }
+    const data = await r.json();
+    anim.finish();
+    _jtNewResume = data;
+
+    setTimeout(() => {
+      _jtSetStep(3);
+      _jtPopulateResults(data);
+      _jtShow('jtStateResults');
+    }, 500);
+  } catch (err) {
+    anim.finish();
+    toast(err.message || 'Tailoring failed — try again', 'err');
+    _jtSetStep(2);
+    _jtShow('jtStateReview');
+  }
+};
+
+function _jtPopulateResults(data) {
+  g('jtOldScore').textContent = data.oldMatchScore || 0;
+  g('jtNewScore').textContent = data.newMatchScore || 0;
+  const jl = g('jtResultJobLine');
+  if (jl) jl.textContent = `${_jtJob.title}${_jtJob.company ? ' at ' + _jtJob.company : ''}`;
+
+  const ba = Array.isArray(data.beforeAfter) ? data.beforeAfter : [];
+  const improvements = Array.isArray(data.improvements) && data.improvements.length
+    ? data.improvements
+    : ["Reframed your resume to better match this job's requirements"];
+  g('jtImproveList').innerHTML = improvements.map(t =>
+    `<div class="jt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(t)}</span></div>`
+  ).join('');
+
+  const baWrap = g('jtBeforeAfterWrap');
+  if (ba.length) {
+    baWrap.style.display = '';
+    g('jtBeforeAfterList').innerHTML = ba.map(pair => `
+      <div class="jt-ba-card">
+        <div class="jt-ba-before"><div class="jt-ba-lbl">BEFORE</div><div class="jt-ba-text">${esc(pair.before||'')}</div></div>
+        <div class="jt-ba-after"><div class="jt-ba-lbl">AFTER</div><div class="jt-ba-text">${esc(pair.after||'')}</div></div>
+      </div>`).join('');
+  } else {
+    baWrap.style.display = 'none';
+  }
+
+  const unmet = (_jtReview?.requirementsFit || []).filter(f => !f.met);
+  const origEl = g('jtOrigIssueList');
+  if (origEl) {
+    origEl.innerHTML = unmet.length
+      ? unmet.map(f => `
+          <div class="jt-issue-item">
+            <div class="jt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+            <div class="jt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')"><strong>${esc(f.requirement||'')}</strong> — ${esc(f.note||'')}</div>
+          </div>`).join('')
+      : `<div style="font-size:13px;color:#64748b;padding:8px 0">Your resume already covered every requirement KIE could find — tailoring focused on emphasis and framing.</div>`;
+  }
+  _jtSwitchResultTab('after');
+}
+
+window._jtSwitchResultTab = function(which) {
+  const isAfter = which === 'after';
+  g('jtTabAfter').classList.toggle('active', isAfter);
+  g('jtTabBefore').classList.toggle('active', !isAfter);
+  g('jtPanelAfter').classList.toggle('active', isAfter);
+  g('jtPanelBefore').classList.toggle('active', !isAfter);
+};
+
+// Already saved server-side the moment tailoring finished — "Save" confirms
+// it, "Discard" actually deletes that doc.
+window.saveJobTailoredResume = function() {
+  toast('Tailored resume saved! Find it under "Job Tailored" in My Resumes.', 'ok');
+  closeJobTailorPanel();
+};
+
+window.discardJobTailoredResume = async function() {
+  if (!_jtNewResume || !_jtNewResume.id) { closeJobTailorPanel(); return; }
+  try {
+    await api('DELETE', '/api/resumes/' + _jtNewResume.id);
+  } catch (err) {
+    toast(err.message || 'Could not discard — try again', 'err');
+    return;
+  }
+  toast('Changes discarded', 'ok');
+  closeJobTailorPanel();
 };
 </script>
 <script src="/dashboard/app-sidebar.js"></script>
+
 </body>
 </html>
