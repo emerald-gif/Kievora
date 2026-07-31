@@ -285,7 +285,16 @@ function getCycleAnchorDate(userData) {
   const ts = userData?.planUpdatedAt || userData?.createdAt;
   if (ts && typeof ts.toDate === 'function') return ts.toDate();
   if (ts instanceof Date) return ts;
-  return new Date(); // last-resort fallback — shouldn't normally hit this
+  // BUG FIX: this used to fall back to `new Date()` — a timestamp that's
+  // different on every single call. That made the computed cycleStartKey
+  // different on every request too, so `sameCycle` was never true and
+  // aiCreditsUsed always read back as 0 — credits WERE being deducted in
+  // Firestore, they just never appeared to be, because each check thought
+  // it was a brand-new cycle. Any account missing both createdAt and
+  // planUpdatedAt (older accounts from before those fields existed) hit
+  // this every time. A fixed, deterministic fallback (1st of the month,
+  // midnight UTC) fixes it for exactly the accounts that need it.
+  return new Date('2024-01-01T00:00:00.000Z');
 }
 
 // Given the anchor date and "now", returns the start of the CURRENT billing
