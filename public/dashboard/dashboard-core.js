@@ -187,6 +187,8 @@
         desc: 'Scan any resume and get a full ATS score, strengths, weaknesses, and exactly what to fix — plus our AI Image Analyzer for scanned or photographed resumes.' },
       resumeOptimize: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/><path d="M19 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>', title: 'Fix My Resume', minPlan: 'paid7',
         desc: 'Let KIE rewrite your bullet points, add missing keywords, and push your ATS score up automatically — saved as a brand-new resume, your original stays untouched.' },
+      jobTailorResume: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>', title: 'Tailor My Resume For This Job', minPlan: 'paid7',
+        desc: "Let KIE reframe your title, summary, skills, and bullet points to match one specific job's requirements — saved as its own resume, your original stays untouched." },
       recruiterView:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>', title: 'Recruiter View', minPlan: 'paid15',
         desc: "See your resume exactly the way a recruiter does on a 6-second skim — first impressions, red flags, and what makes them keep reading." },
       templates:      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>', title: 'All Templates', minPlan: 'paid7',
@@ -973,6 +975,7 @@
       await loadPlanGates();
       await loadResumes();
       showView('home');
+      if (typeof _jtCheckPendingHandoff === 'function') _jtCheckPendingHandoff();
       if(typeof ensureGmailFreshAndAlert==='function') ensureGmailFreshAndAlert().then(()=>{ if(typeof maybeShowGmailOnboarding==='function') maybeShowGmailOnboarding(); }).catch(()=>{});
     });
 
@@ -1002,13 +1005,15 @@
     function saveDrafts(){
       try { localStorage.setItem(DRAFTS_LS_KEY, JSON.stringify(drafts)); } catch {}
     }
-    function getMergedResumes(){
+    function getMergedResumes(opts){
+      opts = opts || {};
       // Drafts first, then API resumes; sort by updatedAt desc
       const all = [
         ...drafts.map(d => ({ ...d, _isDraft: true })),
         ...resumes,
       ];
-      return all.sort((a,b)=>{
+      const list = opts.excludeTailored ? all.filter(r => !r.isJobTailored) : all;
+      return list.sort((a,b)=>{
         const ta = a._isDraft ? a.updatedAt : (a.updatedAt && a.updatedAt._seconds ? a.updatedAt._seconds*1000 : new Date(a.updatedAt||0).getTime());
         const tb = b._isDraft ? b.updatedAt : (b.updatedAt && b.updatedAt._seconds ? b.updatedAt._seconds*1000 : new Date(b.updatedAt||0).getTime());
         return (tb||0) - (ta||0);
@@ -1203,14 +1208,34 @@
       return '⚠ Incomplete';
     }
 
+    let _homeRTab = 'all'; // 'all' | 'tailored' — Recent Resumes swiper tab
+    let _allRTab  = 'all'; // 'all' | 'tailored' — My Resumes page tab
+
+    window.switchHomeResumeTab = function(tab) {
+      _homeRTab = tab;
+      const tabs = document.querySelectorAll('#homeRTabs .opt-res-tab');
+      if (tabs[0]) tabs[0].classList.toggle('active', tab === 'all');
+      if (tabs[1]) tabs[1].classList.toggle('active', tab === 'tailored');
+      renderHome();
+    };
+    window.switchAllResumeTab = function(tab) {
+      _allRTab = tab;
+      const tabs = document.querySelectorAll('#allRTabs .opt-res-tab');
+      if (tabs[0]) tabs[0].classList.toggle('active', tab === 'all');
+      if (tabs[1]) tabs[1].classList.toggle('active', tab === 'tailored');
+      renderAllResumes();
+    };
+    window._switchResumeTab = window.switchAllResumeTab; // used by the Job Tailor save flow
+
     function renderHome() {
-      const merged = getMergedResumes();
+      const merged = getMergedResumes().filter(r => _homeRTab === 'tailored' ? r.isJobTailored : !r.isJobTailored);
       const totalCount = merged.length;
       g('rCount').textContent = totalCount;
       const grid = g('rGrid');
       const dotsCont = g('rswipDots');
 
       if (!merged.length) {
+        const isTailoredTab = _homeRTab === 'tailored';
         grid.innerHTML = `<div style="min-width:calc(100vw - 48px);max-width:340px;background:#fff;border-radius:18px;border:1.5px dashed rgba(124,58,237,.22);padding:20px 24px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(124,58,237,.05)">
           <div style="flex-shrink:0;width:52px;height:60px;background:linear-gradient(140deg,#ede9fe,#ddd6fe);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(124,58,237,.15);overflow:hidden">
             <svg viewBox="0 0 40 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="40">
@@ -1226,12 +1251,14 @@
             </svg>
           </div>
           <div style="flex:1;min-width:0;text-align:left">
-            <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:3px">No resumes yet</div>
-            <div style="font-size:11px;color:var(--sub);line-height:1.5;margin-bottom:10px">Build your first resume in minutes and get hired faster.</div>
-            <button onclick="showView('tpick')" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(124,58,237,.28)">
-              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-              Create Resume
-            </button>
+            <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:3px">${isTailoredTab ? 'No job-tailored resumes yet' : 'No resumes yet'}</div>
+            <div style="font-size:11px;color:var(--sub);line-height:1.5;margin-bottom:10px">${isTailoredTab ? "Open a job in Find Jobs and tap \u201cTailor My Resume for This Job.\u201d" : 'Build your first resume in minutes and get hired faster.'}</div>
+            ${isTailoredTab
+              ? `<button onclick="window.location.href='/find-jobs'" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(124,58,237,.28)">Browse Jobs</button>`
+              : `<button onclick="showView('tpick')" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(124,58,237,.28)">
+                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Create Resume
+              </button>`}
           </div>
         </div>`;
         if (dotsCont) dotsCont.innerHTML = '';
@@ -1259,13 +1286,25 @@
 
         const pill = isDraft
           ? `<span class="rr-pill" style="background:#dbeafe;color:#2563eb">Draft</span>`
+          : r.isJobTailored
+          ? `<span class="rr-pill" style="background:#ede9fe;color:#7c3aed" title="${esc((r.tailoredForJob?.title||'')+(r.tailoredForJob?.company?' at '+r.tailoredForJob.company:''))}">${typeof r.newMatchScore === 'number' ? r.newMatchScore + '% match' : 'Tailored'}</span>`
           : `<span class="rr-pill" style="background:${sc}18;color:${sc}"
                onclick="event.stopPropagation();openATSDrawer('${r.id}')"
                title="ATS Score — tap for details">${score} ATS</span>`;
 
         const badgeInner = isDraft
           ? `<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`
+          : r.isJobTailored
+          ? `<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>`
           : `${score}`;
+
+        // A job-tailored resume's own name already reads generic-ish
+        // ("(Tailored for X)") from the server, but the job needs to be
+        // unmissable on the card itself — not just in a tooltip — so people
+        // with several tailored resumes never mix them up.
+        const jobLine = r.isJobTailored && r.tailoredForJob
+          ? `<div class="rr-tailored-for">🎯 ${esc(r.tailoredForJob.title || '')}${r.tailoredForJob.company ? ' · ' + esc(r.tailoredForJob.company) : ''}</div>`
+          : '';
 
         return `<div class="rr-slide" onclick="${openAction}">
           <div class="rr-card">
@@ -1280,6 +1319,7 @@
             </div>
             <div class="rr-info">
               <div class="rr-name">${esc(r.resumeName)}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}</div>
+              ${jobLine}
               <div class="rr-date">Updated ${fmtDate(r.updatedAt)}</div>
               ${pill}
             </div>
@@ -1526,14 +1566,17 @@
 
     // ── ALL RESUMES VIEW ─────────────────────────────────────────────────────
     function renderAllResumes(){
-      const merged = getMergedResumes();
+      const merged = getMergedResumes().filter(r => _allRTab === 'tailored' ? r.isJobTailored : !r.isJobTailored);
       const grid = g('allGrid');
       if (!merged.length){
+        const isTailoredTab = _allRTab === 'tailored';
         grid.innerHTML = `<div class="empty-state">
-          <div style="font-size:56px;margin-bottom:16px">📄</div>
-          <h3>No resumes yet</h3>
-          <p>Start building your professional resume</p>
-          <button class="btn btn-pri" onclick="showView('tpick')" style="padding:12px 28px;font-size:15px">+ Create Resume</button>
+          <div style="font-size:56px;margin-bottom:16px">${isTailoredTab ? '🎯' : '📄'}</div>
+          <h3>${isTailoredTab ? 'No job-tailored resumes yet' : 'No resumes yet'}</h3>
+          <p>${isTailoredTab ? 'Open a job in Find Jobs and tap "Tailor My Resume for This Job."' : 'Start building your professional resume'}</p>
+          ${isTailoredTab
+            ? `<button class="btn btn-pri" onclick="window.location.href='/find-jobs'" style="padding:12px 28px;font-size:15px">Browse Jobs</button>`
+            : `<button class="btn btn-pri" onclick="showView('tpick')" style="padding:12px 28px;font-size:15px">+ Create Resume</button>`}
         </div>`;
         return;
       }
@@ -1543,20 +1586,30 @@
         const isDraft = !!r._isDraft;
         const editAction = isDraft ? `openBuilder('${r.id}', true)` : `openBuilder('${r.id}')`;
         const openAction = isDraft ? editAction : `openDetail('${r.id}')`;
+        // For a job-tailored resume, the role line shows the job it was
+        // tailored for (not the generic resumeData title) — that's the one
+        // piece of info that actually distinguishes it from every other
+        // tailored version someone might have.
+        const roleLine = r.isJobTailored && r.tailoredForJob
+          ? `🎯 ${esc(r.tailoredForJob.title || '')}${r.tailoredForJob.company ? ' at ' + esc(r.tailoredForJob.company) : ''}`
+          : esc(d.jobTitle || 'No job title');
+        const matchBadge = r.isJobTailored && typeof r.newMatchScore === 'number'
+          ? `<span class="optimized-badge" style="background:linear-gradient(135deg,#ede9fe,#f3e8ff);color:#7c3aed">🎯 ${typeof r.oldMatchScore === 'number' ? r.oldMatchScore + '→' : ''}${r.newMatchScore}% match</span>`
+          : '';
         return `<div class="rcard" onclick="${openAction}">
           <div class="rcard-thumb" style="background:${t.bg}18">
             <div class="rcard-thumb-scaler">${buildPrevHTML(d, t.id, t.bg, 'rf-sans')}</div>
           </div>
           <div class="rcard-body">
-            <div class="rcard-name">${esc(r.resumeName)}${isDraft?'<span class="draft-badge">Draft</span>':''}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}</div>
-            <div class="rcard-role">${esc(d.jobTitle || 'No job title')}</div>
+            <div class="rcard-name">${esc(r.resumeName)}${isDraft?'<span class="draft-badge">Draft</span>':''}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}${matchBadge}</div>
+            <div class="rcard-role"${r.isJobTailored ? ' style="color:#7c3aed;font-weight:700"' : ''}>${roleLine}</div>
             <div class="rcard-date">Modified ${fmtDate(r.updatedAt)}</div>
           </div>
           <button class="rcard-more" onclick="event.stopPropagation();openResumeSheet('${r.id}',${isDraft})" title="More options">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
           </button>
         </div>`;
-      }).join('') + `
+      }).join('') + (_allRTab === 'tailored' ? '' : `
         <div class="add-card" onclick="showView('tpick')">
           <div class="add-card-ico">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -1565,7 +1618,7 @@
             <p>Create another resume</p>
             <span>Tailor a new version for your next application</span>
           </div>
-        </div>`;
+        </div>`);
       requestAnimationFrame(scaleRcardThumbs);
     }
     function scaleRcardThumbs() { /* thumb scale is fixed via CSS now — kept as a no-op for any external callers */ }
@@ -10944,7 +10997,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // stays in control of which resume gets optimized — no auto-selecting
     // even when there's only one resume on file.
     window.openOptimizeEntry = function() {
-      const merged = getMergedResumes().filter(r => !r._isDraft);
+      const merged = getMergedResumes({ excludeTailored: true }).filter(r => !r._isDraft);
       _optPickedId = null;
       _optOpenPanel();
       _optSetStep(1);
@@ -10977,6 +11030,326 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       g('optimizePanel').classList.remove('open');
       document.body.style.overflow = '';
     };
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ═══ TAILOR MY RESUME FOR THIS JOB ══════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════
+    // Entered from a Find Jobs job detail screen. That page is a separate
+    // script context (no shared state with this file), so the bridge is a
+    // full navigation carrying just the job data via sessionStorage — see
+    // _jtCheckPendingHandoff(), called once on dashboard init.
+    let _jtJob           = null; // { title, company, location, description, requirements }
+    let _jtPickedId      = null;
+    let _jtSourceResume  = null; // the resume object chosen on Screen 1
+    let _jtReview        = null; // { matchScore, keywordsMatched, keywordsMissing, requirementsFit }
+    let _jtNewResume     = null; // saved tailored resume doc, from /api/job-tailor
+
+    function _jtOpenPanel() { g('jobTailorPanel').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    window.closeJobTailorPanel = function() {
+      g('jobTailorPanel').classList.remove('open');
+      document.body.style.overflow = '';
+    };
+    function _jtSetStep(n) {
+      document.querySelectorAll('#jtSteps .opt-step-dot').forEach(dot => {
+        const d = Number(dot.dataset.n);
+        dot.classList.toggle('done', d < n);
+        dot.classList.toggle('active', d === n);
+      });
+    }
+    function _jtAllStates() { return ['jtStateSelect','jtStateReviewAnim','jtStateReview','jtStateTailorAnim','jtStateResults']; }
+    function _jtShow(id) { _jtAllStates().forEach(s => g(s).classList.remove('show')); g(id).classList.add('show'); }
+
+    // Same "AI moment" grammar as every other KIE loading screen in the app —
+    // ring + % + checklist + progress bar, capped at 90% on the timer so it
+    // only hits 100% once the real API response comes back. Parameterized
+    // since this panel has two separate loading screens (review + tailor).
+    function _jtStartAnim(opts) {
+      const steps = opts.steps || [];
+      const checklistEl = g(opts.checklistId);
+      if (checklistEl) {
+        checklistEl.innerHTML = steps.map(s =>
+          `<div class="opt-check-item"><span class="opt-check-dot"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>${esc(s)}</div>`
+        ).join('');
+      }
+      const stepEls = checklistEl ? Array.from(checklistEl.querySelectorAll('.opt-check-item')) : [];
+      const ring = document.getElementById(opts.ringId);
+      const pct  = document.getElementById(opts.pctId);
+      const fill = document.getElementById(opts.fillId);
+      const RING_CIRC = 358.14;
+      const STEP_CAP = 90;
+      const setProgress = (p) => {
+        if (ring) ring.style.strokeDashoffset = String(RING_CIRC * (1 - p / 100));
+        if (pct) pct.textContent = p + '%';
+        if (fill) fill.style.width = p + '%';
+      };
+      setProgress(0);
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < stepEls.length) {
+          stepEls[i].classList.add('done');
+          i++;
+          setProgress(Math.round((i / stepEls.length) * STEP_CAP));
+        } else {
+          clearInterval(interval);
+        }
+      }, 600);
+      return { finish: () => {
+        clearInterval(interval);
+        stepEls.forEach(el => el.classList.add('done'));
+        setProgress(100);
+      } };
+    }
+
+    // Entry — from Find Jobs' job detail screen via the sessionStorage handoff.
+    window.openJobTailorPanel = function(job) {
+      _jtJob = job;
+      _jtPickedId = null;
+      _jtSourceResume = null;
+      _jtReview = null;
+      _jtNewResume = null;
+
+      const jobLine = `${job.title}${job.company ? ' at ' + job.company : ''}`;
+      const jl1 = g('jtJobLine'); if (jl1) jl1.textContent = jobLine;
+
+      // Job-tailored resumes never appear here — only general-purpose ones
+      // can be the source for a new tailoring pass.
+      const merged = getMergedResumes({ excludeTailored: true }).filter(r => !r._isDraft);
+      const listEl = g('jtResumePickerList');
+      listEl.innerHTML = merged.length ? merged.map(r => `
+        <div class="opt-picker-card" data-id="${r.id}" onclick="_jtSelectResumeCard('${r.id}')">
+          <div class="opt-picker-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+          <div class="opt-picker-body">
+            <div class="opt-picker-name">${esc(r.resumeName)}</div>
+            <div class="opt-picker-meta">${esc(r.resumeData?.jobTitle || 'Updated ' + fmtDate(r.updatedAt))}</div>
+          </div>
+          <div class="opt-picker-score">${typeof r.atsScore === 'number' ? r.atsScore + ' ATS' : 'Not scored'}</div>
+          <div class="opt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        </div>`).join('')
+        : `<div style="font-size:13px;color:var(--sub);padding:16px 0;text-align:center">No resumes yet — <button onclick="closeJobTailorPanel();showView('tpick')" style="background:none;border:none;color:var(--p);font-weight:700;cursor:pointer;font-family:inherit">create one first</button></div>`;
+
+      g('jtContinueBtn').disabled = true;
+      _jtSetStep(1);
+      _jtOpenPanel();
+      _jtShow('jtStateSelect');
+    };
+
+    window._jtSelectResumeCard = function(id) {
+      _jtPickedId = id;
+      document.querySelectorAll('#jtResumePickerList .opt-picker-card').forEach(c => c.classList.remove('selected'));
+      const card = document.querySelector(`#jtResumePickerList .opt-picker-card[data-id="${id}"]`);
+      if (card) card.classList.add('selected');
+      g('jtContinueBtn').disabled = false;
+    };
+
+    window._jtContinueFromPicker = async function() {
+      if (!_jtPickedId) return;
+      const merged = getMergedResumes({ excludeTailored: true });
+      _jtSourceResume = merged.find(r => r.id === _jtPickedId);
+      if (!_jtSourceResume) { toast('Resume not found', 'err'); return; }
+
+      _jtSetStep(2);
+      _jtShow('jtStateReviewAnim');
+      const anim = _jtStartAnim({
+        checklistId: 'jtCheckList', ringId: 'jtAnimProgressRing', pctId: 'jtAnimPct', fillId: 'jtAnimProgressFill',
+        steps: ['Reading job requirements', 'Scanning your resume', 'Matching keywords', 'Scoring your fit'],
+      });
+
+      try {
+        const result = await api('POST', '/api/job-tailor-review', {
+          resumeData: _jtSourceResume.resumeData,
+          jobTitle: _jtJob.title, jobCompany: _jtJob.company,
+          jobDescription: _jtJob.description, jobRequirements: _jtJob.requirements,
+        });
+        anim.finish();
+        _jtReview = result;
+        setTimeout(() => { _jtSetStep(2); _jtPopulateReview(result); _jtShow('jtStateReview'); }, 400);
+      } catch (err) {
+        anim.finish();
+        toast(err.message || 'Match review failed — try again', 'err');
+        _jtSetStep(1);
+        _jtShow('jtStateSelect');
+      }
+    };
+
+    function _jtVerdict(score) {
+      if (score >= 80) return "Excellent match — you're a strong fit for this role!";
+      if (score >= 60) return 'Good match — tailoring can push this further.';
+      if (score >= 40) return 'Moderate match — tailoring will help close the gaps.';
+      return 'Low match — tailoring can meaningfully improve your fit.';
+    }
+
+    function _jtPopulateReview(r) {
+      const score = Math.min(100, Math.max(0, r.matchScore || 0));
+      const sc = typeof atsColor === 'function' ? atsColor(score) : (score >= 70 ? '#16a34a' : score >= 50 ? '#f59e0b' : '#dc2626');
+      const circumference = 2 * Math.PI * 52;
+      const dash = circumference - (score / 100) * circumference;
+      const gaugeFill = g('jtGaugeFill');
+      gaugeFill.setAttribute('stroke', sc);
+      gaugeFill.setAttribute('stroke-dasharray', circumference);
+      gaugeFill.setAttribute('stroke-dashoffset', dash);
+      g('jtMatchScore').textContent = score;
+      g('jtMatchScore').style.color = sc;
+      g('jtGaugeVerdict').textContent = _jtVerdict(score);
+
+      const matched = r.keywordsMatched || [];
+      const missing = r.keywordsMissing || [];
+      g('jtKwMatched').innerHTML = matched.length
+        ? matched.map(k => `<span class="jt-kw-chip matched">${esc(k)}</span>`).join('')
+        : `<span style="font-size:12px;color:var(--sub)">None found</span>`;
+      g('jtKwMissing').innerHTML = missing.length
+        ? missing.map(k => `<span class="jt-kw-chip missing">${esc(k)}</span>`).join('')
+        : `<span style="font-size:12px;color:var(--sub)">Nothing missing — great coverage!</span>`;
+
+      const fit = r.requirementsFit || [];
+      g('jtReqFitList').innerHTML = fit.length
+        ? fit.map(f => `
+            <div class="opt-issue-item">
+              <div class="opt-issue-ico" style="background:${f.met ? '#f0fdf4' : '#fef3e2'};color:${f.met ? '#16a34a' : '#ea580c'}">
+                ${f.met
+                  ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                  : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`}
+              </div>
+              <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')"><strong>${esc(f.requirement||'')}</strong> — ${esc(f.note||'')}</div>
+            </div>`).join('')
+        : `<div style="font-size:13px;color:var(--sub);padding:8px 0">No specific requirements extracted from this posting.</div>`;
+    }
+
+    // This is the real paywall moment — the review above (match score/gaps)
+    // is free, same "diagnostics free, deep action paid" split as ATS
+    // Checker → Fix My Resume.
+    window.runJobTailor = async function() {
+      if (!isFeatureUnlocked('jobTailorResume')) { lockTapped('jobTailorResume'); return; }
+      if (!_jtSourceResume || !_jtReview) { toast('Something went wrong — try again.', 'err'); return; }
+
+      _jtSetStep(3);
+      _jtShow('jtStateTailorAnim');
+      const anim = _jtStartAnim({
+        checklistId: 'jtCheckList2', ringId: 'jtAnimProgressRing2', pctId: 'jtAnimPct2', fillId: 'jtAnimProgressFill2',
+        steps: ['Reframing your title', 'Rewriting your summary', 'Reordering your skills', 'Sharpening your bullet points'],
+      });
+
+      try {
+        const r = await fetch('/api/job-tailor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+          body: JSON.stringify({
+            resumeData:        _jtSourceResume.resumeData,
+            oldMatchScore:     _jtReview.matchScore || 0,
+            sourceResumeId:    _jtSourceResume.id,
+            sourceResumeName:  _jtSourceResume.resumeName,
+            jobTitle:          _jtJob.title,
+            jobCompany:        _jtJob.company,
+            jobLocation:       _jtJob.location,
+            jobDescription:    _jtJob.description,
+            jobRequirements:   _jtJob.requirements,
+            templateType:      _jtSourceResume.templateType || 'classic',
+            primaryColor:      _jtSourceResume.primaryColor || '#7c3aed',
+            fontFamily:        _jtSourceResume.fontFamily   || 'sans',
+          }),
+        });
+        if (!r.ok) { const errBody = await r.json().catch(() => ({})); throw new Error(errBody.message || errBody.error || 'Tailoring failed'); }
+        const data = await r.json();
+        anim.finish();
+        _jtNewResume = data;
+
+        setTimeout(() => {
+          _jtSetStep(3);
+          _jtPopulateResults(data);
+          _jtShow('jtStateResults');
+          loadResumes(); // new tailored resume now exists
+        }, 500);
+      } catch (err) {
+        anim.finish();
+        toast(err.message || 'Tailoring failed — try again', 'err');
+        _jtSetStep(2);
+        _jtShow('jtStateReview');
+      }
+    };
+
+    function _jtPopulateResults(data) {
+      g('jtOldScore').textContent = data.oldMatchScore || 0;
+      g('jtNewScore').textContent = data.newMatchScore || 0;
+      const jobLine = `${_jtJob.title}${_jtJob.company ? ' at ' + _jtJob.company : ''}`;
+      const jl = g('jtResultJobLine'); if (jl) jl.textContent = jobLine;
+
+      const ba = Array.isArray(data.beforeAfter) ? data.beforeAfter : [];
+      const improvements = Array.isArray(data.improvements) && data.improvements.length
+        ? data.improvements
+        : ["Reframed your resume to better match this job's requirements"];
+      g('jtImproveList').innerHTML = improvements.map(t =>
+        `<div class="opt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(t)}</span></div>`
+      ).join('');
+
+      const baWrap = g('jtBeforeAfterWrap');
+      if (ba.length) {
+        baWrap.style.display = '';
+        g('jtBeforeAfterList').innerHTML = ba.map(pair => `
+          <div class="opt-ba-card">
+            <div class="opt-ba-before"><div class="opt-ba-lbl">Before</div><div class="opt-ba-text">${esc(pair.before||'')}</div></div>
+            <div class="opt-ba-after"><div class="opt-ba-lbl">After</div><div class="opt-ba-text">${esc(pair.after||'')}</div></div>
+          </div>`).join('');
+      } else {
+        baWrap.style.display = 'none';
+      }
+
+      const unmet = (_jtReview?.requirementsFit || []).filter(f => !f.met);
+      const origEl = g('jtOrigIssueList');
+      if (origEl) {
+        origEl.innerHTML = unmet.length
+          ? unmet.map(f => `
+              <div class="opt-issue-item">
+                <div class="opt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+                <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')"><strong>${esc(f.requirement||'')}</strong> — ${esc(f.note||'')}</div>
+              </div>`).join('')
+          : `<div style="font-size:13px;color:var(--sub);padding:8px 0">Your resume already covered every requirement KIE could find — tailoring focused on emphasis and framing.</div>`;
+      }
+      _jtSwitchResultTab('after');
+    }
+
+    window._jtSwitchResultTab = function(which) {
+      const isAfter = which === 'after';
+      g('jtTabAfter').classList.toggle('active', isAfter);
+      g('jtTabBefore').classList.toggle('active', !isAfter);
+      g('jtPanelAfter').classList.toggle('active', isAfter);
+      g('jtPanelBefore').classList.toggle('active', !isAfter);
+    };
+
+    // The tailored resume is already saved server-side the moment tailoring
+    // finished — "Save" here confirms it and takes the person to see it;
+    // "Discard" actually deletes that doc, since nothing's been committed to
+    // in the user's mind until they choose.
+    window.saveJobTailoredResume = function() {
+      toast('Tailored resume saved!', 'ok');
+      closeJobTailorPanel();
+      showView('allresumes');
+      if (typeof _switchResumeTab === 'function') _switchResumeTab('tailored');
+    };
+
+    window.discardJobTailoredResume = async function() {
+      if (!_jtNewResume || !_jtNewResume.id) { closeJobTailorPanel(); return; }
+      try {
+        await api('DELETE', '/api/resumes/' + _jtNewResume.id);
+        resumes = resumes.filter(r => r.id !== _jtNewResume.id);
+      } catch (err) {
+        toast(err.message || 'Could not discard — try again', 'err');
+        return;
+      }
+      toast('Changes discarded', 'ok');
+      closeJobTailorPanel();
+    };
+
+    // Picks up the job handed off from Find Jobs' job detail screen (see
+    // tailorResumeForJob() in find-jobs.html). Runs once, right after the
+    // dashboard's own init finishes loading resumes.
+    function _jtCheckPendingHandoff() {
+      if (location.hash !== '#jobtailor') return;
+      let job = null;
+      try { job = JSON.parse(sessionStorage.getItem('kievora_jobtailor_pending') || 'null'); } catch (e) {}
+      sessionStorage.removeItem('kievora_jobtailor_pending');
+      history.replaceState(null, '', location.pathname); // clear the hash so a refresh doesn't re-trigger this
+      if (!job || !job.title) return;
+      openJobTailorPanel(job);
+    }
 
     window.runFixMyResume = async function() {
       // This is the real paywall moment — everything before it (scan +
@@ -11516,11 +11889,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function clPopulateResList() {
         const el = g('clResListEl');
         if (!el) return;
-        if (!resumes || !resumes.length) {
+        const pickable = (resumes || []).filter(r => !r.isJobTailored);
+        if (!pickable.length) {
           el.innerHTML = `<div style="font-size:13px;color:var(--sub);padding:8px 0">No resumes yet — <button onclick="showView('tpick')" style="background:none;border:none;color:var(--p);font-weight:700;cursor:pointer;font-family:inherit">create one first</button></div>`;
           return;
         }
-        el.innerHTML = resumes.map((r, i) => {
+        el.innerHTML = pickable.map((r, i) => {
           const name = r.resumeName || r.resumeData?.fullName || `Resume ${i + 1}`;
           const date = r.updatedAt?.seconds ? new Date(r.updatedAt.seconds * 1000).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
           return `<div class="cl-res-item" id="clri_${r.id}" onclick="clSelectResume('${r.id}')">
@@ -12627,7 +13001,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         const first = sel.options[0];
         sel.innerHTML = '';
         sel.appendChild(first);
-        (resumes||[]).forEach(r => {
+        (resumes||[]).filter(r => !r.isJobTailored).forEach(r => {
           const o = document.createElement('option');
           o.value = r.id;
           o.textContent = r.resumeName || r.resumeData?.fullName || r.id;
