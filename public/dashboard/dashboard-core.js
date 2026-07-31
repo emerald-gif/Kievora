@@ -974,7 +974,21 @@
 
       await loadPlanGates();
       await loadResumes();
-      showView('home');
+
+      // Deep link from Find Jobs' "View in My Resumes" button — lands
+      // straight on the Job Tailored tab of My Resumes instead of home.
+      const _dlParams = new URLSearchParams(window.location.search);
+      if (_dlParams.get('view') === 'allresumes') {
+        showView('allresumes');
+        if (_dlParams.get('tab') === 'tailored' && typeof window.switchAllResumeTab === 'function') {
+          window.switchAllResumeTab('tailored');
+        } else if (typeof renderAllResumes === 'function') {
+          renderAllResumes();
+        }
+        history.replaceState(null, '', '/dashboard');
+      } else {
+        showView('home');
+      }
       if(typeof ensureGmailFreshAndAlert==='function') ensureGmailFreshAndAlert().then(()=>{ if(typeof maybeShowGmailOnboarding==='function') maybeShowGmailOnboarding(); }).catch(()=>{});
     });
 
