@@ -193,6 +193,7 @@ const PLANS = {
     templates: 5,
     atsChecker: true,
     resumeOptimize: true,  // TEMP: unlocked for free plan too — flip back to false to re-lock
+    jobTailorResume: true, // TEMP: unlocked for free plan too — flip back to false to re-lock
     recruiterView: false,
     findJobsClick: false,
     coverLetterFromResume: false,
@@ -216,6 +217,7 @@ const PLANS = {
     templates: 'all',
     atsChecker: true,
     resumeOptimize: true,
+    jobTailorResume: true,
     recruiterView: false,
     findJobsClick: true,
     coverLetterFromResume: true,
@@ -241,6 +243,7 @@ const PLANS = {
     templates: 'all',
     atsChecker: true,
     resumeOptimize: true,
+    jobTailorResume: true,
     recruiterView: true,
     findJobsClick: true,
     coverLetterFromResume: true,
@@ -485,6 +488,8 @@ const UPGRADE_MESSAGES = {
   atsChecker: () => `Your resume has been scanned. Upgrade to any paid plan to see your full score, strengths, weaknesses, and specific suggestions to improve it. $7 or $15 both unlock it.`,
   // Fix My Resume (AI optimization pass from ATS Checker results)
   resumeOptimize: () => `Fixing your resume with AI is a paid feature. Upgrade to $7 or $15 to let KIE rewrite your bullet points, add missing keywords, and push your ATS score up automatically.`,
+  // Tailor My Resume For This Job (from a Find Jobs job detail screen)
+  jobTailorResume: () => `Tailoring your resume to a specific job is a paid feature. Upgrade to $7 or $15 to let KIE match your resume to this job's exact requirements and boost your fit score.`,
   // Recruiter View
   recruiterView: (plan) => plan === 'paid7'
     ? `Recruiter View is a $15 feature. You already have ATS Checker — this just adds the full recruiter-perspective report on top.`

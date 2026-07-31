@@ -476,7 +476,7 @@ module.exports = function registerToolsRoutes(app) {
   - Grade: "A+" ≥90, "A" 80–89, "B+" 75–79, "B" 65–74, "C+" 55–64, "C" 45–54, "D" <45
   - Before finalizing atsScore, silently re-check: if you were tempted to round up, round down instead — err toward the stricter number.
   - strengths: 2–4 SPECIFIC things done well — reference actual content, not generic praise
-  - weaknesses: 2–3 SPECIFIC problems (e.g. "No summary", "Bullets lack metrics", "Only 2 skills listed")
+  - weaknesses: 2–4 SPECIFIC problems, each as ONE sentence that names the concrete issue AND why it actually hurts (e.g. "No quantified metrics — every bullet describes duties instead of measurable impact, so a recruiter can't tell how well you actually did the job" rather than just "Bullets lack metrics"). Reference the resume's actual content where possible, not a generic template phrase.
   - suggestions: 3–5 CONCRETE fixes with exact guidance (e.g. "Turn 'managed team' into 'Managed a team of [X], delivering [result]'")
   - missingItems: only genuinely absent sections that would strengthen the resume
 
@@ -570,10 +570,12 @@ module.exports = function registerToolsRoutes(app) {
     "languages": [{"language":"","proficiency":""}],
     "atsScore": 0,
     "grade": "",
-    "beforeAfter": [{"before":"","after":""}]
+    "beforeAfter": [{"before":"","after":""}],
+    "improvements": []
   }
 
   "beforeAfter": pick the 2-3 bullet rewrites with the clearest visible improvement — "before" is the exact original text, "after" is the rewritten version.
+  "improvements": 3-5 SPECIFIC statements about what you actually changed in THIS resume — reference real content (a role, a skill you added, a number you quantified), never generic filler like "Improved clarity" or "Better formatting." Examples of the right specificity: "Quantified your Software Engineer bullets with real metrics (40% faster deploys, 3 team members led)" or "Added AWS and Docker to skills — both appear in your experience but were missing from the list" or "Rewrote your summary to lead with 5 years of backend experience instead of a generic objective statement." If a category genuinely didn't change (e.g. no skills were added), don't force an entry for it.
   "atsScore": score the REWRITTEN resume 0-100 (integer) using the SAME STRICT rubric the ATS Checker uses (contact info, summary, experience, education, skills, formatting) — grade on quality, not presence, and hold this to the exact same skeptical standard: real ATS tools rarely give 85+, most well-written resumes land 70-84. It should be meaningfully higher than the original score of ${oldScore || 0} (since bullets are now quantified and keyword-rich) — but do not hand out an inflated number just to show a bigger jump. If a fair strict grade isn't meaningfully higher, that's fine — never fabricate metrics or embellish to force the score up.
   "grade": "A+" >=90, "A" 80-89, "B+" 75-79, "B" 65-74, "C+" 55-64, "C" 45-54, "D" <45.
 
@@ -637,7 +639,8 @@ module.exports = function registerToolsRoutes(app) {
         ...created.data(),
         oldScore: oldScoreNum,
         newScore,
-        beforeAfter: Array.isArray(result.beforeAfter) ? result.beforeAfter.slice(0, 3) : [],
+        beforeAfter:   Array.isArray(result.beforeAfter)   ? result.beforeAfter.slice(0, 3)   : [],
+        improvements:  Array.isArray(result.improvements)  ? result.improvements.slice(0, 5)  : [],
       });
     } catch (err) {
       if (err.code === 'CREDITS_EXHAUSTED') {
@@ -645,6 +648,208 @@ module.exports = function registerToolsRoutes(app) {
       }
       console.error('POST /api/resume-optimize ERROR:', err.message);
       res.status(500).json({ error: 'Resume optimization failed. Please try again.' });
+    }
+  });
+
+  // ─── POST /api/job-tailor-review — match score + gap analysis (free) ──────────
+  // Called from the "Tailor My Resume for This Job" flow, Screen 2. This is the
+  // diagnostic half — same "diagnostics free, deep action paid" split as ATS
+  // Checker → Fix My Resume. Only the actual rewrite (/api/job-tailor below) is
+  // plan-gated. Uses AI credits like every other AI call, but no plan_locked gate.
+  app.post('/api/job-tailor-review', authenticate, async (req, res) => {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) return res.status(503).json({ error: 'AI review not configured.' });
+
+    const planKey = await getUserPlanKey(req.user.uid);
+    const planCfg = getPlanConfig(planKey);
+
+    const { resumeData, jobTitle, jobCompany, jobDescription, jobRequirements } = req.body;
+    if (!resumeData) return res.status(400).json({ error: 'resumeData is required.' });
+    if (!jobTitle || !jobTitle.trim()) return res.status(400).json({ error: 'jobTitle is required.' });
+
+    const jobCtx = `Job Title: ${jobTitle}\nCompany: ${jobCompany || ''}\nDescription:\n${(jobDescription || '').slice(0, 3000)}\nRequirements:\n${(jobRequirements || '').slice(0, 1500)}`;
+
+    const prompt = `You are an expert recruiter comparing a candidate's resume against a specific job posting. Be honest and specific — this is a diagnostic, not a sales pitch.
+
+  JOB POSTING:
+  ${jobCtx}
+
+  CANDIDATE'S RESUME (JSON):
+  ${JSON.stringify(resumeData).slice(0, 6000)}
+
+  Return ONLY valid JSON in this exact shape — no markdown, no commentary:
+  {
+    "matchScore": 0,
+    "keywordsMatched": [],
+    "keywordsMissing": [],
+    "requirementsFit": [{"requirement":"","met":true,"note":""}]
+  }
+
+  - matchScore: integer 0-100, how well THIS resume fits THIS specific job — be a strict, honest grader. A resume with no relevant experience for the role should score low (20-40), a strong match with most requirements covered scores 70+. Do not inflate.
+  - keywordsMatched: 3-8 specific skills/terms from the job posting that DO appear (in some form) in the resume
+  - keywordsMissing: 3-8 specific skills/terms the job posting wants that are genuinely absent from the resume — these are what tailoring will need to address
+  - requirementsFit: 3-5 of the job's actual stated requirements, each with "met" (true/false/partially — use true only for a genuine match) and a one-sentence "note" explaining why, referencing the resume's actual content`;
+
+    try {
+      const { data: result } = await callKieAIJson(
+        planCfg.kieModel,
+        'You are an expert recruiter and resume-to-job matching analyst. Always respond with valid JSON only — no extra text, no markdown.',
+        [{ role: 'user', content: prompt }],
+        { max_tokens: 2000, temperature: 0.2 },
+        { uid: req.user.uid, planKey }
+      );
+
+      const matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
+      console.log(`POST /api/job-tailor-review — uid:${req.user.uid} job:"${jobTitle}" score:${matchScore} plan:${planKey}`);
+
+      res.json({
+        matchScore,
+        keywordsMatched:  Array.isArray(result.keywordsMatched)  ? result.keywordsMatched.slice(0, 8)  : [],
+        keywordsMissing:  Array.isArray(result.keywordsMissing)  ? result.keywordsMissing.slice(0, 8)  : [],
+        requirementsFit:  Array.isArray(result.requirementsFit)  ? result.requirementsFit.slice(0, 5)  : [],
+      });
+    } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
+      }
+      console.error('POST /api/job-tailor-review ERROR:', err.message);
+      res.status(500).json({ error: 'Job match review failed. Please try again.' });
+    }
+  });
+
+  // ─── POST /api/job-tailor — "Tailor My Resume for This Job" (Pro+ only) ───────
+  // Rewrites job title framing, summary, skills, and experience bullets to fit
+  // ONE specific job posting, then ALWAYS saves as a brand-new resume doc,
+  // flagged isJobTailored so it never shows up in normal resume pickers
+  // (cover letter source, Optimize My Resume source, etc.) or gets used as the
+  // source for another tailoring pass — it's scoped to that one job only.
+  app.post('/api/job-tailor', authenticate, async (req, res) => {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) return res.status(503).json({ error: 'AI tailoring not configured.' });
+
+    const planKey = await getUserPlanKey(req.user.uid);
+    const planCfg = getPlanConfig(planKey);
+    if (!planCfg.jobTailorResume) {
+      return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.jobTailorResume() });
+    }
+
+    const {
+      resumeData, oldMatchScore, sourceResumeId, sourceResumeName,
+      jobTitle, jobCompany, jobLocation, jobDescription, jobRequirements,
+      templateType, primaryColor, fontFamily,
+    } = req.body;
+    if (!resumeData) return res.status(400).json({ error: 'resumeData is required.' });
+    if (!jobTitle || !jobTitle.trim()) return res.status(400).json({ error: 'jobTitle is required.' });
+
+    const jobCtx = `Job Title: ${jobTitle}\nCompany: ${jobCompany || ''}\nDescription:\n${(jobDescription || '').slice(0, 3000)}\nRequirements:\n${(jobRequirements || '').slice(0, 1500)}`;
+
+    const prompt = `You are an expert resume writer tailoring a candidate's resume to ONE specific job posting. Never invent employers, job titles, dates, degrees, or metrics that aren't truthfully implied by the original resume — you're reframing and prioritizing real content to fit this job, not fabricating new experience.
+
+  JOB POSTING:
+  ${jobCtx}
+
+  Tailor the resume:
+  - jobTitle: reframe to the resume's own headline/title so it reads as aligned with "${jobTitle}" (do not claim the candidate already held this exact title if they didn't — a truthful professional title that signals fit)
+  - summary: rewrite to lead with the experience/skills this specific job cares about most, 40-60 words
+  - skills: reorder so the skills this job actually wants come first; add any skill clearly implied by the resume's real experience but missing from the list — never add a skill with no basis in the resume
+  - workExperience: rewrite bullets in "description" to foreground the achievements most relevant to this job's requirements, quantify wherever plausible — keep the same jobs/dates/companies, just re-emphasize what matters for this posting
+  - Keep the structure identical — same number of jobs/education/skills entries as the original, just rewritten/reordered
+
+  Return ONLY valid JSON in this exact shape — no markdown, no commentary:
+  {
+    "fullName": "", "jobTitle": "", "email": "", "phone": "", "location": "",
+    "summary": "",
+    "workExperience": [{"position":"","company":"","startDate":"","endDate":"","description":""}],
+    "education": [{"degree":"","field":"","school":"","graduationDate":""}],
+    "skills": [],
+    "certifications": [{"name":"","issuer":"","date":""}],
+    "projects": [{"name":"","url":"","description":""}],
+    "languages": [{"language":"","proficiency":""}],
+    "matchScore": 0,
+    "beforeAfter": [{"before":"","after":""}],
+    "improvements": []
+  }
+
+  "beforeAfter": pick the 2-3 bullet rewrites with the clearest visible re-framing toward this job — "before" is the exact original text, "after" is the rewritten version.
+  "improvements": 3-5 SPECIFIC statements about what you changed to fit THIS job — reference the job's actual requirements and the resume's actual content, never generic filler. Example: "Moved AWS and Kubernetes to the top of your skills — both are explicitly required in this posting" or "Reframed your Team Lead bullet to emphasize the cross-functional coordination this role asks for."
+  "matchScore": score the TAILORED resume against this specific job, 0-100, strict and honest — should be meaningfully higher than the original match score of ${oldMatchScore || 0} if the tailoring genuinely improved fit, but never inflate past what's truthfully supported.
+
+  ORIGINAL RESUME JSON:
+  ${JSON.stringify(resumeData).slice(0, 6000)}`;
+
+    try {
+      const { data: result } = await callKieAIJson(
+        planCfg.kieModel,
+        'You are an expert resume writer specializing in tailoring resumes to specific job postings. Always respond with valid JSON only — no extra text, no markdown.',
+        [{ role: 'user', content: prompt }],
+        { max_tokens: 4096, temperature: 0.4 },
+        { uid: req.user.uid, planKey }
+      );
+
+      const newMatchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
+      const tailoredResumeData = {
+        fullName: result.fullName || resumeData.fullName || '',
+        jobTitle: result.jobTitle || resumeData.jobTitle || '',
+        email:    result.email    || resumeData.email    || '',
+        phone:    result.phone    || resumeData.phone    || '',
+        location: result.location || resumeData.location || '',
+        summary:  result.summary  || '',
+        workExperience: Array.isArray(result.workExperience) && result.workExperience.length ? result.workExperience : (resumeData.workExperience || []),
+        education:      Array.isArray(result.education)      ? result.education      : (resumeData.education || []),
+        skills:         Array.isArray(result.skills)          ? result.skills         : (resumeData.skills || []),
+        certifications: Array.isArray(result.certifications)  ? result.certifications : (resumeData.certifications || []),
+        projects:       Array.isArray(result.projects)        ? result.projects       : (resumeData.projects || []),
+        languages:      Array.isArray(result.languages)       ? result.languages      : (resumeData.languages || []),
+      };
+
+      // Never overwrite the source resume, and never let this become pickable
+      // as a normal resume elsewhere in the app — isJobTailored + tailoredForJob
+      // are what every resume picker in the client filters on.
+      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\(Tailored.*?\)\s*$/i, '');
+      const oldScoreNum = Math.min(100, Math.max(0, Math.round(oldMatchScore || 0)));
+      const newName = `${baseName} (Tailored for ${jobTitle})`;
+
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      const docData = {
+        userId:       req.user.uid,
+        resumeName:   newName,
+        templateType: templateType || 'classic',
+        primaryColor: primaryColor || '#7c3aed',
+        fontFamily:   fontFamily   || 'sans',
+        resumeData:   tailoredResumeData,
+        atsScore:     0, // not an ATS-scored resume in the general sense — matchScore is what matters here
+        isJobTailored: true,
+        tailoredForJob: {
+          title:    jobTitle,
+          company:  jobCompany  || '',
+          location: jobLocation || '',
+        },
+        oldMatchScore: oldScoreNum,
+        newMatchScore,
+        createdAt: now,
+        updatedAt: now,
+      };
+      if (sourceResumeId) docData.tailoredFromResumeId = sourceResumeId;
+
+      const docRef  = await db.collection(RESUMES).add(docData);
+      const created = await docRef.get();
+
+      console.log(`POST /api/job-tailor — uid:${req.user.uid} job:"${jobTitle}" ${oldScoreNum}->${newMatchScore} newDoc:${docRef.id} plan:${planKey}`);
+
+      res.status(201).json({
+        id: docRef.id,
+        ...created.data(),
+        oldMatchScore: oldScoreNum,
+        newMatchScore,
+        beforeAfter:   Array.isArray(result.beforeAfter)   ? result.beforeAfter.slice(0, 3)   : [],
+        improvements:  Array.isArray(result.improvements)  ? result.improvements.slice(0, 5)  : [],
+      });
+    } catch (err) {
+      if (err.code === 'CREDITS_EXHAUSTED') {
+        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
+      }
+      console.error('POST /api/job-tailor ERROR:', err.message);
+      res.status(500).json({ error: 'Resume tailoring failed. Please try again.' });
     }
   });
 
