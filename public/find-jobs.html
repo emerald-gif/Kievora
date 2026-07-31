@@ -608,6 +608,32 @@
 .jt-btn-pri{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.28)}
 .jt-btn-ghost{background:#f1f5f9;color:#475569}
 
+/* ── Celebratory "Saved!" overlay ─────────────────────────────────────── */
+.jt-saved-overlay{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,14,23,.46);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s ease}
+.jt-saved-overlay.show{opacity:1;pointer-events:auto}
+.jt-saved-card{position:relative;width:100%;max-width:340px;background:#fff;border-radius:26px;padding:34px 24px 24px;text-align:center;box-shadow:0 24px 60px rgba(15,14,23,.28);transform:translateY(14px) scale(.96);opacity:0;transition:transform .3s cubic-bezier(.32,.8,.24,1),opacity .3s ease}
+.jt-saved-overlay.show .jt-saved-card{transform:translateY(0) scale(1);opacity:1}
+.jt-saved-x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:none;background:#f5f4fa;color:#7a7488;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.jt-saved-x:hover{background:#ede9fe;color:#7c3aed}
+.jt-saved-badge{position:relative;width:84px;height:84px;margin:0 auto 18px}
+.jt-saved-ring{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#ede9fe,transparent 70%);animation:jtSavedRing 1.8s ease-out infinite}
+@keyframes jtSavedRing{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+.jt-saved-circle{position:absolute;inset:8px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(124,58,237,.38);animation:jtSavedPop .5s cubic-bezier(.34,1.56,.64,1) both .1s}
+@keyframes jtSavedPop{0%{transform:scale(0)}100%{transform:scale(1)}}
+.jt-saved-check{width:34px;height:34px}
+.jt-saved-check path{stroke-dasharray:24;stroke-dashoffset:24;animation:jtSavedCheck .35s ease forwards .38s}
+@keyframes jtSavedCheck{to{stroke-dashoffset:0}}
+.jt-saved-spark{position:absolute;color:#c084fc;opacity:0;animation:jtSavedSpark .7s ease forwards}
+.jt-saved-spark svg{display:block}
+.jt-saved-spark.s1{top:-6px;left:2px;animation-delay:.42s}
+.jt-saved-spark.s2{top:6px;right:-8px;animation-delay:.52s}
+.jt-saved-spark.s3{bottom:-4px;left:14px;animation-delay:.62s}
+@keyframes jtSavedSpark{0%{opacity:0;transform:scale(.3) rotate(0deg)}45%{opacity:1;transform:scale(1) rotate(20deg)}100%{opacity:0;transform:scale(.6) rotate(35deg)}}
+.jt-saved-title{font-size:19px;font-weight:900;color:#0f172a;letter-spacing:-.3px;margin-bottom:6px}
+.jt-saved-sub{font-size:13.5px;color:#64748b;line-height:1.5;margin-bottom:22px}
+.jt-saved-sub b{color:#0f172a;font-weight:800}
+.jt-saved-actions{display:flex;flex-direction:column;gap:9px}
+
 /* Resume picker cards */
 .jt-picker-card{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:13px 14px;margin-bottom:10px;cursor:pointer;transition:all .15s;position:relative}
 .jt-picker-card.selected{border-color:#7c3aed;background:#faf9ff;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
@@ -1159,6 +1185,33 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── CELEBRATORY "RESUME SAVED" OVERLAY ── -->
+<div class="jt-saved-overlay" id="jtSavedOverlay">
+  <div class="jt-saved-card">
+    <button class="jt-saved-x" onclick="closeJobTailorSavedOverlay()" aria-label="Close">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="jt-saved-badge">
+      <div class="jt-saved-ring"></div>
+      <div class="jt-saved-circle">
+        <svg class="jt-saved-check" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <span class="jt-saved-spark s1"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg></span>
+      <span class="jt-saved-spark s2"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg></span>
+      <span class="jt-saved-spark s3"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg></span>
+    </div>
+    <div class="jt-saved-title">Resume Tailored &amp; Saved! 🎉</div>
+    <div class="jt-saved-sub" id="jtSavedSub">Your resume for <b>this role</b> is ready in My Resumes.</div>
+    <div class="jt-saved-actions">
+      <button class="jt-btn jt-btn-pri" style="width:100%" onclick="viewTailoredResume()">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+        View in My Resumes
+      </button>
+      <button class="jt-btn jt-btn-ghost" style="width:100%" onclick="closeJobTailorSavedOverlay()">Keep Browsing Jobs</button>
+    </div>
   </div>
 </div>
 
@@ -2782,8 +2835,25 @@ window._jtSwitchResultTab = function(which) {
 // Already saved server-side the moment tailoring finished — "Save" confirms
 // it, "Discard" actually deletes that doc.
 window.saveJobTailoredResume = function() {
-  toast('Saved! Find it under "Job Tailored" in My Resumes.', 'ok');
   closeJobTailorPanel();
+  showJobTailorSavedOverlay();
+};
+
+window.showJobTailorSavedOverlay = function() {
+  const sub = g('jtSavedSub');
+  if (sub && _jtJob) {
+    const roleBit = _jtJob.title ? `<b>${esc(_jtJob.title)}</b>${_jtJob.company ? ' at <b>' + esc(_jtJob.company) + '</b>' : ''}` : '<b>this role</b>';
+    sub.innerHTML = `Your resume for ${roleBit} is ready in My Resumes.`;
+  }
+  g('jtSavedOverlay').classList.add('show');
+};
+
+window.closeJobTailorSavedOverlay = function() {
+  g('jtSavedOverlay').classList.remove('show');
+};
+
+window.viewTailoredResume = function() {
+  window.location.href = '/dashboard?view=allresumes&tab=tailored';
 };
 
 window.discardJobTailoredResume = async function() {
