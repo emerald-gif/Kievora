@@ -17,6 +17,30 @@
   <!-- ── Gmail Pipeline Intelligence styles — namespaced "gpipe-", touches nothing else ── -->
 <body>
 
+<!-- ══ JOB TAILOR HANDOFF MASK ══════════════════════════════════════════════
+     Arriving from Find Jobs' "Tailor My Resume" is a full page navigation —
+     without this, the dashboard home renders and is visible for a beat
+     before auth/resumes load and the panel opens over it, which reads as a
+     jarring flash. This tiny inline script runs synchronously, before any
+     other script, so the mask is up before first paint if a handoff is
+     pending. _jtCheckPendingHandoff() removes it once the panel is ready
+     (or immediately, if there's nothing pending). -->
+<div id="jtHandoffMask" style="display:none;position:fixed;inset:0;z-index:99999;background:#faf9ff;align-items:center;justify-content:center;flex-direction:column;gap:14px">
+  <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(124,58,237,.3)">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#7c3aed">Loading your resumes…</div>
+</div>
+<script>
+  if (location.hash === '#jobtailor') {
+    try {
+      if (sessionStorage.getItem('kievora_jobtailor_pending')) {
+        document.getElementById('jtHandoffMask').style.display = 'flex';
+      }
+    } catch (e) {}
+  }
+</script>
+
 
 <!-- ══ GMAIL INTELLIGENCE PANEL — body level so position:fixed works ══ -->
 <div id="gmailIntPanel" style="position:fixed;inset:0;z-index:900;background:#F2F2F7;transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif">

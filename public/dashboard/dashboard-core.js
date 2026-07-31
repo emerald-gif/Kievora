@@ -2605,12 +2605,24 @@
       const t = TPLS.find(x => x.id === r.templateType) || TPLS[0];
       const d = r.resumeData || {};
       g('detName').textContent = r.resumeName;
-      g('detMeta').innerHTML = `<span class="det-meta-chip">${t.name}</span><span class="det-meta-dot"></span><span class="det-meta-chip">${d.jobTitle || 'No title'}</span><span class="det-meta-dot"></span><span style="font-size:11px;color:var(--mute);font-weight:600">Modified ${fmtDate(r.updatedAt)}</span>`;
+      // Job-tailored resumes show which job they were tailored for instead
+      // of the reframed internal job title — that's the thing that actually
+      // distinguishes one tailored resume from another.
+      const metaRoleChip = r.isJobTailored && r.tailoredForJob
+        ? `<span class="det-meta-chip" style="background:#ede9fe;color:#7c3aed">🎯 ${esc(r.tailoredForJob.title || '')}${r.tailoredForJob.company ? ' at ' + esc(r.tailoredForJob.company) : ''}</span>`
+        : `<span class="det-meta-chip">${esc(d.jobTitle || 'No title')}</span>`;
+      g('detMeta').innerHTML = `<span class="det-meta-chip">${t.name}</span><span class="det-meta-dot"></span>${metaRoleChip}<span class="det-meta-dot"></span><span style="font-size:11px;color:var(--mute);font-weight:600">Modified ${fmtDate(r.updatedAt)}</span>`;
       
 
-      // Populate ATS score on detail screen
+      // Populate score circle on detail screen — job-tailored resumes show
+      // Match Score (the metric that's actually meaningful for them), not
+      // ATS Score, which is deliberately 0/unset for these and was rendering
+      // as a false "Incomplete" warning.
       try {
-        const ds = typeof r.atsScore === 'number' ? r.atsScore : computeATSScore(d);
+        const isTailored = !!r.isJobTailored;
+        const ds = isTailored
+          ? Math.min(100, Math.max(0, typeof r.newMatchScore === 'number' ? r.newMatchScore : 0))
+          : (typeof r.atsScore === 'number' ? r.atsScore : computeATSScore(d));
         const dc = atsColor(ds);
         const dR = 28, dCirc = +(2 * Math.PI * dR).toFixed(2);
         const dOff = +(dCirc - (ds / 100) * dCirc).toFixed(2);
@@ -2628,14 +2640,21 @@
             </svg>
             <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
               <span style="font-size:17px;font-weight:900;color:${dc};line-height:1">${ds}</span>
-              <span style="font-size:8px;color:#94a3b8;font-weight:600;margin-top:1px">ATS</span>
+              <span style="font-size:8px;color:#94a3b8;font-weight:600;margin-top:1px">${isTailored ? 'MATCH' : 'ATS'}</span>
             </div>`;
           const statusEl = g('detAtsStatus');
-          if (statusEl) { statusEl.textContent = atsStatusLabel(ds); statusEl.style.color = dc; }
-          // store for drawer
-          if (!window._atsResumeData) window._atsResumeData = {};
-          window._atsResumeData[id] = { score: ds, d, name: r.resumeName };
+          if (statusEl) {
+            statusEl.textContent = isTailored ? _jtVerdict(ds) : atsStatusLabel(ds);
+            statusEl.style.color = dc;
+          }
+          // store for drawer — skip for tailored resumes, the ATS info
+          // drawer explains ATS scoring specifically, which doesn't apply here
+          if (!isTailored) {
+            if (!window._atsResumeData) window._atsResumeData = {};
+            window._atsResumeData[id] = { score: ds, d, name: r.resumeName };
+          }
           const infoBtn = g('detAtsInfoBtn');
+          if (infoBtn) infoBtn.style.display = isTailored ? 'none' : '';
           if (infoBtn) infoBtn.dataset.rid = id;
           requestAnimationFrame(() => requestAnimationFrame(() => {
             const arc = g('detAtsArc');
@@ -11341,14 +11360,20 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // Picks up the job handed off from Find Jobs' job detail screen (see
     // tailorResumeForJob() in find-jobs.html). Runs once, right after the
     // dashboard's own init finishes loading resumes.
+    function _jtHideHandoffMask() {
+      const m = document.getElementById('jtHandoffMask');
+      if (m) m.style.display = 'none';
+    }
+
     function _jtCheckPendingHandoff() {
-      if (location.hash !== '#jobtailor') return;
+      if (location.hash !== '#jobtailor') { _jtHideHandoffMask(); return; }
       let job = null;
       try { job = JSON.parse(sessionStorage.getItem('kievora_jobtailor_pending') || 'null'); } catch (e) {}
       sessionStorage.removeItem('kievora_jobtailor_pending');
       history.replaceState(null, '', location.pathname); // clear the hash so a refresh doesn't re-trigger this
-      if (!job || !job.title) return;
+      if (!job || !job.title) { _jtHideHandoffMask(); return; }
       openJobTailorPanel(job);
+      _jtHideHandoffMask();
     }
 
     window.runFixMyResume = async function() {
