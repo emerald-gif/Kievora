@@ -2131,11 +2131,11 @@
     .cl-panel-card{background:#fff;border-radius:18px;border:1px solid var(--hair);padding:22px;box-shadow:var(--shadow-crisp)}
     .cl-step-nav{margin-top:20px;display:flex;justify-content:flex-end}
 
-    /* Edge-to-edge on mobile, matching the resume builder */
+    /* Standard inset card on mobile — not edge-to-edge */
     @media(max-width:640px){
-      .cl-wrap{padding-left:0;padding-right:0}
-      .cl-step-hdr{padding:0 16px}
-      .cl-panel-card{border-radius:0;border-left:none;border-right:none;box-shadow:none;padding:20px 16px}
+      .cl-wrap{padding-left:14px;padding-right:14px}
+      .cl-step-hdr{padding:0 2px}
+      .cl-panel-card{border-radius:16px;border:1px solid var(--hair);box-shadow:var(--shadow-crisp);padding:18px 16px}
       .cl-step-panel{padding-bottom:78px}
       .cl-step-nav{
         position:sticky;bottom:0;left:0;right:0;margin:0;
