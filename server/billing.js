@@ -56,8 +56,8 @@ module.exports = function registerBillingRoutes(app) {
           paid15: { ...convert(15),  label: 'Premier',  key: 'paid15' },
         },
         topup: {
-          paid7:  { ...convert(1.5), messages: 100 },
-          paid15: { ...convert(5),   messages: 100 },
+          paid7:  { ...convert(PLANS.paid7.topupPriceUSD),  credits: PLANS.paid7.topupCredits },
+          paid15: { ...convert(PLANS.paid15.topupPriceUSD), credits: PLANS.paid15.topupCredits },
         },
       });
     } catch (e) {
