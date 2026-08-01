@@ -330,14 +330,21 @@ const AI_PRICING_PER_M_TOKENS = {
   nova:  { input: 3,    output: 15   },   // Anthropic — Claude Sonnet 5 (standard rate, post Sept 1 2026)
   ultra: { input: 5,    output: 25   },   // Anthropic — Claude Opus 4.8
 };
-const CREDIT_VALUE_USD = 0.01; // 1 credit = $0.01 — the peg every budget/topup number above is built on
+const CREDIT_VALUE_USD = 0.01; // 1 credit = $0.01 — the peg every PAID budget/topup number above is built on
+// Free plan only: same "30 credits" displayed, but each credit is worth half
+// as much real spend ($0.005 instead of $0.01), so the free tier's actual
+// dollar ceiling is $0.15 instead of $0.30. Paid plans are untouched.
+const FREE_CREDIT_VALUE_USD = 0.005;
 
 // Converts real token usage on a specific model into credits, rounding UP so
 // the platform is never the one eating a fraction of a cent on rounding.
-function tokensToCredits(modelKey, inputTokens, outputTokens) {
+// planKey is optional — pass 'free' to apply the free-tier rate; anything
+// else (or omitted) uses the standard paid rate.
+function tokensToCredits(modelKey, inputTokens, outputTokens, planKey) {
   const rate = AI_PRICING_PER_M_TOKENS[modelKey] || AI_PRICING_PER_M_TOKENS.spark;
   const usd  = ((inputTokens || 0) * rate.input + (outputTokens || 0) * rate.output) / 1_000_000;
-  return Math.max(1, Math.ceil(usd / CREDIT_VALUE_USD)); // every call costs at least 1 credit — no free rounding-to-zero calls
+  const creditValue = planKey === 'free' ? FREE_CREDIT_VALUE_USD : CREDIT_VALUE_USD;
+  return Math.max(1, Math.ceil(usd / creditValue)); // every call costs at least 1 credit — no free rounding-to-zero calls
 }
 
 // ─── AI credit ledger — resets on the subscription anniversary, not the
@@ -647,7 +654,7 @@ async function callKieAI(modelKey, systemContent, messages, cfg, billing) {
     if (!res.ok) { const e = await res.text(); throw new Error('Groq error: ' + e); }
     const data = await res.json();
     if (billing?.uid) {
-      const credits = tokensToCredits(modelKey, data.usage?.prompt_tokens, data.usage?.completion_tokens);
+      const credits = tokensToCredits(modelKey, data.usage?.prompt_tokens, data.usage?.completion_tokens, billing.planKey);
       await deductCredits(billing.uid, billing.planKey, credits);
     }
     return data.choices?.[0]?.message?.content || '';
@@ -689,7 +696,7 @@ async function callKieAI(modelKey, systemContent, messages, cfg, billing) {
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
     if (billing?.uid) {
-      const credits = tokensToCredits(modelKey, data.usage?.input_tokens, data.usage?.output_tokens);
+      const credits = tokensToCredits(modelKey, data.usage?.input_tokens, data.usage?.output_tokens, billing.planKey);
       await deductCredits(billing.uid, billing.planKey, credits);
     }
     return cfg.jsonMode ? '{' + text : text;
@@ -812,7 +819,7 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk, 
         const payload = trimmed.slice(6);
         if (payload === '[DONE]') {
           if (billing?.uid) {
-            const credits = tokensToCredits(modelKey, usage?.prompt_tokens, usage?.completion_tokens);
+            const credits = tokensToCredits(modelKey, usage?.prompt_tokens, usage?.completion_tokens, billing.planKey);
             await deductCredits(billing.uid, billing.planKey, credits);
           }
           return;
@@ -826,7 +833,7 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk, 
       }
     }
     if (billing?.uid) { // stream ended without an explicit [DONE] line — still bill what we saw
-      const credits = tokensToCredits(modelKey, usage?.prompt_tokens, usage?.completion_tokens);
+      const credits = tokensToCredits(modelKey, usage?.prompt_tokens, usage?.completion_tokens, billing.planKey);
       await deductCredits(billing.uid, billing.planKey, credits);
     }
 
@@ -884,7 +891,7 @@ async function callKieAIStream(modelKey, systemContent, messages, cfg, onChunk, 
       }
     }
     if (billing?.uid) {
-      const credits = tokensToCredits(modelKey, inputTokens, outputTokens);
+      const credits = tokensToCredits(modelKey, inputTokens, outputTokens, billing.planKey);
       await deductCredits(billing.uid, billing.planKey, credits);
     }
   }
@@ -1418,7 +1425,7 @@ ${snippet}
 Reply with ONLY the category, nothing else.` }] })
     });
     const d = await r.json();
-    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens))).catch(() => {});
+    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens, pk))).catch(() => {});
     const cat = (d.choices?.[0]?.message?.content || '').trim().toLowerCase();
     const VALID_CATEGORIES = ['application_confirmation', 'interview_invite', 'assessment', 'recruiter_outreach', 'rejection', 'offer', 'post_offer', 'general_update'];
     return VALID_CATEGORIES.includes(cat) ? cat : _classifyCareerEmailFallback(s);
@@ -1457,7 +1464,7 @@ ${snippet}
 --- END UNTRUSTED EMAIL CONTENT ---` }] })
     });
     const d = await r.json();
-    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens))).catch(() => {});
+    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens, pk))).catch(() => {});
     const text = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
     return JSON.parse(text);
   } catch { return { company: null, role: null }; }
@@ -1479,7 +1486,7 @@ ${snippet}
 --- END UNTRUSTED EMAIL CONTENT ---` }] })
     });
     const d = await r.json();
-    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens))).catch(() => {});
+    if (uid && d.usage) getUserPlanKey(uid).then(pk => deductCredits(uid, pk, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens, pk))).catch(() => {});
     const text   = (d.choices?.[0]?.message?.content || '{}').trim().replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
     return parsed && parsed.datetime ? parsed : null;
@@ -2019,7 +2026,7 @@ async function generateConvSummary(uid, messages, priorSummary) {
     // just against 'spark' rate since it's always Groq regardless of plan.
     if (uid && d.usage) {
       getUserPlanKey(uid)
-        .then(planKey => deductCredits(uid, planKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens)))
+        .then(planKey => deductCredits(uid, planKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens, planKey)))
         .catch(() => {});
     }
     const text = (d.choices?.[0]?.message?.content||'').trim().replace(/```json|```/g,'').trim();

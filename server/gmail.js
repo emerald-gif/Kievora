@@ -163,7 +163,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d = await r.json();
-      if (d.usage) deductCredits(req.user.uid, planKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens)).catch(() => {});
+      if (d.usage) deductCredits(req.user.uid, planKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens, planKey)).catch(() => {});
       const draft = _gpipeSafeParseJson(d.choices?.[0]?.message?.content);
       if (!draft || !draft.body) { console.error('[gmail] draft-followup: no usable AI response —', JSON.stringify(d).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
       let to = null;
@@ -342,7 +342,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d = await r.json();
-      if (d.usage) deductCredits(req.user.uid, _ipPlanKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens)).catch(() => {});
+      if (d.usage) deductCredits(req.user.uid, _ipPlanKey, tokensToCredits('spark', d.usage.prompt_tokens, d.usage.completion_tokens, _ipPlanKey)).catch(() => {});
       const prep = _gpipeSafeParseJson(d.choices?.[0]?.message?.content);
       if (!prep || !prep.questions) { console.error('[gmail] interview-prep: no usable AI response —', JSON.stringify(d).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
       res.json({ success:true, prep });
@@ -405,7 +405,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const dd    = await rr.json();
-      if (dd.usage) deductCredits(req.user.uid, _drPlanKey, tokensToCredits('spark', dd.usage.prompt_tokens, dd.usage.completion_tokens)).catch(() => {});
+      if (dd.usage) deductCredits(req.user.uid, _drPlanKey, tokensToCredits('spark', dd.usage.prompt_tokens, dd.usage.completion_tokens, _drPlanKey)).catch(() => {});
       const draft = _gpipeSafeParseJson(dd.choices?.[0]?.message?.content);
       if (!draft || !draft.body) { console.error('[gmail] draft-reply: no usable AI response —', JSON.stringify(dd).slice(0,400)); return res.status(502).json({ error:'ai_response_invalid' }); }
       const fromHdr = lastMsg?.payload?.headers?.find(h=>h.name.toLowerCase()==='from')?.value || '';
@@ -461,7 +461,7 @@ module.exports = function registerGmailRoutes(app) {
         })
       });
       const d2 = await r2.json();
-      if (d2.usage) deductCredits(req.user.uid, _rgPlanKey, tokensToCredits('spark', d2.usage.prompt_tokens, d2.usage.completion_tokens)).catch(() => {});
+      if (d2.usage) deductCredits(req.user.uid, _rgPlanKey, tokensToCredits('spark', d2.usage.prompt_tokens, d2.usage.completion_tokens, _rgPlanKey)).catch(() => {});
       const result = _gpipeSafeParseJson(d2.choices?.[0]?.message?.content);
       if (!result) { console.error('[gmail] resume-gap: no usable AI response —', JSON.stringify(d2).slice(0,400)); return res.json({ success:true, gap:null, reason:'ai_response_invalid' }); }
       res.json({ success:true, gap: result.found ? { skill:result.skill, companies:result.companies||[] } : null, resumeUsed: chosen.resumeName||'Untitled' });
