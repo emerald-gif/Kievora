@@ -940,8 +940,9 @@ module.exports = function registerToolsRoutes(app) {
         source:   'JSearch',
         posted:   j.job_posted_at_datetime_utc || '',
         snippet:  (j.job_description || '').replace(/\n/g, ' ').replace(/<[^>]+>/g,'').slice(0,200) + '…',
-        description: (j.job_description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
+        description: (j.job_description || '').replace(/<[^>]+>/g,'').slice(0, 8000),
         requirements: (j.job_required_skills || []).join(', ') || '',
+        truncated: false,
       }));
     } catch { return []; }
   }
@@ -987,6 +988,7 @@ module.exports = function registerToolsRoutes(app) {
           snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
           description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
           requirements: '',
+          truncated: true, // Adzuna's API only ever returns a short snippet, never the full JD
         }));
       } catch { /* skip this country */ }
     }));
@@ -1032,8 +1034,9 @@ module.exports = function registerToolsRoutes(app) {
         source:   'Remotive',
         posted:   j.publication_date || '',
         snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
-        description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
+        description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 8000),
         requirements: '',
+        truncated: false,
       }));
     } catch { return []; }
   }
@@ -1094,6 +1097,7 @@ module.exports = function registerToolsRoutes(app) {
         snippet:  (j.snippet || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
         description: (j.snippet || '').replace(/<[^>]+>/g,'').slice(0, 3000),
         requirements: '',
+        truncated: true, // Jooble's API only ever returns a short snippet, never the full JD
       }));
     } catch (err) {
       console.error(`_fetchJooble — request threw for query:"${query}":`, err.message);
@@ -1167,6 +1171,7 @@ module.exports = function registerToolsRoutes(app) {
         snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
         description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
         requirements: '',
+        truncated: true, // Careerjet's API only ever returns a short snippet, never the full JD
       }));
     } catch (err) {
       console.error(`_fetchCareerjet — request threw for query:"${query}":`, err.message);
