@@ -2076,6 +2076,18 @@ function renderJobDesc(el, rawDesc) {
   }
 }
 
+// Some providers (Adzuna, Jooble, Careerjet) only ever return a truncated
+// snippet, never the full JD — point people to the original posting
+// instead of pretending we have the full description. Used both when the
+// job has no url to scrape, and as the fallback if the scrape attempt fails.
+function renderFjdTruncatedFallback(j) {
+  renderJobDesc(g('fjdDesc'), j.description || j.snippet);
+  if (j.url) {
+    g('fjdDesc').insertAdjacentHTML('beforeend',
+      `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
+  }
+}
+
 function fmtDate(iso) {
   if (!iso) return '';
   try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; }
@@ -2105,15 +2117,29 @@ function populateJobDetail(j) {
   if (j.posted)   pills.push(`<span class="fjd-pill grey">📅 ${fmtDate(j.posted)}</span>`);
   g('fjdPills').innerHTML = pills.join('');
 
-  // Description — rendered properly, not plain text dump
-  renderJobDesc(g('fjdDesc'), j.description || j.snippet);
-
-  // Some providers (Adzuna, Jooble, Careerjet) only ever return a truncated
-  // snippet, never the full JD — point people to the original posting
-  // instead of pretending we have the full description.
+  // Description — full text if we have it, otherwise try a live scrape,
+  // otherwise fall back to snippet + link.
+  window._fjdOpenToken = (window._fjdOpenToken || 0) + 1;
+  const myFjdToken = window._fjdOpenToken;
   if (j.truncated && j.url) {
-    g('fjdDesc').insertAdjacentHTML('beforeend',
-      `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
+    g('fjdDesc').innerHTML = `<p id="fjdFullLoading" style="color:#94a3b8;font-size:12px">Loading full description…</p>`;
+    api('POST', '/api/job-full-description', { url: j.url }).then(data => {
+      if (myFjdToken !== window._fjdOpenToken) return; // a different job was opened meanwhile
+      if (data && data.ok && data.description) {
+        renderJobDesc(g('fjdDesc'), data.description);
+        g('fjdDesc').insertAdjacentHTML('beforeend',
+          `<p style="margin-top:10px;font-size:11px;color:#94a3b8">Full listing fetched from <a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">${j.company || 'the original posting'} →</a></p>`);
+      } else {
+        renderFjdTruncatedFallback(j);
+      }
+    }).catch(() => {
+      if (myFjdToken !== window._fjdOpenToken) return;
+      renderFjdTruncatedFallback(j);
+    });
+  } else if (j.truncated) {
+    renderFjdTruncatedFallback(j); // gated/no-url case — nothing to scrape
+  } else {
+    renderJobDesc(g('fjdDesc'), j.description || j.snippet);
   }
 
   // Requirements

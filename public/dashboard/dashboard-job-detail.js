@@ -22,9 +22,59 @@
     }
   }
 
+  function renderTruncatedFallback(j) {
+    const el = document.getElementById('jdDesc');
+    renderDesc(el, j.description || j.snippet);
+    // Some providers (Adzuna, Jooble, Careerjet) only ever return a truncated
+    // snippet, never the full JD — point people to the original posting
+    // instead of pretending we have the full description.
+    if (j.url) {
+      el.insertAdjacentHTML('beforeend',
+        `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
+    }
+  }
+
+  // Tracks which job is currently open so a slow scrape response can't
+  // overwrite the drawer if the user has since opened a different job.
+  let _jdOpenToken = 0;
+
+  // Best-effort: fetch the real posting server-side and try to pull the full
+  // description out of it. Always falls back to the snippet+link on any
+  // failure — see /api/job-full-description for the extraction logic.
+  async function tryFetchFullDescription(j, myToken) {
+    if (!j.url) return;
+    const el = document.getElementById('jdDesc');
+    el.insertAdjacentHTML('beforeend', `<p id="jdFullLoading" style="margin-top:10px;color:#94a3b8;font-size:12px">Loading full description…</p>`);
+    try {
+      const tok = await window.__kieGetIdToken();
+      const res = await fetch('/api/job-full-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+        body: JSON.stringify({ url: j.url }),
+      });
+      const data = await res.json();
+      if (myToken !== _jdOpenToken) return; // a different job was opened meanwhile
+      const loadingEl = document.getElementById('jdFullLoading');
+      if (loadingEl) loadingEl.remove();
+      if (data.ok && data.description) {
+        renderDesc(el, data.description);
+        el.insertAdjacentHTML('beforeend',
+          `<p style="margin-top:10px;font-size:11px;color:#94a3b8">Full listing fetched from <a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">${j.company || 'the original posting'} →</a></p>`);
+      } else {
+        renderTruncatedFallback(j);
+      }
+    } catch {
+      if (myToken !== _jdOpenToken) return;
+      const loadingEl = document.getElementById('jdFullLoading');
+      if (loadingEl) loadingEl.remove();
+      renderTruncatedFallback(j);
+    }
+  }
+
   window.openJobDetail = function(idx, pool) {
     const jobs = pool === 'home' ? (window._homeJobs || []) : (window._fjJobs || []);
     const j = jobs[idx]; if (!j) return;
+    const myToken = ++_jdOpenToken;
 
     // Logo
     const logo = document.getElementById('jdLogo');
@@ -44,15 +94,15 @@
     if (j.posted)   meta.push(`<span class="jd-pill">📅 ${fmtDate(j.posted)}</span>`);
     document.getElementById('jdMeta').innerHTML = meta.join('');
 
-    // Description — rendered properly
-    renderDesc(document.getElementById('jdDesc'), j.description || j.snippet);
-
-    // Some providers (Adzuna, Jooble, Careerjet) only ever return a truncated
-    // snippet, never the full JD — point people to the original posting
-    // instead of pretending we have the full description.
+    // Description — full text if we have it, otherwise try a live scrape,
+    // otherwise fall back to snippet + link.
     if (j.truncated && j.url) {
-      document.getElementById('jdDesc').insertAdjacentHTML('beforeend',
-        `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
+      document.getElementById('jdDesc').innerHTML = '';
+      tryFetchFullDescription(j, myToken);
+    } else if (j.truncated) {
+      renderTruncatedFallback(j); // gated/no-url case — nothing to scrape
+    } else {
+      renderDesc(document.getElementById('jdDesc'), j.description || j.snippet);
     }
 
     // Requirements
