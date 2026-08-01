@@ -2057,17 +2057,20 @@
     <div class="mto-intro-sub">Zero guesswork — pick a tool below and let KIE do the heavy lifting.</div>
   </div>
 
+  <!-- Category filter tabs — collapses 13 tools down to 3-5 relevant ones per tap -->
+  <div class="mto-tabs" id="mtoTabs">
+    <button class="mto-tab active" data-cat="all" onclick="filterMoreTools('all')">All</button>
+    <button class="mto-tab" data-cat="resume" onclick="filterMoreTools('resume')">Resume &amp; App</button>
+    <button class="mto-tab" data-cat="growth" onclick="filterMoreTools('growth')">Career Growth</button>
+    <button class="mto-tab" data-cat="brand" onclick="filterMoreTools('brand')">Brand &amp; Outreach</button>
+    <button class="mto-tab" data-cat="interview" onclick="filterMoreTools('interview')">Interview</button>
+  </div>
+
   <!-- Tools grid -->
   <div class="mto-body">
-    <div class="mto-tile-grid">
-    <!-- Section: Build & Analyze -->
-    <div class="mto-section-label">
-      <div class="mto-section-line"></div>
-      <span>Build &amp; Analyze</span>
-      <div class="mto-section-line"></div>
-    </div>
+    <div class="mto-tile-grid" id="mtoTileGrid">
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('aibuild')" style="--tile-c:#7c3aed">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('aibuild')" style="--tile-c:#7c3aed;--tile-tint:#f2ebfd">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
       </div>
@@ -2081,7 +2084,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('careerhealth')" style="--tile-c:#059669">
+    <div class="mto-tile" data-cat="growth" onclick="closeMoreTools();openKieTool('careerhealth')" style="--tile-c:#059669;--tile-tint:#e6f4f0">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
       </div>
@@ -2095,7 +2098,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('roadmap')" style="--tile-c:#2563eb">
+    <div class="mto-tile" data-cat="growth" onclick="closeMoreTools();openKieTool('roadmap')" style="--tile-c:#2563eb;--tile-tint:#e9effd">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div>
       </div>
@@ -2109,7 +2112,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('salary')" style="--tile-c:#d97706">
+    <div class="mto-tile" data-cat="growth" onclick="closeMoreTools();openKieTool('salary')" style="--tile-c:#d97706;--tile-tint:#fbf1e6">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
       </div>
@@ -2123,7 +2126,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('industry')" style="--tile-c:#4f46e5">
+    <div class="mto-tile" data-cat="growth" onclick="closeMoreTools();openKieTool('industry')" style="--tile-c:#4f46e5;--tile-tint:#edecfc">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="15" y="3" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="2" y="14" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/><rect x="15" y="14" width="7" height="7" rx="1" stroke="#4f46e5" stroke-width="2"/></svg></div>
       </div>
@@ -2137,14 +2140,7 @@
       </div>
     </div>
 
-    <!-- Section: Coach & Grow -->
-    <div class="mto-section-label" style="margin-top:8px">
-      <div class="mto-section-line"></div>
-      <span>Coach &amp; Grow</span>
-      <div class="mto-section-line"></div>
-    </div>
-
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('linkedin')" style="--tile-c:#0891b2">
+    <div class="mto-tile" data-cat="brand" onclick="closeMoreTools();openKieTool('linkedin')" style="--tile-c:#0891b2;--tile-tint:#e6f4f7">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#0891b2" stroke-width="2"/><path stroke="#0891b2" stroke-width="2" stroke-linecap="round" d="M7 10v7M7 7v.01M12 17v-4a2 2 0 014 0v4M12 13v4"/></svg></div>
       </div>
@@ -2158,7 +2154,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('interview')" style="--tile-c:#ea580c">
+    <div class="mto-tile" data-cat="interview" onclick="closeMoreTools();openKieTool('interview')" style="--tile-c:#ea580c;--tile-tint:#fdeee7">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 10v2a7 7 0 01-14 0v-2"/><line stroke="#ea580c" stroke-width="2" stroke-linecap="round" x1="12" y1="19" x2="12" y2="23"/></svg></div>
       </div>
@@ -2172,7 +2168,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('branding')" style="--tile-c:#a21caf">
+    <div class="mto-tile" data-cat="brand" onclick="closeMoreTools();openKieTool('branding')" style="--tile-c:#a21caf;--tile-tint:#f6e8f7">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path fill="#a21caf" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm6 10.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg></div>
       </div>
@@ -2186,7 +2182,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('messaging')" style="--tile-c:#0d9488">
+    <div class="mto-tile" data-cat="brand" onclick="closeMoreTools();openKieTool('messaging')" style="--tile-c:#0d9488;--tile-tint:#e7f4f3">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
       </div>
@@ -2200,7 +2196,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('promotion')" style="--tile-c:#ca8a04">
+    <div class="mto-tile" data-cat="growth" onclick="closeMoreTools();openKieTool('promotion')" style="--tile-c:#ca8a04;--tile-tint:#faf3e6">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 21l4-4 4 4M12 3v14M5 7l7-4 7 4"/></svg></div>
       </div>
@@ -2214,14 +2210,7 @@
       </div>
     </div>
 
-    <!-- Section: Smart Match & Write -->
-    <div class="mto-section-label" style="margin-top:8px">
-      <div class="mto-section-line"></div>
-      <span>Smart Match &amp; Write</span>
-      <div class="mto-section-line"></div>
-    </div>
-
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('jobmatch')" style="--tile-c:#16a34a">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('jobmatch')" style="--tile-c:#16a34a;--tile-tint:#e8f6ed">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
       </div>
@@ -2235,7 +2224,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('coverletter')" style="--tile-c:#9333ea">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('coverletter')" style="--tile-c:#9333ea;--tile-tint:#f4ebfd">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
       </div>
@@ -2249,7 +2238,7 @@
       </div>
     </div>
 
-    <div class="mto-tile" onclick="closeMoreTools();openKieTool('resignation')" style="--tile-c:#e11d48">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('resignation')" style="--tile-c:#e11d48;--tile-tint:#fce8ed">
       <div class="mto-tile-top">
         <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 19H6a2 2 0 01-2-2V7a2 2 0 012-2h5m8 10l-4-4m0 0l4-4m-4 4H9"/></svg></div>
       </div>
@@ -2263,6 +2252,7 @@
       </div>
     </div>
 
+    <div class="mto-empty" id="mtoEmpty" style="display:none">No tools in this category yet.</div>
     <div style="height:32px"></div>
     </div>
   </div>

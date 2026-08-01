@@ -986,6 +986,13 @@
           renderAllResumes();
         }
         history.replaceState(null, '', '/dashboard');
+      } else if (_dlParams.get('view') === 'tools') {
+        // Deep link from the general sidebar's "More Tools" item — that nav
+        // lives on every page, but the overlay itself only exists here on
+        // dashboard.html, so it has to land here first, then open it.
+        showView('home');
+        if (typeof window.openMoreTools === 'function') window.openMoreTools();
+        history.replaceState(null, '', '/dashboard');
       } else {
         showView('home');
       }

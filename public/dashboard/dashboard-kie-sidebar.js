@@ -196,12 +196,35 @@
     overlay.style.display = 'block';
     document.body.style.overflow = 'hidden';
     overlay.scrollTop = 0;
+    // Always land back on "All" — don't leave the user stuck on a filtered
+    // view from their last visit with no visible way back to the full grid.
+    if (typeof window.filterMoreTools === 'function') window.filterMoreTools('all');
   };
   window.closeMoreTools = function() {
     const overlay = document.getElementById('moreToolsOverlay');
     if (!overlay) return;
     overlay.style.display = 'none';
     document.body.style.overflow = '';
+  };
+
+  // Category filter tabs on the More Tools overlay — collapses the 13 tools
+  // down to whatever's relevant to the tapped category instead of forcing a
+  // full scroll-and-scan every time.
+  window.filterMoreTools = function(cat) {
+    const grid = document.getElementById('mtoTileGrid');
+    const tabs = document.getElementById('mtoTabs');
+    if (!grid || !tabs) return;
+    let visible = 0;
+    grid.querySelectorAll('.mto-tile').forEach(function (tile) {
+      const match = cat === 'all' || tile.getAttribute('data-cat') === cat;
+      tile.classList.toggle('mto-hide', !match);
+      if (match) visible++;
+    });
+    tabs.querySelectorAll('.mto-tab').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+    });
+    const empty = document.getElementById('mtoEmpty');
+    if (empty) empty.style.display = visible ? 'none' : 'block';
   };
 
   // Open KIE chat and pre-fill prompt
