@@ -859,6 +859,107 @@ module.exports = function registerToolsRoutes(app) {
     }
   });
 
+  // ─── POST /api/job-full-description — best-effort scrape for truncated jobs ──
+  // Adzuna/Jooble/Careerjet only ever hand back a short snippet, never the full
+  // JD. Instead of just linking out, we try to fetch the real posting server-side
+  // and pull out the actual description text. This is inherently fragile (every
+  // job site markup is different, some block bots or need JS), so it ALWAYS
+  // degrades gracefully: on any failure it returns { ok:false } and the client
+  // falls back to snippet + "View full listing" link exactly as before.
+  const JOB_SCRAPE_TIMEOUT_MS = 6000;
+  const JOB_SCRAPE_MAX_CHARS  = 12000;
+
+  // Strip script/style/nav/header/footer blocks, decode entities, collapse
+  // whitespace. Deliberately simple/regex-based — no DOM dependency needed
+  // since we just want readable text, not structured data.
+  function _stripHtmlNoise(html) {
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<(nav|header|footer)[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ');
+  }
+
+  function _decodeEntities(str) {
+    return str
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/&rsquo;/g, '’').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—');
+  }
+
+  // Heuristic extraction: job pages almost always wrap the description in a
+  // container with "description"/"job-desc"/"posting"/"details"/"content" in
+  // its class or id. Grab the largest matching block; if nothing matches,
+  // fall back to the largest <article>/<main>, then to body text as a last resort.
+  function _extractJobDescription(html) {
+    const cleaned = _stripHtmlNoise(html);
+    const candidates = [];
+    const containerRe = /<(div|section|article)\b[^>]*(?:class|id)="[^"]*(?:job[-_]?desc|description|posting|vacancy|details|job[-_]?content|content)[^"]*"[^>]*>([\s\S]*?)<\/\1>/gi;
+    let m;
+    while ((m = containerRe.exec(cleaned)) !== null) candidates.push(m[2]);
+
+    let raw = '';
+    if (candidates.length) {
+      raw = candidates.reduce((a, b) => (b.length > a.length ? b : a), '');
+    } else {
+      const articleMatch = cleaned.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)
+        || cleaned.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
+      raw = articleMatch ? articleMatch[1] : cleaned;
+    }
+
+    // Convert common block/line-break tags to newlines before stripping tags,
+    // so paragraphs and bullet points don't collapse into one wall of text.
+    const text = _decodeEntities(
+      raw
+        .replace(/<li[^>]*>/gi, '\n• ')
+        .replace(/<\/(p|div|li|h[1-6]|br)>/gi, '\n')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, ' ')
+    )
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n[ \t]+/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    return text.slice(0, JOB_SCRAPE_MAX_CHARS);
+  }
+
+  app.post('/api/job-full-description', authenticate, async (req, res) => {
+    const { url } = req.body;
+    if (!url || !/^https?:\/\//i.test(url)) {
+      return res.status(400).json({ ok: false, error: 'valid url is required' });
+    }
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), JOB_SCRAPE_TIMEOUT_MS);
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+      }).finally(() => clearTimeout(timer));
+
+      if (!response.ok) return res.json({ ok: false, error: `upstream ${response.status}` });
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/html')) return res.json({ ok: false, error: 'not html' });
+
+      const html = await response.text();
+      const description = _extractJobDescription(html);
+
+      // Sanity floor — if extraction produced something suspiciously short
+      // (nav crumbs, cookie banner, etc.) it's not worth showing over the
+      // snippet we already have.
+      if (!description || description.length < 200) {
+        return res.json({ ok: false, error: 'extraction too short' });
+      }
+      res.json({ ok: true, description });
+    } catch (err) {
+      console.error(`/api/job-full-description — failed for url:"${url}":`, err.message);
+      res.json({ ok: false, error: 'fetch failed' });
+    }
+  });
+
   // ─── POST /api/find-jobs — Merges JSearch + Adzuna + Remotive + Jooble ────────
   // Env vars: JSEARCH_API_KEY (rapidapi.com), ADZUNA_APP_ID, ADZUNA_APP_KEY (adzuna.com/developers),
   //           JOOBLE_API_KEY (jooble.org/api/about — free tier, default 500 req limit)
