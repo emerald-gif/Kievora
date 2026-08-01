@@ -228,8 +228,8 @@ const PLANS = {
     kieWebSearch: true,
     kieCreativeMode: true,
     gmail: false,
-    topupPriceUSD: 1.5,          // 150 extra AI credits for $1.50 — same $ as before, now denominated correctly
-    topupCredits: 150,
+    topupPriceUSD: 2,            // 100 extra AI credits for $2
+    topupCredits: 100,
   },
   paid15: {
     key: 'paid15', label: 'Premier', priceUSD: 15,
@@ -254,8 +254,8 @@ const PLANS = {
     kieWebSearch: true,
     kieCreativeMode: true,
     gmail: true,
-    topupPriceUSD: 5,            // 500 extra AI credits for $5
-    topupCredits: 500,
+    topupPriceUSD: 5,            // 300 extra AI credits for $5
+    topupCredits: 300,
   },
 };
 const DEFAULT_PLAN = 'free';
@@ -613,8 +613,8 @@ RULES for recommending tools/pages:
 
 // Topup purchase messages (shown in the topup modal on billing.html)
 const TOPUP_MESSAGES = {
-  paid7:  `Top up 150 AI credits for $1.50. These are added to your current cycle's balance — any unused credits expire when your plan renews.`,
-  paid15: `Top up 500 AI credits for $5. These are added to your current cycle's balance — any unused credits expire when your plan renews.`,
+  paid7:  `Top up 100 AI credits for $2. These are added to your current cycle's balance — any unused credits expire when your plan renews.`,
+  paid15: `Top up 300 AI credits for $5. These are added to your current cycle's balance — any unused credits expire when your plan renews.`,
 };
 
 // ─── Universal AI caller — routes Groq vs Anthropic by model key ──────────────
@@ -2095,7 +2095,7 @@ async function applyPaystackMetadata(metadata, reference) {
     const cycleStartKey = getCycleStart(anchor, new Date()).toISOString();
     const sameCycle = usage.aiCreditsCycleStart === cycleStartKey;
     const existing  = sameCycle ? (usage.aiCreditsTopup || 0) : 0;
-    const toAdd     = Number(topupCredits) || 150;
+    const toAdd     = Number(topupCredits) || 100;
     await uRef.set({
       usage: {
         aiCreditsTopup: existing + toAdd,
