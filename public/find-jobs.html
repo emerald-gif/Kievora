@@ -2441,9 +2441,10 @@ function populateJobDetail(j) {
   // Description — rendered properly, not plain text dump
   renderJobDesc(g('fjdDesc'), j.description || j.snippet);
 
-  // Adzuna's API only ever returns a truncated snippet — point people to the
-  // original posting instead of pretending we have the full description.
-  if (j.source === 'Adzuna' && j.url) {
+  // Some providers (Adzuna, Jooble, Careerjet) only ever return a truncated
+  // snippet, never the full JD — point people to the original posting
+  // instead of pretending we have the full description.
+  if (j.truncated && j.url) {
     g('fjdDesc').insertAdjacentHTML('beforeend',
       `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
   }
