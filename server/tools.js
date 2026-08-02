@@ -1399,14 +1399,13 @@ module.exports = function registerToolsRoutes(app) {
     }
   });
 
-  app.post('/api/find-jobs', authenticate, async (req, res) => {
-    // Plan gate: free users can see the listing cards but can't open/apply to jobs.
-    const planKey = await getUserPlanKey(req.user.uid);
-    const canClick = getPlanConfig(planKey).findJobsClick;
-
-    const { query, limit = 20, countryCode = 'worldwide', location = '' } = req.body;
-    if (!query) return res.status(400).json({ error: 'query is required' });
-
+  // ─── findJobsCore — shared by the /api/find-jobs route AND the weekly job
+  // alerts cron (server/job-alerts.js). Runs the multi-provider search, merges,
+  // dedupes, and relevance-filters. Exported at the bottom of this file via
+  // registerToolsRoutes.findJobsCore so job-alerts.js can call it outside of
+  // any HTTP request (no req/res, no req.ip — Careerjet falls back to a
+  // default IP in that case, see _fetchCareerjet above).
+  async function findJobsCore(query, countryCode = 'worldwide', location = '', limit = 20, userIp = '') {
     const isLocal = countryCode && countryCode !== 'worldwide';
     const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
 
@@ -1415,7 +1414,7 @@ module.exports = function registerToolsRoutes(app) {
       _fetchAdzuna(query, limit, countryCode),
       _fetchRemotive(query, 10, countryCode),
       _fetchJooble(query, limit, countryCode, countryName, location),
-      _fetchCareerjet(query, limit, countryCode, countryName, location, req.ip),
+      _fetchCareerjet(query, limit, countryCode, countryName, location, userIp),
     ]);
 
     let jobs = [
@@ -1459,7 +1458,19 @@ module.exports = function registerToolsRoutes(app) {
 
     jobs = jobs.slice(0, limit);
 
-    console.log(`POST /api/find-jobs — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'} Careerjet:${r5.status==='fulfilled'?r5.value.length:'err'})`);
+    console.log(`findJobsCore — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'} Careerjet:${r5.status==='fulfilled'?r5.value.length:'err'})`);
+    return jobs;
+  }
+
+  app.post('/api/find-jobs', authenticate, async (req, res) => {
+    // Plan gate: free users can see the listing cards but can't open/apply to jobs.
+    const planKey = await getUserPlanKey(req.user.uid);
+    const canClick = getPlanConfig(planKey).findJobsClick;
+
+    const { query, limit = 20, countryCode = 'worldwide', location = '' } = req.body;
+    if (!query) return res.status(400).json({ error: 'query is required' });
+
+    const jobs = await findJobsCore(query, countryCode, location, limit, req.ip);
 
     if (!canClick) {
       const gatedJobs = jobs.map(({ url, description, ...rest }) => rest);
@@ -2492,4 +2503,12 @@ Rules:
       if (browser) { try { await browser.close(); } catch (_) {} }
     }
   });
+
+  // Expose findJobsCore on the exported function itself so job-alerts.js's
+  // weekly cron (which runs outside any HTTP request) can call the same
+  // search/merge/dedupe logic the /api/find-jobs route uses. Must be assigned
+  // here, inside the function body, since it only exists once
+  // registerToolsRoutes(app) has actually been invoked — see the comment at
+  // the top of job-alerts.js.
+  registerToolsRoutes.findJobsCore = findJobsCore;
 }; // end registerToolsRoutes
