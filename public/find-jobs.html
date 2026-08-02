@@ -3061,6 +3061,31 @@ window.discardJobTailoredResume = async function() {
 };
 </script>
 <script src="/dashboard/app-sidebar.js"></script>
+<script src="/dashboard/coachmark.js"></script>
+<script>
+// First coachmark: point at the bookmark icon on the first job card so
+// people discover Saved Jobs. Jobs render async, so watch #jobsGrid until
+// a card shows up rather than assuming it's there on load.
+(function () {
+  var grid = document.getElementById('jobsGrid');
+  if (!grid) return;
+
+  function tryShow() {
+    var btn = grid.querySelector('.job-bookmark-btn');
+    if (!btn) return false;
+    Coachmark.show('find-jobs-save-btn', btn, {
+      text: 'Tap to save this job — find it later under Saved Jobs.'
+    });
+    return true;
+  }
+
+  if (tryShow()) return;
+  var obs = new MutationObserver(function () {
+    if (tryShow()) obs.disconnect();
+  });
+  obs.observe(grid, { childList: true, subtree: true });
+})();
+</script>
 
 </body>
 </html>
