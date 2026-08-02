@@ -924,6 +924,41 @@ module.exports = function registerToolsRoutes(app) {
     return text.slice(0, JOB_SCRAPE_MAX_CHARS);
   }
 
+  // Sites we scrape sometimes serve an anti-bot verification/CAPTCHA page
+  // instead of the real content (Cloudflare "Just a moment", "unusual
+  // traffic" interstitials, etc). These return 200 + text/html and are often
+  // long enough to pass the length check, so they need their own detection —
+  // otherwise we'd confidently show a CAPTCHA page as the "full job description".
+  //
+  // Two separate lists on purpose: the HTML-level list only matches
+  // interstitial-template markers that never appear on a real content page.
+  // Plain "recaptcha"/"g-recaptcha" is deliberately NOT checked against raw
+  // HTML — lots of legitimate job pages embed a recaptcha on their apply
+  // form while the actual JD is still perfectly scrapable elsewhere on the
+  // page, so that would false-positive and needlessly reject good scrapes.
+  const BOT_CHALLENGE_HTML_PATTERNS = [
+    /cf-browser-verification/i,
+    /cf-chl-widget/i,
+    /just a moment\.{3}\s*<\/title>/i,
+    /checking your browser before accessing/i,
+    /attention required.{0,20}cloudflare/i,
+  ];
+  const BOT_CHALLENGE_TEXT_PATTERNS = [
+    /unusual traffic/i,
+    /verify (you are|you're) (a )?human/i,
+    /are you a robot/i,
+    /access denied/i,
+    /pardon our interruption/i,
+    /this page checks to see if it'?s really you/i,
+    /please enable (javascript|cookies) (and|to) (reload|continue)/i,
+  ];
+  function _isBotChallengeHtml(html) {
+    return BOT_CHALLENGE_HTML_PATTERNS.some(re => re.test(html));
+  }
+  function _isBotChallengeText(text) {
+    return BOT_CHALLENGE_TEXT_PATTERNS.some(re => re.test(text));
+  }
+
   app.post('/api/job-full-description', authenticate, async (req, res) => {
     const { url } = req.body;
     if (!url || !/^https?:\/\//i.test(url)) {
@@ -945,6 +980,8 @@ module.exports = function registerToolsRoutes(app) {
       if (!contentType.includes('text/html')) return res.json({ ok: false, error: 'not html' });
 
       const html = await response.text();
+      if (_isBotChallengeHtml(html)) return res.json({ ok: false, error: 'bot challenge page' });
+
       const description = _extractJobDescription(html);
 
       // Sanity floor — if extraction produced something suspiciously short
@@ -952,6 +989,9 @@ module.exports = function registerToolsRoutes(app) {
       // snippet we already have.
       if (!description || description.length < 200) {
         return res.json({ ok: false, error: 'extraction too short' });
+      }
+      if (_isBotChallengeText(description)) {
+        return res.json({ ok: false, error: 'bot challenge page' });
       }
       res.json({ ok: true, description });
     } catch (err) {
