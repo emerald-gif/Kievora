@@ -13,6 +13,8 @@ module.exports = function registerToolsRoutes(app) {
     cloudinary,
   } = require('./lib');
   const { recordFileHistory } = require('./files');
+  const dns = require('dns').promises;
+  const net = require('net');
 
   app.get('/api/resumes', authenticate, async (req, res) => {
     console.log('GET /api/resumes — uid:', req.user.uid);
@@ -959,10 +961,60 @@ module.exports = function registerToolsRoutes(app) {
     return BOT_CHALLENGE_TEXT_PATTERNS.some(re => re.test(text));
   }
 
+  // SSRF guard — /api/job-full-description takes a client-supplied url and
+  // fetches it server-side. Without this, any authenticated user could point
+  // it at http://169.254.169.254/... (cloud metadata), http://localhost:...,
+  // or an internal 10.x/172.16-31.x/192.168.x address and use Kievora's own
+  // server as a proxy into infrastructure it can't otherwise reach. Job
+  // postings only ever live on public internet hosts, so blocking anything
+  // that resolves to a private/loopback/link-local range costs nothing
+  // functionally and closes that off.
+  function _isPrivateOrReservedIp(ip) {
+    const type = net.isIP(ip);
+    if (!type) return true; // not a valid IP at all — treat as unsafe
+    if (type === 4) {
+      const o = ip.split('.').map(Number);
+      if (o[0] === 127) return true;                                   // loopback
+      if (o[0] === 10) return true;                                    // 10.0.0.0/8
+      if (o[0] === 172 && o[1] >= 16 && o[1] <= 31) return true;        // 172.16.0.0/12
+      if (o[0] === 192 && o[1] === 168) return true;                   // 192.168.0.0/16
+      if (o[0] === 169 && o[1] === 254) return true;                   // 169.254.0.0/16 — includes cloud metadata
+      if (o[0] === 0) return true;                                     // 0.0.0.0/8
+      if (o[0] >= 224) return true;                                    // multicast/reserved
+      return false;
+    }
+    // IPv6
+    const lower = ip.toLowerCase();
+    if (lower === '::1') return true;                                  // loopback
+    if (lower.startsWith('fe80:') || lower.startsWith('fe8') || lower.startsWith('fc') || lower.startsWith('fd')) return true; // link-local / unique-local
+    if (lower.startsWith('::ffff:')) return _isPrivateOrReservedIp(lower.replace('::ffff:', '')); // IPv4-mapped
+    return false;
+  }
+  async function _isSafeExternalUrl(urlStr) {
+    let u;
+    try { u = new URL(urlStr); } catch { return false; }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    const hostname = u.hostname.toLowerCase();
+    if (hostname === 'localhost' || hostname.endsWith('.local') || hostname.endsWith('.internal')) return false;
+    // If it's already a literal IP, check it directly.
+    if (net.isIP(hostname)) return !_isPrivateOrReservedIp(hostname);
+    try {
+      const records = await dns.lookup(hostname, { all: true, verbatim: true });
+      if (!records.length) return false;
+      return records.every(r => !_isPrivateOrReservedIp(r.address));
+    } catch {
+      return false; // DNS failure — fail closed
+    }
+  }
+
   app.post('/api/job-full-description', authenticate, async (req, res) => {
     const { url } = req.body;
     if (!url || !/^https?:\/\//i.test(url)) {
       return res.status(400).json({ ok: false, error: 'valid url is required' });
+    }
+    if (!(await _isSafeExternalUrl(url))) {
+      console.warn(`/api/job-full-description — blocked unsafe target url:"${url}" uid:${req.user.uid}`);
+      return res.status(400).json({ ok: false, error: 'url not allowed' });
     }
     try {
       const controller = new AbortController();
@@ -974,6 +1026,15 @@ module.exports = function registerToolsRoutes(app) {
           'Accept': 'text/html,application/xhtml+xml',
         },
       }).finally(() => clearTimeout(timer));
+
+      // Re-check after redirects: the initial hostname could resolve safely
+      // but redirect to an internal address (classic SSRF-via-redirect). The
+      // request already happened by this point, but we still refuse to
+      // process/return anything that landed somewhere unsafe.
+      if (response.redirected && !(await _isSafeExternalUrl(response.url))) {
+        console.warn(`/api/job-full-description — blocked unsafe redirect target url:"${url}" → "${response.url}" uid:${req.user.uid}`);
+        return res.json({ ok: false, error: 'redirected to disallowed url' });
+      }
 
       if (!response.ok) return res.json({ ok: false, error: `upstream ${response.status}` });
       const contentType = response.headers.get('content-type') || '';
