@@ -698,12 +698,12 @@
 
     <!-- Job Alerts engagement banner -->
     <div class="alert-banner" id="alertBanner" style="display:none">
-      <div class="alert-banner-ico">🔔</div>
+      <div class="alert-banner-ico" id="alertBannerIco">🔔</div>
       <div class="alert-banner-txt">
-        <div class="alert-banner-title">Get weekly alerts for this search</div>
+        <div class="alert-banner-title" id="alertBannerTitle">Get weekly alerts for this search</div>
         <div class="alert-banner-sub" id="alertBannerSub">We'll email you new matches every week</div>
       </div>
-      <button class="alert-banner-btn" onclick="goSetJobAlert()">Turn on</button>
+      <button class="alert-banner-btn" id="alertBannerBtn" onclick="goSetJobAlert()">Turn on</button>
       <button class="alert-banner-x" onclick="dismissAlertBanner()" aria-label="Dismiss">✕</button>
     </div>
 
@@ -758,6 +758,48 @@
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeProfModal()">Cancel</button>
       <button class="modal-save" onclick="saveProfModal()">Find Jobs</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── JOB ALERTS DRAWER — same jobAlert fields/endpoint as Account, so both stay in sync ── -->
+<div class="modal-overlay" id="jobAlertModal">
+  <div class="modal-sheet">
+    <div class="modal-title">Weekly Job Alerts</div>
+    <div id="jaMismatchNote" style="display:none;font-size:12px;font-weight:700;color:#b45309;background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:9px 11px;margin-bottom:14px"></div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Job Title</label>
+      <input class="modal-inp" id="jaTitle" type="text" placeholder="e.g. Frontend Developer" oninput="renderJaConfirm()" autocomplete="off">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Country</label>
+      <select class="modal-inp" id="jaCountry" onchange="renderJaConfirm()">
+        <option value="worldwide">🌍 Worldwide</option>
+        <option value="ng">🇳🇬 Nigeria</option>
+        <option value="gh">🇬🇭 Ghana</option>
+        <option value="ke">🇰🇪 Kenya</option>
+        <option value="za">🇿🇦 South Africa</option>
+        <option value="eg">🇪🇬 Egypt</option>
+        <option value="us">🇺🇸 United States</option>
+        <option value="gb">🇬🇧 United Kingdom</option>
+        <option value="ca">🇨🇦 Canada</option>
+        <option value="au">🇦🇺 Australia</option>
+        <option value="de">🇩🇪 Germany</option>
+        <option value="fr">🇫🇷 France</option>
+        <option value="in">🇮🇳 India</option>
+        <option value="sg">🇸🇬 Singapore</option>
+        <option value="ae">🇦🇪 UAE</option>
+        <option value="br">🇧🇷 Brazil</option>
+        <option value="nl">🇳🇱 Netherlands</option>
+      </select>
+    </div>
+    <label class="filter-checkbox-row" style="margin-top:0">
+      <input type="checkbox" id="jaAlertsOn" onchange="renderJaConfirm()"> Turn on weekly alerts
+    </label>
+    <div id="jaConfirmText" style="display:none;margin-top:14px;background:#f5f3ff;border:1.5px solid #ede9fe;border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:700;color:#5b21b6"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeJobAlertModal()">Cancel</button>
+      <button class="modal-save" id="jaSaveBtn" onclick="saveJobAlert()">Save</button>
     </div>
   </div>
 </div>
@@ -1301,11 +1343,13 @@ function onCountryChange() {
 }
 
 // ── Job Alerts engagement banner ──────────────────────────────────────────────
-// Points people at /account to turn on weekly alerts for whatever they just
-// searched. Dismissible per-search-term so it doesn't nag on every keystroke,
-// and hidden entirely once they've already turned alerts on for this exact
-// title+country (best-effort check against the Firestore-synced localStorage
-// mirror — no extra network round trip needed here).
+// Points people at the in-page drawer (below) to turn on weekly alerts for
+// whatever they just searched. Dismissible per-search-term so it doesn't nag
+// on every keystroke, and hidden entirely once they've already turned alerts
+// on for this exact title. If they have an alert set for a DIFFERENT title
+// than what they're currently searching, the banner switches to an
+// "update your alert?" prompt instead of a generic "turn on" — otherwise
+// people end up with a stale alert for a role they searched once months ago.
 function _alertBannerDismissKey(q) {
   const uid = window.__fjUid || 'anon';
   return `kievora_alert_dismissed_${uid}_${(q||'').toLowerCase().trim()}`;
@@ -1315,12 +1359,36 @@ function updateAlertBanner(hasResults) {
   if (!banner) return;
   const q = g('searchInp')?.value?.trim();
   if (!hasResults || !q) { banner.style.display = 'none'; return; }
+
+  const alert = window._userJobAlert;
+  const hasActiveAlert = alert && alert.enabled && alert.title;
+  const sameTitle = hasActiveAlert && alert.title.trim().toLowerCase() === q.toLowerCase();
+  if (sameTitle) { banner.style.display = 'none'; return; } // already alerting for exactly this search
+
   try {
-    if (localStorage.getItem(_alertBannerDismissKey(q))) { banner.style.display = 'none'; return; }
+    // A stale dismiss only applies to the "turn on" case, not a genuine
+    // mismatch — if their real alert is now for something else entirely,
+    // that's worth resurfacing even if they dismissed the banner once before.
+    if (!hasActiveAlert && localStorage.getItem(_alertBannerDismissKey(q))) { banner.style.display = 'none'; return; }
   } catch {}
-  const countryName = _countryName || 'Worldwide';
-  const sub = g('alertBannerSub');
-  if (sub) sub.textContent = `New "${q}" matches in ${countryName}, sent every week`;
+
+  const titleEl = g('alertBannerTitle');
+  const subEl   = g('alertBannerSub');
+  const btnEl   = g('alertBannerBtn');
+  const icoEl   = g('alertBannerIco');
+
+  if (hasActiveAlert) {
+    if (icoEl) icoEl.textContent = '🔁';
+    if (titleEl) titleEl.textContent = 'Update your job alert?';
+    if (subEl) subEl.textContent = `Currently set for "${alert.title}" — switch it to "${q}"?`;
+    if (btnEl) btnEl.textContent = 'Update alert';
+  } else {
+    const countryName = _countryName || 'Worldwide';
+    if (icoEl) icoEl.textContent = '🔔';
+    if (titleEl) titleEl.textContent = 'Get weekly alerts for this search';
+    if (subEl) subEl.textContent = `New "${q}" matches in ${countryName}, sent every week`;
+    if (btnEl) btnEl.textContent = 'Turn on';
+  }
   banner.style.display = 'flex';
 }
 function dismissAlertBanner() {
@@ -1332,8 +1400,103 @@ function dismissAlertBanner() {
 function goSetJobAlert() {
   const q = g('searchInp')?.value?.trim() || '';
   const country = _selectedCountry || 'worldwide';
-  window.location.href = `/account?openJobAlerts=1&title=${encodeURIComponent(q)}&country=${encodeURIComponent(country)}`;
+  openJobAlertModal({ title: q, country });
 }
+
+// ── Job Alerts drawer — writes to the SAME /api/update-profile fields
+// (jobTitle + jobAlert) and the SAME localStorage keys that account.html
+// uses, so whichever page someone sets it from, both stay in sync.
+const JA_COUNTRY_NAMES = {
+  worldwide:'Worldwide', ng:'Nigeria', gh:'Ghana', ke:'Kenya', za:'South Africa',
+  eg:'Egypt', us:'United States', gb:'United Kingdom', ca:'Canada', au:'Australia',
+  de:'Germany', fr:'France', in:'India', sg:'Singapore', ae:'UAE', br:'Brazil', nl:'Netherlands'
+};
+window._userJobAlert = null; // populated by loadUserJobAlert() — { enabled, title, countryCode, countryName, frequency }
+
+async function loadUserJobAlert() {
+  try {
+    const data = await api('GET', '/api/profile');
+    window._userJobAlert = (data && data.data && data.data.jobAlert) || null;
+  } catch { /* not fatal — banner just falls back to the generic "turn on" copy */ }
+  // Search may have already finished loading before this resolved — refresh
+  // the banner now that we actually know the alert state.
+  const q = g('searchInp')?.value?.trim();
+  if (q) updateAlertBanner(document.querySelectorAll('.job-card').length > 0);
+}
+
+function openJobAlertModal(prefill) {
+  const alert = window._userJobAlert || {};
+  const prefillTitle = (prefill && prefill.title) || alert.title || '';
+  g('jaTitle').value    = prefillTitle;
+  g('jaCountry').value  = (prefill && prefill.country) || alert.countryCode || 'worldwide';
+  g('jaAlertsOn').checked = true; // opening via the CTA always means "turn this on"
+
+  const note = g('jaMismatchNote');
+  const isMismatch = alert.enabled && alert.title && prefill && prefill.title
+    && alert.title.trim().toLowerCase() !== prefill.title.trim().toLowerCase();
+  if (isMismatch) {
+    note.style.display = 'block';
+    note.textContent = `This replaces your current alert for "${alert.title}".`;
+  } else {
+    note.style.display = 'none';
+  }
+  renderJaConfirm();
+  g('jobAlertModal').classList.add('open');
+}
+function closeJobAlertModal() { g('jobAlertModal').classList.remove('open'); }
+
+function renderJaConfirm() {
+  const on = g('jaAlertsOn').checked;
+  const confirm = g('jaConfirmText');
+  if (!on) { confirm.style.display = 'none'; return; }
+  const title   = g('jaTitle').value.trim();
+  const country = JA_COUNTRY_NAMES[g('jaCountry').value] || 'Worldwide';
+  confirm.style.display = 'block';
+  confirm.textContent = title
+    ? `Alert me weekly for: ${title} in ${country}`
+    : `Add a job title above to turn on weekly alerts`;
+}
+
+async function saveJobAlert() {
+  const btn = g('jaSaveBtn');
+  const title    = g('jaTitle').value.trim();
+  const country  = g('jaCountry').value;
+  const alertsOn = g('jaAlertsOn').checked;
+  if (alertsOn && !title) { toast('Add a job title to turn on alerts', 'err'); return; }
+
+  const originalLabel = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = 'Saving…';
+  const timeout = setTimeout(() => {
+    if (btn.disabled) {
+      btn.disabled = false; btn.innerHTML = originalLabel;
+      toast('Taking too long — check your connection and try again', 'err');
+    }
+  }, 12000);
+
+  try {
+    const countryName = JA_COUNTRY_NAMES[country] || '';
+    const jobAlert = { enabled: alertsOn, frequency: 'weekly', title, countryCode: country, countryName };
+    await api('POST', '/api/update-profile', { jobTitle: title, jobAlert });
+
+    window._userJobAlert = jobAlert;
+    if (title)   localStorage.setItem(getProfKey(), JSON.stringify({ title, source: 'manual', ts: Date.now() }));
+    if (country) localStorage.setItem(`kievora_country_${window.__fjUid||'anon'}`, JSON.stringify({ code: country, name: countryName }));
+    try { localStorage.removeItem(_alertBannerDismissKey(title)); } catch {}
+
+    clearTimeout(timeout);
+    closeJobAlertModal();
+    toast(alertsOn ? 'Job alert saved!' : 'Job alerts turned off');
+    updateAlertBanner(document.querySelectorAll('.job-card').length > 0);
+  } catch (e) {
+    clearTimeout(timeout);
+    toast('Save failed: ' + (e.message || 'unknown error'), 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalLabel;
+  }
+}
+g('jobAlertModal')?.addEventListener('click', e => { if (e.target === g('jobAlertModal')) closeJobAlertModal(); });
 
 function getCurrentProfQuery() {
   const uid   = window.__fjUid || 'anon';
@@ -1999,6 +2162,8 @@ populateSortModal();
 
 // ── Init (called by Firebase auth gate above) ─────────────────────────────────
 window.__onFindJobsAuthReady = async function() {
+  loadUserJobAlert(); // fire-and-forget — refreshes the banner itself once resolved
+
   // Detect country first, then load jobs so the first search is already localised
   await detectAndSetCountry();
 
