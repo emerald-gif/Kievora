@@ -2306,25 +2306,86 @@
       return tplClassic(d, c, fc);
     }
     // A neutral, undecorated "as-uploaded" page — deliberately NOT run through
-    // any branded template. This is what "Before" should show for a freshly
-    // uploaded resume: exactly the text the user gave us, plain, so the
-    // improvement in "After" is an honest comparison, not before/after of
-    // two different pieces of formatting we imposed.
+    // any branded template. This is the fallback for pasted text specifically:
+    // there's no original document to be visually faithful to, so plain text
+    // IS the honest "before" for that case.
     function buildPlainTextPrevHTML(text) {
       return `<div style="width:600px;min-height:840px;background:#fff;padding:52px 46px;box-sizing:border-box;font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.65;color:#1f2937;white-space:pre-wrap;word-break:break-word">${esc(text || 'No text available for this resume.')}</div>`;
     }
 
-    function _optRenderPlainPreviewInto(scalerId, wrapId, rawText) {
+    // Builds a true-fidelity snapshot of the ACTUAL uploaded file for the
+    // "Before" preview — not the plain text we extracted for AI analysis.
+    // PDFs get rendered page-by-page onto a canvas via pdf.js (so fonts,
+    // columns, colors, spacing all look exactly as the user's file does).
+    // DOCX gets converted to formatted HTML via mammoth (headings/bold/lists
+    // preserved — not pixel-exact, but a real document, not a text dump).
+    // Pasted text has no original file, so it stays plain text.
+    async function _optBuildUploadPreview(file, pastedText) {
+      if (!file) {
+        _optUploadPreviewKind = 'text';
+        _optUploadPreviewData = pastedText || '';
+        return;
+      }
+      const ext = file.name.split('.').pop().toLowerCase();
+      try {
+        if (ext === 'pdf') {
+          if (!window.pdfjsLib) throw new Error('PDF reader not loaded');
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const buf = await file.arrayBuffer();
+          const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+          const pages = [];
+          const maxPages = Math.min(pdf.numPages, 3); // resumes are 1-2 pages; 3 is a generous cap
+          for (let i = 1; i <= maxPages; i++) {
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 2 }); // 2x for crisp rendering once scaled down in the card
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            pages.push(canvas.toDataURL('image/png'));
+          }
+          _optUploadPreviewKind = 'pdf';
+          _optUploadPreviewData = pages;
+        } else if (ext === 'docx' || ext === 'doc') {
+          if (!window.mammoth) throw new Error('Word reader not loaded');
+          const buf = await file.arrayBuffer();
+          const result = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+          _optUploadPreviewKind = 'docx';
+          _optUploadPreviewData = result.value;
+        } else {
+          // .txt or anything else — no real visual document exists to render
+          _optUploadPreviewKind = 'text';
+          _optUploadPreviewData = pastedText || '';
+        }
+      } catch (e) {
+        console.warn('Upload preview render failed, falling back to plain text:', e.message);
+        _optUploadPreviewKind = 'text';
+        _optUploadPreviewData = pastedText || '';
+      }
+    }
+
+    function _optRenderUploadPreviewInto(scalerId, wrapId) {
       const scaler = g(scalerId);
       if (!scaler) return;
-      scaler.innerHTML = buildPlainTextPrevHTML(rawText);
+      let html;
+      if (_optUploadPreviewKind === 'pdf' && Array.isArray(_optUploadPreviewData) && _optUploadPreviewData.length) {
+        html = `<div style="width:600px">${_optUploadPreviewData.map(src =>
+          `<img src="${src}" style="width:600px;display:block;margin-bottom:8px" alt="Resume page"/>`
+        ).join('')}</div>`;
+      } else if (_optUploadPreviewKind === 'docx' && _optUploadPreviewData) {
+        html = `<div style="width:600px;min-height:840px;background:#fff;padding:48px 44px;box-sizing:border-box;font-family:Calibri,Arial,sans-serif;font-size:14px;line-height:1.55;color:#1f2937">${_optUploadPreviewData}</div>`;
+      } else {
+        html = buildPlainTextPrevHTML(_optUploadPreviewData || '');
+      }
+      scaler.innerHTML = html;
       requestAnimationFrame(() => {
         const wrap = g(wrapId);
         if (!wrap) return;
         const w = wrap.offsetWidth || 300;
         const scale = w / 600;
         scaler.style.transform = 'scale(' + scale + ')';
-        wrap.style.height = Math.round(scale * 840) + 'px';
+        const contentH = scaler.scrollHeight || 840; // real height, not a fixed guess — matters for multi-page PDFs
+        wrap.style.height = Math.round(scale * contentH) + 'px';
       });
     }
 
@@ -2911,13 +2972,23 @@
       // PRIMARY: hidden iframe — bypasses Android popup blocker
       try {
         const ifrEl = document.createElement('iframe');
-        ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
+        // Real page dimensions, positioned off-screen — a 0x0 iframe never
+        // actually gets laid out, so Android's print-to-PDF service has
+        // nothing to rasterize and shows "Can't load content at the moment."
+        ifrEl.style.cssText = 'position:fixed;width:816px;height:1056px;border:0;top:-11000px;left:-11000px';
         document.body.appendChild(ifrEl);
         const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
         iDoc.open(); iDoc.write(fullDoc); iDoc.close();
+        // Android's print-to-PDF names the saved file after the TOP window's
+        // title, not the iframe's own <title> — without this override every
+        // download was landing in Downloads as the app's page title (e.g.
+        // "Dashboard — Kievora") instead of the resume's actual name.
+        const _prevDocTitle = document.title;
+        document.title = title;
         _kiePrintWhenReady(ifrEl.contentWindow, function() {
           try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
           _kieHideDownloadOverlay();
+          setTimeout(function() { document.title = _prevDocTitle; }, 4000);
           setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
         });
         toast('Print dialog opening — choose "Save as PDF"');
@@ -6818,13 +6889,21 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // because it prints within the same page context, no new window needed.
       try {
         const ifrEl = document.createElement('iframe');
-        ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
+        // Real page dimensions, positioned off-screen — a 0x0 iframe never
+        // actually gets laid out, so the print service has nothing to render.
+        ifrEl.style.cssText = 'position:fixed;width:816px;height:1056px;border:0;top:-11000px;left:-11000px';
         document.body.appendChild(ifrEl);
         const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
         iDoc.open(); iDoc.write(fullHtml); iDoc.close();
+        // Android names the saved PDF after the TOP window's title, not the
+        // iframe's own <title> — this override fixes downloads landing as
+        // "Dashboard — Kievora" instead of the actual resume name.
+        const _prevDocTitle = document.title;
+        document.title = title;
         _kiePrintWhenReady(ifrEl.contentWindow, function() {
           try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
           _kieHideDownloadOverlay();
+          setTimeout(function() { document.title = _prevDocTitle; }, 4000);
           setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
         });
         toast('Print dialog opening — choose "Save as PDF" in the menu');
@@ -10794,7 +10873,9 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const single = g('optPrevSingleGroup');
       const both   = g('optPrevBothGroup');
       // A freshly uploaded resume (has raw _optUploadText) shows "Before" as
-      // plain, exact text — no template. An existing platform resume being
+      // a true-fidelity render of the actual file — PDF pages rendered as
+      // images, DOCX converted to formatted HTML, pasted text shown plain
+      // (nothing else to be faithful to). An existing platform resume being
       // re-optimized shows "Before" in the template it was actually saved
       // with, since that IS its real, already-templated original.
       const hasRawUpload = !!_optUploadText;
@@ -10802,7 +10883,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (single) single.style.display = 'none';
         if (both)   both.style.display   = '';
         if (hasRawUpload) {
-          _optRenderPlainPreviewInto('optPrevBeforeScaler', 'optPrevBeforeWrap', _optUploadText);
+          _optRenderUploadPreviewInto('optPrevBeforeScaler', 'optPrevBeforeWrap');
         } else {
           _optRenderPreviewInto('optPrevBeforeScaler', 'optPrevBeforeWrap', analysisResult, analysisResult?._sourceTemplateType || 'classic');
         }
@@ -10811,7 +10892,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (both)   both.style.display   = 'none';
         if (single) single.style.display = '';
         if (hasRawUpload) {
-          _optRenderPlainPreviewInto('optPrevSingleScaler', 'optPrevSingleWrap', _optUploadText);
+          _optRenderUploadPreviewInto('optPrevSingleScaler', 'optPrevSingleWrap');
         } else {
           _optRenderPreviewInto('optPrevSingleScaler', 'optPrevSingleWrap', analysisResult, analysisResult?._sourceTemplateType || 'classic');
         }
@@ -10960,10 +11041,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const merged = getMergedResumes();
       const r = merged.find(x => x.id === resumeId);
       if (!r) { toast('Resume not found', 'err'); closeOptimizePanel(); return; }
-      // Clear any stale raw-upload text from a previous session in this panel —
-      // this path re-optimizes a saved platform resume, not a fresh upload,
-      // so "Before" must NOT fall back to plain-text rendering.
+      // Clear any stale raw-upload text/preview from a previous session in
+      // this panel — this path re-optimizes a saved platform resume, not a
+      // fresh upload, so "Before" must NOT fall back to upload-preview rendering.
       _optUploadFile = null; _optUploadText = '';
+      _optUploadPreviewKind = null; _optUploadPreviewData = null;
       const text = _resumeDataToText(r.resumeData || {});
       if (text.trim().length < 30) {
         toast('This resume needs more content before it can be optimized.', 'err');
@@ -11003,9 +11085,17 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     // to ATS Checker's view/vars.
     let _optUploadFile = null;
     let _optUploadText = '';
+    // True-fidelity "Before" preview data — a rendered snapshot of the ACTUAL
+    // uploaded file (PDF pages rendered via pdf.js canvas, DOCX converted to
+    // formatted HTML via mammoth), not the plain extracted text. Pasted text
+    // has no original document, so it stays plain text — there's nothing to
+    // be faithful to.
+    let _optUploadPreviewKind = null; // 'pdf' | 'docx' | 'text'
+    let _optUploadPreviewData = null; // string[] dataURLs for pdf, HTML string for docx, plain string for text
 
     function _optOpenUploadState() {
       _optUploadFile = null; _optUploadText = '';
+      _optUploadPreviewKind = null; _optUploadPreviewData = null;
       const fr = g('optUploadFileReady'); if (fr) fr.style.display = 'none';
       const dz = g('optDropzone');        if (dz) dz.style.display = 'block';
       const fi = g('optFileInput');       if (fi) fi.value = '';
@@ -11105,6 +11195,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         toast('Upload a file or paste your resume text', 'err'); return;
       }
       _optUploadText = text;
+      // Build the true-fidelity "Before" preview (PDF render / DOCX HTML) in
+      // parallel with the AI scan below — doesn't block the diagnosis screen,
+      // and any failure here silently falls back to plain text internally.
+      const filePreviewForBuild = (pw && pw.style.display !== 'none') ? null : _optUploadFile;
+      const previewPromise = _optBuildUploadPreview(filePreviewForBuild, text);
       _optSetStep(2);
       const anim = _optStartChecklist({
         title: 'Analyzing your resume…',
@@ -11115,6 +11210,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       });
       try {
         const result = await api('POST', '/api/analyze-resume', { resumeText: text, forceResume: true });
+        await previewPromise; // make sure the Before preview is ready before showing the diagnosis screen
         anim.finish();
         if (result.isResume === false) {
           toast("Couldn't read this resume clearly — try again.", 'err');
@@ -12314,13 +12410,21 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         // PRIMARY: hidden iframe
         try {
           const ifrEl = document.createElement('iframe');
-          ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
+          // Real page dimensions, positioned off-screen — a 0x0 iframe never
+          // actually gets laid out, so the print service has nothing to render.
+          ifrEl.style.cssText = 'position:fixed;width:816px;height:1056px;border:0;top:-11000px;left:-11000px';
           document.body.appendChild(ifrEl);
           const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
           iDoc.open(); iDoc.write(fullDoc); iDoc.close();
+          // Android names the saved PDF after the TOP window's title, not the
+          // iframe's own <title> — this override fixes downloads landing as
+          // "Dashboard — Kievora" instead of the actual cover letter name.
+          const _prevDocTitle = document.title;
+          document.title = title;
           _kiePrintWhenReady(ifrEl.contentWindow, function() {
             try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
             _kieHideDownloadOverlay();
+            setTimeout(function() { document.title = _prevDocTitle; }, 4000);
             setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
           });
           toast('Print dialog opening — choose "Save as PDF"');
@@ -12681,13 +12785,21 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         // PRIMARY: hidden iframe — no popup blocker on mobile
         try {
           const ifrEl = document.createElement('iframe');
-          ifrEl.style.cssText = 'position:fixed;width:0;height:0;border:0;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
+          // Real page dimensions, positioned off-screen — a 0x0 iframe never
+          // actually gets laid out, so the print service has nothing to render.
+          ifrEl.style.cssText = 'position:fixed;width:816px;height:1056px;border:0;top:-11000px;left:-11000px';
           document.body.appendChild(ifrEl);
           const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
           iDoc.open(); iDoc.write(fullDoc); iDoc.close();
+          // Android names the saved PDF after the TOP window's title, not the
+          // iframe's own <title> — this override fixes downloads landing as
+          // "Dashboard — Kievora" instead of the actual report name.
+          const _prevDocTitle = document.title;
+          document.title = fullTitle;
           _kiePrintWhenReady(ifrEl.contentWindow, function() {
             try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
             _kieHideDownloadOverlay();
+            setTimeout(function() { document.title = _prevDocTitle; }, 4000);
             setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
           });
           toast('Print dialog opening — choose "Save as PDF"');
