@@ -58,10 +58,21 @@
           data.conversations.forEach(sc => {
             const local = _convs.find(c => c.id === sc.id);
             if (!local) {
-              _convs.push({ id: sc.id, title: sc.title, createdAt: sc.createdAt || Date.now(), updatedAt: sc.updatedAt || Date.now(), preview: sc.preview || '' });
+              _convs.push({ id: sc.id, title: sc.title, titleSource: 'auto', createdAt: sc.createdAt || Date.now(), updatedAt: sc.updatedAt || Date.now(), preview: sc.preview || '' });
               changed = true;
             } else if (sc.updatedAt && sc.updatedAt > (local.updatedAt || 0)) {
-              local.title     = local.title || sc.title;
+              // BUG FIX: this used to be `local.title || sc.title`, which — since
+              // local.title is set immediately from the raw first message and is
+              // never empty — meant the server's title NEVER won, even once the
+              // background summarizer (server: saveConvSummary → real topic-based
+              // title) produced something far better than "how do i prepare for
+              // a job". Now: any title the user hasn't manually renamed
+              // (titleSource !== 'user') stays open to being upgraded by the
+              // server's summary-based title as soon as one exists.
+              if (local.titleSource !== 'user' && sc.title) {
+                local.title = sc.title;
+                local.titleSource = 'auto';
+              }
               local.updatedAt = sc.updatedAt;
               local.preview    = sc.preview || local.preview;
               changed = true;
@@ -121,6 +132,9 @@
       conv = {
         id:        _activeId || genId(),
         title:     autoTitle(userMsg),
+        titleSource: 'auto', // bootstrap title from the first message — upgraded
+                             // to a real summary once the background
+                             // summarizer produces one (see syncConvsFromServer)
         createdAt: Date.now(),
         updatedAt: Date.now(),
         preview:   aiReply ? aiReply.slice(0,80) : userMsg.slice(0,80),
@@ -502,7 +516,9 @@
     const tid = modal?.dataset?.convId;
     loadConvs();
     const tc = _convs.find(c => c.id === tid);
-    if (tc) { tc.title = val; saveConvs(); renderHistory(); }
+    // titleSource:'user' locks this title in — syncConvsFromServer (below)
+    // never overwrites a user-chosen title with an auto-generated one.
+    if (tc) { tc.title = val; tc.titleSource = 'user'; saveConvs(); renderHistory(); }
     closeRenameModal();
   };
 
