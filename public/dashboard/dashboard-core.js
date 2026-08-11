@@ -1888,10 +1888,8 @@
       const steps = [1, 2, 3];
       steps.forEach(s => {
         const el = g('stp' + s);
-        el.className = 'stp ' + (s < builderStep ? 'stp-done' : s === builderStep ? 'stp-cur' : 'stp-idle');
+        el.className = 'stp-dot ' + (s < builderStep ? 'stp-done' : s === builderStep ? 'stp-cur' : '');
       });
-      g('stpL1').className = 'stp-line' + (builderStep > 1 ? ' done' : '');
-      g('stpL2').className = 'stp-line' + (builderStep > 2 ? ' done' : '');
       // Show correct panel
       [1, 2, 3].forEach(s => {
         g('step' + s).classList.toggle('active', s === builderStep);
@@ -11584,11 +11582,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         for (let i = 0; i < 4; i++) {
           const el = g('clS' + (i + 1));
           if (!el) continue;
-          el.className = 'cl-stp ' + (i < cur ? 'cl-stp-done' : i === cur ? 'cl-stp-cur' : 'cl-stp-idle');
-        }
-        for (let i = 1; i <= 3; i++) {
-          const ln = g('clL' + i);
-          if (ln) ln.className = 'cl-stp-line' + (i < step ? ' done' : '');
+          el.className = 'cl-stp ' + (i < cur ? 'cl-stp-done' : i === cur ? 'cl-stp-cur' : '');
         }
         ['clStep1','clStep2','clStep3','clStep4'].forEach((id, idx) => {
           const el = g(id); if (el) el.className = 'cl-step-panel' + (idx === cur ? ' active' : '');

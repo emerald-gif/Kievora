@@ -667,12 +667,10 @@
         <button id="builderBack" class="back-btn hdr-abs-l">
           <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </button>
-        <div class="steps-track">
-          <div id="stp1" class="stp stp-done">1</div>
-          <div id="stpL1" class="stp-line done"></div>
-          <div id="stp2" class="stp stp-cur">2</div>
-          <div id="stpL2" class="stp-line"></div>
-          <div id="stp3" class="stp stp-idle">3</div>
+        <div class="steps-track" id="stpTrack">
+          <span class="stp-dot" id="stp1" data-n="1"></span>
+          <span class="stp-dot" id="stp2" data-n="2"></span>
+          <span class="stp-dot" id="stp3" data-n="3"></span>
         </div>
         <button id="bSvBtn" class="btn btn-green hdr-abs-r" style="display:none">
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -988,13 +986,10 @@
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       </button>
       <div class="cl-steps" id="clStepsTrack">
-        <div class="cl-stp cl-stp-cur" id="clS1">1</div>
-        <div class="cl-stp-line" id="clL1"></div>
-        <div class="cl-stp cl-stp-idle" id="clS2">2</div>
-        <div class="cl-stp-line" id="clL2"></div>
-        <div class="cl-stp cl-stp-idle" id="clS3">3</div>
-        <div class="cl-stp-line" id="clL3"></div>
-        <div class="cl-stp cl-stp-idle" id="clS4">4</div>
+        <span class="cl-stp cl-stp-cur" id="clS1" data-n="1"></span>
+        <span class="cl-stp cl-stp-idle" id="clS2" data-n="2"></span>
+        <span class="cl-stp cl-stp-idle" id="clS3" data-n="3"></span>
+        <span class="cl-stp cl-stp-idle" id="clS4" data-n="4"></span>
       </div>
     </div>
 
