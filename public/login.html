@@ -452,7 +452,12 @@ input:not(:placeholder-shown) ~ label{
         const result = await signInWithPopup(auth, provider);
         const info   = getAdditionalUserInfo(result);
         if (info?.isNewUser) {
-          await signOut(auth);
+          // Firebase auto-provisions an Auth account on first federated
+          // sign-in, even here on the LOGIN page. If we only sign out, that
+          // orphaned account persists — and the next login attempt with the
+          // same Google/Microsoft account will see isNewUser:false and be
+          // routed straight past signup/onboarding. So we delete it outright.
+          try { await result.user.delete(); } catch { await signOut(auth); }
           err.textContent = `No account found for that ${providerLabel} account. Please sign up first.`;
           err.style.display = 'block';
           return;
