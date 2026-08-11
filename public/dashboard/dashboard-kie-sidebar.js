@@ -546,6 +546,18 @@
     }).catch(() => {});
   };
 
+  // ── HISTORY-RESTORE GUARD ───────────────────────────────────────────────
+  // watchKieMsgs() below reacts to AI bubbles appearing in #kieMsgs to bump
+  // a conversation's updatedAt/preview and move it to the top — that's
+  // correct for a genuine new reply, but _restoreKieMsgs() (just below)
+  // rebuilds those exact same bubbles when you simply OPEN an old
+  // conversation to look at it. Without this guard, opening a 2-day-old
+  // chat made it jump to the top of the list as if it had just been
+  // updated, even though nothing new was sent. While this flag is set, the
+  // observer callback below treats bubble mutations as a restore, not a
+  // real new turn, and leaves updatedAt/order untouched.
+  let _kieRestoringHistory = false;
+
   // ── HOOK INTO KIE SEND TO TRACK CONVERSATIONS ─────────────────────────────
   // We intercept after a successful AI response to register the conversation
   function hookKieSend() {
@@ -568,6 +580,8 @@
     if (!msgs) { setTimeout(watchKieMsgs, 500); return; }
 
     const observer = new MutationObserver(() => {
+      if (_kieRestoringHistory) return; // bubbles are being rebuilt from a
+                                         // past conversation, not a live reply
       // Count assistant bubbles (km-ai is the actual class used in appendKMsg)
       const aiBubbles = msgs.querySelectorAll('.km-ai, .kie-msg-ai, .kie-msg-kie, .kie-msg.kie-msg-ai');
       if (aiBubbles.length > 0) {
@@ -610,6 +624,13 @@
     const welcome = document.getElementById('kieWelcome');
     const kieTyp  = document.getElementById('kieTyp');
     if (!msgs || !hist || !hist.length) return;
+
+    // See _kieRestoringHistory comment above — every bubble this function
+    // (re)creates below must NOT be mistaken by watchKieMsgs()'s observer
+    // for a fresh reply. Cleared on a macrotask (setTimeout 0), not a
+    // microtask, so it's guaranteed to still be set when the observer's own
+    // microtask callback fires for these mutations.
+    _kieRestoringHistory = true;
 
     // ── Sync the in-memory history ─────────────────────────────────────────
     if (typeof window.kieHist !== 'undefined') window.kieHist = hist;
@@ -657,6 +678,9 @@
     if (welcome) welcome.style.display = 'none';
     msgs.scrollTop = msgs.scrollHeight;
     if (typeof showPlusFab === 'function') showPlusFab(true);
+    // Release the guard on the next macrotask, after the mutation observer's
+    // own callback (a microtask) has already run and been skipped.
+    setTimeout(() => { _kieRestoringHistory = false; }, 0);
   };
 
   // ── SHOW KIE ACTION BARS AFTER RESULTS ────────────────────────────────────
