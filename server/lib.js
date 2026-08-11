@@ -35,23 +35,24 @@ function getOAuthClient() {
 }
 
 // ─── Google Drive OAuth Config ──────────────────────────────────────────────
-// Reuses the SAME OAuth Client ID/Secret as Gmail (it's one Google Cloud OAuth
-// app — you can register multiple "Authorized redirect URIs" on it). Only the
-// redirect URI differs, so add DRIVE_REDIRECT_URI as a second entry on that
-// Client ID in Google Cloud Console (e.g. https://kievora.com/api/drive/callback).
-// Scope is deliberately just 'drive.file' — NOT 'drive' or 'drive.readonly' —
-// because drive.file only grants access to files Kievora creates OR files the
-// user explicitly selects via the Google Picker widget. That keeps this on
-// Google's "non-sensitive" scope tier, so it skips their manual OAuth
-// verification review entirely. Do not widen this scope without expecting a
-// verification review to be required.
-const DRIVE_REDIRECT_URI = process.env.DRIVE_REDIRECT_URI; // e.g. https://kievora.com/api/drive/callback
-const DRIVE_API_KEY      = process.env.DRIVE_API_KEY;       // browser API key, for the Picker widget only
-const DRIVE_APP_ID       = process.env.DRIVE_APP_ID;        // Google Cloud project number, for the Picker widget
-
-function getDriveOAuthClient() {
-  return new google.auth.OAuth2(GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, DRIVE_REDIRECT_URI);
-}
+// Drive has no server-side OAuth handshake of its own anymore — no redirect
+// URI, nothing stored. It reuses Gmail's OAuth Client ID (GMAIL_CLIENT_ID
+// above) only so the frontend can request a one-time, drive.file-only access
+// token via Google Identity Services and open the Picker. See server/drive.js.
+// IMPORTANT CAVEAT: because it's the same Client ID / same Google Cloud
+// project as Gmail, and Gmail requests 'gmail.modify' (a RESTRICTED scope),
+// this project's publishing status stays "Testing" — capped at ~100 test
+// users — until Gmail is verified. That cap is per Google Cloud PROJECT, not
+// per feature, so it applies to Drive too, no matter how narrow Drive's own
+// request is. A drive.file-only request should still avoid the scary "Google
+// hasn't verified this app" interstitial for people who ARE on the test list
+// (that specific warning is decided per-request, based on the scopes in THAT
+// request) — but it will NOT lift the 100-user ceiling on its own. To lift
+// that ceiling for uploads specifically, ahead of Gmail verification, Drive
+// would need its own separate Google Cloud project + OAuth Client ID
+// (non-sensitive scopes only, published straight to "In production").
+const DRIVE_API_KEY = process.env.DRIVE_API_KEY; // browser API key, for the Picker widget
+const DRIVE_APP_ID  = process.env.DRIVE_APP_ID;  // Google Cloud project number, for the Picker widget
 
 // multer: memory storage so we stream directly to Cloudinary (no disk writes)
 const upload = multer({
@@ -2139,7 +2140,7 @@ async function authenticate(req, res, next) {
 
 module.exports = {
   getOAuthClient, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REDIRECT_URI, upload,
-  getDriveOAuthClient, DRIVE_REDIRECT_URI, DRIVE_API_KEY, DRIVE_APP_ID,
+  DRIVE_API_KEY, DRIVE_APP_ID,
   admin, db, RESUMES, USERS,
   KIE_MODELS, KIE_TIERS, PLANS, DEFAULT_PLAN, getPlanConfig, getUserPlanKey,
   getCycleAnchorDate, getCycleStart,
