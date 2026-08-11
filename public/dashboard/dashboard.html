@@ -155,87 +155,6 @@
   </div>
 </div>
 
-<!-- ══ GOOGLE DRIVE PANEL — mirrors GMAIL INTELLIGENCE PANEL's structure ══ -->
-<div id="driveIntPanel" style="position:fixed;inset:0;z-index:900;background:#F2F2F7;transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif">
-
-  <div style="display:flex;align-items:center;padding:14px 16px;background:rgba(242,242,247,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:.5px solid rgba(60,60,67,.29);position:sticky;top:0;z-index:10;gap:12px">
-    <button onclick="closeDrivePanel()" aria-label="Back" style="width:30px;height:30px;border:none;background:rgba(120,120,128,.16);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#3c3c43;padding:0">
-      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-    </button>
-    <div style="flex:1;min-width:0">
-      <div style="font-size:17px;font-weight:700;color:#000;letter-spacing:-.4px">Google Drive</div>
-      <div style="font-size:11px;color:#8e8e93;font-weight:500;margin-top:0px">Save & import files</div>
-    </div>
-    <div id="driveHeaderBadge" style="display:none;background:rgba(52,199,89,.15);color:#248a3d;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.3px;flex-shrink:0;display:flex;align-items:center;gap:4px">
-      <span style="width:6px;height:6px;background:#34c759;border-radius:50%;display:inline-block"></span>Live
-    </div>
-  </div>
-
-  <div style="padding:16px 16px 36px;flex:1;max-width:520px;width:100%;margin:0 auto">
-
-    <!-- Disconnected state -->
-    <div id="driveDisconnectedPanel">
-      <div style="background:#fff;border-radius:14px;padding:26px 20px;text-align:center;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)">
-        <div style="width:60px;height:60px;background:#eff6ff;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-          <img src="/drive.jpg" alt="Google Drive" style="width:30px;height:30px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;30&quot; height=&quot;30&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z&quot; fill=&quot;#0066da&quot;/><path d=&quot;M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z&quot; fill=&quot;#00ac47&quot;/><path d=&quot;M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z&quot; fill=&quot;#ffba00&quot;/></svg>'">
-        </div>
-        <div style="font-size:18px;font-weight:700;color:#000;margin-bottom:7px;letter-spacing:-.3px">Connect Google Drive</div>
-        <div style="font-size:13px;color:#8e8e93;line-height:1.55;margin-bottom:22px">Save resumes and files straight to your Drive, or import a file from Drive into a KIE chat — free on every plan.</div>
-        <button onclick="window.connectDrive()" style="background:#7c3aed;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;letter-spacing:-.1px">Connect Drive →</button>
-      </div>
-      <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)">
-        <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:.5px solid rgba(60,60,67,.13)">
-          <div style="width:28px;height:28px;background:rgba(52,199,89,.13);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#34c759" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </div>
-          <div><div style="font-size:13px;font-weight:600;color:#000">Only files you choose</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">KIE only ever sees a file after you pick it — never your whole Drive</div></div>
-        </div>
-        <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:.5px solid rgba(60,60,67,.13)">
-          <div style="width:28px;height:28px;background:rgba(124,58,237,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-          </div>
-          <div><div style="font-size:13px;font-weight:600;color:#000">Save resumes back to Drive</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">Name it, save it, get a link — no browser download detour</div></div>
-        </div>
-        <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px">
-          <div style="width:28px;height:28px;background:rgba(255,159,10,.14);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#ff9f0a" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
-          <div><div style="font-size:13px;font-weight:600;color:#000">Disconnect anytime</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">One tap removes Kievora's access to your Drive</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Connected state -->
-    <div id="driveConnectedPanel" style="display:none">
-      <div style="display:flex;align-items:center;gap:9px;padding:2px 2px 14px">
-        <div style="width:7px;height:7px;border-radius:50%;background:#34c759;box-shadow:0 0 0 3px rgba(52,199,89,.15);flex-shrink:0"></div>
-        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:#3c3c43" id="driveEmailLabel">Connected</div>
-      </div>
-
-      <button onclick="window.kiePickFromDrive(window.__kieDrivePanelPicked)" style="width:100%;display:flex;align-items:center;gap:12px;background:#fff;border:none;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);cursor:pointer;text-align:left;font-family:inherit">
-        <div style="width:40px;height:40px;background:#eff6ff;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0066da" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:#000">Import a file from Drive</div>
-          <div style="font-size:11.5px;color:#8e8e93;margin-top:1px">Brings it straight into a KIE chat</div>
-        </div>
-      </button>
-
-      <div id="driveImportedCard" style="display:none;background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);align-items:center;gap:10px"></div>
-
-      <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:14px">
-        <div style="padding:13px 16px;font-size:12px;color:#8e8e93;line-height:1.5">Tip: you can also save resumes and other files to Drive right from the attach button in chat.</div>
-      </div>
-
-      <button onclick="window.disconnectDrive()" style="width:100%;background:#fff;border:none;color:#ff3b30;border-radius:14px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(0,0,0,.04)">
-        Disconnect Drive
-      </button>
-    </div>
-
-  </div>
-</div>
-
 <!-- ══ GMAIL ONBOARDING DRAWER — Point 1 ══ -->
 <div id="gmailOnboardingDrawer" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,14,23,.5);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeGmailOnboarding()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:20px 20px 30px;max-height:85vh;overflow-y:auto;animation:slideUp .35s cubic-bezier(.32,.72,0,1)">
@@ -1620,17 +1539,6 @@
             <div class="ksb-set-row-sub" id="gmailSettingsSub">Connect to track your job search</div>
           </div>
           <div id="gmailSettingsBadge" style="display:none;background:#dcfce7;color:#16a34a;border:1.5px solid #bbf7d0;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">LIVE</div>
-          <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <button class="ksb-set-row" onclick="window.kieDriveNudgeTap()">
-          <div class="ksb-set-row-ico">
-            <img src="/drive.jpg" alt="Google Drive" style="width:24px;height:24px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z&quot; fill=&quot;#0066da&quot;/><path d=&quot;M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z&quot; fill=&quot;#00ac47&quot;/><path d=&quot;M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z&quot; fill=&quot;#ffba00&quot;/></svg>'">
-          </div>
-          <div class="ksb-set-row-txt">
-            <div class="ksb-set-row-title">Google Drive</div>
-            <div class="ksb-set-row-sub" id="driveSettingsSub">Save resumes & files, or import from Drive</div>
-          </div>
-          <div id="driveSettingsBadge" style="display:none;background:#dcfce7;color:#16a34a;border:1.5px solid #bbf7d0;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">LIVE</div>
           <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
       </div>

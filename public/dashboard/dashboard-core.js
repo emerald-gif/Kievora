@@ -3556,7 +3556,6 @@
               <button type="button" class="kie-attach-tile" id="kmdDriveItem" onclick="window.kieAttachSheetDriveTap && window.kieAttachSheetDriveTap()">
                 <div class="kie-attach-tile-ico" style="position:relative">
                   <img src="/drive.jpg" alt="Drive" style="width:24px;height:24px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z&quot; fill=&quot;#0066da&quot;/><path d=&quot;M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z&quot; fill=&quot;#00ac47&quot;/><path d=&quot;M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z&quot; fill=&quot;#ffba00&quot;/></svg>'">
-                  <span id="kmdDriveDot" style="display:none;position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#34c759;border:2px solid #f2f2f7"></span>
                 </div>
                 <div class="kie-attach-tile-label">Drive</div>
               </button>
@@ -3567,7 +3566,6 @@
       } else {
         sheet.classList.add('open');
       }
-      if (window.kieRefreshDriveAttachTag) window.kieRefreshDriveAttachTag();
       _kieLoadRecentAttachFiles();
     };
 
