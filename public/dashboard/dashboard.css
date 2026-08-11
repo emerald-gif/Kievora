@@ -645,6 +645,7 @@
        the user is pointing at. Tightened both to match the working pattern
        used elsewhere in the app. */
     .bld{max-width:680px;margin:0 auto;padding:74px 20px 32px}
+    #v-builder{background:#fff}
     .bld-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:6px}
     .hdr-abs-l{position:absolute;left:0;top:50%;transform:translateY(-50%)}
     .hdr-abs-r{position:absolute;right:0;top:50%;transform:translateY(-50%)}
@@ -2114,6 +2115,7 @@
     /* BUG FIX: same dead-space bug as .bld above — see that comment.
        Tightened to match. */
     .cl-wrap{max-width:680px;margin:0 auto;padding:74px 20px 48px}
+    #v-coverletter{background:#fff}
     .cl-step-hdr{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px;margin-bottom:6px}
     #clBackBtn.back-btn{
       width:40px;height:40px;background:transparent;border:none;
