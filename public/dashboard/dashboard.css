@@ -242,14 +242,14 @@
     /* Step wizard bars — sticky sub-header below iNav */
     body.i-nav-on .bld-sticky-hdr{
       position:sticky;top:60px;z-index:50;
-      background:rgba(248,247,255,.98);
+      background:rgba(255,255,255,.98);
       backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
       padding:10px 0 14px;margin:0 0 20px;
     }
     body.i-nav-on .bld{ padding-top:64px }
     body.i-nav-on .cl-step-hdr{
       position:sticky;top:60px;z-index:50;
-      background:rgba(248,247,255,.98);
+      background:rgba(255,255,255,.98);
       backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
       padding:10px 0;margin:0 0 20px;
     }
