@@ -910,6 +910,24 @@
     onAuthStateChanged(auth, async u => {
       if (!u) { window.location.href = '/login'; return; }
 
+      // ── ONBOARDING GATE ──────────────────────────────────────────────────
+      // Never trust client-side signup/login flow state to guarantee
+      // onboarding happened — a valid Firebase Auth session is not proof of
+      // that (e.g. an account that slipped through federated sign-in without
+      // ever writing a Firestore user doc). Check the source of truth here,
+      // on every dashboard load, and bounce anyone who hasn't finished it.
+      try {
+        const userSnap = await getDoc(doc(db, 'users', u.uid));
+        if (!userSnap.exists() || !userSnap.data().onboardingDone) {
+          window.location.href = '/onboarding';
+          return;
+        }
+      } catch (e) {
+        console.error('Onboarding check failed:', e.message);
+        window.location.href = '/onboarding';
+        return;
+      }
+
       // ── SECURITY: Scope ALL localStorage keys to this user's UID ────────────
       // This prevents any data leakage between accounts on shared devices.
       const prevUid = localStorage.getItem('kievora_active_uid');
