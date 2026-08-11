@@ -3116,7 +3116,12 @@
             }
             _appendKieFileMsg(m.fileRef, m.fileName || 'File', m.fileExt || 'file', m.content);
           } else {
-            appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null, m.mode || null, m.images || null);
+            // m.thought (title + step trace) rides along with the saved
+            // message — see kieHist.push(... thought: _turnThought) at each
+            // send flow — so the "Thought for Ns" panel comes back exactly
+            // as it was, reload after reload, instead of vanishing the
+            // moment the page refreshes.
+            appendKMsg(m.role === 'user' ? 'user' : 'ai', m.content, false, null, m.sources || null, m.mode || null, m.images || null, m.role === 'user' ? undefined : (m.thought || null));
           }
         });
         scrollKie(true, true);
@@ -3975,6 +3980,7 @@
       let bubbleW = null, bubble = null, actionsEl = null;
       const msgId  = 'kb-' + Date.now();
       const tStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let _turnThought = null;
 
       function _ensureBubble() {
         if (bubbleW) return;
@@ -4000,7 +4006,7 @@
             <div class="km-meta">${tStamp}</div>
           </div>`;
         msgsEl.insertBefore(bubbleW, typEl);
-        _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
+        _turnThought = _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
         bubble    = bubbleW.querySelector('.km-bubble');
         actionsEl = bubbleW.querySelector('.km-actions');
         bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
@@ -4096,7 +4102,7 @@
           finalText += `\n\n[CONFIRM_RESUME_CTA]`;
         }
 
-        kieHist.push({ role: 'assistant', content: finalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
+        kieHist.push({ role: 'assistant', content: finalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode, thought: _turnThought || undefined });
         saveKieHistory();
         _finish(finalText);
 
@@ -4104,7 +4110,7 @@
         hideKieStatus();
         if (e.name === 'AbortError' || _kieStopTyping) {
           if (streamedText) {
-            kieHist.push({ role: 'assistant', content: streamedText, mode: kieMode });
+            kieHist.push({ role: 'assistant', content: streamedText, mode: kieMode, thought: _turnThought || undefined });
             saveKieHistory();
             _finish(streamedText);
           } else {
@@ -4298,6 +4304,12 @@
     }
 
     // ── KIE MODE CONFIGS (client-side labels/status) ──────────────────────────
+    // These are now only the FALLBACK/closing flavor per mode — used when we
+    // have no user text to work from (e.g. an auto-fired greeting). Whenever
+    // an actual question exists, _kieContextualSteps() below builds the trace
+    // from that question instead, so the same "Thought for Ns" pattern shows
+    // real, per-question content rather than the same canned phrases on every
+    // mode switch.
     const KIE_MODE_CFG = {
       default:  { status: ['Thinking…', 'Crafting your answer…', 'Almost there…'] },
       deep:     { status: ['Thinking deeply…', 'Analyzing all angles…', 'Building your strategy…', 'Reviewing the details…'] },
@@ -4311,6 +4323,46 @@
       quick:    { status: ['Getting straight to it…', 'Finding the key point…'] },
       creative: { status: ['Thinking outside the box…', 'Cooking up something bold…', 'Breaking the rules…'] },
     };
+
+    // Short mode-flavored closing line — appended after the context-specific
+    // opening step(s) so the trace still reads as "quick" vs "deep" vs
+    // "creative" in tone, it just no longer IS the entire trace.
+    const KIE_MODE_CLOSER = {
+      default:  'Putting your answer together…',
+      deep:     'Working through the details…',
+      web:      'Connecting the current context…',
+      quick:    'Zeroing in on the answer…',
+      creative: 'Exploring a few angles…',
+    };
+
+    // Builds a short thinking-step list FROM the actual question, instead of
+    // picking a static canned array by mode. Every step here is derived from
+    // something the person actually typed (or the conversation state), so
+    // re-asking a different question produces a visibly different trace.
+    function _kieContextualSteps(userMsg, mode, opts) {
+      opts = opts || {};
+      const text = (userMsg || '').trim().replace(/\s+/g, ' ');
+      const steps = [];
+
+      if (text) {
+        const words = text.split(' ');
+        const gist = words.slice(0, 8).join(' ') + (words.length > 8 ? '…' : '');
+        steps.push(kieHist.length <= 1
+          ? `Reading your question — "${gist}"`
+          : `Following up on "${gist}"`);
+      } else {
+        steps.push('Reading your message…');
+      }
+
+      if (opts.hasImage) steps.push('Looking at the image you sent…');
+      if (opts.hasFile)  steps.push('Reading through your file…');
+      if (!opts.hasImage && !opts.hasFile && kieResumeContext) {
+        steps.push('Cross-checking against your resume…');
+      }
+
+      steps.push(KIE_MODE_CLOSER[mode] || KIE_MODE_CLOSER.default);
+      return steps;
+    }
 
     window.setKieMode = function(mode, el) {
       if (!isModeUnlocked(mode)) {
@@ -4654,12 +4706,26 @@
     // Consumed once by the next AI message bubble that gets created, so a
     // finished thinking trace ends up permanently attached to the specific
     // reply it belongs to — not just flashed in the shared widget and lost.
+    //
+    // PERSISTENCE FIX: _kieAttachThoughtTrace now RETURNS the snapshot it
+    // attached. Every call site that creates an AI bubble captures that
+    // return value into a local var and stores it as `thought` on the
+    // matching kieHist.push({role:'assistant', ...}) entry. saveKieHistory()
+    // already serializes the whole kieHist array as-is, so the trace now
+    // rides along with the message it belongs to and survives a reload or
+    // navigating away and back — restoreKieUI() re-attaches it from
+    // m.thought instead of relying on this volatile global, which used to
+    // get wiped the moment the next question started.
     let _kieLastThoughtSnapshot = null;
-    function _kieAttachThoughtTrace(hostEl) {
-      if (!_kieLastThoughtSnapshot || !hostEl) return;
-      const snap = _kieLastThoughtSnapshot;
-      _kieLastThoughtSnapshot = null; // consume once — never double-attach
-      if (hostEl.querySelector('.kie-think-trace')) return;
+    function _kieAttachThoughtTrace(hostEl, explicitSnap) {
+      // explicitSnap is used on rehydration (a stored trace read back out of
+      // kieHist); omit it entirely for the live in-flight path, which still
+      // consumes the shared global exactly as before.
+      const usingExplicit = explicitSnap !== undefined;
+      const snap = usingExplicit ? explicitSnap : _kieLastThoughtSnapshot;
+      if (!snap || !hostEl) return usingExplicit ? snap : null;
+      if (!usingExplicit) _kieLastThoughtSnapshot = null; // consume once — never double-attach
+      if (hostEl.querySelector('.kie-think-trace')) return snap;
       const uid = 'kt-' + Date.now() + '-' + Math.floor(Math.random() * 1e4);
       const wrap = document.createElement('div');
       wrap.className = 'kie-think kie-think-trace collapsed';
@@ -4672,6 +4738,7 @@
         </div>
         <div class="kie-think-body">${snap.bodyHTML}</div>`;
       hostEl.insertBefore(wrap, hostEl.firstChild);
+      return snap;
     }
     // Separate toggle from the shared panel's toggleKieThink() — each
     // attached trace is its own independent, permanently-collapsible node.
@@ -4698,9 +4765,17 @@
     // set instead, while the mode value sent to the server is untouched —
     // same model, same tokens, same depth, just honest-feeling copy.
     const KIE_DISPLAY_STATUS_OVERRIDE = { default: 'quick' };
-    function showKieStatus(mode) {
+    // userMsg/opts are optional — when a call site has the actual question in
+    // hand (the normal chat-send flow does), pass it through and the trace is
+    // built from that question via _kieContextualSteps(). Call sites that
+    // have no user text yet (silent/system-fired turns) fall back to the old
+    // generic per-mode copy, same as before.
+    function showKieStatus(mode, userMsg, opts) {
       const displayKey = KIE_DISPLAY_STATUS_OVERRIDE[mode] || mode;
-      const statuses = KIE_MODE_CFG[displayKey]?.status || ['Thinking…'];
+      const hasContext = typeof userMsg === 'string' && userMsg.trim().length > 0;
+      const statuses = hasContext
+        ? _kieContextualSteps(userMsg, mode, opts)
+        : (KIE_MODE_CFG[displayKey]?.status || ['Thinking…']);
       const rotateMs = displayKey === 'quick' ? 1400 : 2400;
       _thinkStart();
       let idx = 0;
@@ -5997,7 +6072,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       if (msgsEl) msgsEl.style.display = 'flex';
       const typEl = g('kieTyp');
       typEl.style.display = 'flex';
-      showKieStatus(kieMode);
+      showKieStatus(kieMode, userPrompt, { hasImage: true });
       scrollKie();
 
       // Show the image in the user bubble
@@ -6044,6 +6119,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       let bubbleW = null, bubble = null, actionsEl = null;
       const msgId  = 'kb-' + Date.now();
       const tStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let _turnThought = null;
 
       function _ensureImageBubble() {
         if (bubbleW) return;
@@ -6069,7 +6145,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
           <div class="km-meta">${tStamp}</div>
         </div>`;
         msgsEl.insertBefore(bubbleW, typEl);
-        _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
+        _turnThought = _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
         bubble    = bubbleW.querySelector('.km-bubble');
         actionsEl = bubbleW.querySelector('.km-actions');
         bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
@@ -6153,7 +6229,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
 
         hideKieStatus();
         const finalText = streamedText || "I couldn't analyse that image right now. Try again! 🙏";
-        kieHist.push({ role:'assistant', content: finalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
+        kieHist.push({ role:'assistant', content: finalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode, thought: _turnThought || undefined });
         saveKieHistory();
         _finishImageBubble(finalText);
 
@@ -6161,7 +6237,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
         hideKieStatus();
         if (e.name === 'AbortError' || _kieStopTyping) {
           if (streamedText) {
-            kieHist.push({ role:'assistant', content: streamedText });
+            kieHist.push({ role:'assistant', content: streamedText, thought: _turnThought || undefined });
             saveKieHistory();
             _finishImageBubble(streamedText);
           } else {
@@ -7334,7 +7410,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       const typEl = g('kieTyp');
       typEl.style.display = 'flex';
-      showKieStatus(kieMode);
+      showKieStatus(kieMode, msg);
       scrollKie(true);
 
       // BUG FIX #7 — Resolve image history: map imageRef keys back to full base64
@@ -7358,6 +7434,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       let bubbleW = null, bubble = null, actionsEl = null;
       const msgId  = 'kb-' + Date.now();
       const tStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      // Captured once the bubble is created, so the finished thinking trace
+      // can be saved onto this turn's kieHist entry (see kieHist.push calls
+      // below) and survive a reload — see _kieAttachThoughtTrace comment.
+      let _turnThought = null;
 
       function _ensureBubble() {
         if (bubbleW) return;
@@ -7383,7 +7463,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           <div class="km-meta">${tStamp}</div>
         </div>`;
         msgsEl.insertBefore(bubbleW, typEl);
-        _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
+        _turnThought = _kieAttachThoughtTrace(bubbleW.querySelector('.km-ai-body'));
         bubble    = bubbleW.querySelector('.km-bubble');
         actionsEl = bubbleW.querySelector('.km-actions');
         bubble.innerHTML = '<span class="kie-stream-cursor">▌</span>';
@@ -7504,7 +7584,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             .replace(/\n{3,}/g, '\n\n').trim();
         }
 
-        kieHist.push({ role:'assistant', content: cleanedFinalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
+        kieHist.push({ role:'assistant', content: cleanedFinalText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode, thought: _turnThought || undefined });
         saveKieHistory();
 
         // Final render on the streaming bubble (already visible to user)
@@ -7562,7 +7642,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         if (e.name === 'AbortError' || _kieStopTyping) {
           // User hit Stop — preserve whatever was already streamed into the bubble
           if (streamedText) {
-            kieHist.push({ role:'assistant', content: streamedText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode });
+            kieHist.push({ role:'assistant', content: streamedText, sources: turnSources || undefined, images: turnImages || undefined, mode: kieMode, thought: _turnThought || undefined });
             saveKieHistory();
             _finishBubble(streamedText);
           } else {
@@ -7618,7 +7698,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       sendKie();
     };
 
-    function appendKMsg(role, text, animate, onDone, sources, msgMode, images) {
+    function appendKMsg(role, text, animate, onDone, sources, msgMode, images, thought) {
       const msgs = g('kieMsgs');
       msgs.style.display = 'flex';
       const welcome = g('kieWelcome');
@@ -7650,7 +7730,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             <div class="km-meta">${t}</div>
           </div>`;
         msgs.insertBefore(w, g('kieTyp'));
-        _kieAttachThoughtTrace(w.querySelector('.km-ai-body'));
+        // `thought` explicitly passed (even null) on rehydration from saved
+        // history; omitted on a live turn, which falls back to consuming the
+        // shared in-flight snapshot exactly as before.
+        if (thought !== undefined) _kieAttachThoughtTrace(w.querySelector('.km-ai-body'), thought);
+        else _kieAttachThoughtTrace(w.querySelector('.km-ai-body'));
         const bubble    = w.querySelector('.km-bubble');
         const actionsEl = w.querySelector('.km-actions');
         scrollKie(true);
