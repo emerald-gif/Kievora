@@ -2305,6 +2305,29 @@
       if (tpl === 'tribune')   return tplTribune(d, c, fc);
       return tplClassic(d, c, fc);
     }
+    // A neutral, undecorated "as-uploaded" page — deliberately NOT run through
+    // any branded template. This is what "Before" should show for a freshly
+    // uploaded resume: exactly the text the user gave us, plain, so the
+    // improvement in "After" is an honest comparison, not before/after of
+    // two different pieces of formatting we imposed.
+    function buildPlainTextPrevHTML(text) {
+      return `<div style="width:600px;min-height:840px;background:#fff;padding:52px 46px;box-sizing:border-box;font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.65;color:#1f2937;white-space:pre-wrap;word-break:break-word">${esc(text || 'No text available for this resume.')}</div>`;
+    }
+
+    function _optRenderPlainPreviewInto(scalerId, wrapId, rawText) {
+      const scaler = g(scalerId);
+      if (!scaler) return;
+      scaler.innerHTML = buildPlainTextPrevHTML(rawText);
+      requestAnimationFrame(() => {
+        const wrap = g(wrapId);
+        if (!wrap) return;
+        const w = wrap.offsetWidth || 300;
+        const scale = w / 600;
+        scaler.style.transform = 'scale(' + scale + ')';
+        wrap.style.height = Math.round(scale * 840) + 'px';
+      });
+    }
+
     function buildPrevHTML(d, tpl, c, fc) {
       c = c || '#7c3aed';
       const raw = renderTplRaw(d, tpl, c, fc);
@@ -10520,12 +10543,12 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // can run long (exact rewrite examples etc.); most people just want the
       // headline, the full detail is one tap away for anyone who wants it.
       g('analysisWeaknesses').innerHTML = (r.weaknesses||[]).map(w =>
-        `<div class="an-item"><div class="an-ico red"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></div><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(w)}</span></div>`
+        `<div class="an-item"><div class="an-ico red"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></div><div><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(w)}</span><div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div></div></div>`
       ).join('') || `<div class="an-item" style="color:var(--mute);font-style:italic">No critical issues</div>`;
 
       // Suggestions
       g('analysisSuggestions').innerHTML = (r.suggestions||[]).map((s,i) =>
-        `<div class="an-item"><div class="an-ico pur">${i+1}</div><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(s)}</span></div>`
+        `<div class="an-item"><div class="an-ico pur">${i+1}</div><div><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(s)}</span><div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div></div></div>`
       ).join('') || `<div class="an-item" style="color:var(--mute);font-style:italic">No suggestions</div>`;
 
       // Missing
@@ -10770,15 +10793,28 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function _optRenderResumePreviewPanel() {
       const single = g('optPrevSingleGroup');
       const both   = g('optPrevBothGroup');
+      // A freshly uploaded resume (has raw _optUploadText) shows "Before" as
+      // plain, exact text — no template. An existing platform resume being
+      // re-optimized shows "Before" in the template it was actually saved
+      // with, since that IS its real, already-templated original.
+      const hasRawUpload = !!_optUploadText;
       if (_optLastMainState === 'optStateResults' && _optNewResume) {
         if (single) single.style.display = 'none';
         if (both)   both.style.display   = '';
-        _optRenderPreviewInto('optPrevBeforeScaler', 'optPrevBeforeWrap', analysisResult, _optChosenTpl);
+        if (hasRawUpload) {
+          _optRenderPlainPreviewInto('optPrevBeforeScaler', 'optPrevBeforeWrap', _optUploadText);
+        } else {
+          _optRenderPreviewInto('optPrevBeforeScaler', 'optPrevBeforeWrap', analysisResult, analysisResult?._sourceTemplateType || 'classic');
+        }
         _optRenderPreviewInto('optPrevAfterScaler',  'optPrevAfterWrap',  _optNewResume.resumeData, _optNewResume.templateType || _optChosenTpl);
       } else {
         if (both)   both.style.display   = 'none';
         if (single) single.style.display = '';
-        _optRenderPreviewInto('optPrevSingleScaler', 'optPrevSingleWrap', analysisResult, _optChosenTpl);
+        if (hasRawUpload) {
+          _optRenderPlainPreviewInto('optPrevSingleScaler', 'optPrevSingleWrap', _optUploadText);
+        } else {
+          _optRenderPreviewInto('optPrevSingleScaler', 'optPrevSingleWrap', analysisResult, analysisResult?._sourceTemplateType || 'classic');
+        }
       }
     }
     window.addEventListener('resize', () => {
@@ -10809,7 +10845,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       g('optIssueList').innerHTML = _optIssuesFromAnalysis(r).map(i =>
         `<div class="opt-issue-item">
            <div class="opt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
-           <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')">${esc(i)}</div>
+           <div style="flex:1;min-width:0">
+             <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')">${esc(i)}</div>
+             <div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div>
+           </div>
          </div>`
       ).join('');
       g('optBars').innerHTML = _optBarsFromAnalysis(r).map(b => `
@@ -10921,6 +10960,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const merged = getMergedResumes();
       const r = merged.find(x => x.id === resumeId);
       if (!r) { toast('Resume not found', 'err'); closeOptimizePanel(); return; }
+      // Clear any stale raw-upload text from a previous session in this panel —
+      // this path re-optimizes a saved platform resume, not a fresh upload,
+      // so "Before" must NOT fall back to plain-text rendering.
+      _optUploadFile = null; _optUploadText = '';
       const text = _resumeDataToText(r.resumeData || {});
       if (text.trim().length < 30) {
         toast('This resume needs more content before it can be optimized.', 'err');
@@ -10946,6 +10989,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         analysisResult = result;
         analysisResult._sourceResumeId   = resumeId;
         analysisResult._sourceResumeName = r.resumeName;
+        analysisResult._sourceTemplateType = r.templateType || 'classic'; // real saved template — "Before" shows THIS, not an AI guess
         setTimeout(() => { _optSetStep(3); _optPopulateDiag(analysisResult); _optShow('optStateDiag'); }, 400);
       } catch (err) {
         anim.finish();
@@ -11217,7 +11261,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
                 'Improved keyword alignment for ATS scanning',
               ];
           g('optImproveList').innerHTML = improvements.map(t =>
-            `<div class="opt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(t)}</span></div>`
+            `<div class="opt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><div style="flex:1;min-width:0"><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(t)}</span><div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div></div></div>`
           ).join('');
 
           const baWrap = g('optBeforeAfterWrap');
@@ -11241,7 +11285,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
               ? origIssues.map(i => `
                   <div class="opt-issue-item">
                     <div class="opt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
-                    <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')">${esc(i)}</div>
+                    <div style="flex:1;min-width:0">
+                      <div class="opt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')">${esc(i)}</div>
+                      <div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div>
+                    </div>
                   </div>`).join('')
               : `<div style="font-size:13px;color:var(--sub);padding:8px 0">No major issues were flagged — KIE focused on tightening wording and keyword coverage.</div>`;
           }
