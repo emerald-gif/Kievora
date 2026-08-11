@@ -573,9 +573,11 @@ module.exports = function registerToolsRoutes(app) {
     "atsScore": 0,
     "grade": "",
     "beforeAfter": [{"before":"","after":""}],
-    "improvements": []
+    "improvements": [],
+    "templateSuggestion": ""
   }
 
+  "templateSuggestion": pick the single best-fit visual template for THIS candidate from [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split. Never leave this blank — always pick one.
   "beforeAfter": pick the 2-3 bullet rewrites with the clearest visible improvement — "before" is the exact original text, "after" is the rewritten version.
   "improvements": 3-5 SPECIFIC statements about what you actually changed in THIS resume — reference real content (a role, a skill you added, a number you quantified), never generic filler like "Improved clarity" or "Better formatting." Examples of the right specificity: "Quantified your Software Engineer bullets with real metrics (40% faster deploys, 3 team members led)" or "Added AWS and Docker to skills — both appear in your experience but were missing from the list" or "Rewrote your summary to lead with 5 years of backend experience instead of a generic objective statement." If a category genuinely didn't change (e.g. no skills were added), don't force an entry for it.
   "atsScore": score the REWRITTEN resume 0-100 (integer) using the SAME STRICT rubric the ATS Checker uses (contact info, summary, experience, education, skills, formatting) — grade on quality, not presence, and hold this to the exact same skeptical standard: real ATS tools rarely give 85+, most well-written resumes land 70-84. It should be meaningfully higher than the original score of ${oldScore || 0} (since bullets are now quantified and keyword-rich) — but do not hand out an inflated number just to show a bigger jump. If a fair strict grade isn't meaningfully higher, that's fine — never fabricate metrics or embellish to force the score up.
@@ -594,6 +596,12 @@ module.exports = function registerToolsRoutes(app) {
       );
 
       const newScore = Math.min(100, Math.max(0, Math.round(result.atsScore || 0)));
+      // Pick the actual best-fit template instead of silently defaulting to
+      // Classic — the frontend has no real suggestion of its own to send here
+      // (analyze-resume never returns one), so the AI's own read of THIS
+      // resume's content/seniority is the real source of truth for template.
+      const VALID_TPL_IDS = ['classic','modern','bold','minimal','vivid','elegant','slate','coral','split','ink','executive','nova','tribune'];
+      const suggestedTpl = VALID_TPL_IDS.includes(result.templateSuggestion) ? result.templateSuggestion : null;
       const optimizedResumeData = {
         fullName: result.fullName || resumeData.fullName || '',
         jobTitle: result.jobTitle || resumeData.jobTitle || '',
@@ -619,7 +627,7 @@ module.exports = function registerToolsRoutes(app) {
       const docData = {
         userId:       req.user.uid,
         resumeName:   newName,
-        templateType: templateType || 'classic',
+        templateType: suggestedTpl || templateType || 'classic',
         primaryColor: primaryColor || '#7c3aed',
         fontFamily:   fontFamily   || 'sans',
         resumeData:   optimizedResumeData,
