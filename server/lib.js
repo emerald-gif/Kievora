@@ -2036,8 +2036,25 @@ async function generateConvSummary(uid, messages, priorSummary) {
 }
 async function saveConvSummary(uid,convId,summary) {
   if (!uid||!convId||!summary) return;
-  try { await db.collection('users').doc(uid).collection('convSummaries').doc(convId)
-    .set({ ...summary, updatedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true }); }
+  try {
+    await db.collection('users').doc(uid).collection('convSummaries').doc(convId)
+      .set({ ...summary, updatedAt:admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    // Once a real summary exists, upgrade the conversation's title/preview
+    // (read by GET /api/kie/conversations → the sidebar history list) from
+    // the crude "first 50 chars of the first message" bootstrap to
+    // something that actually describes the conversation — e.g. "Prepping
+    // for a marketing interview" instead of "how do i prepare for a job".
+    // kie.js's doLogging() deliberately never overwrites title on its own
+    // after the first turn, so this is the only thing allowed to change it
+    // from here on — and only with something better.
+    if (summary.topic) {
+      const upd = { title: summary.topic.slice(0, 60) };
+      const preview = (summary.unresolved || summary.userSituation || '').slice(0, 100);
+      if (preview) upd.preview = preview;
+      await db.collection('users').doc(uid).collection('kieConversations').doc(convId)
+        .set(upd, { merge:true });
+    }
+  }
   catch(e) { console.error('[conv-summary] save:',e.message); }
 }
 async function getConvSummary(uid,convId) {

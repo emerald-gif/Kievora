@@ -880,7 +880,6 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
       if (_convId) {
         const convRef = db.collection('users').doc(_uid).collection('kieConversations').doc(_convId);
         const baseData = {
-          title,
           messages:     cappedMessages,
           model:        usedModel,
           mode:         usedMode,
@@ -888,10 +887,17 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
           updatedAt:    admin.firestore.FieldValue.serverTimestamp(),
         };
         // .create() only succeeds the FIRST time this convId is ever saved —
-        // that's how createdAt ends up set exactly once instead of drifting
-        // forward on every turn. Every later save hits the "already exists"
-        // branch and merges everything except createdAt, leaving it intact.
-        convRef.create({ ...baseData, createdAt: admin.firestore.FieldValue.serverTimestamp() })
+        // that's how createdAt (and the initial raw-first-message title)
+        // ends up set exactly once instead of drifting forward on every
+        // turn. Every later save hits the "already exists" branch and
+        // merges baseData WITHOUT title — title is deliberately left alone
+        // from here on, so it never gets stomped back to the raw first
+        // message on turn 2, 3, etc. The only thing allowed to upgrade it
+        // afterward is saveConvSummary() (lib.js), once the background
+        // summarizer has something real to say the conversation is about —
+        // e.g. "Interview prep for a marketing role" instead of a truncated
+        // "how do i prepare for a job".
+        convRef.create({ ...baseData, title, createdAt: admin.firestore.FieldValue.serverTimestamp() })
           .catch(() => { convRef.set(baseData, { merge: true }).catch(() => {}); });
       }
     };
