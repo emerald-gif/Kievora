@@ -29,7 +29,6 @@
     _activeId = id;
     if (id) localStorage.setItem(ACTV_KEY(), id);
     else localStorage.removeItem(ACTV_KEY());
-    renderConvRail(); // keep the rail's highlighted avatar in sync with whichever conv is now active
   }
 
   // ── AUTH TOKEN HELPER — for the server-side conversation sync calls below ──
@@ -264,7 +263,6 @@
     document.getElementById('kieSidebar').classList.add('open');
     document.getElementById('kieSidebarOverlay').classList.add('open');
     _sidebar = true;
-    renderConvRail(); // hides itself while the drawer is open — see _sidebar check inside
     // Close 3-dot menu if open
     closeCtxMenu();
   };
@@ -274,7 +272,6 @@
     document.getElementById('kieSidebarOverlay').classList.remove('open');
     closeSidebarSettings();
     _sidebar = false;
-    renderConvRail();
     closeCtxMenu();
   };
 
@@ -384,112 +381,6 @@
     // Replace contents
     body.querySelectorAll('.ksb-cat,.ksb-item').forEach(el => el.remove());
     body.insertAdjacentHTML('afterbegin', html);
-    renderConvRail();
-  }
-
-  // ── CONVERSATION SCRUBBER RAIL (KIE view, right edge) ──────────────────
-  // Same drag-to-magnify pattern as the Find a Job company rail: a vertical
-  // strip of the most recent conversations, colored initial avatars, scrub
-  // up/down to preview each one, lift your finger to jump straight into it.
-  const CONV_RAIL_MAX = 8;
-  const RAIL_COLORS = ['#7c3aed','#a855f7','#6d28d9','#8b5cf6','#c026d3','#9333ea','#4c1d95','#a78bfa'];
-  function railColor(id) {
-    let h = 0;
-    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-    return RAIL_COLORS[h % RAIL_COLORS.length];
-  }
-  function renderConvRail() {
-    const rail = document.getElementById('kieConvRail');
-    if (!rail) return;
-    const recent = _convs.filter(c => c).slice(0, CONV_RAIL_MAX);
-    if (recent.length < 2) { rail.style.display = 'none'; rail.innerHTML = ''; return; } // not worth a rail for 0-1 chats
-    if (_sidebar) { rail.style.display = 'none'; return; } // history drawer already open — avoid two ways to switch chats at once
-
-    rail.style.display = 'flex';
-    rail.innerHTML = recent.map(c => {
-      const title  = c.title || 'Conversation';
-      const active = c.id === _activeId ? ' kcr-active' : '';
-      const initial = title.trim().charAt(0).toUpperCase() || '?';
-      return `<div class="kcr-avt${active}" style="background:${railColor(c.id)}" data-cid="${c.id}" data-ctitle="${escHtml(title)}" title="${escHtml(title)}">${initial}</div>`;
-    }).join('');
-    _wireConvRail(rail);
-  }
-
-  let _convRailWired = false;
-  function _wireConvRail(rail) {
-    if (_convRailWired) return;
-    _convRailWired = true;
-    const label = _convRailLabelEl();
-    let dragging = false, movedEnough = false, startY = 0, downTarget = null;
-
-    function magnifyAt(clientY) {
-      const avts = rail.querySelectorAll('.kcr-avt');
-      let nearest = null, nearestDist = Infinity;
-      avts.forEach(el => {
-        const r = el.getBoundingClientRect();
-        const cy = r.top + r.height / 2;
-        const dist = Math.abs(clientY - cy);
-        const scale = Math.max(1, 1.9 - dist / 55);
-        el.style.transform = `scale(${scale.toFixed(2)})`;
-        el.style.zIndex = String(Math.round(scale * 10));
-        if (dist < nearestDist) { nearestDist = dist; nearest = el; }
-      });
-      if (nearest && nearestDist < 55) {
-        label.textContent = nearest.dataset.ctitle;
-        const r = nearest.getBoundingClientRect();
-        label.style.top = `${r.top + r.height / 2}px`;
-        label.classList.add('kcr-show');
-      } else {
-        label.classList.remove('kcr-show');
-      }
-      return nearest;
-    }
-    function resetScale() {
-      rail.querySelectorAll('.kcr-avt').forEach(el => { el.style.transform = 'scale(1)'; el.style.zIndex = ''; });
-      label.classList.remove('kcr-show');
-    }
-    function onDown(e) {
-      const t = e.touches ? e.touches[0] : e;
-      downTarget = e.target.closest('.kcr-avt');
-      startY = t.clientY;
-      dragging = true; movedEnough = false;
-      magnifyAt(t.clientY);
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      const t = e.touches ? e.touches[0] : e;
-      if (Math.abs(t.clientY - startY) > 6) movedEnough = true;
-      magnifyAt(t.clientY);
-      if (e.cancelable) e.preventDefault();
-    }
-    function onUp(e) {
-      if (!dragging) return;
-      dragging = false;
-      const t = e.changedTouches ? e.changedTouches[0] : e;
-      const landed = magnifyAt(t.clientY);
-      resetScale();
-      const target = movedEnough ? landed : (downTarget || landed);
-      if (target && target.dataset.cid && typeof window.loadConversation === 'function') {
-        window.loadConversation(target.dataset.cid);
-      }
-    }
-    rail.addEventListener('touchstart', onDown, { passive: true });
-    rail.addEventListener('touchmove',  onMove,  { passive: false });
-    rail.addEventListener('touchend',   onUp);
-    rail.addEventListener('mousedown',  onDown);
-    window.addEventListener('mousemove', (e) => { if (dragging) onMove(e); });
-    window.addEventListener('mouseup',   (e) => { if (dragging) onUp(e); });
-    rail.addEventListener('mouseleave', () => { if (!dragging) resetScale(); });
-  }
-  function _convRailLabelEl() {
-    let el = document.getElementById('kcrLabel');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'kcrLabel';
-      el.className = 'kcr-label';
-      document.body.appendChild(el);
-    }
-    return el;
   }
 
   function escHtml(str) {
