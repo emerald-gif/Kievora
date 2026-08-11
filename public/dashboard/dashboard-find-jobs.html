@@ -576,6 +576,74 @@
   .toast-item .toast-x{flex-shrink:0;width:20px;height:20px;border:none;background:none;color:#b7b2c4;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0}
   .toast-item .toast-x:hover{background:#f5f4fa;color:#6b6478}
   @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+  /* ── COMPANY SCRUBBER RAIL ────────────────────────────────────────────
+     Fixed to the right edge of the viewport (not the scrolling page), so
+     it stays reachable by thumb no matter how far down the job list you've
+     scrolled — same idea as the iOS contacts index / the reference image. */
+  .job-rail {
+    position: fixed;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 5px;
+    background: rgba(15,15,25,.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.08);
+    max-height: 62vh;
+    overflow: visible;
+    touch-action: none; /* we handle vertical drag ourselves */
+  }
+  .jr-avt {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #1e2030;
+    border: 1.5px solid rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    transform-origin: center right;
+  }
+  .jr-avt img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+  .jr-avt .jr-fallback { font-size: 11px; font-weight: 800; color: #cbd5e1; }
+  .jr-avt.jr-active {
+    border-color: var(--p, #7c5cff);
+    box-shadow: 0 0 0 2px rgba(124,92,255,.35), 0 4px 14px rgba(124,92,255,.4);
+  }
+  /* Scale is applied inline via JS (magnification follows the touch/pointer),
+     this just gives every avatar a consistent floor so the un-touched ones
+     in the rail don't look inconsistent between reflows. */
+  .jr-avt { transform: scale(1); }
+
+  /* Floating label that pops out to the left of whichever avatar is
+     currently magnified, naming the company — mirrors iOS's letter bubble
+     when you scrub the contacts index. */
+  .jr-label {
+    position: fixed;
+    right: 46px;
+    background: rgba(15,15,25,.9);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 10px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-50%) translateX(6px);
+    transition: opacity .1s ease;
+    z-index: 41;
+    border: 1px solid rgba(255,255,255,.1);
+  }
+  .jr-label.jr-show { opacity: 1; }
 
 </style>
 <link rel="stylesheet" href="/dashboard/app-sidebar.css"/>
@@ -731,6 +799,14 @@
 
     <!-- Jobs grid -->
     <div class="jobs-grid" id="jobsGrid"></div>
+
+    <!-- Company scrubber rail — vertical strip of company logos along the
+         right edge (fixed to viewport, not the scrolling grid). Slide a
+         finger up/down it: the logo nearest your touch enlarges, and
+         lifting your finger on one filters the grid to that company. Tap a
+         highlighted one again to clear the filter. Built/populated by
+         renderCompanyRail() every time the job list changes. -->
+    <div class="job-rail" id="jobRail" style="display:none"></div>
 
     <!-- Load more -->
     <div class="load-more" id="loadMoreWrap" style="display:none">
@@ -1003,6 +1079,7 @@ const COUNTRY_KEY = `kievora_country_${window.__fjUid||'anon'}`;
 let currentFilter  = 'all';
 let allJobs        = [];
 let page           = 1;
+let _railCompanyFilter = null; // set by the company rail scrubber — null = no filter
 const PAGE_SIZE    = 12;
 
 // ── Advanced filters + sort (client-side, applied on top of the quick chips) ──
@@ -1551,6 +1628,7 @@ function timeSince(dateStr) {
 }
 
 function matchFilter(j) {
+  if (_railCompanyFilter && companyKey(j.company) !== _railCompanyFilter) return false;
   if (currentFilter === 'remote'   && !j.remote) return false;
   if (currentFilter === 'full'     && !(j.type || '').toLowerCase().includes('full')) return false;
   if (currentFilter === 'part'     && !(j.type || '').toLowerCase().includes('part')) return false;
@@ -1652,6 +1730,7 @@ function renderJobs() {
     grid.innerHTML = '';
     if (empty) empty.style.display = '';
     if (loadWrap) loadWrap.style.display = 'none';
+    renderCompanyRail();
     return;
   }
   if (empty) empty.style.display = 'none';
@@ -1667,7 +1746,157 @@ function renderJobs() {
   window._fjJobs = allJobs; // store for the detail drawer
 
   if (loadWrap) loadWrap.style.display = visible.length < filtered.length ? '' : 'none';
+  renderCompanyRail();
 }
+
+// ── COMPANY SCRUBBER RAIL ────────────────────────────────────────────────
+// Builds the vertical logo rail from whatever companies are in the
+// UNFILTERED current search results (allJobs, not the already-company-
+// filtered list — otherwise picking a company would make every other
+// company vanish from the rail too, with no way back except the ✕).
+// Ranked by how many open roles each company has, capped to a sane count
+// so the rail never runs off the top/bottom of the screen.
+const RAIL_MAX_COMPANIES = 10;
+function renderCompanyRail() {
+  const rail = g('jobRail');
+  if (!rail) return;
+  if (!allJobs.length) { rail.style.display = 'none'; rail.innerHTML = ''; return; }
+
+  const counts = new Map(); // companyKey -> { company, logo, count }
+  allJobs.forEach(j => {
+    const key = companyKey(j.company);
+    if (!key) return;
+    const entry = counts.get(key) || { company: j.company, logo: j.logo || '', count: 0 };
+    if (!entry.logo && j.logo) entry.logo = j.logo;
+    entry.count++;
+    counts.set(key, entry);
+  });
+
+  const top = [...counts.entries()]
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, RAIL_MAX_COMPANIES);
+
+  if (top.length < 2) { rail.style.display = 'none'; rail.innerHTML = ''; return; } // not worth a rail for 0-1 companies
+
+  rail.style.display = 'flex';
+  rail.innerHTML = top.map(([key, c]) => {
+    const active = _railCompanyFilter === key ? ' jr-active' : '';
+    const initial = (c.company || '?').trim().charAt(0).toUpperCase();
+    const inner = c.logo
+      ? `<img src="${c.logo}" alt="${c.company}" onerror="this.parentElement.innerHTML='<span class=&quot;jr-fallback&quot;>${initial}</span>'">`
+      : `<span class="jr-fallback">${initial}</span>`;
+    return `<div class="jr-avt${active}" data-ckey="${encodeURIComponent(key)}" data-cname="${(c.company||'').replace(/"/g,'&quot;')}" data-count="${c.count}" title="${c.company} (${c.count})">${inner}</div>`;
+  }).join('');
+
+  _wireCompanyRail(rail);
+}
+
+// Drag-to-magnify + tap-to-filter, touch and mouse. Distance-based scaling
+// (same idea as macOS dock magnification): every avatar's scale is a
+// function of how close the pointer's Y position is to that avatar's
+// center, recomputed on every move so it feels alive under a scrubbing
+// thumb — not just a hover state on one item at a time.
+// Wired ONCE per rail element — renderCompanyRail() replaces the avatars
+// inside it on every job-list change, but the container div itself is
+// never recreated, so re-attaching listeners here every render would just
+// stack duplicates (each tap would then fire the select handler multiple
+// times). The listeners read live avatar elements via rail.querySelectorAll
+// at event time, so they stay correct across re-renders without rewiring.
+let _railWired = false;
+function _wireCompanyRail(rail) {
+  if (_railWired) return;
+  _railWired = true;
+  const label = _railLabelEl();
+  let dragging = false;
+  let movedEnough = false;
+  let startY = 0;
+  let downTarget = null;
+
+  function magnifyAt(clientY) {
+    const avts = rail.querySelectorAll('.jr-avt');
+    let nearest = null, nearestDist = Infinity;
+    avts.forEach(el => {
+      const r = el.getBoundingClientRect();
+      const cy = r.top + r.height / 2;
+      const dist = Math.abs(clientY - cy);
+      const scale = Math.max(1, 1.9 - dist / 55); // falls off to 1 within ~100px
+      el.style.transform = `scale(${scale.toFixed(2)})`;
+      el.style.zIndex = String(Math.round(scale * 10));
+      if (dist < nearestDist) { nearestDist = dist; nearest = el; }
+    });
+    if (nearest && nearestDist < 55) {
+      label.textContent = `${nearest.dataset.cname} · ${nearest.dataset.count}`;
+      const r = nearest.getBoundingClientRect();
+      label.style.top = `${r.top + r.height / 2}px`;
+      label.classList.add('jr-show');
+    } else {
+      label.classList.remove('jr-show');
+    }
+    return nearest;
+  }
+  function resetScale() {
+    rail.querySelectorAll('.jr-avt').forEach(el => { el.style.transform = 'scale(1)'; el.style.zIndex = ''; });
+    label.classList.remove('jr-show');
+  }
+
+  function onDown(e) {
+    const t = e.touches ? e.touches[0] : e;
+    downTarget = e.target.closest('.jr-avt');
+    startY = t.clientY;
+    dragging = true;
+    movedEnough = false;
+    magnifyAt(t.clientY);
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const t = e.touches ? e.touches[0] : e;
+    if (Math.abs(t.clientY - startY) > 6) movedEnough = true;
+    magnifyAt(t.clientY);
+    if (e.cancelable) e.preventDefault(); // stop the page from scrolling while scrubbing
+  }
+  function onUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    const t = e.changedTouches ? e.changedTouches[0] : e;
+    const landed = magnifyAt(t.clientY);
+    resetScale();
+    // A tap with no real drag always resolves to whatever was directly under
+    // the finger (downTarget); a drag/scrub resolves to whatever it landed on.
+    const target = movedEnough ? landed : (downTarget || landed);
+    if (target) _selectRailCompany(target);
+  }
+
+  rail.addEventListener('touchstart', onDown, { passive: true });
+  rail.addEventListener('touchmove',  onMove,  { passive: false });
+  rail.addEventListener('touchend',   onUp);
+  rail.addEventListener('mousedown',  onDown);
+  window.addEventListener('mousemove', (e) => { if (dragging) onMove(e); });
+  window.addEventListener('mouseup',   (e) => { if (dragging) onUp(e); });
+  rail.addEventListener('mouseleave', () => { if (!dragging) resetScale(); });
+}
+
+function _railLabelEl() {
+  let el = g('jrLabel');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'jrLabel';
+    el.className = 'jr-label';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function _selectRailCompany(avtEl) {
+  const key = decodeURIComponent(avtEl.dataset.ckey || '');
+  if (!key) return;
+  // Tapping the already-active company clears the filter — same toggle
+  // behavior as the filter chips above the grid.
+  _railCompanyFilter = (_railCompanyFilter === key) ? null : key;
+  page = 1;
+  renderJobs();
+  if (g('jobsGrid')) g('jobsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 
 // ── Saved Jobs screen ────────────────────────────────────────────────────────
 function renderSavedJobs() {
