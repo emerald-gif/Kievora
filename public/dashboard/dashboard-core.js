@@ -1033,6 +1033,20 @@
       try { resumes = await api('GET', '/api/resumes'); }
       catch (e) { toast(e.message, 'err'); resumes = []; }
       loadDrafts();
+      _updateHeroAtsBadge();
+    }
+
+    // The "Optimize My Resume" hero card's floating stat badge shows the
+    // user's actual most recent resume score — not a static placeholder —
+    // so it's an honest reflection of where they stand, not marketing copy.
+    function _updateHeroAtsBadge() {
+      const el = g('dsAtsStatNum');
+      if (!el) return;
+      const merged = getMergedResumes({ excludeTailored: true }).filter(r => !r._isDraft);
+      const latest = merged[0];
+      if (latest && typeof latest.atsScore === 'number') {
+        el.textContent = Math.round(latest.atsScore);
+      } // else leave the placeholder — no resume yet to score
     }
 
     // ── DRAFTS (localStorage) ────────────────────────────────────────────────
