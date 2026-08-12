@@ -3184,36 +3184,102 @@
 
 <!-- ══ CAREER ROADMAP ═══════════════════════════════════════════════════════ -->
 <div id="v-roadmap" class="view">
-  <div class="ctool-hdr">
+  <div class="ctool-hdr" id="roadmapFormHdr">
     <button class="ctool-hdr-back" onclick="ctoolBack()"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
     <span class="ctool-hdr-title-center">Career Roadmap</span>
   </div>
-  <div class="ctool-body">
+  <div class="ctool-body" id="roadmapFormBody">
     <div id="roadmapSuggest"></div>
-    <div class="ctool-card">
-      <label class="ctool-label">Current Role</label>
-      <input id="rmCurrentRole" class="ctool-input" placeholder="e.g. Junior Developer" style="margin-bottom:12px">
-      <label class="ctool-label">Target Role</label>
-      <input id="rmTargetRole" class="ctool-input" placeholder="e.g. Senior Engineering Manager">
-    </div>
-    <div class="ctool-card" style="padding:14px 18px">
-      <label class="ctool-label">Timeframe</label>
-      <div class="ctool-chip-row">
-        <button class="ctool-chip active" data-tf="30days" onclick="rmSetTf(this)">30 Days</button>
-        <button class="ctool-chip" data-tf="60days" onclick="rmSetTf(this)">60 Days</button>
-        <button class="ctool-chip" data-tf="90days" onclick="rmSetTf(this)">90 Days</button>
-        <button class="ctool-chip" data-tf="6months" onclick="rmSetTf(this)">6 Months</button>
-        <button class="ctool-chip" data-tf="1year" onclick="rmSetTf(this)">1 Year</button>
-        <button class="ctool-chip" data-tf="5years" onclick="rmSetTf(this)">5 Years</button>
+
+    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+      <div class="ctool-hero-art">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 28l22-8 22 8 22-8v52l-22 8-22-8-22 8V28z" fill="#ddd6fe" stroke="#a78bfa" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M36 20v52M58 28v52" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <path d="M24 62q10-14 20-8t18-10" stroke="#7c3aed" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="1 5"/>
+          <g transform="translate(50,14)"><path d="M0 0C-9 0-16 7-16 16c0 12 16 26 16 26s16-14 16-26c0-9-7-16-16-16z" fill="#7c3aed"/><circle cx="0" cy="16" r="6" fill="#fff"/></g>
+        </svg>
+      </div>
+      <div class="ctool-hero-body">
+        <div class="ctool-hero-title">Plan your path. Achieve your goals.</div>
+        <div class="ctool-hero-sub">Get a personalized roadmap from your current role to your dream role.</div>
       </div>
     </div>
-    <button class="ctool-btn" id="roadmapBtn" onclick="runRoadmap()">
+
+    <div class="ctool-card">
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Current Role</div>
+          <input id="rmCurrentRole" class="ctool-input" placeholder="e.g. Junior Developer">
+        </div>
+      </div>
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v18M5 4h11l-2.5 4L16 12H5"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Target Role</div>
+          <input id="rmTargetRole" class="ctool-input" placeholder="e.g. Senior Engineering Manager">
+        </div>
+      </div>
+    </div>
+
+    <div class="ctool-card">
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Timeframe</div>
+          <div class="ctool-pill-row">
+            <button class="ctool-pill active" data-tf="30days" onclick="rmSetTf(this)" style="--tc:#7c3aed">30 Days</button>
+            <button class="ctool-pill" data-tf="60days" onclick="rmSetTf(this)" style="--tc:#7c3aed">60 Days</button>
+            <button class="ctool-pill" data-tf="90days" onclick="rmSetTf(this)" style="--tc:#7c3aed">90 Days</button>
+            <button class="ctool-pill" data-tf="6months" onclick="rmSetTf(this)" style="--tc:#7c3aed">6 Months</button>
+            <button class="ctool-pill" data-tf="1year" onclick="rmSetTf(this)" style="--tc:#7c3aed">1 Year</button>
+            <button class="ctool-pill" data-tf="5years" onclick="rmSetTf(this)" style="--tc:#7c3aed">5 Years</button>
+          </div>
+          <div class="ctool-field-hint">Choose a timeframe to get a roadmap that fits your journey.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctool-feat-grid">
+      <div class="ctool-feat" style="--tc:#7c3aed">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
+        <div class="ctool-feat-title">Personalized</div>
+        <div class="ctool-feat-desc">Tailored to your goals and experience.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#7c3aed">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/></svg></div>
+        <div class="ctool-feat-title">Step-by-step</div>
+        <div class="ctool-feat-desc">Clear milestones to keep you moving forward.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#7c3aed">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div>
+        <div class="ctool-feat-title">Track Progress</div>
+        <div class="ctool-feat-desc">Stay on track and measure your growth.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#7c3aed">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.9 6.6L22 9.6l-5 4.9 1.2 7-6.2-3.3L5.8 21.5 7 14.5l-5-4.9 7.1-1z"/></svg></div>
+        <div class="ctool-feat-title">Smart Insights</div>
+        <div class="ctool-feat-desc">AI-powered recommendations for your success.</div>
+      </div>
+    </div>
+
+    <button class="ctool-btn" id="roadmapBtn" onclick="runRoadmap()" style="background:#7c3aed">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
       Build My Roadmap
     </button>
     <div id="roadmapLoading" style="display:none;text-align:center;padding:30px 0"><div style="font-size:13px;font-weight:700;color:var(--sub)">Building your personalized roadmap…</div></div>
-    <div id="roadmapResult" style="display:none;margin-top:6px"></div>
-    <div class="ctool-kie-bar" id="roadmapKieBar" style="display:none">
+  </div>
+
+  <div class="ctool-hdr ctool-results-hdr" id="roadmapResultsHdr">
+    <button class="ctool-hdr-back" onclick="ctoolBackToForm('roadmap')"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+    <span class="ctool-hdr-title-center">Your Roadmap</span>
+  </div>
+  <div class="ctool-body ctool-results-body" id="roadmapResultsBody">
+    <div id="roadmapResult"></div>
+    <div class="ctool-kie-bar" id="roadmapKieBar">
       <button class="ctool-kie-ask" onclick="openKieWithPrompt('I just got my career roadmap. What skills and habits should I prioritize to hit my milestones faster?')">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
@@ -3228,45 +3294,108 @@
 
 <!-- ══ SALARY INTELLIGENCE ══════════════════════════════════════════════════ -->
 <div id="v-salary" class="view">
-  <div class="ctool-hdr">
+  <div class="ctool-hdr" id="salaryFormHdr">
     <button class="ctool-hdr-back" onclick="ctoolBack()"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
     <span class="ctool-hdr-title-center">Salary Intelligence</span>
   </div>
-  <div class="ctool-body">
+  <div class="ctool-body" id="salaryFormBody">
     <div id="salarySuggest"></div>
+
+    <div class="ctool-hero" style="--tc:#d97706;--tt:#fdf0dc">
+      <div class="ctool-hero-art">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fcd9a3" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#fcd9a3" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="32" fill="#fde3b8" stroke="#d97706" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="23" fill="#fcd9a3" stroke="#d97706" stroke-width="1.2" stroke-dasharray="2 3"/>
+          <path d="M50 38v24M44 42c0-3 3-5 6-5s6 2 6 4-2 3-6 4-6 2-6 5 3 5 6 5 6-2 6-5" stroke="#d97706" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          <circle cx="76" cy="30" r="13" fill="#d97706"/>
+          <path d="M71 30l3.5 3.5L82 26" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="ctool-hero-body">
+        <div class="ctool-hero-title">Know your worth. Negotiate with confidence.</div>
+        <div class="ctool-hero-sub">Get real market salary data for your role, location, and experience.</div>
+      </div>
+    </div>
+
     <div class="ctool-card">
-      <label class="ctool-label">Job Title</label>
-      <input id="salJobTitle" class="ctool-input" placeholder="e.g. Product Manager" style="margin-bottom:12px">
-      <label class="ctool-label">Location</label>
-      <input id="salLocation" class="ctool-input" placeholder="e.g. Lagos, Nigeria or New York, USA" style="margin-bottom:12px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label class="ctool-label">Experience</label>
-          <select id="salExp" class="ctool-select">
-            <option value="0-1">0-1 years</option><option value="1-3" selected>1-3 years</option>
-            <option value="3-5">3-5 years</option><option value="5-8">5-8 years</option>
-            <option value="8-12">8-12 years</option><option value="12+">12+ years</option>
-          </select>
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#d97706;--tt:#fdf0dc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Job Title</div>
+          <input id="salJobTitle" class="ctool-input" placeholder="e.g. Product Manager">
         </div>
-        <div>
-          <label class="ctool-label">Education</label>
-          <select id="salEdu" class="ctool-select">
-            <option value="High School">High School</option>
-            <option value="Associate's">Associate's</option>
-            <option value="Bachelor's" selected>Bachelor's</option>
-            <option value="Master's">Master's</option>
-            <option value="PhD">PhD</option>
-          </select>
+      </div>
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#d97706;--tt:#fdf0dc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Location</div>
+          <input id="salLocation" class="ctool-input" placeholder="e.g. Lagos, Nigeria or New York, USA">
+        </div>
+      </div>
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#d97706;--tt:#fdf0dc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.42A12.083 12.083 0 0112 21a12.083 12.083 0 01-6.16-10.42L12 14z"/></svg></div>
+        <div class="ctool-field-main" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div class="ctool-field-label">Experience</div>
+            <select id="salExp" class="ctool-select">
+              <option value="0-1">0-1 years</option><option value="1-3" selected>1-3 years</option>
+              <option value="3-5">3-5 years</option><option value="5-8">5-8 years</option>
+              <option value="8-12">8-12 years</option><option value="12+">12+ years</option>
+            </select>
+          </div>
+          <div>
+            <div class="ctool-field-label">Education</div>
+            <select id="salEdu" class="ctool-select">
+              <option value="High School">High School</option>
+              <option value="Associate's">Associate's</option>
+              <option value="Bachelor's" selected>Bachelor's</option>
+              <option value="Master's">Master's</option>
+              <option value="PhD">PhD</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
-    <button class="ctool-btn" id="salaryBtn" onclick="runSalaryIntel()">
+
+    <div class="ctool-feat-grid">
+      <div class="ctool-feat" style="--tc:#d97706">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div>
+        <div class="ctool-feat-title">Real Market Data</div>
+        <div class="ctool-feat-desc">Current pay ranges, not guesswork.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#d97706">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg></div>
+        <div class="ctool-feat-title">Location-Based</div>
+        <div class="ctool-feat-desc">Pay adjusted to where you work.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#d97706">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg></div>
+        <div class="ctool-feat-title">Negotiation Script</div>
+        <div class="ctool-feat-desc">Exact words to ask for more.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#d97706">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+        <div class="ctool-feat-title">3-Year Forecast</div>
+        <div class="ctool-feat-desc">See where your pay is headed.</div>
+      </div>
+    </div>
+
+    <button class="ctool-btn" id="salaryBtn" onclick="runSalaryIntel()" style="background:#d97706">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Analyze My Market Value
     </button>
     <div id="salaryLoading" style="display:none;text-align:center;padding:30px 0"><div style="font-size:13px;font-weight:700;color:var(--sub)">Analyzing salary data…</div></div>
-    <div id="salaryResult" style="display:none;margin-top:6px"></div>
-    <div class="ctool-kie-bar" id="salaryKieBar" style="display:none">
+  </div>
+
+  <div class="ctool-hdr ctool-results-hdr" id="salaryResultsHdr">
+    <button class="ctool-hdr-back" onclick="ctoolBackToForm('salary')"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+    <span class="ctool-hdr-title-center">Your Salary Report</span>
+  </div>
+  <div class="ctool-body ctool-results-body" id="salaryResultsBody">
+    <div id="salaryResult"></div>
+    <div class="ctool-kie-bar" id="salaryKieBar">
       <button class="ctool-kie-ask" onclick="openKieWithPrompt('Based on my salary intelligence report, how should I negotiate my next offer and what is the best approach?')">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
@@ -3281,32 +3410,93 @@
 
 <!-- ══ INDUSTRY INTELLIGENCE ════════════════════════════════════════════════ -->
 <div id="v-industry" class="view">
-  <div class="ctool-hdr">
+  <div class="ctool-hdr" id="industryFormHdr">
     <button class="ctool-hdr-back" onclick="ctoolBack()"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
     <span class="ctool-hdr-title-center">Industry Intelligence</span>
   </div>
-  <div class="ctool-body">
+  <div class="ctool-body" id="industryFormBody">
     <div id="industrySuggest"></div>
-    <div class="ctool-card">
-      <label class="ctool-label">Industry</label>
-      <input id="indIndustry" class="ctool-input" placeholder="e.g. Fintech, Healthcare, E-commerce" style="margin-bottom:12px">
-      <label class="ctool-label">Your Role (optional)</label>
-      <input id="indRole" class="ctool-input" placeholder="e.g. Software Engineer">
-      <div class="ctool-chip-row" style="margin-top:10px">
-        <button class="ctool-chip" onclick="g('indIndustry').value='Technology & Software'">Tech</button>
-        <button class="ctool-chip" onclick="g('indIndustry').value='Healthcare & Biotech'">Healthcare</button>
-        <button class="ctool-chip" onclick="g('indIndustry').value='Fintech & Finance'">Fintech</button>
-        <button class="ctool-chip" onclick="g('indIndustry').value='E-commerce & Retail'">E-commerce</button>
-        <button class="ctool-chip" onclick="g('indIndustry').value='Creative & Media'">Creative</button>
+
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e9e8fc">
+      <div class="ctool-hero-art">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c7c5f7" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c7c5f7" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="18" y="46" width="14" height="34" fill="#c7c5f7"/>
+          <rect x="36" y="32" width="14" height="48" fill="#a5a1ef"/>
+          <rect x="54" y="52" width="14" height="28" fill="#c7c5f7"/>
+          <rect x="72" y="20" width="14" height="60" fill="#4f46e5"/>
+          <path d="M16 44l18-10 16 8 20-24" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M62 12h8v8" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="ctool-hero-body">
+        <div class="ctool-hero-title">Stay ahead of the curve.</div>
+        <div class="ctool-hero-sub">Get trends, growth outlook, and in-demand skills for any industry.</div>
       </div>
     </div>
-    <button class="ctool-btn" id="industryBtn" onclick="runIndustryIntel()">
+
+    <div class="ctool-card">
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e9e8fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Industry</div>
+          <input id="indIndustry" class="ctool-input" placeholder="e.g. Fintech, Healthcare, E-commerce">
+          <div class="ctool-pill-row" style="margin-top:10px">
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Technology & Software'">Tech</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Healthcare & Biotech'">Healthcare</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Fintech & Finance'">Fintech</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='E-commerce & Retail'">E-commerce</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Creative & Media'">Creative</button>
+          </div>
+        </div>
+      </div>
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e9e8fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Your Role (optional)</div>
+          <input id="indRole" class="ctool-input" placeholder="e.g. Software Engineer">
+        </div>
+      </div>
+    </div>
+
+    <div class="ctool-feat-grid">
+      <div class="ctool-feat" style="--tc:#4f46e5">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+        <div class="ctool-feat-title">Market Trends</div>
+        <div class="ctool-feat-desc">What's shaping the industry now.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#4f46e5">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+        <div class="ctool-feat-title">Skill Demand</div>
+        <div class="ctool-feat-desc">Which skills employers want most.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#4f46e5">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.9 6.6L22 9.6l-5 4.9 1.2 7-6.2-3.3L5.8 21.5 7 14.5l-5-4.9 7.1-1z"/></svg></div>
+        <div class="ctool-feat-title">Growth Outlook</div>
+        <div class="ctool-feat-desc">Where the industry is headed.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#4f46e5">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m8-16h.01M11 11h.01M11 15h.01M7 7h.01M7 11h.01M7 15h.01M15 7h.01M15 11h.01M15 15h.01"/></svg></div>
+        <div class="ctool-feat-title">Key Players</div>
+        <div class="ctool-feat-desc">Top companies hiring right now.</div>
+      </div>
+    </div>
+
+    <button class="ctool-btn" id="industryBtn" onclick="runIndustryIntel()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       Get Industry Report
     </button>
     <div id="industryLoading" style="display:none;text-align:center;padding:30px 0"><div style="font-size:13px;font-weight:700;color:var(--sub)">Generating industry report…</div></div>
-    <div id="industryResult" style="display:none;margin-top:6px"></div>
-    <div class="ctool-kie-bar" id="industryKieBar" style="display:none">
+  </div>
+
+  <div class="ctool-hdr ctool-results-hdr" id="industryResultsHdr">
+    <button class="ctool-hdr-back" onclick="ctoolBackToForm('industry')"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+    <span class="ctool-hdr-title-center">Industry Report</span>
+  </div>
+  <div class="ctool-body ctool-results-body" id="industryResultsBody">
+    <div id="industryResult"></div>
+    <div class="ctool-kie-bar" id="industryKieBar">
       <button class="ctool-kie-ask" onclick="openKieWithPrompt('I just reviewed my industry intelligence report. What career moves should I make to stay ahead of these trends?')">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more
@@ -3317,29 +3507,95 @@
 
 <!-- ══ LINKEDIN OPTIMIZER ═══════════════════════════════════════════════════ -->
 <div id="v-linkedin" class="view">
-  <div class="ctool-hdr">
+  <div class="ctool-hdr" id="linkedinFormHdr">
     <button class="ctool-hdr-back" onclick="ctoolBack()"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
     <span class="ctool-hdr-title-center">LinkedIn Optimizer</span>
   </div>
-  <div class="ctool-body">
+  <div class="ctool-body" id="linkedinFormBody">
     <div id="linkedinSuggest"></div>
-    <div class="ctool-card">
-      <label class="ctool-label">Current Headline *</label>
-      <input id="liHeadline" class="ctool-input" placeholder="e.g. Software Engineer at Google | Python | ML" style="margin-bottom:12px">
-      <label class="ctool-label">About Section (paste current)</label>
-      <textarea id="liAbout" class="ctool-textarea" placeholder="Paste your current About section or leave blank for a fresh one…"></textarea>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-        <div><label class="ctool-label">Current Role</label><input id="liCurrentRole" class="ctool-input" placeholder="Software Engineer"></div>
-        <div><label class="ctool-label">Target Role</label><input id="liTargetRole" class="ctool-input" placeholder="Engineering Manager"></div>
+
+    <div class="ctool-hero" style="--tc:#0891b2;--tt:#e2f3f6">
+      <div class="ctool-hero-art">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a6dfe9" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a6dfe9" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="14" y="18" width="72" height="64" rx="10" fill="#d3eef3" stroke="#0891b2" stroke-width="1.5"/>
+          <circle cx="34" cy="42" r="10" fill="#0891b2"/>
+          <rect x="52" y="36" width="26" height="6" rx="3" fill="#67c3d4"/>
+          <rect x="52" y="46" width="18" height="5" rx="2.5" fill="#a6dfe9"/>
+          <rect x="22" y="62" width="56" height="5" rx="2.5" fill="#a6dfe9"/>
+          <rect x="22" y="71" width="40" height="5" rx="2.5" fill="#a6dfe9"/>
+          <circle cx="78" cy="24" r="12" fill="#0891b2"/>
+          <path d="M78 18v8M74 24h8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="ctool-hero-body">
+        <div class="ctool-hero-title">Get discovered by recruiters.</div>
+        <div class="ctool-hero-sub">Optimize your headline and About section for maximum visibility.</div>
       </div>
     </div>
-    <button class="ctool-btn" id="linkedinBtn" onclick="runLinkedIn()">
+
+    <div class="ctool-card">
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#0891b2;--tt:#e2f3f6"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-9 8V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 5z"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">Current Headline</div>
+          <input id="liHeadline" class="ctool-input" placeholder="e.g. Software Engineer at Google | Python | ML">
+        </div>
+      </div>
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#0891b2;--tt:#e2f3f6"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
+        <div class="ctool-field-main">
+          <div class="ctool-field-label">About Section</div>
+          <textarea id="liAbout" class="ctool-textarea" placeholder="Paste your current About section or leave blank for a fresh one…"></textarea>
+        </div>
+      </div>
+      <div class="ctool-field">
+        <div class="ctool-field-ico" style="--tc:#0891b2;--tt:#e2f3f6"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+        <div class="ctool-field-main" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><div class="ctool-field-label">Current Role</div><input id="liCurrentRole" class="ctool-input" placeholder="Software Engineer"></div>
+          <div><div class="ctool-field-label">Target Role</div><input id="liTargetRole" class="ctool-input" placeholder="Engineering Manager"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctool-feat-grid">
+      <div class="ctool-feat" style="--tc:#0891b2">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg></div>
+        <div class="ctool-feat-title">Recruiter-Ready</div>
+        <div class="ctool-feat-desc">Built to get found in searches.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#0891b2">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></div>
+        <div class="ctool-feat-title">Keyword-Optimized</div>
+        <div class="ctool-feat-desc">Closes the gaps recruiters search for.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#0891b2">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-9 8V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 5z"/></svg></div>
+        <div class="ctool-feat-title">Compelling Bio</div>
+        <div class="ctool-feat-desc">An About section people actually read.</div>
+      </div>
+      <div class="ctool-feat" style="--tc:#0891b2">
+        <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+        <div class="ctool-feat-title">Career Story</div>
+        <div class="ctool-feat-desc">Frames your path toward your goal role.</div>
+      </div>
+    </div>
+
+    <button class="ctool-btn" id="linkedinBtn" onclick="runLinkedIn()" style="background:#0891b2">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       Optimize My LinkedIn
     </button>
     <div id="linkedinLoading" style="display:none;text-align:center;padding:30px 0"><div style="font-size:13px;font-weight:700;color:var(--sub)">Optimizing your LinkedIn profile…</div></div>
-    <div id="linkedinResult" style="display:none;margin-top:6px"></div>
-    <div class="ctool-kie-bar" id="linkedinKieBar" style="display:none">
+  </div>
+
+  <div class="ctool-hdr ctool-results-hdr" id="linkedinResultsHdr">
+    <button class="ctool-hdr-back" onclick="ctoolBackToForm('linkedin')"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+    <span class="ctool-hdr-title-center">Your Optimized Profile</span>
+  </div>
+  <div class="ctool-body ctool-results-body" id="linkedinResultsBody">
+    <div id="linkedinResult"></div>
+    <div class="ctool-kie-bar" id="linkedinKieBar">
       <button class="ctool-kie-ask" onclick="openKieWithPrompt('My LinkedIn is now optimized. What content strategy and daily habits should I use to grow my network and attract recruiters?')">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Let KIE coach you more

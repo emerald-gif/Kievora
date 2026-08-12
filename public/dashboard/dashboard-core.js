@@ -12683,6 +12683,29 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         const r = g(resultId);
         if (r) r.style.display = show ? 'block' : 'none';
       }
+      // Generic form ⇄ results screen switcher, shared by every AI career
+      // tool. Each tool's view has {key}FormHdr/{key}FormBody and
+      // {key}ResultsHdr/{key}ResultsBody — this swaps which pair is visible
+      // so results genuinely take over the screen instead of just unhiding
+      // a div under the form.
+      window.ctoolShowResults = function(key) {
+        const fh = g(key + 'FormHdr'), fb = g(key + 'FormBody');
+        const rh = g(key + 'ResultsHdr'), rb = g(key + 'ResultsBody');
+        if (fh) fh.style.display = 'none';
+        if (fb) fb.style.display = 'none';
+        if (rh) rh.classList.add('active');
+        if (rb) rb.classList.add('active');
+        window.scrollTo(0, 0);
+      };
+      window.ctoolBackToForm = function(key) {
+        const fh = g(key + 'FormHdr'), fb = g(key + 'FormBody');
+        const rh = g(key + 'ResultsHdr'), rb = g(key + 'ResultsBody');
+        if (rh) rh.classList.remove('active');
+        if (rb) rb.classList.remove('active');
+        if (fh) fh.style.display = 'flex';
+        if (fb) fb.style.display = 'block';
+        window.scrollTo(0, 0);
+      };
       function fmtUSD(n) { return '$' + Number(n).toLocaleString(); }
       function scoreBg(s) { return s>=85?'#d1fae5':s>=70?'#dbeafe':s>=50?'#fef3c7':'#fee2e2'; }
       function scoreColor(s) { return s>=85?'#059669':s>=70?'#1d4ed8':s>=50?'#d97706':'#dc2626'; }
@@ -13107,7 +13130,6 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         if(!curr||!tgt) { toast('Enter your current and target role.', 'err'); return; }
         showModelSuggestion('roadmap','roadmapSuggest');
         ctoolLoading('roadmapLoading','roadmapBtn',true);
-        ctoolResult('roadmapResult',false);
         try {
           const r = await fetch('/api/career-roadmap',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({currentRole:curr,targetRole:tgt,timeframe:rmTimeframe,model:kieModel})});
           if(!r.ok) throw new Error((await r.json()).error||'Failed');
@@ -13115,7 +13137,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderRoadmap(data.roadmap);
           logEvent('career_roadmap', { model: kieModel });
           ctoolLoading('roadmapLoading','roadmapBtn',false);
-          ctoolResult('roadmapResult',true);
+          ctoolShowResults('roadmap');
         } catch(err) { ctoolLoading('roadmapLoading','roadmapBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderRoadmap(rm) {
@@ -13147,7 +13169,6 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         if(!jt) { toast('Enter a job title.', 'err'); return; }
         showModelSuggestion('salary','salarySuggest');
         ctoolLoading('salaryLoading','salaryBtn',true);
-        ctoolResult('salaryResult',false);
         try {
           const r = await fetch('/api/salary-intel',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({jobTitle:jt,location:g('salLocation')?.value||'',yearsExp:g('salExp')?.value||'1-3',education:g('salEdu')?.value||"Bachelor's",model:kieModel})});
           if(!r.ok) throw new Error((await r.json()).error||'Failed');
@@ -13155,7 +13176,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderSalary(data);
           logEvent('salary_intel', { model: kieModel });
           ctoolLoading('salaryLoading','salaryBtn',false);
-          ctoolResult('salaryResult',true);
+          ctoolShowResults('salary');
         } catch(err) { ctoolLoading('salaryLoading','salaryBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderSalary(d) {
@@ -13201,7 +13222,6 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         if(!ind) { toast('Enter an industry.', 'err'); return; }
         showModelSuggestion('industry','industrySuggest');
         ctoolLoading('industryLoading','industryBtn',true);
-        ctoolResult('industryResult',false);
         try {
           const r = await fetch('/api/industry-intel',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({industry:ind,role:g('indRole')?.value||'',model:kieModel})});
           if(!r.ok) throw new Error((await r.json()).error||'Failed');
@@ -13209,7 +13229,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderIndustry(data);
           logEvent('industry_intel', { model: kieModel });
           ctoolLoading('industryLoading','industryBtn',false);
-          ctoolResult('industryResult',true);
+          ctoolShowResults('industry');
         } catch(err) { ctoolLoading('industryLoading','industryBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderIndustry(d) {
@@ -13240,7 +13260,6 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         if(!hl) { toast('Enter your current LinkedIn headline.', 'err'); return; }
         showModelSuggestion('linkedin','linkedinSuggest');
         ctoolLoading('linkedinLoading','linkedinBtn',true);
-        ctoolResult('linkedinResult',false);
         try {
           const r = await fetch('/api/linkedin-optimize',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({headline:hl,about:g('liAbout')?.value||'',currentRole:g('liCurrentRole')?.value||'',targetRole:g('liTargetRole')?.value||'',model:kieModel})});
           if(!r.ok) throw new Error((await r.json()).error||'Failed');
@@ -13248,7 +13267,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderLinkedIn(data);
           logEvent('linkedin_optimize', { model: kieModel });
           ctoolLoading('linkedinLoading','linkedinBtn',false);
-          ctoolResult('linkedinResult',true);
+          ctoolShowResults('linkedin');
         } catch(err) { ctoolLoading('linkedinLoading','linkedinBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderLinkedIn(d) {

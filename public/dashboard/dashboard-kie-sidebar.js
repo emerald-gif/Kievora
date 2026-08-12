@@ -186,6 +186,8 @@
       return;
     }
     if (typeof showView === 'function') showView(toolId);
+    // Always land on the input form, not stale results from a previous visit
+    if (typeof window.ctoolBackToForm === 'function') window.ctoolBackToForm(toolId);
     if (toolId === 'jobmatch') {
       if (typeof populateResumePicker === 'function') populateResumePicker('jmResumePicker');
     }

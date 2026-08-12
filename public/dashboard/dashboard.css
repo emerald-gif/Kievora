@@ -2540,6 +2540,44 @@
     .ctool-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
     .ctool-chip{padding:5px 12px;background:#f5f3ff;color:var(--p);border:1px solid var(--p2);border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
     .ctool-chip:hover{background:#ede9fe}
+
+    /* ═══ New tool-screen system: hero card + icon-field rows + pill row +
+       feature grid + results-on-its-own-screen. Shared by every AI career
+       tool so they all feel like one consistent product, not 12 one-off
+       forms. Themed per-tool via --tc (accent) and --tt (tint) custom
+       properties set inline on .ctool-hero / .ctool-field-ico / etc. ═══ */
+    .ctool-hero{border-radius:20px;padding:22px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;background:linear-gradient(160deg,var(--tt,#f5f3ff),#fff)}
+    .ctool-hero-art{flex-shrink:0;width:88px;height:88px;position:relative;display:flex;align-items:center;justify-content:center}
+    .ctool-hero-sparkle{position:absolute;pointer-events:none}
+    .ctool-hero-body{flex:1;min-width:0;position:relative;z-index:2}
+    .ctool-hero-title{font-size:16.5px;font-weight:900;color:var(--txt);margin-bottom:6px;line-height:1.28}
+    .ctool-hero-sub{font-size:12px;color:var(--sub);line-height:1.5}
+
+    .ctool-field{display:flex;align-items:flex-start;gap:12px}
+    .ctool-field + .ctool-field{margin-top:16px;padding-top:16px;border-top:1px solid var(--border2)}
+    .ctool-field-ico{width:38px;height:38px;border-radius:50%;background:var(--tt,#f5f3ff);color:var(--tc,var(--p));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .ctool-field-main{flex:1;min-width:0}
+    .ctool-field-label{font-size:10.5px;font-weight:800;color:var(--tc,var(--p));text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+
+    .ctool-pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+    .ctool-pill{padding:9px 15px;background:#fff;color:var(--tc,var(--p));border:1.5px solid var(--border2);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+    .ctool-pill.active{background:var(--tc,var(--p));color:#fff;border-color:var(--tc,var(--p));box-shadow:0 4px 12px rgba(0,0,0,.16)}
+    .ctool-field-hint{font-size:11.5px;color:var(--sub);margin-top:10px;line-height:1.5}
+
+    .ctool-feat-grid{background:#f8f7ff;border-radius:18px;padding:18px 8px;margin-bottom:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px 4px}
+    .ctool-feat{text-align:center}
+    .ctool-feat-ico{width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(15,14,23,.08);display:flex;align-items:center;justify-content:center;margin:0 auto 7px;color:var(--tc,var(--p))}
+    .ctool-feat-title{font-size:11px;font-weight:800;color:var(--txt);margin-bottom:3px;line-height:1.2}
+    .ctool-feat-desc{font-size:9.5px;color:var(--sub);line-height:1.35}
+
+    /* Results screen — a second full header+body pair inside the same
+       .view, toggled with the form pair so results genuinely replace the
+       screen (with their own back button to the form) instead of just
+       unhiding a div under the form. */
+    .ctool-results-hdr{display:none}
+    .ctool-results-hdr.active{display:flex}
+    .ctool-results-body{display:none}
+    .ctool-results-body.active{display:block}
     .ctool-chip.active{background:var(--p);color:#fff}
     .ctool-result-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
     .ctool-result-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
