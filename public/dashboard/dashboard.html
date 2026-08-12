@@ -7,7 +7,7 @@
   <title>Dashboard — Kievora</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/dashboard/dashboard.css"/>
 
   <script type="module" src="/dashboard/dashboard-core.js"></script>
@@ -227,203 +227,161 @@
     <div class="dash-swiper-outer">
       <div class="ds-track" id="dsTrack">
 
-        <!-- Slide 1 -->
+        <!-- Slide 1: Optimize My Resume -->
         <div class="ds-slide">
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#7c3aed">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>
+            </div>
+            <div class="ds-peek-title">Resume Optimizing</div>
+          </div>
           <div class="ds-card" style="background:linear-gradient(160deg,#f3e8ff,#ede9fe)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <div class="ds-card-body">
-              <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#ede9fe;color:#7c3aed">AI</span>
-                <span class="ds-tag-label">Resume Optimizing</span>
-              </div>
-              <div class="ds-card-heading">Get a higher<br>ATS score</div>
-              <div class="ds-card-sub">KIE scans your resume, shows you what's wrong, then fixes it for you.</div>
-              <button class="ds-card-cta" style="background:#7c3aed" onclick="openOptimizeEntry()">
-                Optimize my resume
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-              </button>
-            </div>
             <div class="ds-doc-wrap">
-              <div class="ds-doc-mock">
+              <div class="ds-doc-mock" style="padding:16px 14px">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#7c3aed"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#ddd6fe"/>
-                  <circle cx="4" cy="45" r="3" fill="#7c3aed"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#a78bfa"/>
-                  <circle cx="4" cy="61" r="3" fill="#c4b5fd"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#e9e7f5"/>
-                  <circle cx="4" cy="77" r="3" fill="#c4b5fd"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#e9e7f5"/>
-                  <circle cx="4" cy="93" r="3" fill="#7c3aed"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#a78bfa"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#e9e7f5"/>
+                  <rect x="0" y="0" width="70" height="9" rx="4.5" fill="#c4b5fd"/>
+                  <rect x="0" y="22" width="98" height="6" rx="3" fill="#e9e7f5"/>
+                  <rect x="0" y="36" width="86" height="6" rx="3" fill="#a78bfa"/>
+                  <path d="M96 34.5l1.3 3 3 1.3-3 1.3-1.3 3-1.3-3-3-1.3 3-1.3z" fill="#7c3aed"/>
+                  <rect x="0" y="50" width="66" height="6" rx="3" fill="#e9e7f5"/>
+                  <rect x="0" y="64" width="80" height="6" rx="3" fill="#a78bfa"/>
+                  <path d="M90 62.5l1.3 3 3 1.3-3 1.3-1.3 3-1.3-3-3-1.3 3-1.3z" fill="#7c3aed"/>
+                  <rect x="0" y="78" width="55" height="6" rx="3" fill="#e9e7f5"/>
+                  <path d="M62 118 L78 100 L94 108 L112 84" stroke="#7c3aed" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M104 84h8v8" stroke="#7c3aed" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="62" y="106" width="10" height="12" rx="2" fill="#ddd6fe"/>
+                  <rect x="78" y="98" width="10" height="20" rx="2" fill="#c4b5fd"/>
+                  <rect x="94" y="90" width="10" height="28" rx="2" fill="#7c3aed"/>
                 </svg>
               </div>
-              <div class="ds-stat-badge">
-                <span class="ds-stat-num" id="dsAtsStatNum">82</span>
-                <span class="ds-stat-lbl">ATS Score</span>
+              <div class="ds-doc-badge" style="background:#7c3aed">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
               </div>
-              <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#ddd6fe"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#c4b5fd"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#a78bfa"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#7c3aed"/>
-              </svg>
             </div>
+            <div class="ds-card-heading">Get a higher ATS score</div>
+            <div class="ds-card-sub">KIE scans your resume, shows you what's wrong, then fixes it for you.</div>
+            <button class="ds-card-cta" onclick="openOptimizeEntry()">
+              Optimize my resume
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
         </div>
 
-        <!-- Slide 2 -->
+        <!-- Slide 2: Create New Resume -->
         <div class="ds-slide">
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>
+            </div>
+            <div class="ds-peek-title">Resume Building</div>
+          </div>
           <div class="ds-card" style="background:linear-gradient(160deg,#eff6ff,#dbeafe)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <div class="ds-card-body">
-              <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#dbeafe;color:#2563eb">AI</span>
-                <span class="ds-tag-label">Resume Building</span>
-              </div>
-              <div class="ds-card-heading">Get a new resume<br>in 20 mins</div>
-              <div class="ds-card-sub">Quickly build a resume that works. It's easy with AI.</div>
-              <button class="ds-card-cta" style="background:#2563eb" onclick="showView('tpick')">
-                Quick-build your resume
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-              </button>
-            </div>
             <div class="ds-doc-wrap">
-              <div class="ds-doc-mock">
+              <div class="ds-doc-mock" style="padding:16px 14px">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#2563eb"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#bfdbfe"/>
-                  <circle cx="4" cy="45" r="3" fill="#2563eb"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#60a5fa"/>
-                  <circle cx="4" cy="61" r="3" fill="#93c5fd"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#dbeafe"/>
-                  <circle cx="4" cy="77" r="3" fill="#93c5fd"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#dbeafe"/>
-                  <circle cx="4" cy="93" r="3" fill="#2563eb"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#60a5fa"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#dbeafe"/>
+                  <circle cx="12" cy="12" r="10" fill="#bfdbfe"/>
+                  <rect x="30" y="6" width="58" height="8" rx="4" fill="#93c5fd"/>
+                  <rect x="30" y="18" width="38" height="5" rx="2.5" fill="#dbeafe"/>
+                  <rect x="0" y="34" width="118" height="2" fill="#dbeafe"/>
+                  <rect x="0" y="44" width="98" height="6" rx="3" fill="#93c5fd"/>
+                  <rect x="0" y="56" width="78" height="6" rx="3" fill="#dbeafe"/>
+                  <rect x="0" y="72" width="98" height="26" rx="7" fill="none" stroke="#93c5fd" stroke-width="2" stroke-dasharray="5 4"/>
+                  <circle cx="49" cy="85" r="11" fill="#2563eb"/>
+                  <path d="M49 80v10M44 85h10" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+                  <rect x="86" y="52" width="30" height="13" rx="6.5" fill="#2563eb"/>
+                  <path d="M101 68v12m0 0l-4-4m4 4l4-4" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 3"/>
                 </svg>
               </div>
-              <div class="ds-stat-badge">
-                <span class="ds-stat-num">13+</span>
-                <span class="ds-stat-lbl">Templates</span>
+              <div class="ds-doc-badge" style="background:#2563eb">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
               </div>
-              <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#dbeafe"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#bfdbfe"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#60a5fa"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#2563eb"/>
-              </svg>
             </div>
+            <div class="ds-card-heading">Get a new resume in 20 mins</div>
+            <div class="ds-card-sub">Quickly build a resume that works. It's easy with AI.</div>
+            <button class="ds-card-cta" onclick="showView('tpick')">
+              Quick-build your resume
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
         </div>
 
-        <!-- Slide 3 -->
+        <!-- Slide 3: ATS Checker -->
         <div class="ds-slide">
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#16a34a">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+            </div>
+            <div class="ds-peek-title">ATS Checking</div>
+          </div>
           <div class="ds-card" style="background:linear-gradient(160deg,#f0fdf4,#dcfce7)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#16a34a"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#16a34a"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#16a34a"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <div class="ds-card-body">
-              <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#dcfce7;color:#16a34a">AI</span>
-                <span class="ds-tag-label">ATS Checking</span>
-              </div>
-              <div class="ds-card-heading">Beat the<br>ATS filters</div>
-              <div class="ds-card-sub">Get your ATS score, strengths, and weaknesses in seconds.</div>
-              <button class="ds-card-cta" style="background:#16a34a" onclick="openUploadView()">
-                Check my resume
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-              </button>
-            </div>
             <div class="ds-doc-wrap">
-              <div class="ds-doc-mock">
+              <div class="ds-doc-mock" style="padding:16px 14px">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#16a34a"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#bbf7d0"/>
-                  <circle cx="4" cy="45" r="3" fill="#16a34a"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#4ade80"/>
-                  <circle cx="4" cy="61" r="3" fill="#86efac"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#dcfce7"/>
-                  <circle cx="4" cy="77" r="3" fill="#86efac"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#dcfce7"/>
-                  <circle cx="4" cy="93" r="3" fill="#16a34a"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#4ade80"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#dcfce7"/>
+                  <rect x="0" y="0" width="62" height="9" rx="4.5" fill="#bbf7d0"/>
+                  <rect x="0" y="24" width="86" height="6" rx="3" fill="#dcfce7"/>
+                  <circle cx="102" cy="27" r="7" fill="#16a34a"/>
+                  <path d="M99 27l2 2 4-4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="0" y="40" width="70" height="6" rx="3" fill="#dcfce7"/>
+                  <circle cx="102" cy="43" r="7" fill="#16a34a"/>
+                  <path d="M99 43l2 2 4-4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="0" y="56" width="90" height="6" rx="3" fill="#dcfce7"/>
+                  <circle cx="102" cy="59" r="7" fill="#f59e0b"/>
+                  <path d="M102 56v3.5M102 62v.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                  <rect x="0" y="34" width="112" height="3" fill="#16a34a" opacity="0.55"/>
+                  <circle cx="20" cy="104" r="14" fill="none" stroke="#16a34a" stroke-width="3"/>
+                  <path d="M30 114l10 10" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M14 104l4 4 8-8" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <div class="ds-stat-badge">
-                <span class="ds-stat-num">60s</span>
-                <span class="ds-stat-lbl">Full Scan</span>
+              <div class="ds-doc-badge" style="background:#16a34a">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
               </div>
-              <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#dcfce7"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#bbf7d0"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#4ade80"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#16a34a"/>
-              </svg>
             </div>
+            <div class="ds-card-heading">Beat the ATS filters</div>
+            <div class="ds-card-sub">Get your ATS score, strengths, and weaknesses in seconds.</div>
+            <button class="ds-card-cta" onclick="openUploadView()">
+              Check my resume
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
         </div>
 
-        <!-- Slide 4 -->
+        <!-- Slide 4: Cover Letter Generator -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#fdf2f8,#fce7f3)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#db2777"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#db2777"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#db2777"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <div class="ds-card-body">
-              <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#fce7f3;color:#db2777">AI</span>
-                <span class="ds-tag-label">Cover Letter Crafting</span>
-              </div>
-              <div class="ds-card-heading">Craft a<br>cover letter</div>
-              <div class="ds-card-sub">Use AI to generate a strong cover letter in minutes.</div>
-              <button class="ds-card-cta" style="background:#db2777" onclick="openKieTool('coverletter')">
-                Craft a cover letter
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-              </button>
+          <div class="ds-peek">
+            <div class="ds-peek-ico" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#db2777">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
+            <div class="ds-peek-title">Cover Letter Crafting</div>
+          </div>
+          <div class="ds-card" style="background:linear-gradient(160deg,#fdf2f8,#fce7f3)">
             <div class="ds-doc-wrap">
-              <div class="ds-doc-mock">
+              <div class="ds-doc-mock" style="padding:16px 14px">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#db2777"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#f9a8d4"/>
-                  <circle cx="4" cy="45" r="3" fill="#db2777"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#f472b6"/>
-                  <circle cx="4" cy="61" r="3" fill="#f9a8d4"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#fce7f3"/>
-                  <circle cx="4" cy="77" r="3" fill="#f9a8d4"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#fce7f3"/>
-                  <circle cx="4" cy="93" r="3" fill="#db2777"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#f472b6"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#fce7f3"/>
+                  <rect x="0" y="0" width="60" height="7" rx="3.5" fill="#f9a8d4"/>
+                  <rect x="0" y="20" width="110" height="5.5" rx="2.75" fill="#fbcfe8"/>
+                  <rect x="0" y="32" width="102" height="5.5" rx="2.75" fill="#fbcfe8"/>
+                  <rect x="0" y="44" width="110" height="5.5" rx="2.75" fill="#fbcfe8"/>
+                  <rect x="0" y="56" width="70" height="5.5" rx="2.75" fill="#fbcfe8"/>
+                  <rect x="0" y="76" width="34" height="6" rx="3" fill="#f9a8d4"/>
+                  <path d="M0 96q8-11 16 0t16 0t16 0" stroke="#db2777" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                  <g transform="translate(84,84) rotate(45)">
+                    <rect x="0" y="0" width="8" height="26" rx="2" fill="#db2777"/>
+                    <path d="M0 26l4 8 4-8z" fill="#831843"/>
+                  </g>
+                  <path d="M78 108l-6 5M74 116l-6 5" stroke="#f9a8d4" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </div>
-              <div class="ds-stat-badge">
-                <span class="ds-stat-num">2m</span>
-                <span class="ds-stat-lbl">To Generate</span>
+              <div class="ds-doc-badge" style="background:#db2777">
+                <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
               </div>
-              <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#db2777" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#db2777" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#fce7f3"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#f9a8d4"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#f472b6"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#db2777"/>
-              </svg>
             </div>
+            <div class="ds-card-heading">Craft a cover letter</div>
+            <div class="ds-card-sub">Use AI to generate a strong cover letter in minutes.</div>
+            <button class="ds-card-cta" onclick="openKieTool('coverletter')">
+              Craft a cover letter
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
         </div>
 
