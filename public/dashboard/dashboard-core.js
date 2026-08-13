@@ -13301,7 +13301,6 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         ctoolLoading('ivLoading','ivStartBtn',true);
         const loadTxt=g('ivLoadingTxt'); if(loadTxt) loadTxt.textContent='Getting your question…';
         if(g('ivLoading')) g('ivLoading').style.display='block';
-        if(g('ivSession')) g('ivSession').style.display='none';
         ctoolResult('ivFeedback',false);
         if(g('ivAnswer')) g('ivAnswer').value='';
         try {
@@ -13312,10 +13311,13 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderIvQuestion(data);
           logEvent('mock_interview_q', { model: kieModel });
           if(g('ivLoading')) g('ivLoading').style.display='none';
-          if(g('ivSetup')) g('ivSetup').style.display='none';
-          if(g('ivSession')) g('ivSession').style.display='block';
           if(g('ivStartBtn')) g('ivStartBtn').disabled=false;
+          ctoolShowResults('interview');
         } catch(err) { if(g('ivLoading')) g('ivLoading').style.display='none'; if(g('ivStartBtn')) g('ivStartBtn').disabled=false; toast('Error: '+err.message, 'err'); }
+      };
+      window.ivBackToSetup = function() {
+        ivPrevQs = []; ivCurrentQ = null;
+        ctoolBackToForm('interview');
       };
       function renderIvQuestion(q) {
         const card=g('ivQuestionCard'); if(!card) return;
@@ -13369,7 +13371,6 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       window.runBranding = async function() {
         showModelSuggestion('branding','brandingSuggest');
         ctoolLoading('brandingLoading','brandingBtn',true);
-        ctoolResult('brandingResult',false);
         const rid=g('bdResumePicker')?.value||'';
         const resume=rid?getResumeById(rid):null;
         try {
@@ -13379,7 +13380,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderBranding(data);
           logEvent('personal_brand', { model: kieModel });
           ctoolLoading('brandingLoading','brandingBtn',false);
-          ctoolResult('brandingResult',true);
+          ctoolShowResults('branding');
         } catch(err) { ctoolLoading('brandingLoading','brandingBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderBranding(d) {
@@ -13410,7 +13411,6 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         if(!jt||!co) { toast('Enter the job title and company name.', 'err'); return; }
         showModelSuggestion('messaging','messagingSuggest');
         ctoolLoading('messagingLoading','messagingBtn',true);
-        ctoolResult('messagingResult',false);
         const rid=g('msgResumePicker')?.value||'';
         const resume=rid?getResumeById(rid):null;
         try {
@@ -13420,7 +13420,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderMessaging(data);
           logEvent('professional_msg', { model: kieModel });
           ctoolLoading('messagingLoading','messagingBtn',false);
-          ctoolResult('messagingResult',true);
+          ctoolShowResults('messaging');
         } catch(err) { ctoolLoading('messagingLoading','messagingBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderMessaging(d) {
@@ -13491,7 +13491,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         if(v==='messaging') populateResumePicker('msgResumePicker');
         if(v==='promotion') populateResumePicker('prResumePicker');
         // Reset interview session when navigating away and back
-        if(v==='interview') { ivPrevQs=[]; ivCurrentQ=null; if(g('ivSession')) g('ivSession').style.display='none'; if(g('ivFeedback')) g('ivFeedback').style.display='none'; if(g('ivSetup')) g('ivSetup').style.display='block'; }
+        if(v==='interview') { ivPrevQs=[]; ivCurrentQ=null; if(g('ivFeedback')) g('ivFeedback').style.display='none'; }
       };
 
       // Analyze button
