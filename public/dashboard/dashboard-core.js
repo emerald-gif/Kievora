@@ -316,6 +316,15 @@
     }
     window.lockTapped = lockTapped; // bridge — needed by job card onclicks generated outside this module scope
 
+    // Gate for AI-tool action buttons (Build My Roadmap, Analyze My Match,
+    // etc.) — the screen itself is always visible, but running the tool is
+    // still plan-gated. Call at the top of every run*() function; returns
+    // false (and shows the paywall) if locked, true if the tool may proceed.
+    function ctoolGate(key) {
+      if (!isToolUnlocked(key)) { lockTapped('tool', key); return false; }
+      return true;
+    }
+
     // ── KIE [GOTO:key] destinations ─────────────────────────────────────────
     // Every real place inside Kievora KIE can point a user to from chat via a
     // [GOTO:key] marker in its reply (see _kieApplyGotoMarkers below). Keys
@@ -1145,12 +1154,12 @@
 
       const ctoolViews = ['aibuild','careerhealth','roadmap','salary','industry','linkedin','interview','branding','messaging','promotion','jobmatch','resignation'];
 
-      // Plan gate: block navigation into a locked AI tool entirely — never let
-      // the view render so there's nothing to "peek" at without the tool running.
-      if (ctoolViews.includes(v) && !isToolUnlocked(v)) {
-        lockTapped('tool', v);
-        return;
-      }
+      // Plan gate: entering an AI tool's screen (hero card, fields, etc.) is
+      // always allowed — the lock is enforced when the person actually taps
+      // the tool's action button (see ctoolGate below), not on navigation.
+      // The "More Tools" tile itself still shows its lock badge separately
+      // (see the badge-refresh pass near .mto-tile), so the plan boundary is
+      // still visible up front — it's just not a wall blocking the screen.
 
       document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
       g('v-' + v).classList.add('active');
@@ -12549,10 +12558,10 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       populateResumePicker('jmResumePicker');
 
       window.runJobMatch = async function() {
+        if (!ctoolGate('jobmatch')) return;
         const jd = (g('jmJobDesc')?.value || '').trim();
         if (!jd || jd.length < 50) { toast('Please paste a job description (at least 50 characters).', 'err'); return; }
         ctoolLoading('jobmatchLoading', 'jobmatchBtn', true);
-        ctoolResult('jobmatchResult', false);
         const rid = g('jmResumePicker')?.value || '';
         const resume = rid ? getResumeById(rid) : null;
         const statMsgs = ['Scanning job requirements…', 'Comparing against your profile…', 'Calculating match score…', 'Identifying skill gaps…'];
@@ -12569,7 +12578,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           const data = await r.json();
           renderJobMatch(data);
           ctoolLoading('jobmatchLoading', 'jobmatchBtn', false);
-          ctoolResult('jobmatchResult', true);
+          ctoolShowResults('jobmatch');
         } catch(err) {
           clearInterval(si_int);
           ctoolLoading('jobmatchLoading', 'jobmatchBtn', false);
@@ -12608,11 +12617,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       // ── RESIGNATION LETTER ─────────────────────────────────────────────────────
       window.runResignation = async function() {
+        if (!ctoolGate('resignation')) return;
         const role = (g('rsCurrentRole')?.value || '').trim();
         const company = (g('rsCompany')?.value || '').trim();
         if (!role || !company) { toast('Please enter your role and company name.', 'err'); return; }
         ctoolLoading('resignationLoading', 'resignationBtn', true);
-        ctoolResult('resignationResult', false);
         try {
           const r = await fetch('/api/resignation-letter', {
             method: 'POST',
@@ -12630,7 +12639,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           const data = await r.json();
           renderResignation(data);
           ctoolLoading('resignationLoading', 'resignationBtn', false);
-          ctoolResult('resignationResult', true);
+          ctoolShowResults('resignation');
         } catch(err) {
           ctoolLoading('resignationLoading', 'resignationBtn', false);
           toast('Error: ' + err.message, 'err');
@@ -13023,11 +13032,11 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       // ── AI RESUME BUILDER ──────────────────────────────────────────────────────
       window._aibuildData = null;
       window.runAiBuild = async function() {
+        if (!ctoolGate('aibuild')) return;
         const prompt = (g('aibuildPrompt')?.value||'').trim();
         if (!prompt || prompt.length < 8) { toast('Please describe the resume you want to create.', 'err'); return; }
         showModelSuggestion('aibuild','aibuildSuggest');
         ctoolLoading('aibuildLoading','aibuildBtn',true);
-        ctoolResult('aibuildResult',false);
         const statEl = g('aibuildStatus');
         const msgs = ['Building your resume…','Crafting the experience section…','Adding skills & education…','Polishing the final details…'];
         let si=0; const si_int = setInterval(()=>{ if(statEl) statEl.textContent=msgs[++si%msgs.length]; },2000);
@@ -13039,7 +13048,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           window._aibuildData = data.resumeData;
           renderAiBuildResult(data.resumeData);
           ctoolLoading('aibuildLoading','aibuildBtn',false);
-          ctoolResult('aibuildResult',true);
+          ctoolShowResults('aibuild');
         } catch(err) {
           clearInterval(si_int);
           ctoolLoading('aibuildLoading','aibuildBtn',false);
@@ -13068,12 +13077,12 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
 
       // ── CAREER HEALTH SCORE ────────────────────────────────────────────────────
       window.runCareerHealth = async function() {
+        if (!ctoolGate('careerhealth')) return;
         const sel = g('chResumePicker'); const rid = sel?.value||'';
         const resume = rid ? getResumeById(rid) : null;
         if(!resume) { toast('Please select a resume to analyze.', 'err'); return; }
         showModelSuggestion('careerhealth','careerhealthSuggest');
         ctoolLoading('careerhealthLoading','careerhealthBtn',true);
-        ctoolResult('careerhealthResult',false);
         try {
           const r = await fetch('/api/career-health',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({resumeData:resume.resumeData,model:kieModel})});
           if(!r.ok) throw new Error((await r.json()).error||'Failed');
@@ -13081,7 +13090,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderCareerHealth(data);
           logEvent('career_health', { model: kieModel });
           ctoolLoading('careerhealthLoading','careerhealthBtn',false);
-          ctoolResult('careerhealthResult',true);
+          ctoolShowResults('careerhealth');
         } catch(err) { ctoolLoading('careerhealthLoading','careerhealthBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderCareerHealth(d) {
@@ -13126,6 +13135,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         el.classList.add('active');
       };
       window.runRoadmap = async function() {
+        if (!ctoolGate('roadmap')) return;
         const curr=(g('rmCurrentRole')?.value||'').trim(), tgt=(g('rmTargetRole')?.value||'').trim();
         if(!curr||!tgt) { toast('Enter your current and target role.', 'err'); return; }
         showModelSuggestion('roadmap','roadmapSuggest');
@@ -13165,6 +13175,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
 
       // ── SALARY INTELLIGENCE ────────────────────────────────────────────────────
       window.runSalaryIntel = async function() {
+        if (!ctoolGate('salary')) return;
         const jt=(g('salJobTitle')?.value||'').trim();
         if(!jt) { toast('Enter a job title.', 'err'); return; }
         showModelSuggestion('salary','salarySuggest');
@@ -13218,6 +13229,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
 
       // ── INDUSTRY INTELLIGENCE ──────────────────────────────────────────────────
       window.runIndustryIntel = async function() {
+        if (!ctoolGate('industry')) return;
         const ind=(g('indIndustry')?.value||'').trim();
         if(!ind) { toast('Enter an industry.', 'err'); return; }
         showModelSuggestion('industry','industrySuggest');
@@ -13256,6 +13268,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
 
       // ── LINKEDIN OPTIMIZER ─────────────────────────────────────────────────────
       window.runLinkedIn = async function() {
+        if (!ctoolGate('linkedin')) return;
         const hl=(g('liHeadline')?.value||'').trim();
         if(!hl) { toast('Enter your current LinkedIn headline.', 'err'); return; }
         showModelSuggestion('linkedin','linkedinSuggest');
@@ -13295,6 +13308,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         el.classList.add('active');
       };
       window.runGetQuestion = async function() {
+        if (!ctoolGate('interview')) return;
         const jt=(g('ivJobTitle')?.value||'').trim();
         if(!jt) { toast('Enter the job title you are interviewing for.', 'err'); return; }
         showModelSuggestion('interview','interviewSuggest');
@@ -13369,6 +13383,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         el.classList.add('active');
       };
       window.runBranding = async function() {
+        if (!ctoolGate('branding')) return;
         showModelSuggestion('branding','brandingSuggest');
         ctoolLoading('brandingLoading','brandingBtn',true);
         const rid=g('bdResumePicker')?.value||'';
@@ -13407,6 +13422,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         el.classList.add('active');
       };
       window.runMessaging = async function() {
+        if (!ctoolGate('messaging')) return;
         const jt=(g('msgJobTitle')?.value||'').trim(), co=(g('msgCompany')?.value||'').trim();
         if(!jt||!co) { toast('Enter the job title and company name.', 'err'); return; }
         showModelSuggestion('messaging','messagingSuggest');
@@ -13442,11 +13458,11 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
 
       // ── PROMOTION READINESS ────────────────────────────────────────────────────
       window.runPromotion = async function() {
+        if (!ctoolGate('promotion')) return;
         const curr=(g('prCurrentRole')?.value||'').trim(), tgt=(g('prTargetRole')?.value||'').trim();
         if(!curr||!tgt) { toast('Enter your current and target role.', 'err'); return; }
         showModelSuggestion('promotion','promotionSuggest');
         ctoolLoading('promotionLoading','promotionBtn',true);
-        ctoolResult('promotionResult',false);
         const rid=g('prResumePicker')?.value||'';
         const resume=rid?getResumeById(rid):null;
         try {
@@ -13456,7 +13472,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           renderPromotion(data);
           logEvent('promotion_readiness', { model: kieModel });
           ctoolLoading('promotionLoading','promotionBtn',false);
-          ctoolResult('promotionResult',true);
+          ctoolShowResults('promotion');
         } catch(err) { ctoolLoading('promotionLoading','promotionBtn',false); toast('Error: '+err.message, 'err'); }
       };
       function renderPromotion(d) {
