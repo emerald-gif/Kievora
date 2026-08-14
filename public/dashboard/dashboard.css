@@ -805,8 +805,8 @@
     /* ── MORE TOOLS OVERLAY ── */
     /* Clean white nav bar — identical treatment to the Settings panel (.ksb-set-hdr) */
     .mto-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px;background:#fff;border-bottom:1.5px solid #ede9fe;position:sticky;top:0;z-index:10}
-    .mto-back{width:36px;height:36px;background:#f5f3ff;border:1.5px solid #ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#7c3aed;flex-shrink:0;transition:background .15s}
-    .mto-back:hover{background:#ede9fe}
+    .mto-back{width:40px;height:40px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f0e17;flex-shrink:0;transition:background .15s}
+    .mto-back:hover{background:rgba(124,58,237,.07)}
     .mto-hdr-title{font-size:17px;font-weight:900;color:#0f0e17;letter-spacing:-.3px;flex:1}
     .mto-hdr-pill{display:flex;align-items:center;gap:4px;background:#f5f3ff;border:1px solid #ede9fe;border-radius:20px;padding:6px 12px;font-size:10.5px;font-weight:800;color:#7c3aed;flex-shrink:0;white-space:nowrap}
     /* Intro — same "13 tools" messaging, restructured on a light background instead of a dark hero */
@@ -860,7 +860,7 @@
     .rec-panel{position:fixed;inset:0;z-index:250;background:#f8f7ff;transform:translateX(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
     .rec-panel.open{transform:translateX(0)}
     .rec-panel-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid rgba(124,58,237,.1);position:sticky;top:0;z-index:10;flex-shrink:0}
-    .rec-panel-back{width:38px;height:38px;border:none;background:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f0e17;transition:background .15s;flex-shrink:0}
+    .rec-panel-back{width:40px;height:40px;border:none;background:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f0e17;transition:background .15s;flex-shrink:0}
     .rec-panel-back:hover{background:rgba(124,58,237,.07)}
     .rec-panel-title{font-size:16px;font-weight:800;color:#0f0e17;letter-spacing:-.35px;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none}
     .rec-panel-body{padding:16px;flex:1}
@@ -871,7 +871,7 @@
     .opt-panel{position:fixed;inset:0;z-index:260;background:#faf9ff;transform:translateX(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
     .opt-panel.open{transform:translateX(0)}
     .opt-panel-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid rgba(124,58,237,.1);position:sticky;top:0;z-index:10;flex-shrink:0}
-    .opt-panel-back{width:38px;height:38px;border:none;background:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f0e17;transition:background .15s;flex-shrink:0}
+    .opt-panel-back{width:40px;height:40px;border:none;background:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f0e17;transition:background .15s;flex-shrink:0}
     .opt-panel-back:hover{background:rgba(124,58,237,.07)}
     .opt-panel-body{padding:22px 16px 32px;flex:1}
     .opt-state{display:none}
@@ -1073,8 +1073,8 @@
     .ksb-settings-panel{position:fixed;inset:0;z-index:800;background:#f8f7ff;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
     .ksb-settings-panel.open{transform:translateY(0)}
     .ksb-set-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px;background:#fff;border-bottom:1.5px solid #ede9fe;position:sticky;top:0;z-index:10}
-    .ksb-set-back{width:36px;height:36px;background:#f5f3ff;border:1.5px solid #ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#7c3aed;flex-shrink:0;transition:background .15s}
-    .ksb-set-back:hover{background:#ede9fe}
+    .ksb-set-back{width:40px;height:40px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f0e17;flex-shrink:0;transition:background .15s}
+    .ksb-set-back:hover{background:rgba(124,58,237,.07)}
     .ksb-set-title{font-size:17px;font-weight:900;color:#0f0e17;letter-spacing:-.3px}
 
     /* ── SIDEBAR LIGHT THEME ── */
