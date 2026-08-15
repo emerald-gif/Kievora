@@ -2972,67 +2972,45 @@
 
       _kieShowDownloadOverlay('Preparing your resume PDF…');
 
-      // Standard Letter size, always — the print dialog's own "Paper size"
-      // picker enforces a standard size regardless of what a custom @page
-      // height asks for, so fighting it with a computed exact-fit height
-      // just produces content sitting in an unpredictable spot on the page.
-      // A short one-page resume having some blank space below it is normal
-      // (that's how any short document looks in Word or Google Docs too) —
-      // reliable positioning matters more than a page trimmed to the pixel.
-      const fullDoc = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
-        + '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
-        + '<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}'
-        + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0;width:100%}'
-        + 'body{display:block}body>*{margin-top:0 !important}'
-        + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
-        + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
-        + '.rf-mono{font-family:"Courier New",Courier,monospace}'
-        + '@media print{@page{size:8.5in 11in;margin:0}html,body{margin:0 !important;padding:0 !important;width:100%}body{display:block !important}}</style>'
-        + '</head><body>' + html + '</body></html>';
+      (async () => {
+        try {
+          const tok = await window.__kieGetIdToken();
+          const res = await fetch('/api/resume/pdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + tok,
+            },
+            body: JSON.stringify({ html, resumeName: title }),
+          });
 
-      // PRIMARY: hidden iframe — bypasses Android popup blocker
-      try {
-        const ifrEl = document.createElement('iframe');
-        // Real page dimensions, positioned off-screen — a 0x0 iframe never
-        // actually gets laid out, so Android's print-to-PDF service has
-        // nothing to rasterize and shows "Can't load content at the moment."
-        ifrEl.style.cssText = 'position:fixed;width:816px;height:1056px;border:0;top:-11000px;left:-11000px';
-        document.body.appendChild(ifrEl);
-        const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
-        iDoc.open(); iDoc.write(fullDoc); iDoc.close();
-        // Android's print-to-PDF names the saved file after the TOP window's
-        // title, not the iframe's own <title> — without this override every
-        // download was landing in Downloads as the app's page title (e.g.
-        // "Dashboard — Kievora") instead of the resume's actual name.
-        const _prevDocTitle = document.title;
-        document.title = title;
-        _kiePrintWhenReady(ifrEl.contentWindow, function() {
-          try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
+          if (!res.ok) {
+            let msg = 'PDF generation failed. Please try again.';
+            try { msg = (await res.json()).error || msg; } catch (e) {}
+            throw new Error(msg);
+          }
+
+          const blob = await res.blob();
+          const url  = URL.createObjectURL(blob);
+
+          // Real download — same-tab anchor click, triggered directly from the
+          // user's tap, so it's never popup-blocked and needs no new window.
+          const a = document.createElement('a');
+          a.href = url; a.download = title + '.pdf';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function() { try { URL.revokeObjectURL(url); } catch (e) {} }, 30000);
+
           _kieHideDownloadOverlay();
-          setTimeout(function() { document.title = _prevDocTitle; }, 4000);
-          setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
-        });
-        toast('Print dialog opening — choose "Save as PDF"');
-        return;
-      } catch(e) { _kieHideDownloadOverlay(); /* fall through */ }
-
-      // FALLBACK: blob URL new tab
-      const blob = new Blob([fullDoc], { type: 'text/html' });
-      const url  = URL.createObjectURL(blob);
-      const printWin = window.open(url, '_blank');
-      if (!printWin) {
-        _kieHideDownloadOverlay();
-        const a = document.createElement('a');
-        a.href = url; a.download = title + '.html';
-        a.style.display = 'none'; document.body.appendChild(a);
-        a.click(); document.body.removeChild(a);
-        toast('Resume saved to Downloads — open it and print as PDF');
-        return;
-      }
-      printWin.onload = function() { _kiePrintWhenReady(printWin, function() { printWin.focus(); printWin.print(); _kieHideDownloadOverlay(); }); };
-      toast('Choose "Save as PDF" in the print dialog');
+          toast('Resume downloaded ✅');
+        } catch (err) {
+          console.error('Resume PDF download error:', err);
+          _kieHideDownloadOverlay();
+          toast('Could not generate the PDF — try again in a moment');
+        }
+      })();
     }
 
 
@@ -6883,7 +6861,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     };
 
     // ── KIE: FILE CARD IN CHAT ────────────────────────────────────────────────
-    // ── CLIENT-SIDE RESUME PRINT (no Puppeteer needed) ───────────────────────
+    // ── SERVER-SIDE RESUME PDF (PDFBolt) — real auto-download, no print dialog ─
     // Attached to window so inline onclick strings inside innerHTML can always
     // reach it, even across script-scope boundaries on some mobile browsers.
     window.kieOpenResumePrint = function kieOpenResumePrint(html, name) {
@@ -6891,77 +6869,45 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
       _kieShowDownloadOverlay('Preparing your resume PDF…');
 
-      // Standard Letter size, always — see dlResume for why: the print
-      // dialog's own "Paper size" picker enforces a standard size regardless
-      // of a custom @page height, so a computed exact-fit height just fights
-      // the OS instead of cooperating with it.
-      const fullHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
-        + '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
-        + '<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}'
-        + 'html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
-        + 'body{display:block}body>*{margin-top:0 !important}'
-        + '.rf-sans{font-family:"Inter",system-ui,-apple-system,sans-serif}'
-        + '.rf-serif{font-family:Georgia,"Times New Roman",serif}'
-        + '.rf-mono{font-family:"Courier New",Courier,monospace}'
-        + '@media print{@page{size:8.5in 11in;margin:0}html,body{margin:0 !important;padding:0 !important;width:100%}body{display:block !important}}</style>'
-        + '</head><body>' + html + '</body></html>';
+      (async () => {
+        try {
+          const tok = await window.__kieGetIdToken();
+          const res = await fetch('/api/resume/pdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + tok,
+            },
+            body: JSON.stringify({ html, resumeName: title }),
+          });
 
-      // PRIMARY: hidden iframe — bypasses Android Chrome popup blocker entirely
-      // because it prints within the same page context, no new window needed.
-      try {
-        const ifrEl = document.createElement('iframe');
-        // Real page dimensions, positioned off-screen — a 0x0 iframe never
-        // actually gets laid out, so the print service has nothing to render.
-        ifrEl.style.cssText = 'position:fixed;width:816px;height:1056px;border:0;top:-11000px;left:-11000px';
-        document.body.appendChild(ifrEl);
-        const iDoc = ifrEl.contentDocument || ifrEl.contentWindow.document;
-        iDoc.open(); iDoc.write(fullHtml); iDoc.close();
-        // Android names the saved PDF after the TOP window's title, not the
-        // iframe's own <title> — this override fixes downloads landing as
-        // "Dashboard — Kievora" instead of the actual resume name.
-        const _prevDocTitle = document.title;
-        document.title = title;
-        _kiePrintWhenReady(ifrEl.contentWindow, function() {
-          try { ifrEl.contentWindow.focus(); ifrEl.contentWindow.print(); } catch(pe) {}
+          if (!res.ok) {
+            let msg = 'PDF generation failed. Please try again.';
+            try { msg = (await res.json()).error || msg; } catch (e) {}
+            throw new Error(msg);
+          }
+
+          const blob = await res.blob();
+          const url  = URL.createObjectURL(blob);
+
+          // Real download — same-tab anchor click, triggered directly from the
+          // user's tap, so it's never popup-blocked and needs no new window.
+          const a = document.createElement('a');
+          a.href = url; a.download = title + '.pdf';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function() { try { URL.revokeObjectURL(url); } catch (e) {} }, 30000);
+
           _kieHideDownloadOverlay();
-          setTimeout(function() { document.title = _prevDocTitle; }, 4000);
-          setTimeout(function() { try { document.body.removeChild(ifrEl); } catch(e) {} }, 60000);
-        });
-        toast('Print dialog opening — choose "Save as PDF" in the menu');
-        return;
-      } catch(ifrErr) { _kieHideDownloadOverlay(); /* fall through to blob-URL approaches */ }
-
-      // FALLBACK A: blob URL in a new tab (desktop + some mobile)
-      const blob = new Blob([fullHtml], { type: 'text/html' });
-      const url  = URL.createObjectURL(blob);
-      let opened = false;
-      try {
-        const printWin = window.open(url, '_blank');
-        if (printWin) {
-          opened = true;
-          printWin.onload = function() { _kiePrintWhenReady(printWin, function() { try { printWin.focus(); printWin.print(); } catch(e) {} _kieHideDownloadOverlay(); }); };
+          toast('Resume downloaded ✅');
+        } catch (err) {
+          console.error('Resume PDF download error:', err);
+          _kieHideDownloadOverlay();
+          toast('Could not generate the PDF — try again in a moment');
         }
-      } catch(e) { opened = false; }
-
-      if (!opened) {
-        _kieHideDownloadOverlay();
-        // FALLBACK B: <a download> — downloads the HTML file to device storage,
-        // most reliable last resort on stubborn Android browsers.
-        const a = document.createElement('a');
-        a.href = url; a.download = title + '.html';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        toast('Resume saved to Downloads — open it and tap Print to save as PDF');
-        setTimeout(function() { try { URL.revokeObjectURL(url); } catch(e) {} }, 30000);
-        return;
-      }
-
-      toast('Choose "Save as PDF" in the print dialog');
-      setTimeout(function() { try { URL.revokeObjectURL(url); } catch(e) {} }, 120000);
+      })();
     };
 
     // Print-card variant — shows a reopen button instead of blob download link
@@ -6973,7 +6919,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       const w = document.createElement('div');
       w.className = 'km km-ai';
       const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const rawMsg = introMsg || `Here's your resume — tap the button below to open it and save as a PDF. 📄`;
+      const rawMsg = introMsg || `Here's your resume — tap the button below to download it as a PDF. 📄`;
       const displayMsg = rawMsg.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
       // Store html keyed by a unique id so the reopen button can access it
@@ -6990,11 +6936,11 @@ Return ONLY valid JSON, no markdown, no explanation.`;
             </div>
             <div class="km-file-info">
               <div class="km-file-name">${esc(resumeName)}.pdf</div>
-              <div class="km-file-meta">Tap to open & save as PDF</div>
+              <div class="km-file-meta">Tap to download</div>
             </div>
             <button class="km-file-dl" onclick="(function(){var s=window._kiePrintStore&&window._kiePrintStore['${printId}'];if(s)kieOpenResumePrint(s.html,s.name);})()">
               <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Save as PDF
+              Download PDF
             </button>
           </div>
           <div class="km-meta">${time}</div>
