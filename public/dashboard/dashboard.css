@@ -619,7 +619,8 @@
     /* ── TEMPLATE PICKER ── */
     .tpick{max-width:1100px;margin:0 auto;padding:72px 16px 24px}
     .back-row{margin-bottom:24px}
-    .back-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--border2);color:var(--sub);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+    .back-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#0f0e17;cursor:pointer;transition:background .15s;flex-shrink:0;padding:0}
+    .back-btn:hover{background:rgba(124,58,237,.07)}
     .back-btn:hover{border-color:var(--p);color:var(--p);background:#faf5ff}
     .tpick-hdr{text-align:center;margin-bottom:16px}
     .tpick-hdr h2{font-size:22px;font-weight:900;margin-bottom:4px;letter-spacing:-.4px}
@@ -2223,7 +2224,8 @@
     /* ANALYSIS VIEW ── */
     .analysis-wrap{max-width:740px;margin:0 auto;padding:76px 16px 48px}
     .analysis-hdr-row{display:flex;align-items:center;gap:14px;margin-bottom:22px}
-    .analysis-back{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--border2);color:var(--sub);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;flex-shrink:0}
+    .analysis-back{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:50%;color:#0f0e17;cursor:pointer;transition:background .15s;font-family:inherit;flex-shrink:0;padding:0}
+    .analysis-back:hover{background:rgba(124,58,237,.07)}
     .analysis-back:hover{border-color:var(--p);color:var(--p)}
     .analysis-title{font-size:20px;font-weight:900;color:var(--txt)}
     .analysis-subtitle{font-size:12px;color:var(--sub);margin-top:1px}
@@ -2598,7 +2600,8 @@
     .hub-eco-hdr::before{content:'';position:absolute;top:-60px;right:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(168,85,247,.22) 0%,transparent 65%);pointer-events:none}
     .hub-eco-hdr::after{content:'';position:absolute;bottom:-30px;left:-20px;width:140px;height:140px;background:radial-gradient(circle,rgba(124,58,237,.15) 0%,transparent 65%);pointer-events:none}
     .hub-eco-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 0;position:relative;z-index:2}
-    .hub-eco-back-btn{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 11px;color:#c4b5fd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+    .hub-eco-back-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border:none;border-radius:50%;color:#fff;cursor:pointer;font-family:inherit;transition:background .15s;flex-shrink:0;padding:0}
+    .hub-eco-back-btn:hover{background:rgba(255,255,255,.18)}
     .hub-eco-back-btn:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.25)}
     .hub-eco-body{padding:18px 16px 0;position:relative;z-index:2}
     .hub-eco-brand{display:flex;align-items:center;gap:11px;margin-bottom:10px}
