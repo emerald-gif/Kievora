@@ -2927,3 +2927,30 @@
      main sidebar's offset — the two are mutually exclusive */
   body.kie-mode #v-kie{left:var(--kie-sb-w)}
 }
+
+/* ── HOME HERO SWIPER — v2 (resume.io-style stacked card) ───────────────────
+   Centered document preview on top, short copy, one full-width white CTA row.
+   CSS-only: markup unchanged. .ds-card-body uses display:contents so its
+   children can be reordered inside the card's own flex column. */
+.ds-slide{flex:0 0 88%;max-width:400px}
+.ds-card{flex-direction:column;align-items:stretch;gap:0;min-height:0;padding:18px 16px 16px;border-radius:24px;overflow:hidden}
+.ds-card-body{display:contents}
+.ds-sparkle,.ds-chart-float{display:none}
+
+.ds-tag{order:1;justify-content:center;margin-bottom:14px}
+.ds-tag-label{font-size:12.5px;font-weight:800;letter-spacing:.1px}
+
+.ds-doc-wrap{order:2;width:112px;align-self:center;margin:2px 0 18px}
+.ds-doc-mock{padding:12px 11px 0;max-height:104px;overflow:hidden;border-radius:12px 12px 0 0;box-shadow:0 10px 26px rgba(15,14,23,.12);
+  -webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
+.ds-stat-badge{top:-10px;right:-26px;width:52px;height:52px;box-shadow:0 6px 18px rgba(0,0,0,.14)}
+.ds-stat-num{font-size:16px}
+.ds-stat-lbl{font-size:6px}
+
+.ds-card-heading{order:3;text-align:center;font-size:22px;line-height:1.15;margin-bottom:6px}
+.ds-card-sub{order:4;text-align:center;max-width:none;font-size:13px;line-height:1.5;margin:0 auto 16px;padding:0 6px}
+
+.ds-card-cta{order:5;width:100%;justify-content:space-between;background:#fff!important;color:var(--txt);
+  border:1px solid rgba(15,14,23,.06);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:700;
+  box-shadow:0 1px 4px rgba(15,14,23,.06)}
+.ds-card-cta svg{flex-shrink:0;opacity:.7}
