@@ -6,6 +6,7 @@
 module.exports = function registerKieRoutes(app) {
   const {
     admin, db, authenticate,
+    GROQ_MAIN_MODEL, groqExtras, groqBudget,
     KIE_MODELS, KIE_TIERS, PLANS, getPlanConfig, getUserPlanKey,
     getCreditStatus, deductCredits, tokensToCredits, UPGRADE_MESSAGES, TOPUP_MESSAGES, buildKieToolsBlock,
     getCycleAnchorDate, getCycleStart,
@@ -436,7 +437,7 @@ module.exports = function registerKieRoutes(app) {
     const tierTokenBonus = effectiveMode === 'quick' ? 0 : tier.tokenBonus;
     const effectiveCfg   = { ...cfg, max_tokens: cfg.max_tokens + tierTokenBonus };
 
-    // ── Vision gate: KIE Spark (Groq llama-3.3-70b-versatile) has no vision ──
+    // ── Vision gate: KIE Spark (Groq gpt-oss, text-only) has no vision ──
     // support at all. Previously an image attached on Spark would still get
     // built into an Anthropic-style multimodal content block and sent to
     // Groq's OpenAI-style endpoint, which fails — and since the stream
@@ -1166,8 +1167,9 @@ One row per fact, only the facts relevant to what they actually asked (don't dum
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 600,
+          model: GROQ_MAIN_MODEL,
+          ...groqExtras(GROQ_MAIN_MODEL),
+          max_tokens: groqBudget(GROQ_MAIN_MODEL, 600),
           temperature: 0.7,
           messages: [
             { role: 'system', content: systemPrompt },

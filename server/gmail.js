@@ -9,6 +9,7 @@ const { google } = require('googleapis'); // ✅ FIXED: google is now defined
 module.exports = function registerGmailRoutes(app) {
   const {
     admin, db, authenticate, getOAuthClient,
+    GROQ_FAST_MODEL, groqExtras, groqBudget,
     GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET,
     classifyCareerEmail, extractEmailEntities, extractInterviewDateTime,
     syncUserGmail, buildApplicationList, generateInsights, computeNextAction,
@@ -158,7 +159,7 @@ module.exports = function registerGmailRoutes(app) {
         : '';
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
-        body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:260, temperature:0.6,
+        body: JSON.stringify({ model:GROQ_FAST_MODEL, ...groqExtras(GROQ_FAST_MODEL), max_tokens:groqBudget(GROQ_FAST_MODEL,260), temperature:0.6,
           messages:[{ role:'user', content:`Write a short, warm, professional follow-up email a job applicant can send to check on the status of their application. Company: ${company}. Role: ${role||'the role they applied for'}.${repeatNote} Keep it under 120 words, confident but not pushy, no generic filler, no placeholder brackets. Return ONLY valid JSON: {"subject":"...","body":"..."}` }]
         })
       });
@@ -333,7 +334,7 @@ module.exports = function registerGmailRoutes(app) {
 
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
-        body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:500, temperature:0.6,
+        body: JSON.stringify({ model:GROQ_FAST_MODEL, ...groqExtras(GROQ_FAST_MODEL), max_tokens:groqBudget(GROQ_FAST_MODEL,500), temperature:0.6,
           messages:[{ role:'user', content:`Generate interview prep for a candidate interviewing at ${company}${role?' for the role of '+role:''}.${resumeContext||' No resume on file — keep talking points generic but still genuinely useful.'}
   Return ONLY valid JSON in this exact shape, nothing else:
   {"questions":["q1","q2","q3","q4","q5"],"talkingPoints":["p1","p2","p3"]}
@@ -400,7 +401,7 @@ module.exports = function registerGmailRoutes(app) {
 
       const rr = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
-        body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:300, temperature:0.6,
+        body: JSON.stringify({ model:GROQ_FAST_MODEL, ...groqExtras(GROQ_FAST_MODEL), max_tokens:groqBudget(GROQ_FAST_MODEL,300), temperature:0.6,
           messages:[{ role:'user', content:`Write a reply to this email from someone at ${company}. Reference what they actually said specifically — quote or paraphrase a real detail from it, don't write something generic that could apply to any email. Keep it under 130 words, warm, professional, confident.\n\nTheir email:\n${body}\n\nReturn ONLY valid JSON: {"subject":"Re: ...","body":"..."}` }]
         })
       });
@@ -451,7 +452,7 @@ module.exports = function registerGmailRoutes(app) {
 
       const r2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${groqKey}`},
-        body: JSON.stringify({ model:'llama-3.1-8b-instant', max_tokens:250, temperature:0.3,
+        body: JSON.stringify({ model:GROQ_FAST_MODEL, ...groqExtras(GROQ_FAST_MODEL), max_tokens:groqBudget(GROQ_FAST_MODEL,250), temperature:0.3,
           messages:[{ role:'user', content:`Resume skills listed: ${skills}.
   Email subject lines from companies that advanced this candidate to interview/assessment/offer stage:
   ${emailContext}
