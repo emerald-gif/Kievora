@@ -1,11 +1,12 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --p:#7c3aed;--p2:#a855f7;--ps:#5b21b6;
-      --g:linear-gradient(135deg,#7c3aed,#a855f7);
-      --bg:#f8f7ff;--card:#fff;
-      --border:#ede9fe;--border2:#e8e0fb;
-      --txt:#0f0e17;--sub:#64748b;--mute:#94a3b8;
-      --rad:14px;--shadow:0 4px 20px rgba(124,58,237,.08);
+      /* MindShift Books palette (indigo → cyan, slate neutrals) — step 1 of the recolor */
+      --p:#4f46e5;--p2:#06b6d4;--ps:#4338ca;
+      --g:linear-gradient(90deg,#4f46e5,#06b6d4);
+      --bg:#f8fafc;--card:#fff;
+      --border:#e2e8f0;--border2:#e2e8f0;
+      --txt:#0f172a;--sub:#6b7280;--mute:#9ca3af;
+      --rad:14px;--shadow:0 4px 20px rgba(79,70,229,.08);
       /* Neutral, Apple-style tokens — used where a card/divider shouldn't
          carry a purple tint (hairline borders, crisp low-opacity shadows).
          The brand tokens above stay for anything that should read as an
