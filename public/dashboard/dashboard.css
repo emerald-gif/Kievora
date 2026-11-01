@@ -1159,11 +1159,11 @@
     .kie-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
     .kie-info{display:flex;flex-direction:column}
     .kie-name{font-size:15px;font-weight:800;color:#1a1a2e;letter-spacing:-.2px}
-    .kie-sub{font-size:11px;color:#8b8b9e;margin-top:1px;font-weight:500}
+    .kie-sub{font-size:11px;color:#94a3b8;margin-top:1px;font-weight:500}
     .kie-hdr-r{display:flex;align-items:center;gap:3px;pointer-events:auto;background:#fff;border-radius:25px;padding:4px;box-shadow:0 2px 11px rgba(15,23,42,.11)}
     .kie-close{background:#f5f5f8;border:1px solid #e8e8ec;color:#5f5f7a;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;transition:all .15s;font-family:inherit}
     .kie-close:hover{background:#e0e7ff;border-color:#a5b4fc;color:var(--p)}
-    .kie-clear-btn{background:none;border:none;color:#8b8b9e;cursor:pointer;padding:8px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .kie-clear-btn{background:none;border:none;color:#94a3b8;cursor:pointer;padding:8px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .15s}
     .kie-clear-btn:hover{background:#f5f5f8;color:#5f5f7a}
 
     /* Welcome screen */
@@ -1175,7 +1175,7 @@
     .kie-welcome-title{font-size:21px;font-weight:900;color:#1a1a2e;margin-bottom:4px;letter-spacing:-.5px}
     .kie-wave{display:inline-flex;align-items:center;vertical-align:-5px;animation:wave 2.2s ease-in-out infinite;transform-origin:70% 70%}
     @keyframes wave{0%,100%{transform:rotate(0deg)}20%{transform:rotate(14deg)}40%{transform:rotate(-8deg)}60%{transform:rotate(14deg)}80%{transform:rotate(-4deg)}}
-    .kie-welcome-sub{font-size:12px;color:#8b8b9e;max-width:280px;line-height:1.5;margin:0 auto}
+    .kie-welcome-sub{font-size:12px;color:#94a3b8;max-width:280px;line-height:1.5;margin:0 auto}
     /* ── KIE ECOSYSTEM TOOLS inside welcome ── */
     .kie-eco-wrap{padding:8px 14px 4px}
     .kie-eco-divider{display:flex;align-items:center;gap:8px;margin-bottom:12px}
@@ -1237,7 +1237,7 @@
     .kie-chip:hover{border-color:#4f46e5;background:#f5f7ff;transform:translateY(-2px);box-shadow:0 6px 16px rgba(79,70,229,.12)}
     .kie-chip-ico{font-size:22px;margin-bottom:8px;display:block}
     .kie-chip-txt{font-size:12px;font-weight:700;color:#1a1a2e;line-height:1.4}
-    .kie-chip-sub{font-size:11px;color:#8b8b9e;margin-top:3px;font-weight:400}
+    .kie-chip-sub{font-size:11px;color:#94a3b8;margin-top:3px;font-weight:400}
 
     /* Messages area */
     .kie-msgs{flex:1;min-height:0;overflow-y:auto;padding:64px 12px 8px;display:flex;flex-direction:column;gap:16px;background:#fff;scroll-behavior:smooth}
@@ -1376,7 +1376,7 @@
     /* Mode pills bar — compact, above input */
     .kie-modes{display:flex;align-items:center;gap:5px;padding:8px 16px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0;background:transparent}
     .kie-modes::-webkit-scrollbar{display:none}
-    .kie-mode-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid #e8e8ec;background:#fff;color:#8b8b9e;cursor:pointer;transition:all .18s;white-space:nowrap;font-family:inherit;flex-shrink:0}
+    .kie-mode-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid #e8e8ec;background:#fff;color:#94a3b8;cursor:pointer;transition:all .18s;white-space:nowrap;font-family:inherit;flex-shrink:0}
     .kie-mode-pill:hover{border-color:#a5b4fc;color:#4f46e5;background:#f5f7ff}
     .kie-mode-pill.active{background:linear-gradient(135deg,#4f46e5,#06b6d4);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(79,70,229,.25)}
     .kie-mode-pill svg{flex-shrink:0}
@@ -1660,7 +1660,7 @@
     .kie-file-overlay-close:active{transform:scale(.92)}
     .kie-file-overlay-title{flex:1;min-width:0}
     #kieFilePreviewName{font-size:14.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1a1a2e;letter-spacing:-.2px}
-    #kieFilePreviewSub{font-size:11.5px;color:#8b8b9e;margin-top:2px;font-weight:500}
+    #kieFilePreviewSub{font-size:11.5px;color:#94a3b8;margin-top:2px;font-weight:500}
     .kie-file-overlay-body{flex:1;overflow-y:auto;background:#f8fafc;padding:20px 14px 48px;display:flex;flex-direction:column;align-items:center;gap:16px;scroll-behavior:smooth}
     .kie-file-overlay-page{max-width:100%;height:auto;border-radius:6px;box-shadow:0 4px 18px rgba(79,70,229,.12);border:1px solid #e0e7ff;background:#fff}
     .kie-file-overlay-txt{
@@ -1675,7 +1675,7 @@
       animation:kieSpin .8s linear infinite;
     }
     @keyframes kieSpin{to{transform:rotate(360deg)}}
-    .kie-file-overlay-loading-txt{color:#8b8b9e;font-size:12.5px;font-weight:500}
+    .kie-file-overlay-loading-txt{color:#94a3b8;font-size:12.5px;font-weight:500}
     .kie-file-overlay-note{color:#94a3b8;font-size:11px;text-align:center;padding-top:4px}
     .kie-file-overlay-unavail{
       display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -1788,7 +1788,7 @@
         radial-gradient(circle at 74% 18%, rgba(129,140,248,.55) 0%, transparent 50%),
         radial-gradient(circle at 50% 48%, rgba(199,210,254,.95) 0%, transparent 58%),
         radial-gradient(circle at 66% 80%, rgba(6,182,212,.6) 0%, transparent 55%),
-        linear-gradient(165deg, #c7d2fe 0%, #a5b4fc 30%, #b085f5 65%, #8b3ce8 100%);
+        linear-gradient(165deg, #c7d2fe 0%, #a5b4fc 30%, #818cf8 65%, #4f46e5 100%);
       animation-duration:2.4s;
     }
     .kie-live-wave-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -2329,7 +2329,7 @@
     .kie-tswipe-card:active{transform:scale(.97)}
     .kie-tswipe-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:17px;flex-shrink:0}
     .kie-tswipe-name{font-size:11.5px;font-weight:800;color:#1a1a2e;line-height:1.3;margin-bottom:2px}
-    .kie-tswipe-sub{font-size:9.5px;color:#8b8b9e;font-weight:400;line-height:1.4}
+    .kie-tswipe-sub{font-size:9.5px;color:#94a3b8;font-weight:400;line-height:1.4}
 
     /* New chat icon — hidden by default, shown once there's an active
        conversation to reset (see showPlusFab() in dashboard-kie-sidebar.js) */
