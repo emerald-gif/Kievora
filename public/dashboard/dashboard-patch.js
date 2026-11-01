@@ -141,24 +141,24 @@ document.addEventListener('DOMContentLoaded', () => {
     'position:fixed','left:0','right:0','bottom:0',
     'z-index:9999','background:#fff',
     'border-radius:22px 22px 0 0',
-    'box-shadow:0 -4px 40px rgba(124,58,237,.18)',
+    'box-shadow:0 -4px 40px rgba(79,70,229,.18)',
     'transform:translateY(100%)',
     'transition:transform .35s cubic-bezier(.4,0,.2,1)',
     'max-height:88vh','display:flex','flex-direction:column',
   ].join(';');
   _drwEl.innerHTML = `
-    <div style="width:36px;height:4px;background:#e0d7f5;border-radius:2px;margin:12px auto 0;flex-shrink:0"></div>
+    <div style="width:36px;height:4px;background:#e2e8f0;border-radius:2px;margin:12px auto 0;flex-shrink:0"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;flex-shrink:0">
       <div>
-        <div style="font-size:17px;font-weight:900;color:#0f0e17;letter-spacing:-.3px">Choose a Template</div>
+        <div style="font-size:17px;font-weight:900;color:#0f172a;letter-spacing:-.3px">Choose a Template</div>
         <div style="font-size:12px;color:#64748b;margin-top:2px">Your resume details stay intact — just the design changes.</div>
       </div>
-      <button id="_etClose" style="width:34px;height:34px;background:#f3f0ff;border:none;border-radius:10px;color:#7c3aed;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:12px;font-family:inherit;line-height:1">✕</button>
+      <button id="_etClose" style="width:34px;height:34px;background:#eef2ff;border:none;border-radius:10px;color:#4f46e5;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:12px;font-family:inherit;line-height:1">✕</button>
     </div>
     <div id="_etGrid" style="overflow-y:auto;padding:4px 16px 12px;flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start"></div>
-    <div style="padding:12px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));background:#fff;border-top:1px solid #f0eeff;display:flex;gap:10px;flex-shrink:0">
-      <button id="_etCancel" style="flex:1;background:#f3f0ff;color:#7c3aed;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>
-      <button id="_etConfirm" style="flex:2;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3)">Use Template →</button>
+    <div style="padding:12px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));background:#fff;border-top:1px solid #eef2ff;display:flex;gap:10px;flex-shrink:0">
+      <button id="_etCancel" style="flex:1;background:#eef2ff;color:#4f46e5;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>
+      <button id="_etConfirm" style="flex:2;background:linear-gradient(135deg,#4f46e5,#06b6d4);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(79,70,229,.3)">Use Template →</button>
     </div>`;
   document.body.appendChild(_drwEl);
 

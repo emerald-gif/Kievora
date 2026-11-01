@@ -382,7 +382,7 @@
       const style = document.createElement('style');
       style.id = 'kie-goto-style';
       style.textContent = `
-        .kie-goto-btn{display:inline-flex;align-items:center;gap:5px;margin:4px 6px 4px 0;padding:8px 13px;border-radius:11px;border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;font:600 12.5px/1.3 inherit;cursor:pointer;transition:transform .12s ease;vertical-align:middle}
+        .kie-goto-btn{display:inline-flex;align-items:center;gap:5px;margin:4px 6px 4px 0;padding:8px 13px;border-radius:11px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;font:600 12.5px/1.3 inherit;cursor:pointer;transition:transform .12s ease;vertical-align:middle}
         .kie-goto-btn:active{transform:scale(.96)}
         .kie-goto-btn::after{content:'→';margin-left:1px;opacity:.7}
         .kie-goto-btn.kie-goto-locked{background:#f8fafc;color:#64748b;border-color:#e2e8f0}
@@ -499,7 +499,7 @@
       { id:'modern',    name:'Modern',     tag:'Clean',         bg:'#0f766e' },
       { id:'bold',      name:'Bold',       tag:'Executive',     bg:'#7c2d12' },
       { id:'minimal',   name:'Minimal',    tag:'Simple',        bg:'#1e293b' },
-      { id:'vivid',     name:'Vivid',      tag:'Standout',      bg:'#581c87' },
+      { id:'vivid',     name:'Vivid',      tag:'Standout',      bg:'#3730a3' },
       { id:'elegant',   name:'Elegant',    tag:'Refined',       bg:'#44403c' },
       { id:'slate',     name:'Slate',      tag:'Dark & Sharp',  bg:'#0f172a' },
       { id:'coral',     name:'Coral',      tag:'Warm & Bold',   bg:'#c2410c' },
@@ -911,7 +911,7 @@
     window.aiAssistSummary  = () => triggerSummaryCoach(g('bTitle').value.trim() || 'Professional');
     window.aiSuggestSkills  = triggerSkillsCoach;
 
-    function sparkIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path fill="#7c3aed" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>'; }
+    function sparkIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path fill="#4f46e5" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>'; }
     function checkIcon(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#2563eb"/><path stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M7 12.5l3.5 3.5 6.5-7"/></svg>'; }
     function plusIcon() { return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#cbd5e1" stroke-width="2"/><path stroke="#94a3b8" stroke-width="2" stroke-linecap="round" d="M12 8v8M8 12h8"/></svg>'; }
 
@@ -1297,17 +1297,17 @@
 
       if (!merged.length) {
         const isTailoredTab = _homeRTab === 'tailored';
-        grid.innerHTML = `<div style="min-width:calc(100vw - 48px);max-width:340px;background:#fff;border-radius:18px;border:1.5px dashed rgba(124,58,237,.22);padding:20px 24px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(124,58,237,.05)">
-          <div style="flex-shrink:0;width:52px;height:60px;background:linear-gradient(140deg,#ede9fe,#ddd6fe);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(124,58,237,.15);overflow:hidden">
+        grid.innerHTML = `<div style="min-width:calc(100vw - 48px);max-width:340px;background:#fff;border-radius:18px;border:1.5px dashed rgba(79,70,229,.22);padding:20px 24px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(79,70,229,.05)">
+          <div style="flex-shrink:0;width:52px;height:60px;background:linear-gradient(140deg,#e0e7ff,#c7d2fe);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(79,70,229,.15);overflow:hidden">
             <svg viewBox="0 0 40 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="40">
-              <rect x="2" y="2" width="36" height="44" rx="5" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5"/>
-              <rect x="6" y="10" width="18" height="2.5" rx="1.25" fill="#a78bfa"/>
-              <rect x="6" y="15" width="28" height="2" rx="1" fill="#ddd6fe"/>
-              <rect x="6" y="19.5" width="24" height="2" rx="1" fill="#ddd6fe"/>
-              <rect x="6" y="26" width="12" height="2" rx="1" fill="#c4b5fd"/>
-              <rect x="6" y="30.5" width="28" height="1.8" rx="0.9" fill="#ede9fe"/>
-              <rect x="6" y="34.5" width="20" height="1.8" rx="0.9" fill="#ede9fe"/>
-              <circle cx="32" cy="36" r="7" fill="#7c3aed"/>
+              <rect x="2" y="2" width="36" height="44" rx="5" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1.5"/>
+              <rect x="6" y="10" width="18" height="2.5" rx="1.25" fill="#818cf8"/>
+              <rect x="6" y="15" width="28" height="2" rx="1" fill="#c7d2fe"/>
+              <rect x="6" y="19.5" width="24" height="2" rx="1" fill="#c7d2fe"/>
+              <rect x="6" y="26" width="12" height="2" rx="1" fill="#a5b4fc"/>
+              <rect x="6" y="30.5" width="28" height="1.8" rx="0.9" fill="#e0e7ff"/>
+              <rect x="6" y="34.5" width="20" height="1.8" rx="0.9" fill="#e0e7ff"/>
+              <circle cx="32" cy="36" r="7" fill="#4f46e5"/>
               <path d="M29 36h6M32 33v6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
           </div>
@@ -1315,8 +1315,8 @@
             <div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:3px">${isTailoredTab ? 'No job-tailored resumes yet' : 'No resumes yet'}</div>
             <div style="font-size:11px;color:var(--sub);line-height:1.5;margin-bottom:10px">${isTailoredTab ? "Open a job in Find Jobs and tap \u201cTailor My Resume for This Job.\u201d" : 'Build your first resume in minutes and get hired faster.'}</div>
             ${isTailoredTab
-              ? `<button onclick="window.location.href='/find-jobs'" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(124,58,237,.28)">Browse Jobs</button>`
-              : `<button onclick="showView('tpick')" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(124,58,237,.28)">
+              ? `<button onclick="window.location.href='/find-jobs'" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(79,70,229,.28)">Browse Jobs</button>`
+              : `<button onclick="showView('tpick')" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(79,70,229,.28)">
                 <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 Create Resume
               </button>`}
@@ -1348,7 +1348,7 @@
         const pill = isDraft
           ? `<span class="rr-pill" style="background:#dbeafe;color:#2563eb">Draft</span>`
           : r.isJobTailored
-          ? `<span class="rr-pill" style="background:#ede9fe;color:#7c3aed" title="${esc((r.tailoredForJob?.title||'')+(r.tailoredForJob?.company?' at '+r.tailoredForJob.company:''))}">${typeof r.newMatchScore === 'number' ? r.newMatchScore + '% match' : 'Tailored'}</span>`
+          ? `<span class="rr-pill" style="background:#e0e7ff;color:#4f46e5" title="${esc((r.tailoredForJob?.title||'')+(r.tailoredForJob?.company?' at '+r.tailoredForJob.company:''))}">${typeof r.newMatchScore === 'number' ? r.newMatchScore + '% match' : 'Tailored'}</span>`
           : `<span class="rr-pill" style="background:${sc}18;color:${sc}"
                onclick="event.stopPropagation();openATSDrawer('${r.id}')"
                title="ATS Score — tap for details">${score} ATS</span>`;
@@ -1492,7 +1492,7 @@
         <div class="ats-drawer-score-row">
           <div class="ats-drawer-ring">
             <svg width="80" height="80" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="${R2}" stroke="#ede9fe" stroke-width="6" fill="none"/>
+              <circle cx="40" cy="40" r="${R2}" stroke="#e0e7ff" stroke-width="6" fill="none"/>
               <circle cx="40" cy="40" r="${R2}" stroke="${sc}" stroke-width="6" fill="none"
                 stroke-dasharray="${circ2}" stroke-dashoffset="${circ2}"
                 stroke-linecap="round" transform="rotate(-90 40 40)"
@@ -1655,7 +1655,7 @@
           ? `🎯 ${esc(r.tailoredForJob.title || '')}${r.tailoredForJob.company ? ' at ' + esc(r.tailoredForJob.company) : ''}`
           : esc(d.jobTitle || 'No job title');
         const matchBadge = r.isJobTailored && typeof r.newMatchScore === 'number'
-          ? `<span class="optimized-badge" style="background:linear-gradient(135deg,#ede9fe,#f3e8ff);color:#7c3aed">🎯 ${typeof r.oldMatchScore === 'number' ? r.oldMatchScore + '→' : ''}${r.newMatchScore}% match</span>`
+          ? `<span class="optimized-badge" style="background:linear-gradient(135deg,#e0e7ff,#eef2ff);color:#4f46e5">🎯 ${typeof r.oldMatchScore === 'number' ? r.oldMatchScore + '→' : ''}${r.newMatchScore}% match</span>`
           : '';
         return `<div class="rcard" onclick="${openAction}">
           <div class="rcard-thumb" style="background:${t.bg}18">
@@ -1663,7 +1663,7 @@
           </div>
           <div class="rcard-body">
             <div class="rcard-name">${esc(r.resumeName)}${isDraft?'<span class="draft-badge">Draft</span>':''}${(!isDraft && typeof r.optimizedFromScore === 'number' && typeof r.atsScore === 'number')?`<span class="optimized-badge">✨ ${r.optimizedFromScore}→${r.atsScore}</span>`:''}${matchBadge}</div>
-            <div class="rcard-role"${r.isJobTailored ? ' style="color:#7c3aed;font-weight:700"' : ''}>${roleLine}</div>
+            <div class="rcard-role"${r.isJobTailored ? ' style="color:#4f46e5;font-weight:700"' : ''}>${roleLine}</div>
             <div class="rcard-date">Modified ${fmtDate(r.updatedAt)}</div>
           </div>
           <button class="rcard-more" onclick="event.stopPropagation();openResumeSheet('${r.id}',${isDraft})" title="More options">
@@ -1994,7 +1994,7 @@
     // Work / Edu / Skills render
     function renderW() {
       g('wCont').innerHTML = wList.length === 0
-        ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No work experience added yet.</p>'
+        ? '<p style="font-size:12px;color:#818cf8;font-style:italic">No work experience added yet.</p>'
         : wList.map(w => `<div class="ec${w._id===editingWId?' editing':''}" onclick="editW(${w._id})"><div class="ec-top"><div><div class="ec-name">${esc(w.position)} @ ${esc(w.company)}</div><div class="ec-sub">${esc(w.startDate)}–${esc(w.endDate || 'Present')}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmW(${w._id})">✕</button></div>${w.description ? `<div style="font-size:11px;color:#64748b;margin-top:4px">${esc(w.description)}</div>` : ''}<div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
     window.editW = id => {
@@ -2012,7 +2012,7 @@
     };
     function renderE() {
       g('eCont').innerHTML = eList.length === 0
-        ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No education added yet.</p>'
+        ? '<p style="font-size:12px;color:#818cf8;font-style:italic">No education added yet.</p>'
         : eList.map(e => `<div class="ec${e._id===editingEId?' editing':''}" onclick="editE(${e._id})"><div class="ec-top"><div><div class="ec-name">${esc(e.degree)} in ${esc(e.field)}</div><div class="ec-sub">${esc(e.school)} · ${esc(e.graduationDate)}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmE(${e._id})">✕</button></div><div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
     window.editE = id => {
@@ -2030,7 +2030,7 @@
     };
     function renderS() {
       g('sCont').innerHTML = sList.length === 0
-        ? '<p style="font-size:12px;color:#a78bfa;font-style:italic;margin-bottom:8px">No skills added yet.</p>'
+        ? '<p style="font-size:12px;color:#818cf8;font-style:italic;margin-bottom:8px">No skills added yet.</p>'
         : `<div class="spills">${sList.map((s, i) => `<span class="spill">${esc(s)}<button onclick="rmS(${i})">✕</button></span>`).join('')}</div>`;
     }
     window.rmW = id => { wList = wList.filter(w => w._id !== id); if (editingWId === id) window.cancelEditW(); renderW(); autoSaveDraft(); };
@@ -2043,7 +2043,7 @@
     function renderCert() {
       const el = g('certCont'); if (!el) return;
       el.innerHTML = certList.length === 0
-        ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No certifications added yet.</p>'
+        ? '<p style="font-size:12px;color:#818cf8;font-style:italic">No certifications added yet.</p>'
         : certList.map(c => `<div class="ec${c._id===editingCrtId?' editing':''}" onclick="editCert(${c._id})"><div class="ec-top"><div><div class="ec-name">${esc(c.name)}</div><div class="ec-sub">${esc(c.issuer || '')}${c.date ? ' · ' + esc(c.date) : ''}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmCert(${c._id})">✕</button></div><div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
     window.editCert = id => {
@@ -2061,7 +2061,7 @@
     function renderProj() {
       const el = g('projCont'); if (!el) return;
       el.innerHTML = projList.length === 0
-        ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No projects added yet.</p>'
+        ? '<p style="font-size:12px;color:#818cf8;font-style:italic">No projects added yet.</p>'
         : projList.map(p => `<div class="ec${p._id===editingPrjId?' editing':''}" onclick="editProj(${p._id})"><div class="ec-top"><div><div class="ec-name">${esc(p.name)}</div>${p.url ? `<div class="ec-sub">${esc(p.url)}</div>` : ''}</div><button class="ec-rm" onclick="event.stopPropagation();rmProj(${p._id})">✕</button></div>${p.description ? `<div style="font-size:11px;color:#64748b;margin-top:4px">${esc(p.description)}</div>` : ''}<div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
     window.editProj = id => {
@@ -2079,7 +2079,7 @@
     function renderLang() {
       const el = g('langCont'); if (!el) return;
       el.innerHTML = langList.length === 0
-        ? '<p style="font-size:12px;color:#a78bfa;font-style:italic">No languages added yet.</p>'
+        ? '<p style="font-size:12px;color:#818cf8;font-style:italic">No languages added yet.</p>'
         : langList.map(l => `<div class="ec${l._id===editingLngId?' editing':''}" onclick="editLang(${l._id})"><div class="ec-top"><div><div class="ec-name">${esc(l.language)}</div><div class="ec-sub">${esc(l.proficiency)}</div></div><button class="ec-rm" onclick="event.stopPropagation();rmLang(${l._id})">✕</button></div><div class="ec-edit-hint">Tap to edit</div></div>`).join('');
     }
     window.editLang = id => {
@@ -2253,7 +2253,7 @@
           if (succRingWrap) {
             succRingWrap.innerHTML = `
               <svg width="90" height="90" viewBox="0 0 90 90">
-                <circle cx="45" cy="45" r="${R}" stroke="#ede9fe" stroke-width="6" fill="none"/>
+                <circle cx="45" cy="45" r="${R}" stroke="#e0e7ff" stroke-width="6" fill="none"/>
                 <circle cx="45" cy="45" r="${R}" stroke="${sSc}" stroke-width="6" fill="none"
                   stroke-dasharray="${circ}" stroke-dashoffset="${circ}"
                   stroke-linecap="round" transform="rotate(-90 45 45)"
@@ -2485,13 +2485,13 @@
         <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:14.5px;opacity:.8">${d.email?`<span>✉ ${esc(d.email)}</span>`:''} ${d.phone?`<span>☎ ${esc(d.phone)}</span>`:''} ${d.location?`<span>⌖ ${esc(d.location)}</span>`:''}</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 180px">
-        <div style="padding:24px 28px;border-right:2px solid #f8f7ff">
+        <div style="padding:24px 28px;border-right:2px solid #f8fafc">
           ${d.summary?`<div style="margin-bottom:16px"><div style="font-size:13px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:4px;margin-bottom:8px">Profile</div><p style="color:#444;font-size:16px">${esc(d.summary)}</p></div>`:''}
           ${(d.workExperience||[]).length?`<div><div style="font-size:13px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:4px;margin-bottom:10px">Experience</div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><strong style="font-size:16px">${esc(w.position)}</strong><span style="color:#999;font-size:13px">${esc(w.startDate)} – ${esc(w.endDate||'Now')}</span></div><div style="color:#6b7280;font-size:14.5px">${esc(w.company)}</div>${w.description?`<p style="color:#555;font-size:14.5px;margin-top:3px">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
         </div>
-        <div style="padding:24px 16px;background:#faf9ff">
+        <div style="padding:24px 16px;background:#f8fafc">
           ${(d.skills||[]).length?`<div style="margin-bottom:16px"><div style="font-size:11.5px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Skills</div>${(d.skills||[]).map(s=>`<div style="margin-bottom:5px;font-size:14.5px;color:#374151;display:flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:${c};flex-shrink:0"></span>${esc(s)}</div>`).join('')}</div>`:''}
-          ${(d.education||[]).length?`<div style="margin-bottom:14px"><div style="font-size:11.5px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:14.5px">${esc(e.degree)}</strong><div style="color:#7c3aed;font-size:13px">${esc(e.field)}</div><div style="color:#6b7280;font-size:13px">${esc(e.school)}</div><div style="color:#999;font-size:13px">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
+          ${(d.education||[]).length?`<div style="margin-bottom:14px"><div style="font-size:11.5px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid ${c};padding-bottom:3px;margin-bottom:8px">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:14.5px">${esc(e.degree)}</strong><div style="color:#4f46e5;font-size:13px">${esc(e.field)}</div><div style="color:#6b7280;font-size:13px">${esc(e.school)}</div><div style="color:#999;font-size:13px">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:''}
           ${secProj(d,c)}${secCert(d,c)}${secLang(d,c)}
         </div>
       </div>
@@ -2657,7 +2657,7 @@
           <!-- Right sidebar: skills + education -->
           <div style="padding:20px 20px 20px 16px;background:#f9fafb">
             ${(d.skills||[]).length?`<div style="margin-bottom:16px"><div style="font-size:11.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Skills</div>${(d.skills||[]).map(s=>`<div style="font-size:14.5px;color:#374151;padding:3px 0;border-bottom:1px solid #e5e7eb">${esc(s)}</div>`).join('')}</div>`:``}
-            ${(d.education||[]).length?`<div style="margin-bottom:16px"><div style="font-size:11.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:14.5px;color:#111;display:block">${esc(e.degree)}</strong><div style="font-size:14px;color:#555">${esc(e.field)}</div><div style="font-size:13px;color:#7c3aed;font-weight:700">${esc(e.school)}</div><div style="font-size:13px;color:#888">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:``}
+            ${(d.education||[]).length?`<div style="margin-bottom:16px"><div style="font-size:11.5px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #111">Education</div>${(d.education||[]).map(e=>`<div style="margin-bottom:8px"><strong style="font-size:14.5px;color:#111;display:block">${esc(e.degree)}</strong><div style="font-size:14px;color:#555">${esc(e.field)}</div><div style="font-size:13px;color:#4f46e5;font-weight:700">${esc(e.school)}</div><div style="font-size:13px;color:#888">${esc(e.graduationDate)}</div></div>`).join('')}</div>`:``}
             ${secCert(d,c)}${secLang(d,c)}
           </div>
         </div>
@@ -2695,7 +2695,7 @@
         </div>
         <!-- Main content -->
         <div style="padding:28px 26px;background:#fff;line-height:1.65">
-          ${d.summary?`<div style="margin-bottom:18px;padding:14px 16px;background:#f8f7ff;border-left:4px solid ${c};border-radius:0 8px 8px 0"><p style="font-size:16px;color:#374151;line-height:1.75;font-style:italic">${esc(d.summary)}</p></div>`:''}
+          ${d.summary?`<div style="margin-bottom:18px;padding:14px 16px;background:#f8fafc;border-left:4px solid ${c};border-radius:0 8px 8px 0"><p style="font-size:16px;color:#374151;line-height:1.75;font-style:italic">${esc(d.summary)}</p></div>`:''}
           ${(d.workExperience||[]).length?`<div style="margin-bottom:16px"><div style="font-size:12.5px;font-weight:900;color:${c};text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:8px">Experience <div style="flex:1;height:1.5px;background:${c}33"></div></div>${(d.workExperience||[]).map(w=>`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f1f5f9"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><strong style="font-size:16.5px;color:#111">${esc(w.position)}</strong><div style="font-size:14.5px;color:${c};font-weight:700;margin-top:1px">${esc(w.company)}</div></div><span style="font-size:13px;color:#94a3b8;white-space:nowrap;margin-left:8px">${esc(w.startDate)} – ${esc(w.endDate||'Present')}</span></div>${w.description?`<p style="font-size:14.5px;color:#475569;margin-top:4px;line-height:1.6">${esc(w.description)}</p>`:''}</div>`).join('')}</div>`:''}
           ${secProj(d,c)}${secCert(d,c)}
         </div>
@@ -2752,7 +2752,7 @@
       // of the reframed internal job title — that's the thing that actually
       // distinguishes one tailored resume from another.
       const metaRoleChip = r.isJobTailored && r.tailoredForJob
-        ? `<span class="det-meta-chip" style="background:#ede9fe;color:#7c3aed">🎯 ${esc(r.tailoredForJob.title || '')}${r.tailoredForJob.company ? ' at ' + esc(r.tailoredForJob.company) : ''}</span>`
+        ? `<span class="det-meta-chip" style="background:#e0e7ff;color:#4f46e5">🎯 ${esc(r.tailoredForJob.title || '')}${r.tailoredForJob.company ? ' at ' + esc(r.tailoredForJob.company) : ''}</span>`
         : `<span class="det-meta-chip">${esc(d.jobTitle || 'No title')}</span>`;
       g('detMeta').innerHTML = `<span class="det-meta-chip">${t.name}</span><span class="det-meta-dot"></span>${metaRoleChip}<span class="det-meta-dot"></span><span style="font-size:11px;color:var(--mute);font-weight:600">Modified ${fmtDate(r.updatedAt)}</span>`;
       
@@ -2774,7 +2774,7 @@
           dWrap.style.display = 'flex';
           g('detAtsSvg').innerHTML = `
             <svg width="70" height="70" viewBox="0 0 70 70">
-              <circle cx="35" cy="35" r="${dR}" stroke="#ede9fe" stroke-width="5" fill="none"/>
+              <circle cx="35" cy="35" r="${dR}" stroke="#e0e7ff" stroke-width="5" fill="none"/>
               <circle cx="35" cy="35" r="${dR}" stroke="${dc}" stroke-width="5" fill="none"
                 stroke-dasharray="${dCirc}" stroke-dashoffset="${dCirc}"
                 stroke-linecap="round" transform="rotate(-90 35 35)"
@@ -2918,12 +2918,12 @@
       el.id = 'kieDlOverlay';
       el.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:0;pointer-events:none;transition:opacity .25s ease';
       el.innerHTML = `
-        <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(124,58,237,.3)">
+        <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#4f46e5,#06b6d4);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(79,70,229,.3)">
           <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         </div>
-        <div id="kieDlOverlayLabel" style="font-size:15px;font-weight:800;color:#0f0e17;letter-spacing:-.2px">Preparing your download…</div>
-        <div style="width:220px;height:6px;background:#f0eeff;border-radius:99px;overflow:hidden">
-          <div id="kieDlOverlayBar" style="width:0%;height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:99px"></div>
+        <div id="kieDlOverlayLabel" style="font-size:15px;font-weight:800;color:#0f172a;letter-spacing:-.2px">Preparing your download…</div>
+        <div style="width:220px;height:6px;background:#eef2ff;border-radius:99px;overflow:hidden">
+          <div id="kieDlOverlayBar" style="width:0%;height:100%;background:linear-gradient(90deg,#4f46e5,#06b6d4);border-radius:99px"></div>
         </div>
       `;
       document.body.appendChild(el);
@@ -3637,7 +3637,7 @@
           .kie-attach-tile:hover{background:#E9E9EC}
           .kie-attach-tile:active{background:#E2E2E6}
           .kie-attach-tile-ico{display:flex;align-items:center;justify-content:center}
-          .kie-attach-tile-label{font-size:12.5px;font-weight:600;color:#0f0e17;letter-spacing:-.1px}
+          .kie-attach-tile-label{font-size:12.5px;font-weight:600;color:#0f172a;letter-spacing:-.1px}
         `;
         document.head.appendChild(style);
       }
@@ -3658,15 +3658,15 @@
             </div>
             <div style="display:flex;gap:10px;padding:0 16px 22px">
               <button type="button" class="kie-attach-tile" onclick="triggerKieAttach('camera')">
-                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f0e17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
                 <div class="kie-attach-tile-label">Camera</div>
               </button>
               <button type="button" class="kie-attach-tile" onclick="triggerKieAttach('photo')">
-                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f0e17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
                 <div class="kie-attach-tile-label">Photo</div>
               </button>
               <button type="button" class="kie-attach-tile" onclick="triggerKieAttach('file')">
-                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f0e17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+                <div class="kie-attach-tile-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
                 <div class="kie-attach-tile-label">Document</div>
               </button>
               <button type="button" class="kie-attach-tile" id="kmdDriveItem" onclick="window.kieAttachSheetDriveTap && window.kieAttachSheetDriveTap()">
@@ -4609,9 +4609,9 @@
     // Ultra removed from the frontend selector for now — backend KIE_MODELS/
     // KIE_TIERS config for it is untouched, so it's a one-line add-back later.
     const KIE_MODEL_META = {
-      spark: { label: 'KIE Spark',  tagline: 'Fast & Smart',              badge: 'Speed',    icon: '⚡', color: '#a78bfa' },
-      core:  { label: 'KIE Core',   tagline: 'Balanced Intelligence',     badge: 'Smart',    icon: '🧠', color: '#8b5cf6' },
-      nova:  { label: 'KIE Nova',   tagline: 'Deep Career Intelligence',  badge: 'Powerful', icon: '🚀', color: '#7c3aed' },
+      spark: { label: 'KIE Spark',  tagline: 'Fast & Smart',              badge: 'Speed',    icon: '⚡', color: '#818cf8' },
+      core:  { label: 'KIE Core',   tagline: 'Balanced Intelligence',     badge: 'Smart',    icon: '🧠', color: '#6366f1' },
+      nova:  { label: 'KIE Nova',   tagline: 'Deep Career Intelligence',  badge: 'Powerful', icon: '🚀', color: '#4f46e5' },
     };
 
     // ── Sources drawer — shows web search sources used in the last reply ────────
@@ -5478,9 +5478,9 @@
       style.textContent = `
         /* ── Code-card header ── matched directly to the reference: label
            left, plain icons right — no background chrome behind them. */
-        .kie-code-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(124,58,237,.12)}
-        .kie-code-card-label{display:flex;align-items:center;gap:7px;font-weight:700;color:#6d28d9}
-        .kie-code-card-edited-badge{font-size:10px;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:999px;padding:2px 8px;letter-spacing:.2px}
+        .kie-code-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(79,70,229,.12)}
+        .kie-code-card-label{display:flex;align-items:center;gap:7px;font-weight:700;color:#4338ca}
+        .kie-code-card-edited-badge{font-size:10px;font-weight:700;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:2px 8px;letter-spacing:.2px}
         .kie-code-card-btns{display:flex;align-items:center;gap:14px}
         .kie-code-card-edit,.kie-code-card-copy,.kie-code-card-gmail{background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0}
         .kie-code-card-edit{color:#6b7280}
@@ -5512,16 +5512,16 @@
         .kie-canvas-icon-btn:active{opacity:.55}
         .kie-canvas-icon-btn:disabled{color:#cbd5e1}
         .kie-canvas-icon-btn:disabled:active{opacity:1}
-        .kie-canvas-icon-minimize{color:#7c3aed}
+        .kie-canvas-icon-minimize{color:#4f46e5}
         .kie-canvas-body{flex:1;overflow-y:auto;padding:18px 18px 8px;font-size:14px;line-height:1.75;color:#1a1a2e}
         .kie-canvas-body p{margin:0 0 14px}
         .kie-canvas-body p.kie-canvas-changed{background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:8px 10px;margin:0 -10px 14px}
         .kie-canvas-actions{display:flex;gap:8px;padding:12px 16px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #f1f5f9;flex-wrap:wrap;flex-shrink:0}
-        .kie-canvas-quick{flex:1;min-width:90px;padding:11px 10px;border-radius:12px;border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;font:600 12.5px/1.2 inherit;cursor:pointer}
+        .kie-canvas-quick{flex:1;min-width:90px;padding:11px 10px;border-radius:12px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;font:600 12.5px/1.2 inherit;cursor:pointer}
         .kie-canvas-quick:active{transform:scale(.97)}
         .kie-canvas-quick:disabled{opacity:.5;cursor:default}
-        .kie-canvas-loading{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 10px;color:#6d28d9;font:600 12.5px/1.2 inherit}
-        .kie-canvas-spinner{width:15px;height:15px;border-radius:50%;border:2px solid #ddd6fe;border-top-color:#7c3aed;animation:kie-canvas-spin .7s linear infinite}
+        .kie-canvas-loading{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 10px;color:#4338ca;font:600 12.5px/1.2 inherit}
+        .kie-canvas-spinner{width:15px;height:15px;border-radius:50%;border:2px solid #c7d2fe;border-top-color:#4f46e5;animation:kie-canvas-spin .7s linear infinite}
         @keyframes kie-canvas-spin{to{transform:rotate(360deg)}}
         .kie-canvas-reject{flex:1;padding:12px 10px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;color:#475569;font:600 13px/1.2 inherit;cursor:pointer}
         .kie-canvas-accept{flex:1;padding:12px 10px;border-radius:12px;border:none;background:#18181b;color:#fff;font:600 13px/1.2 inherit;cursor:pointer}
@@ -6016,7 +6016,7 @@ Return ONLY JSON, no markdown, no explanation. If there is nothing you can confi
       if (!jobs || !jobs.length) {
         w.innerHTML = `
           <div class="km-ai-body">
-            <div class="km-bubble">I couldn't find any jobs matching "${esc(query)}" right now — try a different phrasing, or search directly on the <a href="/find-jobs?q=${encodeURIComponent(query)}" style="color:#7c3aed;font-weight:700">Find Jobs</a> page.</div>
+            <div class="km-bubble">I couldn't find any jobs matching "${esc(query)}" right now — try a different phrasing, or search directly on the <a href="/find-jobs?q=${encodeURIComponent(query)}" style="color:#4f46e5;font-weight:700">Find Jobs</a> page.</div>
             <div class="km-meta">${t}</div>
           </div>`;
         msgs.insertBefore(w, g('kieTyp'));
@@ -8174,7 +8174,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
 
           const copyBtn = (closed || isFinal)
             ? `<button class="kie-code-card-copy" onclick="_copyCodeCard('${cardId}')" title="Copy"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>`
-            : `<span style="color:#a855f7;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
+            : `<span style="color:#06b6d4;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px"><span class="kie-typing-dot-sm"></span>writing…</span>`;
 
           // Edit opens the KIE canvas (quick-action AI rewrites, undo/redo,
           // accept/reject) — only once the block is done streaming, and only
@@ -8923,7 +8923,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>` },
         { key: 'sms', label: 'Messages', bg: '#22c55e',
           icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>` },
-        { key: 'copy', label: 'Copy', bg: '#7c3aed',
+        { key: 'copy', label: 'Copy', bg: '#4f46e5',
           icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>` },
       ];
       // "More" (OS share sheet) only makes sense as an escape hatch when the
@@ -10028,7 +10028,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         _jobsSwiperRendered = true;
         if (!cards) return;
         if (!allJobs.length) {
-          cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#7c3aed;font-weight:700">search manually</a></div>`;
+          cards.innerHTML = `<div style="padding:20px;color:#9ca3af;font-size:13px">No jobs found — <a href="/find-jobs" style="color:#4f46e5;font-weight:700">search manually</a></div>`;
           return;
         }
         _renderHomeJobCards(allJobs, cards);
@@ -10304,7 +10304,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       err:  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#ef4444"/><path d="M12 7v6.2" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.15" fill="#fff"/></svg>',
       warn: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#f59e0b"/><path d="M12 7.5v6.2" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.15" fill="#fff"/></svg>',
       info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#3b82f6"/><circle cx="12" cy="7.9" r="1.15" fill="#fff"/><path d="M12 11v6" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/></svg>',
-      lock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#7c3aed"/><rect x="7.4" y="11" width="9.2" height="6.5" rx="1.4" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M9.3 11V8.7a2.7 2.7 0 015.4 0V11" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
+      lock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#4f46e5"/><rect x="7.4" y="11" width="9.2" height="6.5" rx="1.4" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M9.3 11V8.7a2.7 2.7 0 015.4 0V11" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
     };
     const TOAST_X = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>';
 
@@ -10677,7 +10677,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // Open the slide-in panel with loading state
       const panel = g('recPanel');
       const body  = g('recPanelBody');
-      const spin  = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="animation:sping 1.2s linear infinite"><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
+      const spin  = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="animation:sping 1.2s linear infinite"><path stroke="#4f46e5" stroke-width="2" stroke-linecap="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
       if (body) body.innerHTML = '<div class="rec-loading"><div class="rec-loading-spin">' + spin + '</div><div style="font-size:14px;font-weight:700;color:var(--sub)">Analyzing from a recruiter\'s perspective...</div></div>';
       if (panel) { panel.classList.add('open'); document.body.style.overflow = 'hidden'; }
       if (btn) { btn.disabled = true; btn.textContent = 'Analyzing...'; }
@@ -10706,8 +10706,8 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           + '</div></div>'
           + '<div class="rec-section"><div class="rec-section-title">&#128681; Red Flags</div>' + mkRecItems(data.redFlags, '#dc2626') + '</div>'
           + '<div class="rec-section"><div class="rec-section-title">&#128640; Standout Moves</div>' + mkRecItems(data.standoutMoves, '#059669') + '</div>'
-          + '<div class="rec-section"><div class="rec-section-title">&#128203; Top Improvements</div>' + mkRecItems(data.improvements, '#7c3aed') + '</div>'
-          + '<div class="rec-section" style="background:#f8f7ff;border-style:dashed"><div style="font-size:12px;color:var(--sub);font-style:italic;line-height:1.65">"' + esc(data.verdict || '') + '"</div></div>';
+          + '<div class="rec-section"><div class="rec-section-title">&#128203; Top Improvements</div>' + mkRecItems(data.improvements, '#4f46e5') + '</div>'
+          + '<div class="rec-section" style="background:#f8fafc;border-style:dashed"><div style="font-size:12px;color:var(--sub);font-style:italic;line-height:1.65">"' + esc(data.verdict || '') + '"</div></div>';
         if (body) body.scrollTop = 0;
         if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Recruiter View'; }
       } catch (err) {
@@ -10749,7 +10749,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       return [
         { label: 'Skills',     pct: hasSk  ? 80 : 45, color: '#16a34a', icon: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>' },
         { label: 'Experience', pct: hasExp ? 75 : 40, color: '#ea580c', icon: '<path d="M3 20h18M6 20V10m6 10V4m6 16v-7"/>' },
-        { label: 'Keywords',   pct: Math.max(20, Math.min(90, score)), color: '#7c3aed', icon: '<path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/>' },
+        { label: 'Keywords',   pct: Math.max(20, Math.min(90, score)), color: '#4f46e5', icon: '<path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/>' },
       ];
     }
     function _optVerdict(score) {
@@ -11824,7 +11824,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           const name = r.resumeName || r.resumeData?.fullName || `Resume ${i + 1}`;
           const date = r.updatedAt?.seconds ? new Date(r.updatedAt.seconds * 1000).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
           return `<div class="cl-res-item" id="clri_${r.id}" onclick="clSelectResume('${r.id}')">
-            <div class="cl-res-thumb"><svg width="12" height="16" fill="none" viewBox="0 0 12 16"><rect x="1" y="1" width="10" height="14" rx="2" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1"/><rect x="3" y="4" width="6" height="1" rx=".5" fill="#a78bfa"/><rect x="3" y="6.5" width="5" height="1" rx=".5" fill="#c4b5fd"/><rect x="3" y="9" width="4" height="1" rx=".5" fill="#c4b5fd"/></svg></div>
+            <div class="cl-res-thumb"><svg width="12" height="16" fill="none" viewBox="0 0 12 16"><rect x="1" y="1" width="10" height="14" rx="2" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1"/><rect x="3" y="4" width="6" height="1" rx=".5" fill="#818cf8"/><rect x="3" y="6.5" width="5" height="1" rx=".5" fill="#a5b4fc"/><rect x="3" y="9" width="4" height="1" rx=".5" fill="#a5b4fc"/></svg></div>
             <div style="flex:1;min-width:0">
               <div class="cl-res-name">${esc(name)}</div>
               ${date ? `<div class="cl-res-date">${date}</div>` : ''}
@@ -12183,7 +12183,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       }
 
       function clTplModern(c, o, paras, contact, editable) {
-        return `<div style="font-size:11.5px;background:#f8f7ff;min-height:840px;font-family:Arial,Helvetica,sans-serif;color:#1e293b;box-sizing:border-box">
+        return `<div style="font-size:11.5px;background:#f8fafc;min-height:840px;font-family:Arial,Helvetica,sans-serif;color:#1e293b;box-sizing:border-box">
           <div style="background:${c};color:#fff;padding:32px 40px">
             <h1${clFieldAttrs('clHeaderName', editable)} style="font-size:19px;font-weight:800;margin-bottom:3px">${esc(o.name || 'Your Name')}</h1>
             ${o.resumeTitle ? `<p style="font-size:11px;opacity:.85">${esc(o.resumeTitle)}</p>` : ''}
@@ -12315,7 +12315,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
           el.removeAttribute('spellcheck');
         });
         // Remove any hover/focus inline background that may be stuck
-        clone.querySelectorAll('[style*="background:rgba(124,58,237"]').forEach(el => {
+        clone.querySelectorAll('[style*="background:rgba(79,70,229"]').forEach(el => {
           el.style.background = '';
           el.style.boxShadow = '';
           el.style.borderRadius = '';
@@ -12599,14 +12599,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
         // inlined into the onclick JS string — so quotes/apostrophes/newlines
         // in AI-generated content can never break out of the attribute and
         // render as raw visible text (the "Copied!').catch(()=>{})" bug).
-        const copyAll = (txt) => `<button data-copy="${esc(txt)}" data-label="Copy Letter" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy Letter</button>`;
+        const copyAll = (txt) => `<button data-copy="${esc(txt)}" data-label="Copy Letter" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#eef2ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy Letter</button>`;
         el.innerHTML = `
           <div class="ctool-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
               <div style="font-size:13px;font-weight:800;color:var(--txt)">📄 Your Resignation Letter</div>
               ${copyAll(d.letter || '')}
             </div>
-            <div style="font-size:13px;color:var(--txt);line-height:1.75;white-space:pre-line;background:#faf9ff;border:1.5px solid var(--border2);border-radius:12px;padding:18px">${esc(d.letter || '')}</div>
+            <div style="font-size:13px;color:var(--txt);line-height:1.75;white-space:pre-line;background:#f8fafc;border:1.5px solid var(--border2);border-radius:12px;padding:18px">${esc(d.letter || '')}</div>
           </div>
           ${mkTakeaway(d.youTakeaway)}
           ${d.tips ? `<div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:10px">💡 Tips for a Smooth Exit</div>${mkListItems(d.tips)}</div>` : ''}
@@ -12665,14 +12665,14 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function scoreBg(s) { return s>=85?'#d1fae5':s>=70?'#dbeafe':s>=50?'#fef3c7':'#fee2e2'; }
       function scoreColor(s) { return s>=85?'#059669':s>=70?'#1d4ed8':s>=50?'#d97706':'#dc2626'; }
       function mkListItems(arr) { return (arr||[]).map(i=>`<div class="ctool-list-item"><div class="ctool-list-dot"></div><div class="ctool-list-txt">${esc(String(i))}</div></div>`).join(''); }
-      function mkTags(arr, bg='#f5f3ff', color='#7c3aed') { return (arr||[]).map(t=>`<span class="ctool-tag" style="background:${bg};color:${color};margin:2px 4px 2px 0">${esc(String(t))}</span>`).join(''); }
+      function mkTags(arr, bg='#eef2ff', color='#4f46e5') { return (arr||[]).map(t=>`<span class="ctool-tag" style="background:${bg};color:${color};margin:2px 4px 2px 0">${esc(String(t))}</span>`).join(''); }
       window.mkListItems = mkListItems;
       window.mkTags = mkTags;
 
       // ── "WHAT THIS MEANS FOR YOU" TAKEAWAY BANNER ──────────────────────────────
       function mkTakeaway(text, icon='💡') {
         if(!text) return '';
-        return `<div class="ctool-card" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1.5px solid var(--p2)">
+        return `<div class="ctool-card" style="background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1.5px solid var(--p2)">
           <div style="display:flex;gap:10px;align-items:flex-start">
             <div style="font-size:20px;line-height:1.2">${icon}</div>
             <div>
@@ -12693,7 +12693,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function repCard(html, accent) { return `<div class="rep-card${accent?' rep-card-accent':''}">${html}</div>`; }
       function repTitle(text, color) { return `<div class="rep-sec-title"${color?` style="color:${color}"`:''}>${esc(text)}</div>`; }
       function repList(arr) { return `<ul class="rep-list">${(arr||[]).map(i=>`<li>${esc(String(i))}</li>`).join('')}</ul>`; }
-      function repTags(arr, bg='#f5f3ff', color='#6d28d9') { return `<div class="rep-tags">${(arr||[]).map(t=>`<span class="rep-tag" style="background:${bg};color:${color}">${esc(String(t))}</span>`).join('')}</div>`; }
+      function repTags(arr, bg='#eef2ff', color='#4338ca') { return `<div class="rep-tags">${(arr||[]).map(t=>`<span class="rep-tag" style="background:${bg};color:${color}">${esc(String(t))}</span>`).join('')}</div>`; }
       function repScoreRow(score, label) {
         const c = scoreColor(score||0);
         return `<div class="rep-score-row"><div class="rep-score-num" style="color:${c}">${score||0}</div><div class="rep-score-bar-wrap"><div class="rep-score-bar" style="width:${score||0}%;background:${c}"></div></div>${label?`<div class="rep-score-label">${esc(label)}</div>`:''}</div>`;
@@ -12705,22 +12705,22 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       function repQuote(text) { return `<div class="rep-quote">${esc(text||'')}</div>`; }
 
       const REP_CSS = `*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:'Inter',system-ui,-apple-system,sans-serif;color:#0f0e17}
+html,body{background:#f8fafc;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:'Inter',system-ui,-apple-system,sans-serif;color:#0f172a}
 .rep-page{max-width:760px;margin:0 auto;background:#fff}
-.rep-header{background:linear-gradient(135deg,#7c3aed,#a855f7);padding:36px 40px 28px;color:#fff}
+.rep-header{background:linear-gradient(135deg,#4f46e5,#06b6d4);padding:36px 40px 28px;color:#fff}
 .rep-logo{font-size:21px;font-weight:900;letter-spacing:-.5px}
 .rep-logo-tag{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.75;margin:2px 0 22px}
 .rep-title{font-size:26px;font-weight:900;letter-spacing:-.5px;line-height:1.2}
 .rep-subtitle{font-size:13px;opacity:.85;margin-top:6px}
 .rep-body{padding:28px 40px 10px}
-.rep-card{background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:18px 20px;margin-bottom:16px;page-break-inside:avoid}
-.rep-card-accent{background:linear-gradient(135deg,#1e0845,#3b1a7a);color:#fff;border:none}
+.rep-card{background:#fff;border:1.5px solid #e0e7ff;border-radius:14px;padding:18px 20px;margin-bottom:16px;page-break-inside:avoid}
+.rep-card-accent{background:linear-gradient(135deg,#1e1b4b,#312e81);color:#fff;border:none}
 .rep-card-accent .rep-sec-title{color:#fff}
-.rep-sec-title{font-size:13px;font-weight:800;color:#0f0e17;margin-bottom:10px}
+.rep-sec-title{font-size:13px;font-weight:800;color:#0f172a;margin-bottom:10px}
 .rep-list{list-style:none}
-.rep-list li{font-size:12.5px;line-height:1.6;color:#1f2937;padding:6px 0 6px 18px;position:relative;border-bottom:1px solid #f5f3ff}
+.rep-list li{font-size:12.5px;line-height:1.6;color:#1f2937;padding:6px 0 6px 18px;position:relative;border-bottom:1px solid #eef2ff}
 .rep-list li:last-child{border-bottom:none}
-.rep-list li::before{content:'';position:absolute;left:0;top:13px;width:6px;height:6px;border-radius:50%;background:#7c3aed}
+.rep-list li::before{content:'';position:absolute;left:0;top:13px;width:6px;height:6px;border-radius:50%;background:#4f46e5}
 .rep-tags{display:flex;flex-wrap:wrap;gap:6px}
 .rep-tag{display:inline-flex;padding:4px 11px;border-radius:99px;font-size:11px;font-weight:700}
 .rep-score-row{display:flex;align-items:center;gap:12px;margin:6px 0}
@@ -12728,12 +12728,12 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
 .rep-score-bar-wrap{flex:1;height:8px;background:#f1f5f9;border-radius:99px;overflow:hidden}
 .rep-score-bar{height:100%;border-radius:99px}
 .rep-score-label{font-size:11.5px;color:#64748b;width:140px;flex-shrink:0}
-.rep-takeaway{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1.5px solid #c4b5fd;border-radius:14px;padding:18px 20px;margin-bottom:16px}
-.rep-takeaway-label{font-size:10px;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.rep-takeaway{background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1.5px solid #a5b4fc;border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.rep-takeaway-label{font-size:10px;font-weight:800;color:#4f46e5;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
 .rep-takeaway-txt{font-size:13px;line-height:1.65;color:#1f2937}
-.rep-quote{font-size:13px;color:#4b5563;line-height:1.7;font-style:italic;border-left:3px solid #7c3aed;padding-left:14px}
-.rep-footer{padding:24px 40px 40px;border-top:1px solid #ede9fe;margin-top:8px}
-.rep-footer-brand{font-size:11px;font-weight:800;color:#7c3aed;margin-bottom:6px}
+.rep-quote{font-size:13px;color:#4b5563;line-height:1.7;font-style:italic;border-left:3px solid #4f46e5;padding-left:14px}
+.rep-footer{padding:24px 40px 40px;border-top:1px solid #e0e7ff;margin-top:8px}
+.rep-footer-brand{font-size:11px;font-weight:800;color:#4f46e5;margin-bottom:6px}
 .rep-footer-note{font-size:10.5px;color:#94a3b8;line-height:1.6}
 @media print{
   @page{size:auto;margin:10mm 8mm}
@@ -12828,7 +12828,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           + repCard(`${repTitle('Top Strengths','#059669')}${repList(d.topStrengths)}`)
           + repCard(`${repTitle('Critical Gaps','#dc2626')}${repList(d.criticalGaps)}`)
           + repCard(`${repTitle('Quick Wins This Week','#d97706')}${repList(d.quickWins)}`)
-          + repCard(`${repTitle('Strategic Actions','#7c3aed')}${repList(d.strategicActions)}`)
+          + repCard(`${repTitle('Strategic Actions','#4f46e5')}${repList(d.strategicActions)}`)
           + repCard(`${repTitle('Verdict')}${repQuote(d.verdict)}`);
       }
 
@@ -12839,7 +12839,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           + repTakeaway(rm.youTakeaway)
           + (rm.phases||[]).map(p=>repCard(`
               <div class="rep-sec-title">Phase ${p.id||''}: ${esc(p.label||'')} <span style="font-size:11px;color:#64748b;font-weight:600">— ${esc(p.duration||'')}</span></div>
-              <div style="font-size:12px;color:#7c3aed;font-weight:700;margin-bottom:10px">${esc(p.focus||'')}</div>
+              <div style="font-size:12px;color:#4f46e5;font-weight:700;margin-bottom:10px">${esc(p.focus||'')}</div>
               <div style="font-size:10.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Goals</div>${repList(p.goals)}
               <div style="font-size:10.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px">Actions</div>${repList(p.actions)}
               ${p.milestones?.length?`<div style="font-size:10.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px">Milestones</div>${repList(p.milestones)}`:''}
@@ -12853,8 +12853,8 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
           <div style="font-size:12px;opacity:.85;margin-top:6px">Range: ${fmtUSD(range.min||0)} – ${fmtUSD(range.max||0)} · ${esc(d.demandLevel||'')} Demand · ${esc(d.demandTrend||'')}</div>`, true)
           + repTakeaway(d.youTakeaway)
           + repCard(`${repTitle('Forecast')}<div style="display:flex;gap:28px">
-              <div style="margin-right:28px"><div style="font-size:20px;font-weight:900;color:#7c3aed">${fmtUSD(d.forecast?.oneYear||0)}</div><div style="font-size:11px;color:#64748b">In 1 Year</div></div>
-              <div><div style="font-size:20px;font-weight:900;color:#7c3aed">${fmtUSD(d.forecast?.threeYear||0)}</div><div style="font-size:11px;color:#64748b">In 3 Years</div></div>
+              <div style="margin-right:28px"><div style="font-size:20px;font-weight:900;color:#4f46e5">${fmtUSD(d.forecast?.oneYear||0)}</div><div style="font-size:11px;color:#64748b">In 1 Year</div></div>
+              <div><div style="font-size:20px;font-weight:900;color:#4f46e5">${fmtUSD(d.forecast?.threeYear||0)}</div><div style="font-size:11px;color:#64748b">In 3 Years</div></div>
             </div>`)
           + repCard(`${repTitle('Top Paying Industries')}${repTags(d.topPayingIndustries)}`)
           + repCard(`${repTitle('Top Paying Locations')}${repTags(d.topPayingLocations,'#dbeafe','#1d4ed8')}`)
@@ -12886,7 +12886,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
             <div><div style="font-size:28px;font-weight:900">${d.recruiterScore||0}</div><div style="font-size:11px;opacity:.8">Recruiter Score</div></div>
           </div>`, true)
           + repTakeaway(d.youTakeaway)
-          + repCard(`${repTitle('Optimized Headline')}<div style="font-size:14px;font-weight:700;color:#7c3aed;line-height:1.5;margin-bottom:6px">${esc(d.optimizedHeadline||'')}</div><div style="font-size:11.5px;color:#64748b">${esc(d.headlineFeedback||'')}</div>`)
+          + repCard(`${repTitle('Optimized Headline')}<div style="font-size:14px;font-weight:700;color:#4f46e5;line-height:1.5;margin-bottom:6px">${esc(d.optimizedHeadline||'')}</div><div style="font-size:11.5px;color:#64748b">${esc(d.headlineFeedback||'')}</div>`)
           + repCard(`${repTitle('Optimized About')}<div style="font-size:12.5px;color:#1f2937;line-height:1.7;white-space:pre-line">${esc(d.optimizedAbout||'')}</div><div style="font-size:11.5px;color:#64748b;margin-top:8px">${esc(d.aboutFeedback||'')}</div>`)
           + repCard(`${repTitle('Missing Keywords','#dc2626')}${repTags(d.keywordGaps,'#fee2e2','#dc2626')}`)
           + repCard(`${repTitle('Skills to Add')}${repTags(d.skillsToAdd)}`)
@@ -12933,7 +12933,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       }
 
       function buildResignationReport(d) {
-        return repCard(`${repTitle('Your Resignation Letter')}<div style="font-size:13px;color:#1f2937;line-height:1.85;white-space:pre-line;background:#faf9ff;border:1px solid #ede9fe;border-radius:10px;padding:18px">${esc(d.letter||'')}</div>`)
+        return repCard(`${repTitle('Your Resignation Letter')}<div style="font-size:13px;color:#1f2937;line-height:1.85;white-space:pre-line;background:#f8fafc;border:1px solid #e0e7ff;border-radius:10px;padding:18px">${esc(d.letter||'')}</div>`)
           + repTakeaway(d.youTakeaway)
           + (d.tips?.length?repCard(`${repTitle('Tips for a Smooth Exit')}${repList(d.tips)}`):'');
       }
@@ -13018,7 +13018,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         if(!window._aibuildData) return;
         window._prebuiltResume = window._aibuildData;
         showView('tpick');
-        setTimeout(()=>{ const notice = document.createElement('div'); notice.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e0845;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:999;box-shadow:0 4px 18px rgba(0,0,0,.3)'; notice.textContent='AI resume ready — pick a template to continue'; document.body.appendChild(notice); setTimeout(()=>notice.remove(),3500); },300);
+        setTimeout(()=>{ const notice = document.createElement('div'); notice.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e1b4b;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:999;box-shadow:0 4px 18px rgba(0,0,0,.3)'; notice.textContent='AI resume ready — pick a template to continue'; document.body.appendChild(notice); setTimeout(()=>notice.remove(),3500); },300);
       };
 
       // ── CAREER HEALTH SCORE ────────────────────────────────────────────────────
@@ -13100,10 +13100,10 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         const el = g('roadmapResult'); if(!el) return;
         window._kieToolData.roadmap = rm;
         el.innerHTML = `
-          <div class="ctool-card" style="background:linear-gradient(135deg,#1e0845,#3b1a7a);color:#fff;margin-bottom:14px">
+          <div class="ctool-card" style="background:linear-gradient(135deg,#1e1b4b,#312e81);color:#fff;margin-bottom:14px">
             <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:4px">${esc(rm.title||'Your Roadmap')}</div>
-            <div style="font-size:12px;color:#c4b5fd;margin-bottom:8px">${esc(rm.timeframe||'')} · ${rm.totalPhases||''} phases</div>
-            <div style="font-size:12px;color:#e9d5ff;line-height:1.5">${esc(rm.summary||'')}</div>
+            <div style="font-size:12px;color:#a5b4fc;margin-bottom:8px">${esc(rm.timeframe||'')} · ${rm.totalPhases||''} phases</div>
+            <div style="font-size:12px;color:#e0e7ff;line-height:1.5">${esc(rm.summary||'')}</div>
           </div>
           ${mkTakeaway(rm.youTakeaway)}
           ${(rm.phases||[]).map(p=>`
@@ -13194,12 +13194,12 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         const el = g('industryResult'); if(!el) return;
         window._kieToolData.industry = d;
         const outColors = {Excellent:'#059669',Good:'#1d4ed8',Fair:'#d97706',Challenging:'#dc2626'};
-        const oc = outColors[d.outlook]||'#7c3aed';
+        const oc = outColors[d.outlook]||'#4f46e5';
         el.innerHTML = `
-          <div class="ctool-card" style="background:linear-gradient(135deg,#1e0845,#3b1a7a)">
+          <div class="ctool-card" style="background:linear-gradient(135deg,#1e1b4b,#312e81)">
             <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:4px">${esc(d.industry||'')} Industry</div>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="ctool-tag" style="background:${oc}33;color:${oc}">${d.outlook||''} Outlook</span><span style="font-size:12px;color:#c4b5fd">${esc(d.growthRate||'')} growth · ${esc(d.marketSize||'')}</span></div>
-            <div style="font-size:12px;color:#e9d5ff;line-height:1.5">${esc(d.summary||'')}</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="ctool-tag" style="background:${oc}33;color:${oc}">${d.outlook||''} Outlook</span><span style="font-size:12px;color:#a5b4fc">${esc(d.growthRate||'')} growth · ${esc(d.marketSize||'')}</span></div>
+            <div style="font-size:12px;color:#e0e7ff;line-height:1.5">${esc(d.summary||'')}</div>
           </div>
           ${mkTakeaway(d.youTakeaway)}
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:10px">🔥 Top Trends</div>${mkListItems(d.topTrends)}</div>
@@ -13234,7 +13234,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         window._kieToolData.linkedin = d;
         el.innerHTML = `
           <div class="ctool-card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;margin-bottom:14px">
-            <div style="background:#f5f3ff;border-radius:10px;padding:12px"><div style="font-size:22px;font-weight:900;color:var(--p)">${d.visibilityScore||0}</div><div style="font-size:10px;color:var(--sub)">Visibility Score</div></div>
+            <div style="background:#eef2ff;border-radius:10px;padding:12px"><div style="font-size:22px;font-weight:900;color:var(--p)">${d.visibilityScore||0}</div><div style="font-size:10px;color:var(--sub)">Visibility Score</div></div>
             <div style="background:#f0fdf4;border-radius:10px;padding:12px"><div style="font-size:22px;font-weight:900;color:#059669">${d.recruiterScore||0}</div><div style="font-size:10px;color:var(--sub)">Recruiter Score</div></div>
           </div></div>
           ${mkTakeaway(d.youTakeaway)}
@@ -13282,8 +13282,8 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       function renderIvQuestion(q) {
         const card=g('ivQuestionCard'); if(!card) return;
         const diffColors={Easy:'#059669',Medium:'#d97706',Hard:'#dc2626'};
-        const dc=diffColors[q.difficulty]||'#7c3aed';
-        card.innerHTML=`<div class="iv-question-type">${esc(q.type||'')} · <span style="color:${dc}">${esc(q.difficulty||'')}</span></div><div class="iv-question-txt">${esc(q.question||'')}</div><div style="font-size:11px;color:#c4b5fd;margin-bottom:8px">${esc(q.context||'')}</div><div class="iv-tips-row">${(q.tips||[]).slice(0,3).map(t=>`<span class="iv-tip">${esc(t)}</span>`).join('')}</div><div style="margin-top:10px;font-size:10px;font-weight:700;color:#a78bfa">Framework: ${esc(q.framework||'STAR Method')}</div>`;
+        const dc=diffColors[q.difficulty]||'#4f46e5';
+        card.innerHTML=`<div class="iv-question-type">${esc(q.type||'')} · <span style="color:${dc}">${esc(q.difficulty||'')}</span></div><div class="iv-question-txt">${esc(q.question||'')}</div><div style="font-size:11px;color:#a5b4fc;margin-bottom:8px">${esc(q.context||'')}</div><div class="iv-tips-row">${(q.tips||[]).slice(0,3).map(t=>`<span class="iv-tip">${esc(t)}</span>`).join('')}</div><div style="margin-top:10px;font-size:10px;font-weight:700;color:#818cf8">Framework: ${esc(q.framework||'STAR Method')}</div>`;
       }
       window.runGetFeedback = async function() {
         if(!ivCurrentQ) return;
@@ -13347,9 +13347,9 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
       function renderBranding(d) {
         const el=g('brandingResult'); if(!el) return;
         window._kieToolData.branding = d;
-        const copyBtn = (txt,label)=>`<button data-copy="${esc(txt)}" data-label="${esc(label)}" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit;float:right;margin-top:-2px">${label}</button>`;
+        const copyBtn = (txt,label)=>`<button data-copy="${esc(txt)}" data-label="${esc(label)}" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#eef2ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit;float:right;margin-top:-2px">${label}</button>`;
         el.innerHTML=`
-          <div class="ctool-card" style="background:linear-gradient(135deg,#1e0845,#3b1a7a)"><div style="font-size:20px;font-weight:900;color:#fff;text-align:center;padding:6px 0">✨ ${esc(d.tagline||'')}</div><div style="font-size:11px;color:#c4b5fd;text-align:center;margin-top:4px">${esc(d.brandVoice||'')}</div></div>
+          <div class="ctool-card" style="background:linear-gradient(135deg,#1e1b4b,#312e81)"><div style="font-size:20px;font-weight:900;color:#fff;text-align:center;padding:6px 0">✨ ${esc(d.tagline||'')}</div><div style="font-size:11px;color:#a5b4fc;text-align:center;margin-top:4px">${esc(d.brandVoice||'')}</div></div>
           ${mkTakeaway(d.youTakeaway)}
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:8px">📝 Professional Bio ${copyBtn(d.bio||'','Copy')}</div><div style="font-size:13px;color:var(--txt);line-height:1.7">${esc(d.bio||'')}</div></div>
           <div class="ctool-card"><div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:8px">🔵 LinkedIn Summary ${copyBtn(d.linkedinSummary||'','Copy')}</div><div style="font-size:13px;color:var(--txt);line-height:1.65">${esc(d.linkedinSummary||'')}</div></div>
@@ -13389,7 +13389,7 @@ html,body{background:#f8f7ff;-webkit-print-color-adjust:exact;print-color-adjust
         const el=g('messagingResult'); if(!el) return;
         const mkMsgCard=(subj,msg,label)=>`
           <div class="ctool-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:12px;font-weight:800;color:var(--p)">${label}</div><button data-copy="${esc(msg)}" data-label="Copy" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#f5f3ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy</button></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:12px;font-weight:800;color:var(--p)">${label}</div><button data-copy="${esc(msg)}" data-label="Copy" onclick="kieCopyBtnClick(this)" style="font-size:10px;font-weight:700;color:var(--p);background:#eef2ff;border:1px solid var(--p2);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">Copy</button></div>
             ${subj?`<div style="font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Subject</div><div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px">${esc(subj)}</div>`:''}
             <div style="font-size:13px;color:var(--txt);line-height:1.65;white-space:pre-line">${esc(msg)}</div>
           </div>`;

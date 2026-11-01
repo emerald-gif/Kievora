@@ -30,7 +30,7 @@
     // instead of pretending we have the full description.
     if (j.url) {
       el.insertAdjacentHTML('beforeend',
-        `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
+        `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#4f46e5;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
     }
   }
 
@@ -59,7 +59,7 @@
       if (data.ok && data.description) {
         renderDesc(el, data.description);
         el.insertAdjacentHTML('beforeend',
-          `<p style="margin-top:10px;font-size:11px;color:#94a3b8">Full listing fetched from <a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">${j.company || 'the original posting'} →</a></p>`);
+          `<p style="margin-top:10px;font-size:11px;color:#94a3b8">Full listing fetched from <a href="${j.url}" target="_blank" rel="noopener" style="color:#4f46e5;font-weight:700;text-decoration:none">${j.company || 'the original posting'} →</a></p>`);
       } else {
         renderTruncatedFallback(j);
       }
@@ -125,7 +125,7 @@
     // "Listed via" — replaces the old generic source line
     const srcEl = document.getElementById('jdSource');
     if (srcEl) srcEl.innerHTML = j.source
-      ? `Curated by Kievora · <span style="background:#f5f3ff;border:1.5px solid #ddd6fe;color:#7c3aed;border-radius:20px;padding:2px 9px;font-size:9.5px;font-weight:800;letter-spacing:.2px">Listed via ${j.source}</span>`
+      ? `Curated by Kievora · <span style="background:#eef2ff;border:1.5px solid #c7d2fe;color:#4f46e5;border-radius:20px;padding:2px 9px;font-size:9.5px;font-weight:800;letter-spacing:.2px">Listed via ${j.source}</span>`
       : '';
 
     document.getElementById('jobDetailDrawer').classList.add('open');

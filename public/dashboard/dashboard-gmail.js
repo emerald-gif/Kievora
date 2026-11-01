@@ -14,11 +14,11 @@ async function _gmailTok() {
 // SVG, colored per context, sized to sit inline with text.
 const _gpipeIcon = {
   offer:      c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${c||'#b45309'}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="9" width="18" height="11" rx="1.6"/><path d="M3 9h18M12 9v11M12 9c-1.4-3.2-4-4.3-5.6-3.3-1 .6-1 2.1 0 2.7 1.3.8 3.8-.1 5.6.6zm0 0c1.4-3.2 4-4.3 5.6-3.3 1 .6 1 2.1 0 2.7-1.3.8-3.8-.1-5.6.6z"/></svg>`,
-  interview:  c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="${c||'#7c3aed'}" stroke="none" style="flex-shrink:0"><path d="M13 2L4.5 13.5H11L9.5 22l9-13H12l1-7z"/></svg>`,
+  interview:  c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="${c||'#4f46e5'}" stroke="none" style="flex-shrink:0"><path d="M13 2L4.5 13.5H11L9.5 22l9-13H12l1-7z"/></svg>`,
   recruiter:  c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${c||'#0e7490'}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 7l9 6 9-6"/></svg>`,
   assessment: c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${c||'#b45309'}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`,
   applied:    c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${c||'#15803d'}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M20 6L9 17l-5-5"/></svg>`,
-  postoffer:  c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${c||'#7c3aed'}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/></svg>`,
+  postoffer:  c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${c||'#4f46e5'}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/></svg>`,
   updates:    c=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${c||'#64748b'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`,
   prep:       c=>`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${c||'currentColor'}" stroke-width="2.1" style="flex-shrink:0"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="${c||'currentColor'}" stroke="none"/></svg>`,
   reply:      c=>`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${c||'currentColor'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 17l-6-5 6-5"/><path d="M3 12h11a6 6 0 016 6v1"/></svg>`,
@@ -171,7 +171,7 @@ function _gmailRenderPanel(data) {
 
   const iEl = document.getElementById('gmailInsightsList');
   if (iEl && data.insights?.length) {
-    iEl.innerHTML = `<div class="gpipe-section-head" style="margin-top:4px">KIE Actions<span class="gpipe-section-count">${data.insights.length}</span></div><div style="display:flex;flex-direction:column;gap:8px">${data.insights.map(i=>`<div style="background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:13px 15px;font-size:12px;color:#374151;line-height:1.55;font-weight:500">${i}</div>`).join('')}</div>`;
+    iEl.innerHTML = `<div class="gpipe-section-head" style="margin-top:4px">KIE Actions<span class="gpipe-section-count">${data.insights.length}</span></div><div style="display:flex;flex-direction:column;gap:8px">${data.insights.map(i=>`<div style="background:#fff;border:1.5px solid #e0e7ff;border-radius:14px;padding:13px 15px;font-size:12px;color:#374151;line-height:1.55;font-weight:500">${i}</div>`).join('')}</div>`;
   } else if(iEl) { iEl.innerHTML=''; }
 }
 
@@ -314,7 +314,7 @@ function _gpipeRenderUrgent(apps) {
     el.innerHTML = `<div class="gpipe-insight-ico" style="background:#fef3c7">${_gpipeIcon.offer('#b45309')}</div><span><b>Offer from ${_gpipeEsc(offer.company)}</b>${offer.role?` (${_gpipeEsc(offer.role)})`:''} — time to evaluate &amp; respond.</span>`;
   } else if (interview) {
     el.className = 'gpipe-insight-row';
-    el.innerHTML = `<div class="gpipe-insight-ico" style="background:#ede9fe">${_gpipeIcon.interview('#7c3aed')}</div><span><b>Interview stage with ${_gpipeEsc(interview.company)}</b>${interview.role?` (${_gpipeEsc(interview.role)})`:''} — prep time.</span>`;
+    el.innerHTML = `<div class="gpipe-insight-ico" style="background:#e0e7ff">${_gpipeIcon.interview('#4f46e5')}</div><span><b>Interview stage with ${_gpipeEsc(interview.company)}</b>${interview.role?` (${_gpipeEsc(interview.role)})`:''} — prep time.</span>`;
   } else {
     el.className = ''; el.innerHTML='';
   }
@@ -322,11 +322,11 @@ function _gpipeRenderUrgent(apps) {
 
 const GPIPE_GROUPS = [
   { key:'offer',                    icon:_gpipeIcon.offer('#b45309'),      label:'Offers' },
-  { key:'interview_invite',         icon:_gpipeIcon.interview('#7c3aed'),  label:'Interviews' },
+  { key:'interview_invite',         icon:_gpipeIcon.interview('#4f46e5'),  label:'Interviews' },
   { key:'recruiter_outreach',       icon:_gpipeIcon.recruiter('#0e7490'),  label:'Recruiter Outreach' },
   { key:'assessment',               icon:_gpipeIcon.assessment('#b45309'),label:'Assessments' },
   { key:'application_confirmation', icon:_gpipeIcon.applied('#15803d'),    label:'Applied' },
-  { key:'post_offer',               icon:_gpipeIcon.postoffer('#7c3aed'),  label:'Post-Offer' },
+  { key:'post_offer',               icon:_gpipeIcon.postoffer('#4f46e5'),  label:'Post-Offer' },
   { key:'general_update',           icon:_gpipeIcon.updates('#64748b'),    label:'Updates' },
   { key:'rejection',                icon:'',                               label:'Rejected' },
 ];
@@ -454,7 +454,7 @@ function _gpipeRenderDraftBox(box, idx, a, draft, to) {
   const { subject, body } = draft || {};
   const gmailLink = _gpipeGmailComposeLink(to, subject, body);
   box.innerHTML = `<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">Subject</div>
-    <div style="font-size:12px;font-weight:700;color:#0f0e17;margin:3px 0 6px">${_gpipeEsc(subject)}</div>
+    <div style="font-size:12px;font-weight:700;color:#0f172a;margin:3px 0 6px">${_gpipeEsc(subject)}</div>
     <textarea rows="5" id="gpipeDraftBody_${idx}">${_gpipeEsc(body)}</textarea>
     <a class="gpipe-draft-gmail" href="${_gpipeEsc(gmailLink)}" target="_blank" rel="noopener" onclick="gpipeOpenedInGmail(${idx})">
       <img src="/gmail.jpg" alt="" onerror="this.style.display='none'"/> Open in Gmail
@@ -724,11 +724,11 @@ window._checkGmailConvTrigger = async function(msg) {
   setTimeout(()=>{
     const msgs=document.getElementById('kieMsgs'); if(!msgs) return;
     const div=document.createElement('div');
-    div.style.cssText='margin:10px 14px;background:#fff;border:1px solid #ece7fb;border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 8px 24px rgba(124,58,237,.08),0 2px 6px rgba(15,14,23,.04);animation:fadeInUp .3s ease;transition:box-shadow .15s,border-color .15s';
-    div.onmouseenter=()=>{div.style.borderColor='#ddd0fb';div.style.boxShadow='0 10px 28px rgba(124,58,237,.13),0 2px 6px rgba(15,14,23,.05)';};
-    div.onmouseleave=()=>{div.style.borderColor='#ece7fb';div.style.boxShadow='0 8px 24px rgba(124,58,237,.08),0 2px 6px rgba(15,14,23,.04)';};
+    div.style.cssText='margin:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 8px 24px rgba(79,70,229,.08),0 2px 6px rgba(15,23,42,.04);animation:fadeInUp .3s ease;transition:box-shadow .15s,border-color .15s';
+    div.onmouseenter=()=>{div.style.borderColor='#c7d2fe';div.style.boxShadow='0 10px 28px rgba(79,70,229,.13),0 2px 6px rgba(15,23,42,.05)';};
+    div.onmouseleave=()=>{div.style.borderColor='#e2e8f0';div.style.boxShadow='0 8px 24px rgba(79,70,229,.08),0 2px 6px rgba(15,23,42,.04)';};
     div.onclick=()=>{div.remove();openSidebarSettings();setTimeout(openGmailPanel,350);};
-    div.innerHTML=`<div style="width:34px;height:34px;border-radius:11px;background:#fff;border:1px solid #f0eef7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="/gmail.jpg" alt="" style="width:19px;height:19px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;17&quot; height=&quot;17&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"></div><div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:800;color:#7c3aed;letter-spacing:.2px;margin-bottom:3px">TIP FROM KIE</div><div style="font-size:12.5px;color:#374151;line-height:1.45;font-weight:500">Connect your Gmail and I can track all of this automatically.</div></div><button onclick="event.stopPropagation();this.parentElement.remove();" aria-label="Dismiss" style="flex-shrink:0;width:22px;height:22px;border:none;background:none;color:#c4bcdb;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>`;
+    div.innerHTML=`<div style="width:34px;height:34px;border-radius:11px;background:#fff;border:1px solid #eef2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="/gmail.jpg" alt="" style="width:19px;height:19px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;17&quot; height=&quot;17&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"></div><div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:800;color:#4f46e5;letter-spacing:.2px;margin-bottom:3px">TIP FROM KIE</div><div style="font-size:12.5px;color:#374151;line-height:1.45;font-weight:500">Connect your Gmail and I can track all of this automatically.</div></div><button onclick="event.stopPropagation();this.parentElement.remove();" aria-label="Dismiss" style="flex-shrink:0;width:22px;height:22px;border:none;background:none;color:#94a3b8;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>`;
     msgs.appendChild(div);
   }, 2500);
 };

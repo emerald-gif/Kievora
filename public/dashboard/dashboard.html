@@ -44,7 +44,7 @@
         <div style="font-size:12.5px;font-weight:700;color:#000">Connection trouble</div>
         <div style="font-size:12px;color:#8e8e93;margin-top:1px;line-height:1.45" id="gmailConnErrorText">Couldn't reach Gmail. Check your connection and try again.</div>
       </div>
-      <button onclick="_gmailRetryAfterError()" style="background:none;border:none;color:#7c3aed;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0;padding:2px">Retry</button>
+      <button onclick="_gmailRetryAfterError()" style="background:none;border:none;color:#4f46e5;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0;padding:2px">Retry</button>
     </div>
 
     <!-- Disconnected state -->
@@ -56,7 +56,7 @@
         </div>
         <div style="font-size:18px;font-weight:700;color:#000;margin-bottom:7px;letter-spacing:-.3px">Connect your Gmail</div>
         <div style="font-size:13px;color:#8e8e93;line-height:1.55;margin-bottom:22px">KIE automatically tracks applications, interviews, recruiter messages and offers — no manual logging ever.</div>
-        <button onclick="connectGmail()" id="gmailConnectBtn" style="background:#7c3aed;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;letter-spacing:-.1px">Connect Gmail →</button>
+        <button onclick="connectGmail()" id="gmailConnectBtn" style="background:#4f46e5;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;letter-spacing:-.1px">Connect Gmail →</button>
       </div>
       <!-- Trust signals — iOS grouped list -->
       <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)">
@@ -67,8 +67,8 @@
           <div><div style="font-size:13px;font-weight:600;color:#000">Auto-tracks everything</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">Confirmations, interviews, recruiter messages, rejections, offers</div></div>
         </div>
         <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:.5px solid rgba(60,60,67,.13)">
-          <div style="width:28px;height:28px;background:rgba(124,58,237,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <div style="width:28px;height:28px;background:rgba(79,70,229,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           </div>
           <div><div style="font-size:13px;font-weight:600;color:#000">Read-only access</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">KIE never sends emails or reads personal messages</div></div>
         </div>
@@ -94,7 +94,7 @@
         <div id="gmailStatusDot" style="width:7px;height:7px;border-radius:50%;background:#34c759;box-shadow:0 0 0 3px rgba(52,199,89,.15);flex-shrink:0;transition:background .25s,box-shadow .25s"></div>
         <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:#3c3c43" id="gmailEmailLabel">Connected</div>
         <div style="font-size:11px;color:#8e8e93;font-weight:500;flex-shrink:0" id="gmailLastSynced">—</div>
-        <button onclick="syncGmailNow()" id="gmailSyncBtn" style="display:flex;align-items:center;gap:5px;background:none;border:none;padding:4px 2px;font-size:12px;font-weight:600;color:#7c3aed;cursor:pointer;font-family:inherit;flex-shrink:0">
+        <button onclick="syncGmailNow()" id="gmailSyncBtn" style="display:flex;align-items:center;gap:5px;background:none;border:none;padding:4px 2px;font-size:12px;font-weight:600;color:#4f46e5;cursor:pointer;font-family:inherit;flex-shrink:0">
           <svg id="gmailSyncIcon" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           <span id="gmailSyncBtnLabel">Sync</span>
         </button>
@@ -156,22 +156,22 @@
 </div>
 
 <!-- ══ GMAIL ONBOARDING DRAWER — Point 1 ══ -->
-<div id="gmailOnboardingDrawer" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,14,23,.5);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeGmailOnboarding()">
+<div id="gmailOnboardingDrawer" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.5);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeGmailOnboarding()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:20px 20px 30px;max-height:85vh;overflow-y:auto;animation:slideUp .35s cubic-bezier(.32,.72,0,1)">
     <div style="width:36px;height:4px;background:#e2e8f0;border-radius:4px;margin:0 auto 18px"></div>
     <div style="text-align:center;margin-bottom:16px">
-      <div style="width:48px;height:48px;background:#fff;border:1px solid #f0eef7;box-shadow:0 4px 14px rgba(15,14,23,.08);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+      <div style="width:48px;height:48px;background:#fff;border:1px solid #eef2ff;box-shadow:0 4px 14px rgba(15,23,42,.08);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
         <img src="/gmail.jpg" alt="Gmail" style="width:26px;height:26px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'">
       </div>
-      <div style="font-size:18px;font-weight:900;color:#0f0e17;margin-bottom:6px;letter-spacing:-.3px">Activate KIE's full intelligence</div>
+      <div style="font-size:18px;font-weight:900;color:#0f172a;margin-bottom:6px;letter-spacing:-.3px">Activate KIE's full intelligence</div>
       <div style="font-size:13px;color:#64748b;line-height:1.5">Connect Gmail and KIE tracks every application, interview, and offer — automatically.</div>
     </div>
-    <div style="background:#f8f7ff;border-radius:16px;padding:14px;margin-bottom:16px">
-      <div style="display:flex;align-items:flex-start;gap:11px;margin-bottom:11px"><div style="width:30px;height:30px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.2"/><path d="M3 6.5l9 6.5 9-6.5"/></svg></div><div><div style="font-size:12.5px;font-weight:700;color:#0f0e17;margin-bottom:1px">Auto-tracks every application</div><div style="font-size:11.5px;color:#64748b">No manual logging — KIE reads your inbox and builds a live pipeline.</div></div></div>
-      <div style="display:flex;align-items:flex-start;gap:11px;margin-bottom:11px"><div style="width:30px;height:30px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.1" fill="#7c3aed" stroke="none"/></svg></div><div><div style="font-size:12.5px;font-weight:700;color:#0f0e17;margin-bottom:1px">KIE opens knowing your situation</div><div style="font-size:11.5px;color:#64748b">Interview tomorrow? Offer sitting unread? KIE surfaces it first.</div></div></div>
-      <div style="display:flex;align-items:flex-start;gap:11px"><div style="width:30px;height:30px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></div><div><div style="font-size:12.5px;font-weight:700;color:#0f0e17;margin-bottom:1px">Read-only. Disconnect anytime.</div><div style="font-size:11.5px;color:#64748b">KIE never sends emails. One tap removes all data.</div></div></div>
+    <div style="background:#f8fafc;border-radius:16px;padding:14px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-start;gap:11px;margin-bottom:11px"><div style="width:30px;height:30px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.2"/><path d="M3 6.5l9 6.5 9-6.5"/></svg></div><div><div style="font-size:12.5px;font-weight:700;color:#0f172a;margin-bottom:1px">Auto-tracks every application</div><div style="font-size:11.5px;color:#64748b">No manual logging — KIE reads your inbox and builds a live pipeline.</div></div></div>
+      <div style="display:flex;align-items:flex-start;gap:11px;margin-bottom:11px"><div style="width:30px;height:30px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.1" fill="#4f46e5" stroke="none"/></svg></div><div><div style="font-size:12.5px;font-weight:700;color:#0f172a;margin-bottom:1px">KIE opens knowing your situation</div><div style="font-size:11.5px;color:#64748b">Interview tomorrow? Offer sitting unread? KIE surfaces it first.</div></div></div>
+      <div style="display:flex;align-items:flex-start;gap:11px"><div style="width:30px;height:30px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></div><div><div style="font-size:12.5px;font-weight:700;color:#0f172a;margin-bottom:1px">Read-only. Disconnect anytime.</div><div style="font-size:11.5px;color:#64748b">KIE never sends emails. One tap removes all data.</div></div></div>
     </div>
-    <button onclick="closeGmailOnboarding();openSidebarSettings();setTimeout(openGmailPanel,400);" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:14px;padding:14px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Connect Gmail →</button>
+    <button onclick="closeGmailOnboarding();openSidebarSettings();setTimeout(openGmailPanel,400);" style="width:100%;background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;border:none;border-radius:14px;padding:14px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Connect Gmail →</button>
     <button onclick="closeGmailOnboarding()" style="width:100%;background:none;border:none;color:#94a3b8;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px">Maybe later</button>
   </div>
 </div>
@@ -227,18 +227,18 @@
 
         <!-- Slide 1 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#f3e8ff,#ddd6fe);box-shadow:0 10px 22px rgba(124,58,237,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card" style="background:linear-gradient(160deg,#eef2ff,#c7d2fe);box-shadow:0 10px 22px rgba(79,70,229,.14)">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#ede9fe;color:#7c3aed">AI</span>
+                <span class="ds-tag-ico" style="background:#e0e7ff;color:#4f46e5">AI</span>
                 <span class="ds-tag-label">Resume Optimizing</span>
               </div>
               <div class="ds-card-heading">Get a higher<br>ATS score</div>
               <div class="ds-card-sub">KIE scans your resume, shows you what's wrong, then fixes it for you.</div>
-              <button class="ds-card-cta" style="background:#7c3aed" onclick="openOptimizeEntry()">
+              <button class="ds-card-cta" style="background:#4f46e5" onclick="openOptimizeEntry()">
                 Optimize my resume
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -246,17 +246,17 @@
             <div class="ds-doc-wrap">
               <div class="ds-doc-mock">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#7c3aed"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#ddd6fe"/>
-                  <circle cx="4" cy="45" r="3" fill="#7c3aed"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#a78bfa"/>
-                  <circle cx="4" cy="61" r="3" fill="#c4b5fd"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#e9e7f5"/>
-                  <circle cx="4" cy="77" r="3" fill="#c4b5fd"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#e9e7f5"/>
-                  <circle cx="4" cy="93" r="3" fill="#7c3aed"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#a78bfa"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#e9e7f5"/>
+                  <circle cx="15" cy="15" r="14" fill="#4f46e5"/>
+                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#c7d2fe"/>
+                  <circle cx="4" cy="45" r="3" fill="#4f46e5"/>
+                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#818cf8"/>
+                  <circle cx="4" cy="61" r="3" fill="#a5b4fc"/>
+                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#e2e8f0"/>
+                  <circle cx="4" cy="77" r="3" fill="#a5b4fc"/>
+                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#e2e8f0"/>
+                  <circle cx="4" cy="93" r="3" fill="#4f46e5"/>
+                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#818cf8"/>
+                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#e2e8f0"/>
                 </svg>
               </div>
               <div class="ds-stat-badge">
@@ -264,12 +264,12 @@
                 <span class="ds-stat-lbl">ATS Score</span>
               </div>
               <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#ddd6fe"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#c4b5fd"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#a78bfa"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#7c3aed"/>
+                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M43 7h7v7" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="3" y="36" width="9" height="14" rx="2" fill="#c7d2fe"/>
+                <rect x="17" y="28" width="9" height="22" rx="2" fill="#a5b4fc"/>
+                <rect x="31" y="20" width="9" height="30" rx="2" fill="#818cf8"/>
+                <rect x="45" y="12" width="9" height="38" rx="2" fill="#4f46e5"/>
               </svg>
             </div>
           </div>
@@ -277,18 +277,18 @@
 
         <!-- Slide 2 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#eff6ff,#bfdbfe);box-shadow:0 10px 22px rgba(37,99,235,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card" style="background:linear-gradient(160deg,#ecfeff,#a5f3fc);box-shadow:0 10px 22px rgba(6,182,212,.14)">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#dbeafe;color:#2563eb">AI</span>
+                <span class="ds-tag-ico" style="background:#cffafe;color:#0891b2">AI</span>
                 <span class="ds-tag-label">Resume Building</span>
               </div>
               <div class="ds-card-heading">Get a new resume<br>in 5 minutes</div>
               <div class="ds-card-sub">Quickly build a resume that works. It's easy with AI.</div>
-              <button class="ds-card-cta" style="background:#2563eb" onclick="showView('tpick')">
+              <button class="ds-card-cta" style="background:#06b6d4" onclick="showView('tpick')">
                 Quick-build your resume
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -296,17 +296,17 @@
             <div class="ds-doc-wrap">
               <div class="ds-doc-mock">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#2563eb"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#bfdbfe"/>
-                  <circle cx="4" cy="45" r="3" fill="#2563eb"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#60a5fa"/>
-                  <circle cx="4" cy="61" r="3" fill="#93c5fd"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#dbeafe"/>
-                  <circle cx="4" cy="77" r="3" fill="#93c5fd"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#dbeafe"/>
-                  <circle cx="4" cy="93" r="3" fill="#2563eb"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#60a5fa"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#dbeafe"/>
+                  <circle cx="15" cy="15" r="14" fill="#06b6d4"/>
+                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#a5f3fc"/>
+                  <circle cx="4" cy="45" r="3" fill="#06b6d4"/>
+                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#22d3ee"/>
+                  <circle cx="4" cy="61" r="3" fill="#67e8f9"/>
+                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#cffafe"/>
+                  <circle cx="4" cy="77" r="3" fill="#67e8f9"/>
+                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#cffafe"/>
+                  <circle cx="4" cy="93" r="3" fill="#06b6d4"/>
+                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#22d3ee"/>
+                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#cffafe"/>
                 </svg>
               </div>
               <div class="ds-stat-badge">
@@ -314,12 +314,12 @@
                 <span class="ds-stat-lbl">Templates</span>
               </div>
               <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#dbeafe"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#bfdbfe"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#60a5fa"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#2563eb"/>
+                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M43 7h7v7" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="3" y="36" width="9" height="14" rx="2" fill="#cffafe"/>
+                <rect x="17" y="28" width="9" height="22" rx="2" fill="#a5f3fc"/>
+                <rect x="31" y="20" width="9" height="30" rx="2" fill="#22d3ee"/>
+                <rect x="45" y="12" width="9" height="38" rx="2" fill="#06b6d4"/>
               </svg>
             </div>
           </div>
@@ -327,18 +327,18 @@
 
         <!-- Slide 3 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#f0fdf4,#bbf7d0);box-shadow:0 10px 22px rgba(22,163,74,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#16a34a"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#16a34a"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#16a34a"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card" style="background:linear-gradient(160deg,#eef2ff,#c7d2fe);box-shadow:0 10px 22px rgba(79,70,229,.14)">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#dcfce7;color:#16a34a">AI</span>
+                <span class="ds-tag-ico" style="background:#e0e7ff;color:#4f46e5">AI</span>
                 <span class="ds-tag-label">ATS Checking</span>
               </div>
               <div class="ds-card-heading">Beat the<br>ATS filters</div>
               <div class="ds-card-sub">Get your ATS score, strengths, and weaknesses in seconds.</div>
-              <button class="ds-card-cta" style="background:#16a34a" onclick="openUploadView()">
+              <button class="ds-card-cta" style="background:#4f46e5" onclick="openUploadView()">
                 Check my resume
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -346,17 +346,17 @@
             <div class="ds-doc-wrap">
               <div class="ds-doc-mock">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#16a34a"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#bbf7d0"/>
-                  <circle cx="4" cy="45" r="3" fill="#16a34a"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#4ade80"/>
-                  <circle cx="4" cy="61" r="3" fill="#86efac"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#dcfce7"/>
-                  <circle cx="4" cy="77" r="3" fill="#86efac"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#dcfce7"/>
-                  <circle cx="4" cy="93" r="3" fill="#16a34a"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#4ade80"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#dcfce7"/>
+                  <circle cx="15" cy="15" r="14" fill="#4f46e5"/>
+                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#c7d2fe"/>
+                  <circle cx="4" cy="45" r="3" fill="#4f46e5"/>
+                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#818cf8"/>
+                  <circle cx="4" cy="61" r="3" fill="#a5b4fc"/>
+                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#e0e7ff"/>
+                  <circle cx="4" cy="77" r="3" fill="#a5b4fc"/>
+                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#e0e7ff"/>
+                  <circle cx="4" cy="93" r="3" fill="#4f46e5"/>
+                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#818cf8"/>
+                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#e0e7ff"/>
                 </svg>
               </div>
               <div class="ds-stat-badge">
@@ -364,12 +364,12 @@
                 <span class="ds-stat-lbl">Full Scan</span>
               </div>
               <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#dcfce7"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#bbf7d0"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#4ade80"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#16a34a"/>
+                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M43 7h7v7" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="3" y="36" width="9" height="14" rx="2" fill="#e0e7ff"/>
+                <rect x="17" y="28" width="9" height="22" rx="2" fill="#c7d2fe"/>
+                <rect x="31" y="20" width="9" height="30" rx="2" fill="#818cf8"/>
+                <rect x="45" y="12" width="9" height="38" rx="2" fill="#4f46e5"/>
               </svg>
             </div>
           </div>
@@ -377,18 +377,18 @@
 
         <!-- Slide 4 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#fdf2f8,#fbcfe8);box-shadow:0 10px 22px rgba(219,39,119,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#db2777"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#db2777"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#db2777"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card" style="background:linear-gradient(160deg,#ecfeff,#a5f3fc);box-shadow:0 10px 22px rgba(6,182,212,.14)">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#fce7f3;color:#db2777">AI</span>
+                <span class="ds-tag-ico" style="background:#cffafe;color:#0891b2">AI</span>
                 <span class="ds-tag-label">Cover Letter Crafting</span>
               </div>
               <div class="ds-card-heading">Craft a<br>cover letter</div>
               <div class="ds-card-sub">Use AI to generate a strong cover letter in minutes.</div>
-              <button class="ds-card-cta" style="background:#db2777" onclick="openKieTool('coverletter')">
+              <button class="ds-card-cta" style="background:#06b6d4" onclick="openKieTool('coverletter')">
                 Craft a cover letter
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -396,17 +396,17 @@
             <div class="ds-doc-wrap">
               <div class="ds-doc-mock">
                 <svg width="100%" viewBox="0 0 120 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="15" cy="15" r="14" fill="#db2777"/>
-                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#f9a8d4"/>
-                  <circle cx="4" cy="45" r="3" fill="#db2777"/>
-                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#f472b6"/>
-                  <circle cx="4" cy="61" r="3" fill="#f9a8d4"/>
-                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#fce7f3"/>
-                  <circle cx="4" cy="77" r="3" fill="#f9a8d4"/>
-                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#fce7f3"/>
-                  <circle cx="4" cy="93" r="3" fill="#db2777"/>
-                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#f472b6"/>
-                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#fce7f3"/>
+                  <circle cx="15" cy="15" r="14" fill="#06b6d4"/>
+                  <rect x="38" y="11" width="48" height="8" rx="4" fill="#67e8f9"/>
+                  <circle cx="4" cy="45" r="3" fill="#06b6d4"/>
+                  <rect x="15" y="42" width="90" height="6" rx="3" fill="#22d3ee"/>
+                  <circle cx="4" cy="61" r="3" fill="#67e8f9"/>
+                  <rect x="15" y="58" width="70" height="6" rx="3" fill="#cffafe"/>
+                  <circle cx="4" cy="77" r="3" fill="#67e8f9"/>
+                  <rect x="15" y="74" width="80" height="6" rx="3" fill="#cffafe"/>
+                  <circle cx="4" cy="93" r="3" fill="#06b6d4"/>
+                  <rect x="15" y="90" width="60" height="6" rx="3" fill="#22d3ee"/>
+                  <rect x="15" y="106" width="45" height="6" rx="3" fill="#cffafe"/>
                 </svg>
               </div>
               <div class="ds-stat-badge">
@@ -414,12 +414,12 @@
                 <span class="ds-stat-lbl">To Generate</span>
               </div>
               <svg class="ds-chart-float" width="66" height="52" viewBox="0 0 66 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#db2777" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M43 7h7v7" stroke="#db2777" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="3" y="36" width="9" height="14" rx="2" fill="#fce7f3"/>
-                <rect x="17" y="28" width="9" height="22" rx="2" fill="#f9a8d4"/>
-                <rect x="31" y="20" width="9" height="30" rx="2" fill="#f472b6"/>
-                <rect x="45" y="12" width="9" height="38" rx="2" fill="#db2777"/>
+                <path d="M3 38 L18 22 L31 29 L50 7" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M43 7h7v7" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="3" y="36" width="9" height="14" rx="2" fill="#cffafe"/>
+                <rect x="17" y="28" width="9" height="22" rx="2" fill="#67e8f9"/>
+                <rect x="31" y="20" width="9" height="30" rx="2" fill="#22d3ee"/>
+                <rect x="45" y="12" width="9" height="38" rx="2" fill="#06b6d4"/>
               </svg>
             </div>
           </div>
@@ -437,13 +437,13 @@
     <!-- Recent Resumes — after Quick Actions -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.25)">
+        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.25)">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
         <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px">Recent Resumes</span>
         <span class="sh-badge" id="rCount" style="font-size:10px;padding:2px 8px">0</span>
       </div>
-      <a id="shAllLink" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px;transition:all .15s" onmouseover="this.style.background='rgba(124,58,237,.14)'" onmouseout="this.style.background='rgba(124,58,237,.08)'">View all<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+      <a id="shAllLink" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(79,70,229,.08);border:1.5px solid rgba(79,70,229,.18);padding:5px 13px;border-radius:99px;transition:all .15s" onmouseover="this.style.background='rgba(79,70,229,.14)'" onmouseout="this.style.background='rgba(79,70,229,.08)'">View all<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
     </div>
     <div class="opt-res-tabs" id="homeRTabs" style="margin:0 0 14px">
       <div class="opt-res-tab active" onclick="switchHomeResumeTab('all')">Resumes</div>
@@ -486,7 +486,7 @@
     <!-- Jobs skeleton — shown by default until renderJobsSwiper() decides what to show -->
     <div class="jobs-home-section" id="jobsHomeSkeleton">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.25)">
+        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.25)">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
         </div>
         <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px">Jobs for You</span>
@@ -532,15 +532,15 @@
     <div class="jobs-home-section" id="jobsHomeSection" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px">
         <div style="display:flex;align-items:center;gap:8px;min-width:0">
-          <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.25)">
+          <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.25)">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
           </div>
           <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Jobs for You</span>
         </div>
-        <a href="/find-jobs" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.18);padding:5px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        <a href="/find-jobs" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(79,70,229,.08);border:1.5px solid rgba(79,70,229,.18);padding:5px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-        <div id="jobsHomeProfPill" style="font-size:11px;color:#7c3aed;font-weight:700;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:99px;padding:2px 10px;display:inline-block"></div>
+        <div id="jobsHomeProfPill" style="font-size:11px;color:#4f46e5;font-weight:700;background:rgba(79,70,229,.08);border:1px solid rgba(79,70,229,.15);border-radius:99px;padding:2px 10px;display:inline-block"></div>
         <a href="/find-jobs" style="font-size:11px;color:#9ca3af;font-weight:600;text-decoration:none">Change →</a>
       </div>
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:none" id="jobsHomeTrack">
@@ -552,8 +552,8 @@
 
     <!-- no-profession CTA -->
     <div class="jobs-home-cta" id="jobsHomeCta" style="display:none">
-      <div style="display:flex;align-items:center;gap:14px;background:#faf5ff;border:1.5px dashed rgba(124,58,237,.25);border-radius:16px;padding:16px 18px;margin-bottom:20px">
-        <div style="width:42px;height:42px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:14px;background:#f5f7ff;border:1.5px dashed rgba(79,70,229,.25);border-radius:16px;padding:16px 18px;margin-bottom:20px">
+        <div style="width:42px;height:42px;background:linear-gradient(135deg,#4f46e5,#06b6d4);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         </div>
         <div style="flex:1;min-width:0">
@@ -622,7 +622,7 @@
       <div class="quiz-sub">Answer 3 quick questions and our AI will pick the best resume template for your exact situation.</div>
 
       <div class="quiz-q">
-        <label><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16M2 13h20"/></svg>What's your industry?</label>
+        <label><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16M2 13h20"/></svg>What's your industry?</label>
         <select id="q-industry">
           <option value="">Select your field…</option>
           <option value="tech">Technology / Engineering</option>
@@ -637,7 +637,7 @@
       </div>
 
       <div class="quiz-q">
-        <label><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>What's your experience level?</label>
+        <label><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>What's your experience level?</label>
         <select id="q-experience">
           <option value="">Select level…</option>
           <option value="entry">Entry Level (0–2 yrs)</option>
@@ -648,7 +648,7 @@
       </div>
 
       <div class="quiz-q">
-        <label><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>What style resonates with you?</label>
+        <label><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>What style resonates with you?</label>
         <select id="q-style">
           <option value="">Select style…</option>
           <option value="professional">Classic &amp; Professional</option>
@@ -680,7 +680,7 @@
       </button>
     </div>
     <div class="tpick-hdr">
-      <h2>Choose Your <span style="background:linear-gradient(135deg,#7c3aed,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Template</span></h2>
+      <h2>Choose Your <span style="background:linear-gradient(135deg,#4f46e5,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Template</span></h2>
       <p>Pick one below, or let us find the best fit for you</p>
     </div>
     <!-- Helper card -->
@@ -758,7 +758,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <label style="margin-bottom:0">Professional Summary</label>
             <button id="aiSummBtn" class="ai-assist-btn" onclick="aiAssistSummary()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path fill="#7c3aed" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path fill="#4f46e5" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
               Get Templates
             </button>
           </div>
@@ -798,7 +798,7 @@
             <label>Description</label>
             <textarea id="wDs" placeholder="Key responsibilities and achievements…" style="min-height:56px"></textarea>
             <button id="workCoachBtn" class="work-coach-btn" onclick="triggerWorkCoach()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path fill="#7c3aed" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path fill="#4f46e5" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
               Suggest bullet points for this role
             </button>
             <!-- ✦ WORK BULLETS PANEL -->
@@ -813,8 +813,8 @@
 
         <!-- Education divider -->
         <div class="sec-hdr" style="margin-top:28px">
-          <div class="sec-hdr-ico" style="background:#fdf4ff">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+          <div class="sec-hdr-ico" style="background:#ecfeff">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#0891b2" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
           </div>
           <span class="sec-hdr-txt">Education</span>
           <div class="sec-divider"></div>
@@ -842,7 +842,7 @@
         <div class="opt-sec">
           <div class="opt-sec-hdr" onclick="toggleOptSection('cert')">
             <div class="opt-sec-hdr-left">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="8" r="6"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><circle cx="12" cy="8" r="6"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
               Certifications
               <span class="opt-sec-badge">Optional</span>
             </div>
@@ -868,7 +868,7 @@
         <div class="opt-sec">
           <div class="opt-sec-hdr" onclick="toggleOptSection('proj')">
             <div class="opt-sec-hdr-left">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
               Projects
               <span class="opt-sec-badge">Optional</span>
             </div>
@@ -892,7 +892,7 @@
         <div class="opt-sec">
           <div class="opt-sec-hdr" onclick="toggleOptSection('lang')">
             <div class="opt-sec-hdr-left">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
               Languages
               <span class="opt-sec-badge">Optional</span>
             </div>
@@ -941,7 +941,7 @@
         <p style="font-size:11px;color:var(--mute);margin-top:8px">Tip: Press Enter to add quickly.</p>
         <div style="margin-top:12px">
           <button id="aiSkillBtn" class="ai-assist-btn" style="width:100%;justify-content:center" onclick="triggerSkillsCoach()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path fill="#7c3aed" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path fill="#4f46e5" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
             Suggest Skills with AI
           </button>
           <!-- ✦ SKILL CHIPS PANEL -->
@@ -970,7 +970,7 @@
     <p style="color:var(--sub);font-size:13px;margin-bottom:20px">Your resume has been saved successfully.</p>
 
     <!-- ATS Score Card -->
-    <div style="background:linear-gradient(135deg,#faf5ff,#f3f0ff);border:1.5px solid var(--border2);border-radius:20px;padding:20px;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;text-align:left">
+    <div style="background:linear-gradient(135deg,#f5f7ff,#eef2ff);border:1.5px solid var(--border2);border-radius:20px;padding:20px;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;text-align:left">
       <div style="display:flex;align-items:center;gap:14px">
         <div id="succAtsRing" style="position:relative;width:90px;height:90px;flex-shrink:0">
           <!-- filled by saveResume() -->
@@ -1005,7 +1005,7 @@
         Keep Editing
       </button>
       <!-- Tertiary: Dashboard -->
-      <button id="sDashBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(124,58,237,.28);transition:all .2s">
+      <button id="sDashBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(79,70,229,.28);transition:all .2s">
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Go to Dashboard
       </button>
@@ -1034,8 +1034,8 @@
     <div id="clStep1" class="cl-step-panel active">
       <div class="cl-panel-card">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <div style="width:36px;height:36px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
           </div>
           <div>
             <div style="font-size:16px;font-weight:900;color:var(--txt);letter-spacing:-.3px">Cover Letter</div>
@@ -1046,8 +1046,8 @@
         <div class="cl-src-grid" style="margin-top:20px">
           <!-- Option A: Pick from existing resumes -->
           <div class="cl-src-card" id="clSrcExisting" onclick="clSelectSource('existing')">
-            <div class="cl-src-ico" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="cl-src-ico" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div class="cl-src-info">
               <div class="cl-src-title">Use my resume</div>
@@ -1066,8 +1066,8 @@
 
           <!-- Option B: Upload resume -->
           <div class="cl-src-card" id="clSrcUpload" onclick="clSelectSource('upload')">
-            <div class="cl-src-ico" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            <div class="cl-src-ico" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
             </div>
             <div class="cl-src-info">
               <div class="cl-src-title">Upload a resume</div>
@@ -1079,7 +1079,7 @@
           <!-- Upload zone (shows when "upload" selected) -->
           <div class="cl-upload-zone" id="clUploadZone">
             <input type="file" id="clFileInput" accept=".pdf,.txt" onchange="clHandleFile(this)"/>
-            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="1.5" style="margin:0 auto 8px;display:block"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="1.5" style="margin:0 auto 8px;display:block"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
             <p>Drop your resume here</p>
             <span>PDF or TXT · max 5MB</span>
           </div>
@@ -1096,8 +1096,8 @@
 
           <!-- Option C: Start from scratch -->
           <div class="cl-src-card" id="clSrcScratch" onclick="clSelectSource('scratch')">
-            <div class="cl-src-ico" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <div class="cl-src-ico" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </div>
             <div class="cl-src-info">
               <div class="cl-src-title">Start from scratch</div>
@@ -1160,23 +1160,23 @@
             <div class="cl-tcard-tick"><svg width="11" height="11" fill="none" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M2 5.5l3 3 4.5-5"/></svg></div>
             <div class="cl-tcard-prev">
               <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-                <rect width="200" height="160" fill="#f8f7ff"/>
-                <rect x="0" y="0" width="200" height="42" fill="#7c3aed"/>
+                <rect width="200" height="160" fill="#f8fafc"/>
+                <rect x="0" y="0" width="200" height="42" fill="#4f46e5"/>
                 <text x="14" y="18" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="#ffffff">Alex Johnson</text>
                 <text x="14" y="28" font-family="Arial,sans-serif" font-size="6" fill="rgba(255,255,255,.8)">Product Manager</text>
                 <text x="14" y="37" font-family="Arial,sans-serif" font-size="5.5" fill="rgba(255,255,255,.65)">alex@email.com · +234 801 0000 000</text>
                 <text x="14" y="56" font-family="Arial,sans-serif" font-size="6" fill="#64748b">June 8, 2026 · Acme Corp</text>
                 <text x="14" y="68" font-family="Arial,sans-serif" font-size="6.5" font-weight="bold" fill="#1e293b">Dear Hiring Manager,</text>
-                <rect x="14" y="73" width="172" height="3.5" rx="2" fill="#ddd6fe"/>
-                <rect x="14" y="80" width="158" height="3.5" rx="2" fill="#ddd6fe"/>
-                <rect x="14" y="87" width="166" height="3.5" rx="2" fill="#ddd6fe"/>
+                <rect x="14" y="73" width="172" height="3.5" rx="2" fill="#c7d2fe"/>
+                <rect x="14" y="80" width="158" height="3.5" rx="2" fill="#c7d2fe"/>
+                <rect x="14" y="87" width="166" height="3.5" rx="2" fill="#c7d2fe"/>
                 <rect x="14" y="96" width="172" height="3.5" rx="2" fill="#e2e8f0"/>
                 <rect x="14" y="103" width="148" height="3.5" rx="2" fill="#e2e8f0"/>
                 <rect x="14" y="110" width="160" height="3.5" rx="2" fill="#e2e8f0"/>
                 <rect x="14" y="119" width="172" height="3.5" rx="2" fill="#e2e8f0"/>
                 <rect x="14" y="126" width="140" height="3.5" rx="2" fill="#e2e8f0"/>
                 <text x="14" y="142" font-family="Arial,sans-serif" font-size="6" fill="#64748b">Yours sincerely,</text>
-                <text x="14" y="151" font-family="Arial,sans-serif" font-size="6.5" font-weight="bold" fill="#7c3aed">Alex Johnson</text>
+                <text x="14" y="151" font-family="Arial,sans-serif" font-size="6.5" font-weight="bold" fill="#4f46e5">Alex Johnson</text>
               </svg>
             </div>
             <div class="cl-tcard-foot">
@@ -1361,11 +1361,11 @@
             <svg class="opt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
               <defs>
                 <linearGradient id="clAnimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#7c3aed"/>
-                  <stop offset="100%" stop-color="#c084fc"/>
+                  <stop offset="0%" stop-color="#4f46e5"/>
+                  <stop offset="100%" stop-color="#22d3ee"/>
                 </linearGradient>
               </defs>
-              <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
+              <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(79,70,229,.12)" stroke-width="4"/>
               <circle id="clAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#clAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
             </svg>
             <div class="opt-anim-orb-ring"></div>
@@ -1411,7 +1411,7 @@
 
         <!-- Action buttons -->
         <div style="display:flex;flex-direction:column;gap:10px">
-          <button onclick="clDownloadPDF()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(124,58,237,.25)">
+          <button onclick="clDownloadPDF()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(79,70,229,.25)">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Download PDF
           </button>
@@ -1463,14 +1463,14 @@
     </div>
 
     <!-- ATS score strip -->
-    <div id="detAtsWrap" style="display:none;align-items:center;gap:14px;background:linear-gradient(135deg,#faf5ff,#ede9fe);border:1.5px solid var(--border2);border-radius:16px;padding:16px;margin-bottom:16px">
+    <div id="detAtsWrap" style="display:none;align-items:center;gap:14px;background:linear-gradient(135deg,#f5f7ff,#e0e7ff);border:1.5px solid var(--border2);border-radius:16px;padding:16px;margin-bottom:16px">
       <div id="detAtsSvg" style="position:relative;width:68px;height:68px;flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);margin-bottom:3px">ATS Score</div>
         <div id="detAtsStatus" style="font-size:14px;font-weight:800;margin-bottom:6px"></div>
         <button id="detAtsInfoBtn" data-rid=""
           onclick="openATSDrawer(this.dataset.rid)"
-          style="display:inline-flex;align-items:center;gap:5px;background:none;border:1.5px solid rgba(124,58,237,.25);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--p);cursor:pointer;font-family:inherit">
+          style="display:inline-flex;align-items:center;gap:5px;background:none;border:1.5px solid rgba(79,70,229,.25);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--p);cursor:pointer;font-family:inherit">
           <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
           What is ATS &amp; how to improve
         </button>
@@ -1487,7 +1487,7 @@
   <div class="ksb-hdr">
     <div class="ksb-brand">
       <div class="ksb-av">
-        <img src="/kie.jpg" alt="KIE" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=&quot;font-size:13px;font-weight:900;color:#7c3aed;letter-spacing:-.5px&quot;>KIE</span>'"/>
+        <img src="/kie.jpg" alt="KIE" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=&quot;font-size:13px;font-weight:900;color:#4f46e5;letter-spacing:-.5px&quot;>KIE</span>'"/>
       </div>
       <div class="ksb-brand-txt">
         <div class="ksb-brand-name">KIE</div>
@@ -1553,8 +1553,8 @@
         <div class="ksb-prof-name" id="ksbProfName">—</div>
         <div class="ksb-prof-email" id="ksbProfEmail">—</div>
       </div>
-      <div style="width:28px;height:28px;background:#f5f3ff;border:1.5px solid #ede9fe;border-radius:8px;display:flex;align-items:center;justify-content:center">
-        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      <div style="width:28px;height:28px;background:#eef2ff;border:1.5px solid #e0e7ff;border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
       </div>
     </div>
 
@@ -1615,8 +1615,8 @@
       <span class="ksb-set-section-label">Legal</span>
       <div class="ksb-set-card">
         <a href="/privacy" class="ksb-set-row" style="text-decoration:none">
-          <div class="ksb-set-row-ico" style="background:rgba(124,58,237,.12)">
-            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div class="ksb-set-row-ico" style="background:rgba(79,70,229,.12)">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div class="ksb-set-row-txt">
             <div class="ksb-set-row-title">Privacy Policy</div>
@@ -1638,7 +1638,7 @@
     </div>
 
     <div style="text-align:center;padding:12px 0 4px">
-      <div style="font-size:10px;font-weight:700;color:#c4b5fd;letter-spacing:.8px">KIE · AI Career Coach by Kievora</div>
+      <div style="font-size:10px;font-weight:700;color:#a5b4fc;letter-spacing:.8px">KIE · AI Career Coach by Kievora</div>
     </div>
   </div>
 </div>
@@ -1676,7 +1676,7 @@
       <div class="kie-hdr-l">
         <!-- Hamburger menu -->
         <button class="kie-hbg" id="kieHamburger" onclick="openSidebar()" title="History">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <line class="hb1" x1="4" y1="6" x2="20" y2="6"/>
             <line class="hb2" x1="4" y1="12" x2="20" y2="12"/>
             <line class="hb3" x1="4" y1="18" x2="20" y2="18"/>
@@ -1770,21 +1770,21 @@
         <div class="kie-welcome-glow"></div>
         <div class="kie-welcome-av">
           <img src="/kie.jpg" alt="KIE" style="width:100%;height:100%;object-fit:cover;border-radius:26px"
-               onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<svg viewBox=&quot;0 0 80 80&quot; fill=&quot;none&quot; width=&quot;108&quot; height=&quot;108&quot;><defs><linearGradient id=&quot;kwG&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;80&quot; y2=&quot;80&quot; gradientUnits=&quot;userSpaceOnUse&quot;><stop stop-color=&quot;#7c3aed&quot;/><stop offset=&quot;1&quot; stop-color=&quot;#a855f7&quot;/></linearGradient></defs><rect width=&quot;80&quot; height=&quot;80&quot; rx=&quot;22&quot; fill=&quot;url(%23kwG)&quot;/><text x=&quot;40&quot; y=&quot;50&quot; text-anchor=&quot;middle&quot; font-family=&quot;Inter,sans-serif&quot; font-weight=&quot;900&quot; font-size=&quot;24&quot; fill=&quot;#fff&quot; letter-spacing=&quot;-1&quot;>KIE</text></svg>')"/>
+               onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<svg viewBox=&quot;0 0 80 80&quot; fill=&quot;none&quot; width=&quot;108&quot; height=&quot;108&quot;><defs><linearGradient id=&quot;kwG&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;80&quot; y2=&quot;80&quot; gradientUnits=&quot;userSpaceOnUse&quot;><stop stop-color=&quot;#4f46e5&quot;/><stop offset=&quot;1&quot; stop-color=&quot;#06b6d4&quot;/></linearGradient></defs><rect width=&quot;80&quot; height=&quot;80&quot; rx=&quot;22&quot; fill=&quot;url(%23kwG)&quot;/><text x=&quot;40&quot; y=&quot;50&quot; text-anchor=&quot;middle&quot; font-family=&quot;Inter,sans-serif&quot; font-weight=&quot;900&quot; font-size=&quot;24&quot; fill=&quot;#fff&quot; letter-spacing=&quot;-1&quot;>KIE</text></svg>')"/>
         </div>
-        <div class="kie-welcome-title">Hi, I'm KIE <span class="kie-wave"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.4 12.6l-1.5-4a1.5 1.5 0 0 0-2.8 1l.6 1.7"/><path d="M13.9 10.2 12 5.2a1.5 1.5 0 0 0-2.8 1.1l2.4 6.4"/><path d="M9.6 11.6 7.9 7.1a1.5 1.5 0 1 0-2.8 1l3.6 9.7c1.2 3.3 4.9 5.6 8.4 4.3a6.5 6.5 0 0 0 3.8-8.4l-1.2-3.2a1.5 1.5 0 0 0-2.8 1.1l.9 2.3"/><path d="M9.6 11.6 8.4 8.4a1.5 1.5 0 1 0-2.8 1l.7 1.9"/></svg></span></div>
+        <div class="kie-welcome-title">Hi, I'm KIE <span class="kie-wave"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.4 12.6l-1.5-4a1.5 1.5 0 0 0-2.8 1l.6 1.7"/><path d="M13.9 10.2 12 5.2a1.5 1.5 0 0 0-2.8 1.1l2.4 6.4"/><path d="M9.6 11.6 7.9 7.1a1.5 1.5 0 1 0-2.8 1l3.6 9.7c1.2 3.3 4.9 5.6 8.4 4.3a6.5 6.5 0 0 0 3.8-8.4l-1.2-3.2a1.5 1.5 0 0 0-2.8 1.1l.9 2.3"/><path d="M9.6 11.6 8.4 8.4a1.5 1.5 0 1 0-2.8 1l.7 1.9"/></svg></span></div>
         <div class="kie-welcome-sub">Your AI career coach. Ask me anything — or pick a tool below to get started.</div>
       </div>
 
       <!-- Gmail alert card -->
-      <div id="kieGmailAlert" style="display:none;margin:12px 14px 0;background:linear-gradient(135deg,#faf5ff,#f3ecff);border:1.5px solid #ddd6fe;border-radius:16px;padding:14px 16px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04)" onclick="kieGmailAlertTap()">
+      <div id="kieGmailAlert" style="display:none;margin:12px 14px 0;background:linear-gradient(135deg,#f5f7ff,#eef2ff);border:1.5px solid #c7d2fe;border-radius:16px;padding:14px 16px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04)" onclick="kieGmailAlertTap()">
         <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#fff"/></svg></div>
+          <div style="width:32px;height:32px;background:linear-gradient(135deg,#4f46e5,#4338ca);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#fff"/></svg></div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:800;color:#7c3aed;margin-bottom:3px" id="kieAlertLabel">KIE spotted something</div>
-            <div style="font-size:13px;font-weight:600;color:#0f0e17;line-height:1.45" id="kieAlertMsg"></div>
+            <div style="font-size:11px;font-weight:800;color:#4f46e5;margin-bottom:3px" id="kieAlertLabel">KIE spotted something</div>
+            <div style="font-size:13px;font-weight:600;color:#0f172a;line-height:1.45" id="kieAlertMsg"></div>
           </div>
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </div>
       </div>
 
@@ -1810,7 +1810,7 @@
           <div class="kie-swiper-track" id="kieSwiperTrack">
 
             <button type="button" onclick="openKieAttachSheet()" class="kie-chip2" style="cursor:pointer">
-              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">
+              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#6366f1,#4f46e5)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
               </div>
               <div class="kie-chip2-txt">Upload resume</div>
@@ -1818,7 +1818,7 @@
             </button>
 
             <button class="kie-chip2" id="kieChip2" onclick="sendChip('Help me improve my resume summary')">
-              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">
+              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#6366f1,#4f46e5)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </div>
               <div class="kie-chip2-txt" id="kieChip2Txt">Improve summary</div>
@@ -1826,7 +1826,7 @@
             </button>
 
             <button class="kie-chip2" id="kieChip3" onclick="sendChip('How do I prepare for a job interview?')">
-              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">
+              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#818cf8,#4f46e5)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2"/><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg>
               </div>
               <div class="kie-chip2-txt" id="kieChip3Txt">Interview prep</div>
@@ -1834,7 +1834,7 @@
             </button>
 
             <button class="kie-chip2" onclick="sendChip('How do I negotiate a higher salary?')">
-              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
+              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#4f46e5,#3730a3)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
               </div>
               <div class="kie-chip2-txt">Salary negotiation</div>
@@ -1842,7 +1842,7 @@
             </button>
 
             <button class="kie-chip2" onclick="sendChip('What skills are in demand in the job market right now?')">
-              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#c4b5fd,#8b5cf6)">
+              <div class="kie-chip2-ico" style="background:linear-gradient(135deg,#a5b4fc,#6366f1)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
               </div>
               <div class="kie-chip2-txt">In-demand skills</div>
@@ -1850,7 +1850,7 @@
             </button>
 
             <button class="kie-chip2" id="kieChip6" onclick="sendChip('How do I switch careers successfully?')">
-              <div class="kie-chip2-ico" id="kieChip6Ico" style="background:linear-gradient(135deg,#6d28d9,#4c1d95)">
+              <div class="kie-chip2-ico" id="kieChip6Ico" style="background:linear-gradient(135deg,#4338ca,#312e81)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M17 3l4 4-4 4M3 11V9a4 4 0 014-4h14M7 21l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
               </div>
               <div class="kie-chip2-txt" id="kieChip6Txt">Career switch</div>
@@ -1943,13 +1943,13 @@
     <!-- Input — sticky at bottom -->
     <!-- Gmail floating alert bar above input -->
     <div id="kieFloatAlert" style="display:none;padding:0 14px 8px;background:transparent">
-      <div style="background:linear-gradient(135deg,#faf5ff,#f3ecff);border:1.5px solid #ddd6fe;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04)" onclick="kieFloatAlertTap()">
-        <div style="width:26px;height:26px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#fff"/></svg></div>
+      <div style="background:linear-gradient(135deg,#f5f7ff,#eef2ff);border:1.5px solid #c7d2fe;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04)" onclick="kieFloatAlertTap()">
+        <div style="width:26px;height:26px;background:linear-gradient(135deg,#4f46e5,#4338ca);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#fff"/></svg></div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:10px;font-weight:800;color:#7c3aed" id="kieFloatAlertLabel">KIE spotted something</div>
-          <div style="font-size:12px;font-weight:600;color:#0f0e17;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="kieFloatAlertMsg"></div>
+          <div style="font-size:10px;font-weight:800;color:#4f46e5" id="kieFloatAlertLabel">KIE spotted something</div>
+          <div style="font-size:12px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="kieFloatAlertMsg"></div>
         </div>
-        <button onclick="event.stopPropagation();dismissFloatAlert()" style="width:20px;height:20px;border:none;background:rgba(124,58,237,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0"><svg width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        <button onclick="event.stopPropagation();dismissFloatAlert()" style="width:20px;height:20px;border:none;background:rgba(79,70,229,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0"><svg width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
       </div>
     </div>
     <div class="kie-input-wrap">
@@ -1961,7 +1961,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
           </button>
           <button class="kmd-trigger" onclick="openModelDrawer()" title="Switch AI model">
-            <span id="kieModelBadge" style="background:#a78bfa22;color:#7c3aed">KIE Spark</span>
+            <span id="kieModelBadge" style="background:#a78bfa22;color:#4f46e5">KIE Spark</span>
             <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div class="kie-toolrow-spacer"></div>
@@ -2014,7 +2014,7 @@
 <script src="/dashboard/dashboard-job-detail.js"></script>
 
 <!-- ══ MORE TOOLS FULL-PAGE OVERLAY ══ -->
-<div id="moreToolsOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:#f8f7ff;overflow-y:auto">
+<div id="moreToolsOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:#f8fafc;overflow-y:auto">
 
   <!-- Clean white nav bar — same treatment as the Settings panel -->
   <div class="mto-hdr">
@@ -2023,7 +2023,7 @@
     </button>
     <div class="mto-hdr-title">AI Career Tools</div>
     <div class="mto-hdr-pill">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5z"/></svg>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5z"/></svg>
       KIE Ecosystem
     </div>
   </div>
@@ -2048,9 +2048,9 @@
   <div class="mto-body">
     <div class="mto-tile-grid" id="mtoTileGrid">
 
-    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('aibuild')" style="--tile-c:#7c3aed;--tile-tint:#f2ebfd">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('aibuild')" style="--tile-c:#4f46e5;--tile-tint:#e2e8f0">
       <div class="mto-tile-top">
-        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
       </div>
       <div class="mto-tile-body">
         <div class="mto-tile-name">AI Resume Builder</div>
@@ -2146,9 +2146,9 @@
       </div>
     </div>
 
-    <div class="mto-tile" data-cat="brand" onclick="closeMoreTools();openKieTool('branding')" style="--tile-c:#a21caf;--tile-tint:#f6e8f7">
+    <div class="mto-tile" data-cat="brand" onclick="closeMoreTools();openKieTool('branding')" style="--tile-c:#0e7490;--tile-tint:#e2e8f0">
       <div class="mto-tile-top">
-        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path fill="#a21caf" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm6 10.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg></div>
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path fill="#0e7490" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm6 10.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg></div>
       </div>
       <div class="mto-tile-body">
         <div class="mto-tile-name">Personal Brand</div>
@@ -2202,9 +2202,9 @@
       </div>
     </div>
 
-    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('coverletter')" style="--tile-c:#9333ea;--tile-tint:#f4ebfd">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('coverletter')" style="--tile-c:#0891b2;--tile-tint:#e2e8f0">
       <div class="mto-tile-top">
-        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#0891b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
       </div>
       <div class="mto-tile-body">
         <div class="mto-tile-name">Cover Letter Writer</div>
@@ -2275,7 +2275,7 @@
   <div class="qm-box">
     <div class="qm-hdr">
       <div class="qm-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path fill="#7c3aed" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path fill="#4f46e5" d="M12 2.5l1.4 4.1 4.1 1.4-4.1 1.4L12 13.5l-1.4-4.1L6.5 8l4.1-1.4L12 2.5zm5 9l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg>
         Find Your Perfect Template
       </div>
       <button class="qm-close" onclick="closeQuizModal()">✕</button>
@@ -2285,7 +2285,7 @@
     <div id="qmPhase1" class="qm-body">
       <p style="font-size:13px;color:var(--sub);margin-bottom:16px;line-height:1.55">Answer 3 quick questions and we'll pick the best template for your situation.</p>
       <div class="qm-q">
-        <label><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16M2 13h20"/></svg>What's your industry?</label>
+        <label><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16M2 13h20"/></svg>What's your industry?</label>
         <select id="qm-industry">
           <option value="">Select your field…</option>
           <option value="tech">Technology / Engineering</option>
@@ -2299,7 +2299,7 @@
         </select>
       </div>
       <div class="qm-q">
-        <label><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>Experience level?</label>
+        <label><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>Experience level?</label>
         <select id="qm-experience">
           <option value="">Select level…</option>
           <option value="entry">Entry Level (0–2 yrs)</option>
@@ -2309,7 +2309,7 @@
         </select>
       </div>
       <div class="qm-q">
-        <label><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Preferred style?</label>
+        <label><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Preferred style?</label>
         <select id="qm-style">
           <option value="">Select style…</option>
           <option value="professional">Professional & Traditional</option>
@@ -2328,7 +2328,7 @@
     <!-- Phase 1.5: KIE matching loading state -->
     <div id="qmPhaseLoading" class="qm-loading" style="display:none">
       <div class="qm-loading-spin">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path stroke-linecap="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><path stroke-linecap="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
       </div>
       <div class="qm-loading-title">KIE is matching you...</div>
       <div class="qm-loading-sub">Comparing your answers against every template in the library</div>
@@ -2589,11 +2589,11 @@
         <svg class="opt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
           <defs>
             <linearGradient id="atsAnimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#7c3aed"/>
-              <stop offset="100%" stop-color="#c084fc"/>
+              <stop offset="0%" stop-color="#4f46e5"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
             </linearGradient>
           </defs>
-          <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
+          <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(79,70,229,.12)" stroke-width="4"/>
           <circle id="atsAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#atsAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
         </svg>
         <div class="opt-anim-orb-ring"></div>
@@ -2779,11 +2779,11 @@
           <svg class="opt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
             <defs>
               <linearGradient id="optAnimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#7c3aed"/>
-                <stop offset="100%" stop-color="#c084fc"/>
+                <stop offset="0%" stop-color="#4f46e5"/>
+                <stop offset="100%" stop-color="#22d3ee"/>
               </linearGradient>
             </defs>
-            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
+            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(79,70,229,.12)" stroke-width="4"/>
             <circle id="optAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#optAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
           </svg>
           <div class="opt-anim-orb-ring"></div>
@@ -2842,7 +2842,7 @@
           <div class="opt-score-box-val" id="optOldScore">0</div>
           <div class="opt-score-box-lbl">Before</div>
         </div>
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.8" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2.8" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
         <div class="opt-score-box opt-score-box-new">
           <div class="opt-score-box-val" id="optNewScore">0</div>
           <div class="opt-score-box-lbl">ATS · After</div>
@@ -2945,7 +2945,7 @@
         <div class="hub-kie-cta-title">Chat directly with KIE</div>
         <div class="hub-kie-cta-sub">Ask anything career-related, instantly</div>
       </div>
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
     </div>
   </div>
 
@@ -2954,7 +2954,7 @@
 
     <div class="hub-card" onclick="showView('aibuild')">
       <div class="hub-card-top">
-        <div class="hub-card-ico-wrap" style="background:#f5f3ff">✍️</div>
+        <div class="hub-card-ico-wrap" style="background:#eef2ff">✍️</div>
         <div>
           <div class="hub-card-name">AI Resume</div>
           <div class="hub-card-sub">Build from a prompt</div>
@@ -3052,15 +3052,15 @@
 
     <div class="hub-card" onclick="showView('branding')">
       <div class="hub-card-top">
-        <div class="hub-card-ico-wrap" style="background:#fdf4ff">⭐</div>
+        <div class="hub-card-ico-wrap" style="background:#ecfeff">⭐</div>
         <div>
           <div class="hub-card-name">Personal Brand</div>
           <div class="hub-card-sub">Bio · pitch · tagline</div>
         </div>
       </div>
-      <div class="hub-card-foot" style="border-color:#f5d0fe">
-        <div class="hub-card-kie-tag" style="color:#a21caf"><span style="font-size:8px">✦</span> KIE</div>
-        <div class="hub-card-arr" style="color:#a21caf"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+      <div class="hub-card-foot" style="border-color:#a5f3fc">
+        <div class="hub-card-kie-tag" style="color:#0e7490"><span style="font-size:8px">✦</span> KIE</div>
+        <div class="hub-card-arr" style="color:#0e7490"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
       </div>
     </div>
 
@@ -3104,19 +3104,19 @@
   <div class="ctool-body" id="aibuildFormBody">
     <div id="aibuildSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="20" y="14" width="46" height="60" rx="6" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
-          <rect x="27" y="24" width="26" height="6" rx="3" fill="#7c3aed"/>
-          <rect x="27" y="35" width="32" height="4" rx="2" fill="#a78bfa"/>
-          <rect x="27" y="43" width="24" height="4" rx="2" fill="#c4b5fd"/>
-          <rect x="27" y="53" width="32" height="4" rx="2" fill="#c4b5fd"/>
-          <rect x="27" y="61" width="20" height="4" rx="2" fill="#c4b5fd"/>
-          <path d="M64 22l4.5 10.5L79 37l-10.5 4.5L64 52l-4.5-10.5L49 37l10.5-4.5z" fill="#7c3aed"/>
-          <circle cx="76" cy="66" r="12" fill="#7c3aed"/>
+          <rect x="20" y="14" width="46" height="60" rx="6" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+          <rect x="27" y="24" width="26" height="6" rx="3" fill="#4f46e5"/>
+          <rect x="27" y="35" width="32" height="4" rx="2" fill="#818cf8"/>
+          <rect x="27" y="43" width="24" height="4" rx="2" fill="#a5b4fc"/>
+          <rect x="27" y="53" width="32" height="4" rx="2" fill="#a5b4fc"/>
+          <rect x="27" y="61" width="20" height="4" rx="2" fill="#a5b4fc"/>
+          <path d="M64 22l4.5 10.5L79 37l-10.5 4.5L64 52l-4.5-10.5L49 37l10.5-4.5z" fill="#4f46e5"/>
+          <circle cx="76" cy="66" r="12" fill="#4f46e5"/>
           <path d="M76 60v12M70 66h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
         </svg>
       </div>
@@ -3128,44 +3128,44 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Describe Your Resume</div>
           <textarea id="aibuildPrompt" class="ctool-textarea" style="min-height:110px" placeholder="e.g. 'Create a senior product manager resume for a tech startup with 7 years experience' or 'Build a luxury executive resume for a CFO in finance'"></textarea>
           <div class="ctool-pill-row" style="margin-top:10px">
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Senior Software Engineer at a FAANG company with 5 years of experience in Python and distributed systems">Sr Engineer</button>
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Creative UX/UI Designer at a design agency with 4 years experience building mobile apps">UX Designer</button>
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Executive CFO resume for a Fortune 500 finance leader with 15 years experience">CFO Executive</button>
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Marketing Manager at a fast-growing e-commerce brand with 3 years experience in digital campaigns">Marketing Mgr</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Senior Software Engineer at a FAANG company with 5 years of experience in Python and distributed systems">Sr Engineer</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Creative UX/UI Designer at a design agency with 4 years experience building mobile apps">UX Designer</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Executive CFO resume for a Fortune 500 finance leader with 15 years experience">CFO Executive</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('aibuildPrompt').value=this.dataset.v" data-v="Marketing Manager at a fast-growing e-commerce brand with 3 years experience in digital campaigns">Marketing Mgr</button>
           </div>
         </div>
       </div>
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">Full Resume</div>
         <div class="ctool-feat-desc">Summary, experience, skills — all written.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-feat-title">Template Match</div>
         <div class="ctool-feat-desc">Picks the design that fits your role.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg></div>
         <div class="ctool-feat-title">ATS-Friendly</div>
         <div class="ctool-feat-desc">Built to pass the filters from the start.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-feat-title">Fully Editable</div>
         <div class="ctool-feat-desc">Lands right in the resume builder.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="aibuildBtn" onclick="runAiBuild()" style="background:#7c3aed">
+    <button class="ctool-btn" id="aibuildBtn" onclick="runAiBuild()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       Generate Resume with KIE
     </button>
@@ -3186,8 +3186,8 @@
       </div>
       <div class="pr-result-preview" id="aibuildPreview"></div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
-        <button class="ctool-btn" style="background:#7c3aed" onclick="useAiBuiltResume()">Use This Resume in Builder →</button>
-        <button onclick="runAiBuild()" style="width:100%;padding:12px;font-size:13px;font-weight:700;background:#f5f3ff;color:var(--p);border:1.5px solid var(--border2);border-radius:14px;cursor:pointer;font-family:inherit">Regenerate</button>
+        <button class="ctool-btn" style="background:#4f46e5" onclick="useAiBuiltResume()">Use This Resume in Builder →</button>
+        <button onclick="runAiBuild()" style="width:100%;padding:12px;font-size:13px;font-weight:700;background:#eef2ff;color:var(--p);border:1.5px solid var(--border2);border-radius:14px;cursor:pointer;font-family:inherit">Regenerate</button>
       </div>
     </div>
     <div class="ctool-kie-bar" id="aibuildKieBar">
@@ -3212,14 +3212,14 @@
   <div class="ctool-body" id="careerhealthFormBody">
     <div id="careerhealthSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="34" fill="none" stroke="#ddd6fe" stroke-width="8"/>
-          <path d="M50 16a34 34 0 0124 58" fill="none" stroke="#7c3aed" stroke-width="8" stroke-linecap="round"/>
-          <path d="M36 50l9 9 19-19" stroke="#7c3aed" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="50" cy="50" r="34" fill="none" stroke="#c7d2fe" stroke-width="8"/>
+          <path d="M50 16a34 34 0 0124 58" fill="none" stroke="#4f46e5" stroke-width="8" stroke-linecap="round"/>
+          <path d="M36 50l9 9 19-19" stroke="#4f46e5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
       <div class="ctool-hero-body">
@@ -3230,7 +3230,7 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Choose Resume to Analyze</div>
           <select id="chResumePicker" class="ctool-select"><option value="">— Select a resume —</option></select>
@@ -3239,29 +3239,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-feat-title">Resume Quality</div>
         <div class="ctool-feat-desc">How strong it reads today.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">Skill Relevance</div>
         <div class="ctool-feat-desc">How current your skills are.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-feat-title">Interview Readiness</div>
         <div class="ctool-feat-desc">How prepared you are to move.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-feat-title">Salary Position</div>
         <div class="ctool-feat-desc">Where you stand against the market.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="careerhealthBtn" onclick="runCareerHealth()" style="background:#7c3aed">
+    <button class="ctool-btn" id="careerhealthBtn" onclick="runCareerHealth()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       Analyze Career Health
     </button>
@@ -3296,15 +3296,15 @@
   <div class="ctool-body" id="roadmapFormBody">
     <div id="roadmapSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 28l22-8 22 8 22-8v52l-22 8-22-8-22 8V28z" fill="#ddd6fe" stroke="#a78bfa" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M36 20v52M58 28v52" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="3 3"/>
-          <path d="M24 62q10-14 20-8t18-10" stroke="#7c3aed" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="1 5"/>
-          <g transform="translate(50,14)"><path d="M0 0C-9 0-16 7-16 16c0 12 16 26 16 26s16-14 16-26c0-9-7-16-16-16z" fill="#7c3aed"/><circle cx="0" cy="16" r="6" fill="#fff"/></g>
+          <path d="M14 28l22-8 22 8 22-8v52l-22 8-22-8-22 8V28z" fill="#c7d2fe" stroke="#818cf8" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M36 20v52M58 28v52" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <path d="M24 62q10-14 20-8t18-10" stroke="#4f46e5" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="1 5"/>
+          <g transform="translate(50,14)"><path d="M0 0C-9 0-16 7-16 16c0 12 16 26 16 26s16-14 16-26c0-9-7-16-16-16z" fill="#4f46e5"/><circle cx="0" cy="16" r="6" fill="#fff"/></g>
         </svg>
       </div>
       <div class="ctool-hero-body">
@@ -3315,14 +3315,14 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Current Role</div>
           <input id="rmCurrentRole" class="ctool-input" placeholder="e.g. Junior Developer">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v18M5 4h11l-2.5 4L16 12H5"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v18M5 4h11l-2.5 4L16 12H5"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Target Role</div>
           <input id="rmTargetRole" class="ctool-input" placeholder="e.g. Senior Engineering Manager">
@@ -3332,16 +3332,16 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Timeframe</div>
           <div class="ctool-pill-row">
-            <button class="ctool-pill active" data-tf="30days" onclick="rmSetTf(this)" style="--tc:#7c3aed">30 Days</button>
-            <button class="ctool-pill" data-tf="60days" onclick="rmSetTf(this)" style="--tc:#7c3aed">60 Days</button>
-            <button class="ctool-pill" data-tf="90days" onclick="rmSetTf(this)" style="--tc:#7c3aed">90 Days</button>
-            <button class="ctool-pill" data-tf="6months" onclick="rmSetTf(this)" style="--tc:#7c3aed">6 Months</button>
-            <button class="ctool-pill" data-tf="1year" onclick="rmSetTf(this)" style="--tc:#7c3aed">1 Year</button>
-            <button class="ctool-pill" data-tf="5years" onclick="rmSetTf(this)" style="--tc:#7c3aed">5 Years</button>
+            <button class="ctool-pill active" data-tf="30days" onclick="rmSetTf(this)" style="--tc:#4f46e5">30 Days</button>
+            <button class="ctool-pill" data-tf="60days" onclick="rmSetTf(this)" style="--tc:#4f46e5">60 Days</button>
+            <button class="ctool-pill" data-tf="90days" onclick="rmSetTf(this)" style="--tc:#4f46e5">90 Days</button>
+            <button class="ctool-pill" data-tf="6months" onclick="rmSetTf(this)" style="--tc:#4f46e5">6 Months</button>
+            <button class="ctool-pill" data-tf="1year" onclick="rmSetTf(this)" style="--tc:#4f46e5">1 Year</button>
+            <button class="ctool-pill" data-tf="5years" onclick="rmSetTf(this)" style="--tc:#4f46e5">5 Years</button>
           </div>
           <div class="ctool-field-hint">Choose a timeframe to get a roadmap that fits your journey.</div>
         </div>
@@ -3349,29 +3349,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
         <div class="ctool-feat-title">Personalized</div>
         <div class="ctool-feat-desc">Tailored to your goals and experience.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/></svg></div>
         <div class="ctool-feat-title">Step-by-step</div>
         <div class="ctool-feat-desc">Clear milestones to keep you moving forward.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div>
         <div class="ctool-feat-title">Track Progress</div>
         <div class="ctool-feat-desc">Stay on track and measure your growth.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.9 6.6L22 9.6l-5 4.9 1.2 7-6.2-3.3L5.8 21.5 7 14.5l-5-4.9 7.1-1z"/></svg></div>
         <div class="ctool-feat-title">Smart Insights</div>
         <div class="ctool-feat-desc">AI-powered recommendations for your success.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="roadmapBtn" onclick="runRoadmap()" style="background:#7c3aed">
+    <button class="ctool-btn" id="roadmapBtn" onclick="runRoadmap()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
       Build My Roadmap
     </button>
@@ -3406,15 +3406,15 @@
   <div class="ctool-body" id="salaryFormBody">
     <div id="salarySuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="32" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
-          <circle cx="50" cy="50" r="23" fill="#c4b5fd" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="2 3"/>
-          <path d="M50 38v24M44 42c0-3 3-5 6-5s6 2 6 4-2 3-6 4-6 2-6 5 3 5 6 5 6-2 6-5" stroke="#7c3aed" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-          <circle cx="76" cy="30" r="13" fill="#7c3aed"/>
+          <circle cx="50" cy="50" r="32" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="23" fill="#a5b4fc" stroke="#4f46e5" stroke-width="1.2" stroke-dasharray="2 3"/>
+          <path d="M50 38v24M44 42c0-3 3-5 6-5s6 2 6 4-2 3-6 4-6 2-6 5 3 5 6 5 6-2 6-5" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          <circle cx="76" cy="30" r="13" fill="#4f46e5"/>
           <path d="M71 30l3.5 3.5L82 26" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
@@ -3426,21 +3426,21 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Job Title</div>
           <input id="salJobTitle" class="ctool-input" placeholder="e.g. Product Manager">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Location</div>
           <input id="salLocation" class="ctool-input" placeholder="e.g. Lagos, Nigeria or New York, USA">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.42A12.083 12.083 0 0112 21a12.083 12.083 0 01-6.16-10.42L12 14z"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.42A12.083 12.083 0 0112 21a12.083 12.083 0 01-6.16-10.42L12 14z"/></svg></div>
         <div class="ctool-field-main" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
             <div class="ctool-field-label">Experience</div>
@@ -3465,29 +3465,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div>
         <div class="ctool-feat-title">Real Market Data</div>
         <div class="ctool-feat-desc">Current pay ranges, not guesswork.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg></div>
         <div class="ctool-feat-title">Location-Based</div>
         <div class="ctool-feat-desc">Pay adjusted to where you work.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg></div>
         <div class="ctool-feat-title">Negotiation Script</div>
         <div class="ctool-feat-desc">Exact words to ask for more.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
         <div class="ctool-feat-title">3-Year Forecast</div>
         <div class="ctool-feat-desc">See where your pay is headed.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="salaryBtn" onclick="runSalaryIntel()" style="background:#7c3aed">
+    <button class="ctool-btn" id="salaryBtn" onclick="runSalaryIntel()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Analyze My Market Value
     </button>
@@ -3522,17 +3522,17 @@
   <div class="ctool-body" id="industryFormBody">
     <div id="industrySuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="18" y="46" width="14" height="34" fill="#c4b5fd"/>
-          <rect x="36" y="32" width="14" height="48" fill="#a78bfa"/>
-          <rect x="54" y="52" width="14" height="28" fill="#c4b5fd"/>
-          <rect x="72" y="20" width="14" height="60" fill="#7c3aed"/>
-          <path d="M16 44l18-10 16 8 20-24" stroke="#7c3aed" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <path d="M62 12h8v8" stroke="#7c3aed" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="18" y="46" width="14" height="34" fill="#a5b4fc"/>
+          <rect x="36" y="32" width="14" height="48" fill="#818cf8"/>
+          <rect x="54" y="52" width="14" height="28" fill="#a5b4fc"/>
+          <rect x="72" y="20" width="14" height="60" fill="#4f46e5"/>
+          <path d="M16 44l18-10 16 8 20-24" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M62 12h8v8" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <div class="ctool-hero-body">
@@ -3543,21 +3543,21 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Industry</div>
           <input id="indIndustry" class="ctool-input" placeholder="e.g. Fintech, Healthcare, E-commerce">
           <div class="ctool-pill-row" style="margin-top:10px">
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('indIndustry').value='Technology & Software'">Tech</button>
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('indIndustry').value='Healthcare & Biotech'">Healthcare</button>
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('indIndustry').value='Fintech & Finance'">Fintech</button>
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('indIndustry').value='E-commerce & Retail'">E-commerce</button>
-            <button class="ctool-pill" style="--tc:#7c3aed" onclick="g('indIndustry').value='Creative & Media'">Creative</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Technology & Software'">Tech</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Healthcare & Biotech'">Healthcare</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Fintech & Finance'">Fintech</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='E-commerce & Retail'">E-commerce</button>
+            <button class="ctool-pill" style="--tc:#4f46e5" onclick="g('indIndustry').value='Creative & Media'">Creative</button>
           </div>
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Your Role (optional)</div>
           <input id="indRole" class="ctool-input" placeholder="e.g. Software Engineer">
@@ -3566,29 +3566,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
         <div class="ctool-feat-title">Market Trends</div>
         <div class="ctool-feat-desc">What's shaping the industry now.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">Skill Demand</div>
         <div class="ctool-feat-desc">Which skills employers want most.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.9 6.6L22 9.6l-5 4.9 1.2 7-6.2-3.3L5.8 21.5 7 14.5l-5-4.9 7.1-1z"/></svg></div>
         <div class="ctool-feat-title">Growth Outlook</div>
         <div class="ctool-feat-desc">Where the industry is headed.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m8-16h.01M11 11h.01M11 15h.01M7 7h.01M7 11h.01M7 15h.01M15 7h.01M15 11h.01M15 15h.01"/></svg></div>
         <div class="ctool-feat-title">Key Players</div>
         <div class="ctool-feat-desc">Top companies hiring right now.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="industryBtn" onclick="runIndustryIntel()" style="background:#7c3aed">
+    <button class="ctool-btn" id="industryBtn" onclick="runIndustryIntel()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       Get Industry Report
     </button>
@@ -3619,18 +3619,18 @@
   <div class="ctool-body" id="linkedinFormBody">
     <div id="linkedinSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="14" y="18" width="72" height="64" rx="10" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
-          <circle cx="34" cy="42" r="10" fill="#7c3aed"/>
-          <rect x="52" y="36" width="26" height="6" rx="3" fill="#a78bfa"/>
-          <rect x="52" y="46" width="18" height="5" rx="2.5" fill="#c4b5fd"/>
-          <rect x="22" y="62" width="56" height="5" rx="2.5" fill="#c4b5fd"/>
-          <rect x="22" y="71" width="40" height="5" rx="2.5" fill="#c4b5fd"/>
-          <circle cx="78" cy="24" r="12" fill="#7c3aed"/>
+          <rect x="14" y="18" width="72" height="64" rx="10" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+          <circle cx="34" cy="42" r="10" fill="#4f46e5"/>
+          <rect x="52" y="36" width="26" height="6" rx="3" fill="#818cf8"/>
+          <rect x="52" y="46" width="18" height="5" rx="2.5" fill="#a5b4fc"/>
+          <rect x="22" y="62" width="56" height="5" rx="2.5" fill="#a5b4fc"/>
+          <rect x="22" y="71" width="40" height="5" rx="2.5" fill="#a5b4fc"/>
+          <circle cx="78" cy="24" r="12" fill="#4f46e5"/>
           <path d="M78 18v8M74 24h8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
         </svg>
       </div>
@@ -3642,21 +3642,21 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-9 8V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 5z"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-9 8V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 5z"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Current Headline</div>
           <input id="liHeadline" class="ctool-input" placeholder="e.g. Software Engineer at Google | Python | ML">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">About Section</div>
           <textarea id="liAbout" class="ctool-textarea" placeholder="Paste your current About section or leave blank for a fresh one…"></textarea>
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
         <div class="ctool-field-main" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div><div class="ctool-field-label">Current Role</div><input id="liCurrentRole" class="ctool-input" placeholder="Software Engineer"></div>
           <div><div class="ctool-field-label">Target Role</div><input id="liTargetRole" class="ctool-input" placeholder="Engineering Manager"></div>
@@ -3665,29 +3665,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg></div>
         <div class="ctool-feat-title">Recruiter-Ready</div>
         <div class="ctool-feat-desc">Built to get found in searches.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></div>
         <div class="ctool-feat-title">Keyword-Optimized</div>
         <div class="ctool-feat-desc">Closes the gaps recruiters search for.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-9 8V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 5z"/></svg></div>
         <div class="ctool-feat-title">Compelling Bio</div>
         <div class="ctool-feat-desc">An About section people actually read.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">Career Story</div>
         <div class="ctool-feat-desc">Frames your path toward your goal role.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="linkedinBtn" onclick="runLinkedIn()" style="background:#7c3aed">
+    <button class="ctool-btn" id="linkedinBtn" onclick="runLinkedIn()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       Optimize My LinkedIn
     </button>
@@ -3718,18 +3718,18 @@
   <div class="ctool-body" id="interviewFormBody">
     <div id="interviewSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="16" y="24" width="68" height="46" rx="8" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
-          <path d="M16 34h68" stroke="#7c3aed" stroke-width="1.2"/>
-          <circle cx="24" cy="29" r="2" fill="#7c3aed"/><circle cx="31" cy="29" r="2" fill="#a78bfa"/><circle cx="38" cy="29" r="2" fill="#c4b5fd"/>
-          <rect x="24" y="42" width="30" height="6" rx="3" fill="#a78bfa"/>
-          <rect x="24" y="52" width="42" height="5" rx="2.5" fill="#c4b5fd"/>
-          <path d="M62 78l6 8 6-8" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
-          <circle cx="68" cy="82" r="15" fill="#7c3aed"/>
+          <rect x="16" y="24" width="68" height="46" rx="8" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+          <path d="M16 34h68" stroke="#4f46e5" stroke-width="1.2"/>
+          <circle cx="24" cy="29" r="2" fill="#4f46e5"/><circle cx="31" cy="29" r="2" fill="#818cf8"/><circle cx="38" cy="29" r="2" fill="#a5b4fc"/>
+          <rect x="24" y="42" width="30" height="6" rx="3" fill="#818cf8"/>
+          <rect x="24" y="52" width="42" height="5" rx="2.5" fill="#a5b4fc"/>
+          <path d="M62 78l6 8 6-8" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+          <circle cx="68" cy="82" r="15" fill="#4f46e5"/>
           <circle cx="63" cy="80" r="1.6" fill="#fff"/><circle cx="73" cy="80" r="1.6" fill="#fff"/>
           <path d="M62 87q6 4 12 0" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>
         </svg>
@@ -3742,50 +3742,50 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Job Title</div>
           <input id="ivJobTitle" class="ctool-input" placeholder="e.g. Product Manager">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Interview Type</div>
           <div class="ctool-pill-row">
-            <button class="ctool-pill active" data-iv="behavioral" onclick="ivSetType(this)" style="--tc:#7c3aed">Behavioral</button>
-            <button class="ctool-pill" data-iv="technical" onclick="ivSetType(this)" style="--tc:#7c3aed">Technical</button>
-            <button class="ctool-pill" data-iv="leadership" onclick="ivSetType(this)" style="--tc:#7c3aed">Leadership</button>
-            <button class="ctool-pill" data-iv="situational" onclick="ivSetType(this)" style="--tc:#7c3aed">Situational</button>
+            <button class="ctool-pill active" data-iv="behavioral" onclick="ivSetType(this)" style="--tc:#4f46e5">Behavioral</button>
+            <button class="ctool-pill" data-iv="technical" onclick="ivSetType(this)" style="--tc:#4f46e5">Technical</button>
+            <button class="ctool-pill" data-iv="leadership" onclick="ivSetType(this)" style="--tc:#4f46e5">Leadership</button>
+            <button class="ctool-pill" data-iv="situational" onclick="ivSetType(this)" style="--tc:#4f46e5">Situational</button>
           </div>
         </div>
       </div>
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
         <div class="ctool-feat-title">Real Questions</div>
         <div class="ctool-feat-desc">Matched to your role and type.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-feat-title">Instant Feedback</div>
         <div class="ctool-feat-desc">Scored right after you answer.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">STAR Framework</div>
         <div class="ctool-feat-desc">Structure that recruiters expect.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
         <div class="ctool-feat-title">Sample Answers</div>
         <div class="ctool-feat-desc">See what a strong answer sounds like.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="ivStartBtn" onclick="runGetQuestion()" style="background:#7c3aed">
+    <button class="ctool-btn" id="ivStartBtn" onclick="runGetQuestion()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Start Interview
     </button>
@@ -3804,8 +3804,8 @@
         <textarea id="ivAnswer" class="ctool-textarea" style="min-height:130px" placeholder="Type your answer here. Take your time — think it through before writing."></textarea>
       </div>
       <div style="display:flex;gap:10px">
-        <button class="ctool-btn" onclick="runGetFeedback()" style="flex:1;background:#7c3aed">Get Feedback →</button>
-        <button onclick="runGetQuestion()" style="padding:14px;background:#f5f3ff;color:var(--p);border:1.5px solid var(--border2);border-radius:14px;cursor:pointer;font-weight:700;font-family:inherit;font-size:13px">Next Q</button>
+        <button class="ctool-btn" onclick="runGetFeedback()" style="flex:1;background:#4f46e5">Get Feedback →</button>
+        <button onclick="runGetQuestion()" style="padding:14px;background:#eef2ff;color:var(--p);border:1.5px solid var(--border2);border-radius:14px;cursor:pointer;font-weight:700;font-family:inherit;font-size:13px">Next Q</button>
       </div>
     </div>
     <div id="ivFeedback" style="display:none;margin-top:6px"></div>
@@ -3826,16 +3826,16 @@
   <div class="ctool-body" id="brandingFormBody">
     <div id="brandingSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="42" cy="42" r="26" fill="#ddd6fe"/>
-          <circle cx="42" cy="34" r="10" fill="#7c3aed"/>
-          <path d="M24 62c0-10 8-16 18-16s18 6 18 16" fill="#7c3aed"/>
-          <path d="M68 20l3.5 8 8 3.5-8 3.5-3.5 8-3.5-8-8-3.5 8-3.5z" fill="#a78bfa"/>
-          <circle cx="80" cy="60" r="10" fill="#7c3aed"/>
+          <circle cx="42" cy="42" r="26" fill="#c7d2fe"/>
+          <circle cx="42" cy="34" r="10" fill="#4f46e5"/>
+          <path d="M24 62c0-10 8-16 18-16s18 6 18 16" fill="#4f46e5"/>
+          <path d="M68 20l3.5 8 8 3.5-8 3.5-3.5 8-3.5-8-8-3.5 8-3.5z" fill="#818cf8"/>
+          <circle cx="80" cy="60" r="10" fill="#4f46e5"/>
           <path d="M76 60l3 3 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
@@ -3847,26 +3847,26 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Bio Type</div>
           <div class="ctool-pill-row">
-            <button class="ctool-pill active" data-bt="professional" onclick="bdSetType(this)" style="--tc:#7c3aed">Professional</button>
-            <button class="ctool-pill" data-bt="executive" onclick="bdSetType(this)" style="--tc:#7c3aed">Executive</button>
-            <button class="ctool-pill" data-bt="speaker" onclick="bdSetType(this)" style="--tc:#7c3aed">Speaker</button>
-            <button class="ctool-pill" data-bt="creative" onclick="bdSetType(this)" style="--tc:#7c3aed">Creative</button>
+            <button class="ctool-pill active" data-bt="professional" onclick="bdSetType(this)" style="--tc:#4f46e5">Professional</button>
+            <button class="ctool-pill" data-bt="executive" onclick="bdSetType(this)" style="--tc:#4f46e5">Executive</button>
+            <button class="ctool-pill" data-bt="speaker" onclick="bdSetType(this)" style="--tc:#4f46e5">Speaker</button>
+            <button class="ctool-pill" data-bt="creative" onclick="bdSetType(this)" style="--tc:#4f46e5">Creative</button>
           </div>
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Choose Resume (optional)</div>
           <select id="bdResumePicker" class="ctool-select"><option value="">— Build from scratch —</option></select>
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Target Audience</div>
           <input id="bdAudience" class="ctool-input" placeholder="e.g. Tech recruiters and startup founders" value="recruiters and hiring managers">
@@ -3875,29 +3875,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-9 8V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 5z"/></svg></div>
         <div class="ctool-feat-title">Professional Bio</div>
         <div class="ctool-feat-desc">Ready to paste anywhere.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">Elevator Pitch</div>
         <div class="ctool-feat-desc">30 seconds that land.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg></div>
         <div class="ctool-feat-title">Brand Keywords</div>
         <div class="ctool-feat-desc">The words that define you.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.9 6.6L22 9.6l-5 4.9 1.2 7-6.2-3.3L5.8 21.5 7 14.5l-5-4.9 7.1-1z"/></svg></div>
         <div class="ctool-feat-title">Multi-Platform</div>
         <div class="ctool-feat-desc">LinkedIn, X, and beyond.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="brandingBtn" onclick="runBranding()" style="background:#7c3aed">
+    <button class="ctool-btn" id="brandingBtn" onclick="runBranding()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
       Build My Brand
     </button>
@@ -3928,14 +3928,14 @@
   <div class="ctool-body" id="messagingFormBody">
     <div id="messagingSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 26a6 6 0 016-6h48a6 6 0 016 6v32a6 6 0 01-6 6H36l-14 12V64h-0a6 6 0 01-6-6V26z" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M24 32h44M24 42h30M24 52h20" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round"/>
-          <circle cx="80" cy="24" r="12" fill="#7c3aed"/>
+          <path d="M16 26a6 6 0 016-6h48a6 6 0 016 6v32a6 6 0 01-6 6H36l-14 12V64h-0a6 6 0 01-6-6V26z" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M24 32h44M24 42h30M24 52h20" stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="80" cy="24" r="12" fill="#4f46e5"/>
           <path d="M75 24l3.5 3.5L85 20" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
@@ -3947,33 +3947,33 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Message Type</div>
           <div class="ctool-pill-row">
-            <button class="ctool-pill active" data-mt="application" onclick="msgSetType(this)" style="--tc:#7c3aed">Application</button>
-            <button class="ctool-pill" data-mt="recruiter" onclick="msgSetType(this)" style="--tc:#7c3aed">Recruiter DM</button>
-            <button class="ctool-pill" data-mt="followup" onclick="msgSetType(this)" style="--tc:#7c3aed">Follow-Up</button>
-            <button class="ctool-pill" data-mt="networking" onclick="msgSetType(this)" style="--tc:#7c3aed">Networking</button>
+            <button class="ctool-pill active" data-mt="application" onclick="msgSetType(this)" style="--tc:#4f46e5">Application</button>
+            <button class="ctool-pill" data-mt="recruiter" onclick="msgSetType(this)" style="--tc:#4f46e5">Recruiter DM</button>
+            <button class="ctool-pill" data-mt="followup" onclick="msgSetType(this)" style="--tc:#4f46e5">Follow-Up</button>
+            <button class="ctool-pill" data-mt="networking" onclick="msgSetType(this)" style="--tc:#4f46e5">Networking</button>
           </div>
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
         <div class="ctool-field-main" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div><div class="ctool-field-label">Job Title</div><input id="msgJobTitle" class="ctool-input" placeholder="Senior PM"></div>
           <div><div class="ctool-field-label">Company</div><input id="msgCompany" class="ctool-input" placeholder="Paystack"></div>
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Recruiter Name (optional)</div>
           <input id="msgRecruiter" class="ctool-input" placeholder="e.g. Sarah or Mr. Johnson">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Use Resume Data</div>
           <select id="msgResumePicker" class="ctool-select"><option value="">— No resume —</option></select>
@@ -3982,29 +3982,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="2"/><path stroke-linecap="round" d="M4 8h16"/></svg></div>
         <div class="ctool-feat-title">2 Versions</div>
         <div class="ctool-feat-desc">Standard and bold, pick what fits.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-feat-title">Do's & Don'ts</div>
         <div class="ctool-feat-desc">Avoid the mistakes that get ignored.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">Personalized</div>
         <div class="ctool-feat-desc">Built around your real background.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg></div>
         <div class="ctool-feat-title">Sending Tips</div>
         <div class="ctool-feat-desc">When and how to follow up.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="messagingBtn" onclick="runMessaging()" style="background:#7c3aed">
+    <button class="ctool-btn" id="messagingBtn" onclick="runMessaging()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
       Generate Message
     </button>
@@ -4039,16 +4039,16 @@
   <div class="ctool-body" id="promotionFormBody">
     <div id="promotionSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="14" y="60" width="16" height="20" fill="#c4b5fd"/>
-          <rect x="34" y="46" width="16" height="34" fill="#a78bfa"/>
-          <rect x="54" y="30" width="16" height="50" fill="#7c3aed"/>
-          <path d="M62 20l4 4 10-12" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <circle cx="70" cy="20" r="18" fill="none" stroke="#c4b5fd" stroke-width="2" stroke-dasharray="3 3"/>
+          <rect x="14" y="60" width="16" height="20" fill="#a5b4fc"/>
+          <rect x="34" y="46" width="16" height="34" fill="#818cf8"/>
+          <rect x="54" y="30" width="16" height="50" fill="#4f46e5"/>
+          <path d="M62 20l4 4 10-12" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="70" cy="20" r="18" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-dasharray="3 3"/>
         </svg>
       </div>
       <div class="ctool-hero-body">
@@ -4059,21 +4059,21 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Current Role</div>
           <input id="prCurrentRole" class="ctool-input" placeholder="e.g. Senior Developer">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v18M5 4h11l-2.5 4L16 12H5"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v18M5 4h11l-2.5 4L16 12H5"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Target Role</div>
           <input id="prTargetRole" class="ctool-input" placeholder="e.g. Engineering Manager">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/></svg></div>
         <div class="ctool-field-main" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
             <div class="ctool-field-label">Timeline</div>
@@ -4093,29 +4093,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-feat-title">Readiness Score</div>
         <div class="ctool-feat-desc">A clear number, not a guess.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <div class="ctool-feat-title">Current Strengths</div>
         <div class="ctool-feat-desc">What's already working for you.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
         <div class="ctool-feat-title">Gaps to Close</div>
         <div class="ctool-feat-desc">Exactly what's missing.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.9 6.6L22 9.6l-5 4.9 1.2 7-6.2-3.3L5.8 21.5 7 14.5l-5-4.9 7.1-1z"/></svg></div>
         <div class="ctool-feat-title">Skills to Develop</div>
         <div class="ctool-feat-desc">A focused plan to build them.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="promotionBtn" onclick="runPromotion()" style="background:#7c3aed">
+    <button class="ctool-btn" id="promotionBtn" onclick="runPromotion()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
       Check My Readiness
     </button>
@@ -4145,21 +4145,21 @@
   <div class="ctool-body" id="jobmatchFormBody">
     <div id="jobmatchSuggest"></div>
 
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="14" y="18" width="34" height="44" rx="4" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
-          <rect x="20" y="26" width="22" height="4" rx="2" fill="#7c3aed"/>
-          <rect x="20" y="34" width="22" height="3" rx="1.5" fill="#a78bfa"/>
-          <rect x="20" y="41" width="16" height="3" rx="1.5" fill="#a78bfa"/>
-          <rect x="50" y="30" width="34" height="44" rx="4" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
-          <rect x="56" y="38" width="22" height="4" rx="2" fill="#7c3aed"/>
-          <rect x="56" y="46" width="22" height="3" rx="1.5" fill="#a78bfa"/>
-          <rect x="56" y="53" width="16" height="3" rx="1.5" fill="#a78bfa"/>
-          <circle cx="49" cy="46" r="13" fill="#fff" stroke="#7c3aed" stroke-width="2.4"/>
-          <path d="M44 46l3.5 3.5L55 42" stroke="#7c3aed" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <rect x="14" y="18" width="34" height="44" rx="4" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+          <rect x="20" y="26" width="22" height="4" rx="2" fill="#4f46e5"/>
+          <rect x="20" y="34" width="22" height="3" rx="1.5" fill="#818cf8"/>
+          <rect x="20" y="41" width="16" height="3" rx="1.5" fill="#818cf8"/>
+          <rect x="50" y="30" width="34" height="44" rx="4" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+          <rect x="56" y="38" width="22" height="4" rx="2" fill="#4f46e5"/>
+          <rect x="56" y="46" width="22" height="3" rx="1.5" fill="#818cf8"/>
+          <rect x="56" y="53" width="16" height="3" rx="1.5" fill="#818cf8"/>
+          <circle cx="49" cy="46" r="13" fill="#fff" stroke="#4f46e5" stroke-width="2.4"/>
+          <path d="M44 46l3.5 3.5L55 42" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
       <div class="ctool-hero-body">
@@ -4170,14 +4170,14 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V8l-6-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2zM13 2v6h6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Paste Job Description</div>
           <textarea id="jmJobDesc" class="ctool-textarea" style="min-height:130px" placeholder="Paste the full job description here — requirements, responsibilities, qualifications…"></textarea>
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Compare Against Resume (optional)</div>
           <select id="jmResumePicker" class="ctool-select"><option value="">— Match without resume context —</option></select>
@@ -4186,29 +4186,29 @@
     </div>
 
     <div class="ctool-feat-grid">
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-feat-title">Match Score</div>
         <div class="ctool-feat-desc">How well you fit, in one number.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
         <div class="ctool-feat-title">Matching Strengths</div>
         <div class="ctool-feat-desc">What already lines up.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
         <div class="ctool-feat-title">Skill Gaps</div>
         <div class="ctool-feat-desc">What's missing from your fit.</div>
       </div>
-      <div class="ctool-feat" style="--tc:#7c3aed">
+      <div class="ctool-feat" style="--tc:#4f46e5">
         <div class="ctool-feat-ico"><svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg></div>
         <div class="ctool-feat-title">Keywords to Add</div>
         <div class="ctool-feat-desc">Terms this posting is scanning for.</div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="jobmatchBtn" onclick="runJobMatch()" style="background:#7c3aed">
+    <button class="ctool-btn" id="jobmatchBtn" onclick="runJobMatch()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Analyze My Match
     </button>
@@ -4237,15 +4237,15 @@
     <span class="ctool-hdr-title-center">Resignation Letter</span>
   </div>
   <div class="ctool-body" id="resignationFormBody">
-    <div class="ctool-hero" style="--tc:#7c3aed;--tt:#ede4fc">
+    <div class="ctool-hero" style="--tc:#4f46e5;--tt:#e2e8f0">
       <div class="ctool-hero-art">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#c4b5fd" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="top:-2px;left:-4px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc" class="ctool-hero-sparkle" style="bottom:2px;right:-6px"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z"/></svg>
         <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22 16h40l16 16v52a4 4 0 01-4 4H22a4 4 0 01-4-4V20a4 4 0 014-4z" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M62 16v16h16" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M28 46h30M28 56h30M28 66h20" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round"/>
-          <g transform="translate(64,74) rotate(-40)"><rect x="0" y="0" width="6" height="24" rx="2" fill="#7c3aed"/><path d="M0 24l3 7 3-7z" fill="#5b21b6"/></g>
+          <path d="M22 16h40l16 16v52a4 4 0 01-4 4H22a4 4 0 01-4-4V20a4 4 0 014-4z" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M62 16v16h16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M28 46h30M28 56h30M28 66h20" stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round"/>
+          <g transform="translate(64,74) rotate(-40)"><rect x="0" y="0" width="6" height="24" rx="2" fill="#4f46e5"/><path d="M0 24l3 7 3-7z" fill="#3730a3"/></g>
         </svg>
       </div>
       <div class="ctool-hero-body">
@@ -4256,21 +4256,21 @@
 
     <div class="ctool-card">
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Your Current Role</div>
           <input id="rsCurrentRole" class="ctool-input" placeholder="e.g. Senior Software Engineer">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Company You're Leaving</div>
           <input id="rsCompany" class="ctool-input" placeholder="e.g. Acme Corp">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Notice Period</div>
           <select id="rsNotice" class="ctool-select">
@@ -4283,26 +4283,26 @@
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Reason (optional — not shown in letter)</div>
           <input id="rsReason" class="ctool-input" placeholder="e.g. new opportunity, relocation, burnout">
         </div>
       </div>
       <div class="ctool-field">
-        <div class="ctool-field-ico" style="--tc:#7c3aed;--tt:#ede4fc"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <div class="ctool-field-ico" style="--tc:#4f46e5;--tt:#e2e8f0"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="ctool-field-main">
           <div class="ctool-field-label">Tone</div>
           <div class="ctool-pill-row">
-            <button class="ctool-pill active" data-rst="professional" onclick="rsSetTone(this)" style="--tc:#7c3aed">Professional</button>
-            <button class="ctool-pill" data-rst="warm" onclick="rsSetTone(this)" style="--tc:#7c3aed">Warm & Grateful</button>
-            <button class="ctool-pill" data-rst="brief" onclick="rsSetTone(this)" style="--tc:#7c3aed">Brief & Direct</button>
+            <button class="ctool-pill active" data-rst="professional" onclick="rsSetTone(this)" style="--tc:#4f46e5">Professional</button>
+            <button class="ctool-pill" data-rst="warm" onclick="rsSetTone(this)" style="--tc:#4f46e5">Warm & Grateful</button>
+            <button class="ctool-pill" data-rst="brief" onclick="rsSetTone(this)" style="--tc:#4f46e5">Brief & Direct</button>
           </div>
         </div>
       </div>
     </div>
 
-    <button class="ctool-btn" id="resignationBtn" onclick="runResignation()" style="background:#7c3aed">
+    <button class="ctool-btn" id="resignationBtn" onclick="runResignation()" style="background:#4f46e5">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       Write My Letter
     </button>

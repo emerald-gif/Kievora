@@ -67,7 +67,7 @@
       }
       .cm-close:hover { color: #fff; background: rgba(255,255,255,.14); }
       .cm-dot {
-        width: 6px; height: 6px; border-radius: 50%; background: #a855f7;
+        width: 6px; height: 6px; border-radius: 50%; background: #06b6d4;
         display: inline-block; margin-right: 6px;
       }
     `;
