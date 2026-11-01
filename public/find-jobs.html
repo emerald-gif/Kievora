@@ -22,10 +22,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --p: #7c3aed; --ps: #6d28d9; --p2: #a855f7;
-    --g: linear-gradient(135deg, #7c3aed, #a855f7);
+    --p: #4f46e5; --ps: #4338ca; --p2: #06b6d4;
+    --g: linear-gradient(135deg, #4f46e5, #06b6d4);
     --txt: #111827; --sub: #6b7280;
-    --border: #e8e8f0; --bg: #f8f7ff;
+    --border: #e8e8f0; --bg: #f8fafc;
     --card: #ffffff;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,9 +42,9 @@
     position: fixed; top: 0; left: 0; right: 0; z-index: 200;
     background: rgba(255,255,255,.96);
     backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid rgba(124,58,237,.1);
+    border-bottom: 1px solid rgba(79,70,229,.1);
     height: 60px;
-    box-shadow: 0 1px 12px rgba(124,58,237,.06);
+    box-shadow: 0 1px 12px rgba(79,70,229,.06);
   }
   .hdr-inner {
     max-width: 1100px; margin: 0 auto;
@@ -72,7 +72,7 @@
     background: #fff; color: var(--sub); cursor: pointer; transition: all .15s;
   }
   .hdr-bookmark-btn:hover { border-color: var(--p); color: var(--p); }
-  .hdr-bookmark-btn.has-saved { color: var(--p); border-color: rgba(124,58,237,.3); background: rgba(124,58,237,.05); }
+  .hdr-bookmark-btn.has-saved { color: var(--p); border-color: rgba(79,70,229,.3); background: rgba(79,70,229,.05); }
   .hdr-bookmark-count {
     position: absolute; top: -4px; right: -4px;
     background: var(--g); color: #fff; font-size: 9.5px; font-weight: 800;
@@ -104,11 +104,11 @@
   .prof-source { font-size: 11px; color: var(--p); font-weight: 600; margin-top: 2px; }
   .prof-change {
     font-size: 12px; font-weight: 700; color: var(--p);
-    border: 1.5px solid rgba(124,58,237,.25); border-radius: 99px;
-    padding: 6px 14px; cursor: pointer; background: rgba(124,58,237,.05);
+    border: 1.5px solid rgba(79,70,229,.25); border-radius: 99px;
+    padding: 6px 14px; cursor: pointer; background: rgba(79,70,229,.05);
     transition: all .15s; flex-shrink: 0; font-family: inherit;
   }
-  .prof-change:hover { background: rgba(124,58,237,.12); border-color: var(--p); }
+  .prof-change:hover { background: rgba(79,70,229,.12); border-color: var(--p); }
   .prof-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .prof-remove {
     width: 32px; height: 32px; flex-shrink: 0;
@@ -122,7 +122,7 @@
   /* ── NO PROFESSION STATE ── */
   .no-prof {
     background: #fff;
-    border: 2px dashed rgba(124,58,237,.3);
+    border: 2px dashed rgba(79,70,229,.3);
     border-radius: 20px;
     padding: 32px 24px;
     text-align: center;
@@ -143,10 +143,10 @@
     border: none; border-radius: 99px;
     padding: 10px 20px; font-size: 13px; font-weight: 700;
     cursor: pointer; font-family: inherit;
-    box-shadow: 0 4px 14px rgba(124,58,237,.3);
+    box-shadow: 0 4px 14px rgba(79,70,229,.3);
     transition: all .2s; text-decoration: none;
   }
-  .btn-pri:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,.4); }
+  .btn-pri:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,70,229,.4); }
   .btn-sec {
     display: inline-flex; align-items: center; gap: 7px;
     background: #fff; color: var(--txt);
@@ -169,7 +169,7 @@
     transition: border-color .2s, box-shadow .2s;
   }
   .search-field + .search-field { margin-top: 8px; }
-  .search-field:focus-within { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.08); z-index: 2; }
+  .search-field:focus-within { border-color: var(--p); box-shadow: 0 0 0 3px rgba(79,70,229,.08); z-index: 2; }
   .search-field svg { flex-shrink: 0; }
   .search-inp {
     flex: 1; border: none; outline: none; background: transparent;
@@ -199,7 +199,7 @@
   .suggest-dropdown {
     position: absolute; left: 0; right: 0; top: calc(100% + 6px);
     background: #fff; border: 1.5px solid var(--border); border-radius: 14px;
-    box-shadow: 0 12px 28px rgba(20,10,50,.12);
+    box-shadow: 0 12px 28px rgba(15,23,42,.12);
     max-height: 260px; overflow-y: auto;
     z-index: 30; display: none; padding: 6px;
   }
@@ -210,7 +210,7 @@
     font-size: 13px; font-weight: 600; color: var(--txt);
     cursor: pointer; transition: background .12s;
   }
-  .suggest-item:hover, .suggest-item.hi { background: #f5f3ff; }
+  .suggest-item:hover, .suggest-item.hi { background: #eef2ff; }
   .suggest-item svg { flex-shrink: 0; color: #b0b0c0; }
   .suggest-item mark { background: none; color: var(--p); font-weight: 800; }
   .suggest-empty { padding: 10px; font-size: 12px; color: var(--sub); font-weight: 600; }
@@ -267,15 +267,15 @@
     cursor: pointer; background: none; border: none; font-family: inherit; text-align: left;
     transition: background .12s;
   }
-  .drawer-option-row:hover { background: #f8f7ff; }
-  .drawer-option-row.active { background: #f5f3ff; color: var(--p); font-weight: 800; }
+  .drawer-option-row:hover { background: #f8fafc; }
+  .drawer-option-row.active { background: #eef2ff; color: var(--p); font-weight: 800; }
   .drawer-option-row .check { color: var(--p); flex-shrink: 0; opacity: 0; transition: opacity .12s; }
   .drawer-option-row.active .check { opacity: 1; }
 
   /* ── JOB DETAIL SCREEN (slides in from right, full page) ── */
   #fjDetailScreen, #fjSavedScreen, #fjCompanyScreen {
     position: fixed; inset: 0; z-index: 200;
-    background: #f8f7ff;
+    background: #f8fafc;
     transform: translateX(100%);
     transition: transform .32s cubic-bezier(.32,.72,0,1);
     overflow-y: auto;
@@ -287,56 +287,56 @@
   #fjDetailScreen.open, #fjSavedScreen.open, #fjCompanyScreen.open { transform: translateX(0); }
   .fjd-hdr {
     position: sticky; top: 0; z-index: 10;
-    background: #fff; border-bottom: 1.5px solid #ede9fe;
+    background: #fff; border-bottom: 1.5px solid #e0e7ff;
     padding: 16px 18px; display: flex; align-items: center; gap: 14px;
   }
   .fjd-back {
-    width: 36px; height: 36px; border: 1.5px solid #ede9fe;
-    background: #f5f3ff; border-radius: 10px;
+    width: 36px; height: 36px; border: 1.5px solid #e0e7ff;
+    background: #eef2ff; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0; color: #7c3aed;
+    cursor: pointer; flex-shrink: 0; color: #4f46e5;
   }
-  .fjd-hdr-title { font-size: 15px; font-weight: 800; color: #0f0e17; letter-spacing: -.2px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fjd-hdr-title { font-size: 15px; font-weight: 800; color: #0f172a; letter-spacing: -.2px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fjd-bookmark-btn {
-    width: 36px; height: 36px; border: 1.5px solid #ede9fe;
-    background: #f5f3ff; border-radius: 10px;
+    width: 36px; height: 36px; border: 1.5px solid #e0e7ff;
+    background: #eef2ff; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0; color: #7c3aed;
+    cursor: pointer; flex-shrink: 0; color: #4f46e5;
     transition: all .15s;
   }
-  .fjd-bookmark-btn.active { background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-color: transparent; }
+  .fjd-bookmark-btn.active { background: linear-gradient(135deg,#4f46e5,#06b6d4); color: #fff; border-color: transparent; }
   .fjd-body { padding: 20px 18px 40px; flex: 1; }
-  .fjd-hero { background: #fff; border: 1.5px solid #ede9fe; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(124,58,237,.05); }
+  .fjd-hero { background: #fff; border: 1.5px solid #e0e7ff; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(79,70,229,.05); }
   .fjd-logo { width: 54px; height: 54px; border-radius: 15px; border: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc; flex-shrink: 0; }
   .fjd-company-name { font-size: 11.5px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-top: 10px; }
-  .fjd-job-title { font-size: 20px; font-weight: 900; color: #0f0e17; letter-spacing: -.4px; line-height: 1.2; margin-top: 5px; }
+  .fjd-job-title { font-size: 20px; font-weight: 900; color: #0f172a; letter-spacing: -.4px; line-height: 1.2; margin-top: 5px; }
   .fjd-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .fjd-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; border-radius: 20px; padding: 5px 11px; }
-  .fjd-pill.purple { background: #f5f3ff; border: 1.5px solid #ddd6fe; color: #7c3aed; }
+  .fjd-pill.purple { background: #eef2ff; border: 1.5px solid #c7d2fe; color: #4f46e5; }
   .fjd-pill.green  { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; }
   .fjd-pill.amber  { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
   .fjd-pill.blue   { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1d4ed8; }
   .fjd-pill.grey   { background: #f8fafc; border: 1.5px solid #e2e8f0; color: #475569; }
-  .fjd-section { background: #fff; border: 1.5px solid #ede9fe; border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .fjd-section { background: #fff; border: 1.5px solid #e0e7ff; border-radius: 16px; padding: 18px; margin-bottom: 12px; }
   .fjd-section-title { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
   /* Formatted description — handles HTML from providers */
   .fjd-desc { font-size: 13.5px; color: #374151; line-height: 1.7; }
   .fjd-desc p  { margin: 0 0 10px; }
   .fjd-desc ul,.fjd-desc ol { padding-left: 18px; margin: 0 0 10px; }
   .fjd-desc li { margin-bottom: 4px; }
-  .fjd-desc h1,.fjd-desc h2,.fjd-desc h3 { font-size: 14px; font-weight: 800; color: #0f0e17; margin: 14px 0 6px; }
-  .fjd-desc strong,.fjd-desc b { font-weight: 700; color: #0f0e17; }
+  .fjd-desc h1,.fjd-desc h2,.fjd-desc h3 { font-size: 14px; font-weight: 800; color: #0f172a; margin: 14px 0 6px; }
+  .fjd-desc strong,.fjd-desc b { font-weight: 700; color: #0f172a; }
   .fjd-desc br { display: block; content: ''; margin-bottom: 5px; }
-  .fjd-apply { display: block; width: 100%; background: linear-gradient(135deg,#7c3aed,#6d28d9); color: #fff; border: none; border-radius: 14px; padding: 17px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: -.2px; box-shadow: 0 4px 16px rgba(124,58,237,.3); transition: opacity .15s; text-decoration: none; text-align: center; }
+  .fjd-apply { display: block; width: 100%; background: linear-gradient(135deg,#4f46e5,#4338ca); color: #fff; border: none; border-radius: 14px; padding: 17px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: -.2px; box-shadow: 0 4px 16px rgba(79,70,229,.3); transition: opacity .15s; text-decoration: none; text-align: center; }
   .fjd-apply:active { opacity: .85; }
   .fjd-apply.locked { background: linear-gradient(135deg,#94a3b8,#64748b); box-shadow: none; cursor: default; }
   .fjd-listed-via { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 12px; font-size: 11.5px; color: #94a3b8; font-weight: 600; }
-  .fjd-listed-badge { background: #f8f7ff; border: 1.5px solid #ede9fe; border-radius: 20px; padding: 3px 10px; font-size: 10.5px; font-weight: 800; color: #7c3aed; letter-spacing: .2px; }
+  .fjd-listed-badge { background: #f8fafc; border: 1.5px solid #e0e7ff; border-radius: 20px; padding: 3px 10px; font-size: 10.5px; font-weight: 800; color: #4f46e5; letter-spacing: .2px; }
 
   /* ── JOB ALERTS BANNER ── */
   .alert-banner {
     display: flex; align-items: center; gap: 12px;
-    background: linear-gradient(135deg,#f8f7ff,#f3eeff); border: 1.5px solid #e9e2ff;
+    background: linear-gradient(135deg,#f8fafc,#eef2ff); border: 1.5px solid #e2e8f0;
     border-radius: 16px; padding: 14px 14px; margin-bottom: 16px;
   }
   .alert-banner-ico { font-size: 20px; flex-shrink: 0; }
@@ -346,10 +346,10 @@
   .alert-banner-btn {
     background: var(--g); color: #fff; border: none; border-radius: 10px;
     padding: 9px 14px; font-size: 12.5px; font-weight: 800; white-space: nowrap;
-    cursor: pointer; box-shadow: 0 6px 16px rgba(124,58,237,.22); flex-shrink: 0;
+    cursor: pointer; box-shadow: 0 6px 16px rgba(79,70,229,.22); flex-shrink: 0;
   }
   .alert-banner-x {
-    background: none; border: none; color: #b4aed6; font-size: 13px; cursor: pointer;
+    background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer;
     padding: 4px; flex-shrink: 0;
   }
   @media (max-width: 380px) { .alert-banner-sub { display: none; } }
@@ -385,7 +385,7 @@
     text-decoration: none; color: inherit;
     position: relative; overflow: hidden;
   }
-  .job-card:hover { border-color: var(--p); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,.13); }
+  .job-card:hover { border-color: var(--p); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,70,229,.13); }
   .job-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: var(--g); opacity: 0; transition: opacity .18s; border-radius: 18px 18px 0 0;
@@ -394,8 +394,8 @@
   /* job-card-locked dimming removed — locked cards are now fully browsable (Option 2: paywall at Apply) */
   .job-lock-badge {
     position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 800;
-    color: #fff; background: linear-gradient(135deg,#7c3aed,#a855f7);
-    padding: 4px 9px; border-radius: 99px; z-index: 2; box-shadow: 0 2px 8px rgba(124,58,237,.35);
+    color: #fff; background: linear-gradient(135deg,#4f46e5,#06b6d4);
+    padding: 4px 9px; border-radius: 99px; z-index: 2; box-shadow: 0 2px 8px rgba(79,70,229,.35);
   }
   .job-bookmark-btn {
     position: absolute; top: 12px; right: 12px; z-index: 3;
@@ -430,7 +430,7 @@
   .tag-remote { background: #ecfdf5; color: #059669; }
   .tag-type   { background: #eff6ff; color: #2563eb; }
   .tag-salary { background: #fffbeb; color: #d97706; }
-  .tag-source { background: #f3f0ff; color: #7c3aed; }
+  .tag-source { background: #eef2ff; color: #4f46e5; }
 
   .job-location { font-size: 11.5px; color: var(--sub); font-weight: 600; display: flex; align-items: center; gap: 5px; }
   .job-snippet {
@@ -445,10 +445,10 @@
     padding: 7px 16px; font-size: 12px; font-weight: 700;
     text-decoration: none; transition: all .15s;
     border: none; cursor: pointer; font-family: inherit;
-    box-shadow: 0 2px 10px rgba(124,58,237,.3);
+    box-shadow: 0 2px 10px rgba(79,70,229,.3);
     letter-spacing: .01em;
   }
-  .job-apply:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(124,58,237,.42); }
+  .job-apply:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(79,70,229,.42); }
 
   /* ── SKELETON ── */
   @keyframes shimmer {
@@ -457,7 +457,7 @@
   }
   .skel {
     border-radius: 18px; height: 190px;
-    background: linear-gradient(90deg, #f3f0fc 25%, #ebe6fa 50%, #f3f0fc 75%);
+    background: linear-gradient(90deg, #eef2ff 25%, #e2e8f0 50%, #eef2ff 75%);
     background-size: 800px 100%;
     animation: shimmer 1.5s linear infinite;
   }
@@ -519,7 +519,7 @@
     cursor: pointer; transition: all .15s; font-family: inherit;
   }
   .filters-trigger-btn:hover { border-color: var(--p); color: var(--p); }
-  .filters-trigger-btn.has-active { border-color: var(--p); color: var(--p); background: rgba(124,58,237,.05); }
+  .filters-trigger-btn.has-active { border-color: var(--p); color: var(--p); background: rgba(79,70,229,.05); }
   .filters-badge {
     background: var(--g); color: #fff; font-size: 9.5px; font-weight: 800;
     min-width: 15px; height: 15px; border-radius: 99px; display: inline-flex;
@@ -554,174 +554,29 @@
   /* ── STICKY APPLY/SAVE FOOTER on job detail ── */
   .fjd-footer {
     position: sticky; bottom: 0; z-index: 10;
-    background: #fff; border-top: 1.5px solid #ede9fe;
+    background: #fff; border-top: 1.5px solid #e0e7ff;
     padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
-    display: flex; flex-direction: column; gap: 10px;
+    display: flex; align-items: center; gap: 10px;
   }
-  .fjd-footer-row { display: flex; align-items: center; gap: 10px; }
-  .fjd-tailor-btn {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    width: 100%; height: 48px;
-    border: 1.5px solid #ede9fe; background: #f5f3ff; color: #7c3aed;
-    border-radius: 14px; font-size: 13.5px; font-weight: 800; font-family: inherit;
-    cursor: pointer; transition: all .15s;
-  }
-  .fjd-tailor-btn:active { background: #ede9fe; }
   .fjd-save-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     flex-shrink: 0; height: 52px; padding: 0 18px;
-    border: 1.5px solid #ede9fe; background: #f5f3ff; color: #7c3aed;
+    border: 1.5px solid #e0e7ff; background: #eef2ff; color: #4f46e5;
     border-radius: 14px; font-size: 13px; font-weight: 800; font-family: inherit;
     cursor: pointer; transition: all .15s;
   }
-  .fjd-save-btn.active { background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-color: transparent; }
+  .fjd-save-btn.active { background: linear-gradient(135deg,#4f46e5,#06b6d4); color: #fff; border-color: transparent; }
   .fjd-footer .fjd-apply { flex: 1; padding: 15px; margin: 0; }
 
   /* ── TOAST ── */
-  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; align-items: center; width: calc(100% - 32px); max-width: 420px; }
-  .toast-item { background: #fff; color: #0f0e17; border: 1px solid rgba(15,14,23,.06); border-radius: 16px; padding: 11px 14px 11px 13px; font-size: 13px; font-weight: 600; line-height: 1.4; white-space: normal; animation: toastIn .25s ease; box-shadow: 0 12px 32px rgba(15,14,23,.14), 0 2px 10px rgba(15,14,23,.06); display: flex; align-items: flex-start; gap: 10px; pointer-events: auto; max-width: 100%; box-sizing: border-box; }
+  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; align-items: center; }
+  .toast-item { background: #fff; color: #0f172a; border: 1px solid rgba(15,23,42,.06); border-radius: 16px; padding: 11px 12px 11px 13px; font-size: 13px; font-weight: 600; white-space: nowrap; animation: toastIn .25s ease; box-shadow: 0 12px 32px rgba(15,23,42,.14), 0 2px 10px rgba(15,23,42,.06); display: flex; align-items: center; gap: 10px; pointer-events: auto; }
   .toast-item .toast-ico{flex-shrink:0;width:20px;height:20px}
   .toast-item .toast-ico svg{width:20px;height:20px;display:block}
   .toast-item .toast-x{flex-shrink:0;width:20px;height:20px;border:none;background:none;color:#b7b2c4;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0}
-  .toast-item .toast-x:hover{background:#f5f4fa;color:#6b6478}
+  .toast-item .toast-x:hover{background:#f1f5f9;color:#6b6478}
   @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
-/* ══ TAILOR MY RESUME FOR THIS JOB — self-contained panel styles ══ */
-.jt-panel{position:fixed;inset:0;z-index:400;background:#faf9ff;transform:translateX(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
-.jt-panel.open{transform:translateX(0)}
-.jt-panel-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid rgba(124,58,237,.1);position:sticky;top:0;z-index:10;flex-shrink:0}
-.jt-panel-back{width:38px;height:38px;border-radius:50%;border:none;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.jt-steps{display:flex;align-items:center;gap:6px}
-.jt-step-dot{width:8px;height:8px;border-radius:50%;background:#e5e0f5;transition:all .25s}
-.jt-step-dot.active{background:#7c3aed;width:20px;border-radius:5px}
-.jt-step-dot.done{background:#a78bfa}
-.jt-panel-body{padding:22px 16px 32px;flex:1}
-.jt-state{display:none}
-.jt-state.show{display:block;animation:jtFadeIn .35s ease}
-@keyframes jtFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.jt-step-badge{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 3px 10px rgba(124,58,237,.25)}
-.jt-diag-title{font-size:20px;font-weight:900;color:#0f172a;letter-spacing:-.3px;margin-bottom:4px}
-.jt-diag-sub{font-size:13px;color:#64748b;margin-bottom:20px}
-.jt-section-lbl{font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px}
-.jt-step-nav{display:flex;align-items:center;margin-top:22px}
-.jt-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 24px;border-radius:14px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;border:none;transition:opacity .15s}
-.jt-btn:disabled{opacity:.4;cursor:default}
-.jt-btn-pri{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.28)}
-.jt-btn-ghost{background:#f1f5f9;color:#475569}
 
-/* ── Celebratory "Saved!" overlay ─────────────────────────────────────── */
-.jt-saved-overlay{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,14,23,.46);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s ease}
-.jt-saved-overlay.show{opacity:1;pointer-events:auto}
-.jt-saved-card{position:relative;width:100%;max-width:340px;background:#fff;border-radius:26px;padding:34px 24px 24px;text-align:center;box-shadow:0 24px 60px rgba(15,14,23,.28);transform:translateY(14px) scale(.96);opacity:0;transition:transform .3s cubic-bezier(.32,.8,.24,1),opacity .3s ease}
-.jt-saved-overlay.show .jt-saved-card{transform:translateY(0) scale(1);opacity:1}
-.jt-saved-x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:none;background:#f5f4fa;color:#7a7488;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
-.jt-saved-x:hover{background:#ede9fe;color:#7c3aed}
-.jt-saved-badge{position:relative;width:84px;height:84px;margin:0 auto 18px}
-.jt-saved-ring{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#ede9fe,transparent 70%);animation:jtSavedRing 1.8s ease-out infinite}
-@keyframes jtSavedRing{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.35);opacity:0}}
-.jt-saved-circle{position:absolute;inset:8px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(124,58,237,.38);animation:jtSavedPop .5s cubic-bezier(.34,1.56,.64,1) both .1s}
-@keyframes jtSavedPop{0%{transform:scale(0)}100%{transform:scale(1)}}
-.jt-saved-check{width:34px;height:34px}
-.jt-saved-check path{stroke-dasharray:24;stroke-dashoffset:24;animation:jtSavedCheck .35s ease forwards .38s}
-@keyframes jtSavedCheck{to{stroke-dashoffset:0}}
-.jt-saved-spark{position:absolute;color:#c084fc;opacity:0;animation:jtSavedSpark .7s ease forwards}
-.jt-saved-spark svg{display:block}
-.jt-saved-spark.s1{top:-6px;left:2px;animation-delay:.42s}
-.jt-saved-spark.s2{top:6px;right:-8px;animation-delay:.52s}
-.jt-saved-spark.s3{bottom:-4px;left:14px;animation-delay:.62s}
-@keyframes jtSavedSpark{0%{opacity:0;transform:scale(.3) rotate(0deg)}45%{opacity:1;transform:scale(1) rotate(20deg)}100%{opacity:0;transform:scale(.6) rotate(35deg)}}
-.jt-saved-title{font-size:19px;font-weight:900;color:#0f172a;letter-spacing:-.3px;margin-bottom:6px}
-.jt-saved-sub{font-size:13.5px;color:#64748b;line-height:1.5;margin-bottom:22px}
-.jt-saved-sub b{color:#0f172a;font-weight:800}
-.jt-saved-actions{display:flex;flex-direction:column;gap:9px}
-
-/* Resume picker cards */
-.jt-picker-card{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:13px 14px;margin-bottom:10px;cursor:pointer;transition:all .15s;position:relative}
-.jt-picker-card.selected{border-color:#7c3aed;background:#faf9ff;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
-.jt-picker-ico{width:38px;height:38px;border-radius:11px;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.jt-picker-body{flex:1;min-width:0}
-.jt-picker-name{font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.jt-picker-meta{font-size:11.5px;color:#94a3b8;font-weight:600;margin-top:2px}
-.jt-picker-score{font-size:11px;font-weight:800;color:#7c3aed;background:#f5f3ff;padding:4px 9px;border-radius:99px;flex-shrink:0}
-.jt-picker-check{width:20px;height:20px;border-radius:50%;background:#7c3aed;display:none;align-items:center;justify-content:center;flex-shrink:0}
-.jt-picker-card.selected .jt-picker-check{display:flex}
-
-/* Loading "AI moment" — ring + orb + checklist + progress bar */
-.jt-anim-wrap{text-align:center;padding:20px 4px}
-.jt-anim-orb-lg{position:relative;width:128px;height:128px;margin:0 auto 18px}
-.jt-anim-ring-svg{position:absolute;inset:0;transform:rotate(-90deg)}
-.jt-anim-progress-ring{transition:stroke-dashoffset .5s ease}
-.jt-anim-orb-ring{position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle,#a855f7,#7c3aed);animation:jtPulse 2s ease-in-out infinite}
-@keyframes jtPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:.9}}
-.jt-anim-orb-core{position:absolute;inset:40px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(124,58,237,.4)}
-.jt-anim-pct{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:#fff;border:1.5px solid #ede9fe;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:800;color:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,.15)}
-.jt-anim-title{font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px}
-.jt-anim-sub{font-size:12.5px;color:#64748b;margin-bottom:18px}
-.jt-check-list{display:flex;flex-direction:column;gap:8px;text-align:left;max-width:280px;margin:0 auto 16px}
-.jt-check-list .opt-check-item,.jt-check-list .jt-check-item{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:#cbd5e1;transition:color .2s}
-.jt-check-list .jt-check-item.done{color:#0f172a}
-.jt-check-dot{width:18px;height:18px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
-.jt-check-item.done .jt-check-dot{background:#16a34a}
-.jt-anim-progress-track{height:5px;background:#f1f5f9;border-radius:99px;overflow:hidden;max-width:280px;margin:0 auto}
-.jt-anim-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px;transition:width .5s ease}
-.jt-anim-timing{font-size:11px;color:#94a3b8;margin-top:10px}
-
-/* Score gauge */
-.jt-gauge-wrap{text-align:center;margin-bottom:8px}
-.jt-ring-wrap{position:relative;width:120px;height:120px;margin:0 auto}
-.jt-ring-wrap svg{transform:rotate(-90deg)}
-.jt-ring-wrap circle{transition:stroke-dashoffset 1s ease}
-.jt-ring-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.jt-ring-val{font-size:26px;font-weight:900;color:#0f172a;line-height:1}
-.jt-ring-lbl{font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.4px;margin-top:2px}
-.jt-gauge-verdict{font-size:13px;font-weight:700;color:#475569;margin-top:10px}
-
-/* Keywords */
-.jt-kw-block{margin-bottom:6px}
-.jt-kw-sub{font-size:11.5px;font-weight:800;margin:10px 0 8px}
-.jt-kw-sub.jt-kw-good{color:#16a34a}
-.jt-kw-sub.jt-kw-bad{color:#dc2626}
-.jt-kw-chips{display:flex;flex-wrap:wrap;gap:7px}
-.jt-kw-chip{font-size:12px;font-weight:700;padding:6px 12px;border-radius:99px;border:1.5px solid}
-.jt-kw-chip.matched{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a}
-.jt-kw-chip.missing{background:#fef2f2;border-color:#fecaca;color:#dc2626}
-
-/* Requirements / issues list */
-.jt-issue-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
-.jt-issue-item{display:flex;align-items:flex-start;gap:11px;background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:12px 14px}
-.jt-issue-ico{width:26px;height:26px;border-radius:9px;background:#fef3e2;color:#ea580c;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
-.jt-issue-title{font-size:13px;color:#0f172a;line-height:1.4}
-.jt-issue-title.detail-clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
-.jt-issue-title.detail-clamp.expanded{-webkit-line-clamp:unset;display:block}
-.detail-clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
-.detail-clamp.expanded{-webkit-line-clamp:unset;display:block}
-.detail-clamp-hint{font-size:10.5px;font-weight:700;color:#7c3aed;margin-top:2px;opacity:.85;cursor:pointer}
-.detail-clamp.expanded + .detail-clamp-hint{display:none}
-.jt-issue-title.detail-clamp.expanded + .detail-clamp-hint{display:none}
-
-/* Results screen */
-.jt-score-boxes{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0 6px}
-.jt-score-box{flex:1;max-width:130px;text-align:center;border-radius:16px;padding:16px 10px}
-.jt-score-box-old{background:#f1f5f9}
-.jt-score-box-new{background:#f0fdf4}
-.jt-score-box-val{font-size:28px;font-weight:900;color:#0f172a;line-height:1}
-.jt-score-box-new .jt-score-box-val{color:#16a34a}
-.jt-score-box-lbl{font-size:10.5px;font-weight:800;color:#94a3b8;letter-spacing:.3px;margin-top:4px}
-.jt-res-tabs{display:flex;gap:6px;background:#f1f5f9;border-radius:14px;padding:4px;margin:18px 0 4px}
-.jt-res-tab{flex:1;text-align:center;padding:9px 10px;border-radius:11px;font-size:13px;font-weight:800;color:#94a3b8;cursor:pointer;transition:all .15s}
-.jt-res-tab.active{background:#fff;color:#0f172a;box-shadow:0 2px 6px rgba(15,23,42,.08)}
-.jt-res-panel{display:none}
-.jt-res-panel.active{display:block}
-.jt-improve-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
-.jt-improve-item{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid #ede9fe;border-radius:13px;padding:11px 14px;font-size:13px;font-weight:600;color:#0f172a}
-.jt-improve-item svg{flex-shrink:0;color:#16a34a}
-.jt-ba-card{background:#fff;border:1.5px solid #ede9fe;border-radius:14px;padding:14px;margin-bottom:10px}
-.jt-ba-before,.jt-ba-after{padding:8px 0}
-.jt-ba-before{border-bottom:1px dashed #ede9fe;opacity:.75}
-.jt-ba-lbl{font-size:10px;font-weight:800;letter-spacing:.4px;margin-bottom:4px}
-.jt-ba-before .jt-ba-lbl{color:#dc2626}
-.jt-ba-after .jt-ba-lbl{color:#16a34a}
-.jt-ba-text{font-size:12.5px;color:#334155;line-height:1.5}
-.jt-results-actions{margin-top:20px}
 </style>
 <link rel="stylesheet" href="/dashboard/app-sidebar.css"/>
 <style>@media(min-width:900px){body.has-app-sb .hdr{left:var(--app-sb-w)}}</style>
@@ -843,12 +698,12 @@
 
     <!-- Job Alerts engagement banner -->
     <div class="alert-banner" id="alertBanner" style="display:none">
-      <div class="alert-banner-ico" id="alertBannerIco">🔔</div>
+      <div class="alert-banner-ico">🔔</div>
       <div class="alert-banner-txt">
-        <div class="alert-banner-title" id="alertBannerTitle">Get weekly alerts for this search</div>
+        <div class="alert-banner-title">Get weekly alerts for this search</div>
         <div class="alert-banner-sub" id="alertBannerSub">We'll email you new matches every week</div>
       </div>
-      <button class="alert-banner-btn" id="alertBannerBtn" onclick="goSetJobAlert()">Turn on</button>
+      <button class="alert-banner-btn" onclick="goSetJobAlert()">Turn on</button>
       <button class="alert-banner-x" onclick="dismissAlertBanner()" aria-label="Dismiss">✕</button>
     </div>
 
@@ -903,48 +758,6 @@
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeProfModal()">Cancel</button>
       <button class="modal-save" onclick="saveProfModal()">Find Jobs</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── JOB ALERTS DRAWER — same jobAlert fields/endpoint as Account, so both stay in sync ── -->
-<div class="modal-overlay" id="jobAlertModal">
-  <div class="modal-sheet">
-    <div class="modal-title">Weekly Job Alerts</div>
-    <div id="jaMismatchNote" style="display:none;font-size:12px;font-weight:700;color:#b45309;background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:9px 11px;margin-bottom:14px"></div>
-    <div style="margin-bottom:14px">
-      <label style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Job Title</label>
-      <input class="modal-inp" id="jaTitle" type="text" placeholder="e.g. Frontend Developer" oninput="renderJaConfirm()" autocomplete="off">
-    </div>
-    <div style="margin-bottom:14px">
-      <label style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Country</label>
-      <select class="modal-inp" id="jaCountry" onchange="renderJaConfirm()">
-        <option value="worldwide">🌍 Worldwide</option>
-        <option value="ng">🇳🇬 Nigeria</option>
-        <option value="gh">🇬🇭 Ghana</option>
-        <option value="ke">🇰🇪 Kenya</option>
-        <option value="za">🇿🇦 South Africa</option>
-        <option value="eg">🇪🇬 Egypt</option>
-        <option value="us">🇺🇸 United States</option>
-        <option value="gb">🇬🇧 United Kingdom</option>
-        <option value="ca">🇨🇦 Canada</option>
-        <option value="au">🇦🇺 Australia</option>
-        <option value="de">🇩🇪 Germany</option>
-        <option value="fr">🇫🇷 France</option>
-        <option value="in">🇮🇳 India</option>
-        <option value="sg">🇸🇬 Singapore</option>
-        <option value="ae">🇦🇪 UAE</option>
-        <option value="br">🇧🇷 Brazil</option>
-        <option value="nl">🇳🇱 Netherlands</option>
-      </select>
-    </div>
-    <label class="filter-checkbox-row" style="margin-top:0">
-      <input type="checkbox" id="jaAlertsOn" onchange="renderJaConfirm()"> Turn on weekly alerts
-    </label>
-    <div id="jaConfirmText" style="display:none;margin-top:14px;background:#f5f3ff;border:1.5px solid #ede9fe;border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:700;color:#5b21b6"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeJobAlertModal()">Cancel</button>
-      <button class="modal-save" id="jaSaveBtn" onclick="saveJobAlert()">Save</button>
     </div>
   </div>
 </div>
@@ -1022,7 +835,7 @@
   <!-- Sticky header -->
   <div class="fjd-hdr">
     <button class="fjd-back" onclick="closeJobDetail()">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </button>
     <div class="fjd-hdr-title" id="fjdHdrTitle">Job Details</div>
     <button class="fjd-bookmark-btn" id="fjdBookmarkBtn" data-jkey="" onclick="toggleBookmark(event, this.dataset.jkey)" title="Save job" aria-label="Save job">
@@ -1062,203 +875,11 @@
 
   <!-- Sticky action bar -->
   <div class="fjd-footer">
-    <button class="fjd-tailor-btn" id="fjdTailorBtn" onclick="tailorResumeForJob()">
-      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.9 5.6 5.6 1.9-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg>
-      Tailor My Resume for This Job
+    <button class="fjd-save-btn" id="fjdSaveBtnFooter" data-jkey="" onclick="toggleBookmark(event, this.dataset.jkey)" aria-label="Save job">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <span class="fjd-save-lbl">Save</span>
     </button>
-    <div class="fjd-footer-row">
-      <button class="fjd-save-btn" id="fjdSaveBtnFooter" data-jkey="" onclick="toggleBookmark(event, this.dataset.jkey)" aria-label="Save job">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-        <span class="fjd-save-lbl">Save</span>
-      </button>
-      <a id="fjdApplyBtn" class="fjd-apply" target="_blank" rel="noopener">Apply for this role →</a>
-    </div>
-  </div>
-</div>
-
-<!-- ══ TAILOR MY RESUME FOR THIS JOB — opens in place, no navigation ══ -->
-<div id="jtPanel" class="jt-panel">
-  <div class="jt-panel-hdr">
-    <button class="jt-panel-back" onclick="closeJobTailorPanel()">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-    </button>
-    <div class="jt-steps" id="jtSteps">
-      <span class="jt-step-dot" data-n="1"></span>
-      <span class="jt-step-dot" data-n="2"></span>
-      <span class="jt-step-dot" data-n="3"></span>
-    </div>
-    <span style="width:38px;flex-shrink:0"></span>
-  </div>
-
-  <div class="jt-panel-body">
-
-    <!-- Screen 1: pick a resume -->
-    <div id="jtStateSelect" class="jt-state show">
-      <div class="jt-step-badge">1</div>
-      <div class="jt-diag-title">Tailor My Resume</div>
-      <div class="jt-diag-sub" id="jtJobLine">for this job</div>
-      <div class="jt-section-lbl">Choose a resume</div>
-      <div id="jtResumePickerList"></div>
-      <div class="jt-step-nav" style="justify-content:flex-end">
-        <button id="jtContinueBtn" class="jt-btn jt-btn-pri" onclick="_jtContinueFromPicker()" disabled>
-          Continue <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Screen 2a: reviewing (loading) -->
-    <div id="jtStateReviewAnim" class="jt-state">
-      <div class="jt-anim-wrap">
-        <div class="jt-anim-orb-lg">
-          <svg class="jt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
-            <defs><linearGradient id="jtAnimGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs>
-            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
-            <circle id="jtAnimProgressRing" class="jt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#jtAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
-          </svg>
-          <div class="jt-anim-orb-ring"></div>
-          <div class="jt-anim-orb-core"><svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg></div>
-          <div class="jt-anim-pct" id="jtAnimPct">0%</div>
-        </div>
-        <div class="jt-anim-title">Calculating match score…</div>
-        <div class="jt-anim-sub">Comparing your resume against this job's requirements.</div>
-        <div class="jt-check-list" id="jtCheckList"></div>
-        <div class="jt-anim-progress-track"><div class="jt-anim-progress-fill" id="jtAnimProgressFill"></div></div>
-        <div class="jt-anim-timing">This usually takes a few seconds</div>
-      </div>
-    </div>
-
-    <!-- Screen 2b: review — match score, keywords, requirements fit -->
-    <div id="jtStateReview" class="jt-state">
-      <div class="jt-step-badge">2</div>
-      <div class="jt-diag-title" style="text-align:center;margin-bottom:16px">Job Match Score</div>
-      <div class="jt-gauge-wrap">
-        <div class="jt-ring-wrap">
-          <svg width="120" height="120" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/>
-            <circle id="jtGaugeFill" cx="60" cy="60" r="52" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"/>
-          </svg>
-          <div class="jt-ring-overlay">
-            <div class="jt-ring-val" id="jtMatchScore">—</div>
-            <div class="jt-ring-lbl">MATCH</div>
-          </div>
-        </div>
-        <div class="jt-gauge-verdict" id="jtGaugeVerdict"></div>
-      </div>
-
-      <div class="jt-section-lbl">Keywords</div>
-      <div class="jt-kw-block">
-        <div class="jt-kw-sub jt-kw-good">✓ Found on your resume</div>
-        <div class="jt-kw-chips" id="jtKwMatched"></div>
-        <div class="jt-kw-sub jt-kw-bad">✗ Missing from your resume</div>
-        <div class="jt-kw-chips" id="jtKwMissing"></div>
-      </div>
-
-      <div class="jt-section-lbl">Requirements Fit</div>
-      <div id="jtReqFitList" class="jt-issue-list"></div>
-
-      <div class="jt-step-nav" style="justify-content:space-between">
-        <button class="jt-btn jt-btn-ghost" onclick="closeJobTailorPanel()">Cancel</button>
-        <button class="jt-btn jt-btn-pri" onclick="runJobTailor()">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-          Start Tailoring
-        </button>
-      </div>
-    </div>
-
-    <!-- Screen 3a: tailoring (loading) -->
-    <div id="jtStateTailorAnim" class="jt-state">
-      <div class="jt-anim-wrap">
-        <div class="jt-anim-orb-lg">
-          <svg class="jt-anim-ring-svg" width="128" height="128" viewBox="0 0 128 128">
-            <defs><linearGradient id="jtAnimGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs>
-            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(124,58,237,.12)" stroke-width="4"/>
-            <circle id="jtAnimProgressRing2" class="jt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#jtAnimGrad2)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
-          </svg>
-          <div class="jt-anim-orb-ring"></div>
-          <div class="jt-anim-orb-core"><svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
-          <div class="jt-anim-pct" id="jtAnimPct2">0%</div>
-        </div>
-        <div class="jt-anim-title">Tailoring your resume…</div>
-        <div class="jt-anim-sub">Reframing your experience to match this job.</div>
-        <div class="jt-check-list" id="jtCheckList2"></div>
-        <div class="jt-anim-progress-track"><div class="jt-anim-progress-fill" id="jtAnimProgressFill2"></div></div>
-        <div class="jt-anim-timing">This usually takes 10–20 seconds</div>
-      </div>
-    </div>
-
-    <!-- Screen 3b: results — before/after match score, what changed, save/discard -->
-    <div id="jtStateResults" class="jt-state">
-      <div class="jt-step-badge">3</div>
-      <div class="jt-diag-title">Resume Tailored ✨</div>
-      <div class="jt-diag-sub" id="jtResultJobLine">for this job</div>
-
-      <div class="jt-score-boxes">
-        <div class="jt-score-box jt-score-box-old">
-          <div class="jt-score-box-val" id="jtOldScore">0</div>
-          <div class="jt-score-box-lbl">Before</div>
-        </div>
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2.8" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
-        <div class="jt-score-box jt-score-box-new">
-          <div class="jt-score-box-val" id="jtNewScore">0</div>
-          <div class="jt-score-box-lbl">Match · After</div>
-        </div>
-      </div>
-
-      <div class="jt-res-tabs">
-        <div class="jt-res-tab" id="jtTabBefore" onclick="_jtSwitchResultTab('before')">Before — What We Found</div>
-        <div class="jt-res-tab active" id="jtTabAfter" onclick="_jtSwitchResultTab('after')">After — What Changed</div>
-      </div>
-
-      <div id="jtPanelAfter" class="jt-res-panel active">
-        <div class="jt-section-lbl">Key Improvements</div>
-        <div class="jt-improve-list" id="jtImproveList"></div>
-        <div id="jtBeforeAfterWrap">
-          <div class="jt-section-lbl">Before vs After</div>
-          <div id="jtBeforeAfterList"></div>
-        </div>
-      </div>
-
-      <div id="jtPanelBefore" class="jt-res-panel">
-        <div class="jt-section-lbl">Requirements Not Met</div>
-        <div class="jt-issue-list" id="jtOrigIssueList"></div>
-      </div>
-
-      <div class="jt-results-actions">
-        <button class="jt-btn jt-btn-pri" style="width:100%;justify-content:center" onclick="saveJobTailoredResume()">
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-          Save Tailored Resume
-        </button>
-        <button class="jt-btn jt-btn-ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="discardJobTailoredResume()">Discard Changes</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ── CELEBRATORY "RESUME SAVED" OVERLAY ── -->
-<div class="jt-saved-overlay" id="jtSavedOverlay">
-  <div class="jt-saved-card">
-    <button class="jt-saved-x" onclick="closeJobTailorSavedOverlay()" aria-label="Close">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
-    <div class="jt-saved-badge">
-      <div class="jt-saved-ring"></div>
-      <div class="jt-saved-circle">
-        <svg class="jt-saved-check" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-      </div>
-      <span class="jt-saved-spark s1"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg></span>
-      <span class="jt-saved-spark s2"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg></span>
-      <span class="jt-saved-spark s3"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg></span>
-    </div>
-    <div class="jt-saved-title">Resume Tailored &amp; Saved! 🎉</div>
-    <div class="jt-saved-sub" id="jtSavedSub">Your resume for <b>this role</b> is ready in My Resumes.</div>
-    <div class="jt-saved-actions">
-      <button class="jt-btn jt-btn-pri" style="width:100%" onclick="viewTailoredResume()">
-        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M9 13h6M9 17h6"/></svg>
-        View in My Resumes
-      </button>
-      <button class="jt-btn jt-btn-ghost" style="width:100%" onclick="closeJobTailorSavedOverlay()">Keep Browsing Jobs</button>
-    </div>
+    <a id="fjdApplyBtn" class="fjd-apply" target="_blank" rel="noopener">Apply for this role →</a>
   </div>
 </div>
 
@@ -1266,7 +887,7 @@
 <div id="fjSavedScreen">
   <div class="fjd-hdr">
     <button class="fjd-back" onclick="closeSavedJobs()">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </button>
     <div class="fjd-hdr-title">Saved Jobs</div>
   </div>
@@ -1284,7 +905,7 @@
 <div id="fjCompanyScreen">
   <div class="fjd-hdr">
     <button class="fjd-back" onclick="closeCompany()">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </button>
     <div class="fjd-hdr-title" id="companyHdrTitle">Company</div>
   </div>
@@ -1680,13 +1301,11 @@ function onCountryChange() {
 }
 
 // ── Job Alerts engagement banner ──────────────────────────────────────────────
-// Points people at the in-page drawer (below) to turn on weekly alerts for
-// whatever they just searched. Dismissible per-search-term so it doesn't nag
-// on every keystroke, and hidden entirely once they've already turned alerts
-// on for this exact title. If they have an alert set for a DIFFERENT title
-// than what they're currently searching, the banner switches to an
-// "update your alert?" prompt instead of a generic "turn on" — otherwise
-// people end up with a stale alert for a role they searched once months ago.
+// Points people at /account to turn on weekly alerts for whatever they just
+// searched. Dismissible per-search-term so it doesn't nag on every keystroke,
+// and hidden entirely once they've already turned alerts on for this exact
+// title+country (best-effort check against the Firestore-synced localStorage
+// mirror — no extra network round trip needed here).
 function _alertBannerDismissKey(q) {
   const uid = window.__fjUid || 'anon';
   return `kievora_alert_dismissed_${uid}_${(q||'').toLowerCase().trim()}`;
@@ -1696,36 +1315,12 @@ function updateAlertBanner(hasResults) {
   if (!banner) return;
   const q = g('searchInp')?.value?.trim();
   if (!hasResults || !q) { banner.style.display = 'none'; return; }
-
-  const alert = window._userJobAlert;
-  const hasActiveAlert = alert && alert.enabled && alert.title;
-  const sameTitle = hasActiveAlert && alert.title.trim().toLowerCase() === q.toLowerCase();
-  if (sameTitle) { banner.style.display = 'none'; return; } // already alerting for exactly this search
-
   try {
-    // A stale dismiss only applies to the "turn on" case, not a genuine
-    // mismatch — if their real alert is now for something else entirely,
-    // that's worth resurfacing even if they dismissed the banner once before.
-    if (!hasActiveAlert && localStorage.getItem(_alertBannerDismissKey(q))) { banner.style.display = 'none'; return; }
+    if (localStorage.getItem(_alertBannerDismissKey(q))) { banner.style.display = 'none'; return; }
   } catch {}
-
-  const titleEl = g('alertBannerTitle');
-  const subEl   = g('alertBannerSub');
-  const btnEl   = g('alertBannerBtn');
-  const icoEl   = g('alertBannerIco');
-
-  if (hasActiveAlert) {
-    if (icoEl) icoEl.textContent = '🔁';
-    if (titleEl) titleEl.textContent = 'Update your job alert?';
-    if (subEl) subEl.textContent = `Currently set for "${alert.title}" — switch it to "${q}"?`;
-    if (btnEl) btnEl.textContent = 'Update alert';
-  } else {
-    const countryName = _countryName || 'Worldwide';
-    if (icoEl) icoEl.textContent = '🔔';
-    if (titleEl) titleEl.textContent = 'Get weekly alerts for this search';
-    if (subEl) subEl.textContent = `New "${q}" matches in ${countryName}, sent every week`;
-    if (btnEl) btnEl.textContent = 'Turn on';
-  }
+  const countryName = _countryName || 'Worldwide';
+  const sub = g('alertBannerSub');
+  if (sub) sub.textContent = `New "${q}" matches in ${countryName}, sent every week`;
   banner.style.display = 'flex';
 }
 function dismissAlertBanner() {
@@ -1737,103 +1332,8 @@ function dismissAlertBanner() {
 function goSetJobAlert() {
   const q = g('searchInp')?.value?.trim() || '';
   const country = _selectedCountry || 'worldwide';
-  openJobAlertModal({ title: q, country });
+  window.location.href = `/account?openJobAlerts=1&title=${encodeURIComponent(q)}&country=${encodeURIComponent(country)}`;
 }
-
-// ── Job Alerts drawer — writes to the SAME /api/update-profile fields
-// (jobTitle + jobAlert) and the SAME localStorage keys that account.html
-// uses, so whichever page someone sets it from, both stay in sync.
-const JA_COUNTRY_NAMES = {
-  worldwide:'Worldwide', ng:'Nigeria', gh:'Ghana', ke:'Kenya', za:'South Africa',
-  eg:'Egypt', us:'United States', gb:'United Kingdom', ca:'Canada', au:'Australia',
-  de:'Germany', fr:'France', in:'India', sg:'Singapore', ae:'UAE', br:'Brazil', nl:'Netherlands'
-};
-window._userJobAlert = null; // populated by loadUserJobAlert() — { enabled, title, countryCode, countryName, frequency }
-
-async function loadUserJobAlert() {
-  try {
-    const data = await api('GET', '/api/profile');
-    window._userJobAlert = (data && data.data && data.data.jobAlert) || null;
-  } catch { /* not fatal — banner just falls back to the generic "turn on" copy */ }
-  // Search may have already finished loading before this resolved — refresh
-  // the banner now that we actually know the alert state.
-  const q = g('searchInp')?.value?.trim();
-  if (q) updateAlertBanner(document.querySelectorAll('.job-card').length > 0);
-}
-
-function openJobAlertModal(prefill) {
-  const alert = window._userJobAlert || {};
-  const prefillTitle = (prefill && prefill.title) || alert.title || '';
-  g('jaTitle').value    = prefillTitle;
-  g('jaCountry').value  = (prefill && prefill.country) || alert.countryCode || 'worldwide';
-  g('jaAlertsOn').checked = true; // opening via the CTA always means "turn this on"
-
-  const note = g('jaMismatchNote');
-  const isMismatch = alert.enabled && alert.title && prefill && prefill.title
-    && alert.title.trim().toLowerCase() !== prefill.title.trim().toLowerCase();
-  if (isMismatch) {
-    note.style.display = 'block';
-    note.textContent = `This replaces your current alert for "${alert.title}".`;
-  } else {
-    note.style.display = 'none';
-  }
-  renderJaConfirm();
-  g('jobAlertModal').classList.add('open');
-}
-function closeJobAlertModal() { g('jobAlertModal').classList.remove('open'); }
-
-function renderJaConfirm() {
-  const on = g('jaAlertsOn').checked;
-  const confirm = g('jaConfirmText');
-  if (!on) { confirm.style.display = 'none'; return; }
-  const title   = g('jaTitle').value.trim();
-  const country = JA_COUNTRY_NAMES[g('jaCountry').value] || 'Worldwide';
-  confirm.style.display = 'block';
-  confirm.textContent = title
-    ? `Alert me weekly for: ${title} in ${country}`
-    : `Add a job title above to turn on weekly alerts`;
-}
-
-async function saveJobAlert() {
-  const btn = g('jaSaveBtn');
-  const title    = g('jaTitle').value.trim();
-  const country  = g('jaCountry').value;
-  const alertsOn = g('jaAlertsOn').checked;
-  if (alertsOn && !title) { toast('Add a job title to turn on alerts', 'err'); return; }
-
-  const originalLabel = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = 'Saving…';
-  const timeout = setTimeout(() => {
-    if (btn.disabled) {
-      btn.disabled = false; btn.innerHTML = originalLabel;
-      toast('Taking too long — check your connection and try again', 'err');
-    }
-  }, 12000);
-
-  try {
-    const countryName = JA_COUNTRY_NAMES[country] || '';
-    const jobAlert = { enabled: alertsOn, frequency: 'weekly', title, countryCode: country, countryName };
-    await api('POST', '/api/update-profile', { jobTitle: title, jobAlert });
-
-    window._userJobAlert = jobAlert;
-    if (title)   localStorage.setItem(getProfKey(), JSON.stringify({ title, source: 'manual', ts: Date.now() }));
-    if (country) localStorage.setItem(`kievora_country_${window.__fjUid||'anon'}`, JSON.stringify({ code: country, name: countryName }));
-    try { localStorage.removeItem(_alertBannerDismissKey(title)); } catch {}
-
-    clearTimeout(timeout);
-    closeJobAlertModal();
-    toast(alertsOn ? 'Job alert saved!' : 'Job alerts turned off');
-    updateAlertBanner(document.querySelectorAll('.job-card').length > 0);
-  } catch (e) {
-    clearTimeout(timeout);
-    toast('Save failed: ' + (e.message || 'unknown error'), 'err');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = originalLabel;
-  }
-}
-g('jobAlertModal')?.addEventListener('click', e => { if (e.target === g('jobAlertModal')) closeJobAlertModal(); });
 
 function getCurrentProfQuery() {
   const uid   = window.__fjUid || 'anon';
@@ -2245,11 +1745,11 @@ async function loadJobs(query, force) {
       const displayName = _countryName || _selectedCountry.toUpperCase();
       const grid = g('jobsGrid');
       if (grid) grid.innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:32px 20px;background:#fff;border:1.5px solid #ede9fe;border-radius:20px">
+        <div style="grid-column:1/-1;text-align:center;padding:32px 20px;background:#fff;border:1.5px solid #e0e7ff;border-radius:20px">
           <div style="font-size:36px;margin-bottom:12px">🌍</div>
-          <div style="font-size:15px;font-weight:800;color:#0f0e17;margin-bottom:8px">No jobs found in ${displayName}</div>
+          <div style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:8px">No jobs found in ${displayName}</div>
           <div style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">We don't have listings for this region yet, but there are thousands of remote and global opportunities available.</div>
-          <button onclick="switchToWorldwide()" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,.3)">Show worldwide jobs →</button>
+          <button onclick="switchToWorldwide()" style="background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(79,70,229,.3)">Show worldwide jobs →</button>
           <div style="margin-top:12px;font-size:11.5px;color:#94a3b8">Or check back later as we expand to more regions</div>
         </div>`;
       return;
@@ -2499,8 +1999,6 @@ populateSortModal();
 
 // ── Init (called by Firebase auth gate above) ─────────────────────────────────
 window.__onFindJobsAuthReady = async function() {
-  loadUserJobAlert(); // fire-and-forget — refreshes the banner itself once resolved
-
   // Detect country first, then load jobs so the first search is already localised
   await detectAndSetCountry();
 
@@ -2578,25 +2076,12 @@ function renderJobDesc(el, rawDesc) {
   }
 }
 
-// Some providers (Adzuna, Jooble, Careerjet) only ever return a truncated
-// snippet, never the full JD — point people to the original posting
-// instead of pretending we have the full description. Used both when the
-// job has no url to scrape, and as the fallback if the scrape attempt fails.
-function renderFjdTruncatedFallback(j) {
-  renderJobDesc(g('fjdDesc'), j.description || j.snippet);
-  if (j.url) {
-    g('fjdDesc').insertAdjacentHTML('beforeend',
-      `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
-  }
-}
-
 function fmtDate(iso) {
   if (!iso) return '';
   try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; }
 }
 
 function populateJobDetail(j) {
-  window._fjCurrentJob = j;
   // Header title
   const hdrTitle = g('fjdHdrTitle');
   if (hdrTitle) hdrTitle.textContent = j.company || 'Job Details';
@@ -2620,29 +2105,14 @@ function populateJobDetail(j) {
   if (j.posted)   pills.push(`<span class="fjd-pill grey">📅 ${fmtDate(j.posted)}</span>`);
   g('fjdPills').innerHTML = pills.join('');
 
-  // Description — full text if we have it, otherwise try a live scrape,
-  // otherwise fall back to snippet + link.
-  window._fjdOpenToken = (window._fjdOpenToken || 0) + 1;
-  const myFjdToken = window._fjdOpenToken;
-  if (j.truncated && j.url) {
-    g('fjdDesc').innerHTML = `<p id="fjdFullLoading" style="color:#94a3b8;font-size:12px">Loading full description…</p>`;
-    api('POST', '/api/job-full-description', { url: j.url }).then(data => {
-      if (myFjdToken !== window._fjdOpenToken) return; // a different job was opened meanwhile
-      if (data && data.ok && data.description) {
-        renderJobDesc(g('fjdDesc'), data.description);
-        g('fjdDesc').insertAdjacentHTML('beforeend',
-          `<p style="margin-top:10px;font-size:11px;color:#94a3b8">Full listing fetched from <a href="${j.url}" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:700;text-decoration:none">${j.company || 'the original posting'} →</a></p>`);
-      } else {
-        renderFjdTruncatedFallback(j);
-      }
-    }).catch(() => {
-      if (myFjdToken !== window._fjdOpenToken) return;
-      renderFjdTruncatedFallback(j);
-    });
-  } else if (j.truncated) {
-    renderFjdTruncatedFallback(j); // gated/no-url case — nothing to scrape
-  } else {
-    renderJobDesc(g('fjdDesc'), j.description || j.snippet);
+  // Description — rendered properly, not plain text dump
+  renderJobDesc(g('fjdDesc'), j.description || j.snippet);
+
+  // Adzuna's API only ever returns a truncated snippet — point people to the
+  // original posting instead of pretending we have the full description.
+  if (j.source === 'Adzuna' && j.url) {
+    g('fjdDesc').insertAdjacentHTML('beforeend',
+      `<p style="margin-top:10px"><a href="${j.url}" target="_blank" rel="noopener" style="color:#4f46e5;font-weight:700;text-decoration:none">View full listing on ${j.company || 'company site'} →</a></p>`);
   }
 
   // Requirements
@@ -2704,393 +2174,7 @@ window.closeJobDetail = function() {
   g('fjDetailScreen').classList.remove('open');
   if (!anyPanelOpen(['fjDetailScreen'])) document.body.style.overflow = '';
 };
-
-function esc(s) {
-  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ═══ TAILOR MY RESUME FOR THIS JOB — fully in-page, no navigation ══════════
-// ═══════════════════════════════════════════════════════════════════════════
-// Runs entirely within find-jobs.html now (was previously a full-page handoff
-// to the dashboard, which meant a visible loading flash before the picker
-// even appeared). This page already has its own auth token and api() helper,
-// so it can call the same server endpoints directly. Review (match score/
-// keywords) runs free; the actual tailoring is gated, same "diagnostics
-// free, deep action paid" split as ATS Checker → Fix My Resume.
-let _jtJob          = null;
-let _jtPickedId     = null;
-let _jtSourceResume = null;
-let _jtReview       = null;
-let _jtNewResume    = null;
-let _jtAllResumes   = null; // cached from /api/resumes, fetched once per panel open
-
-function _jtSetStep(n) {
-  document.querySelectorAll('#jtSteps .jt-step-dot').forEach(dot => {
-    const d = Number(dot.dataset.n);
-    dot.classList.toggle('done', d < n);
-    dot.classList.toggle('active', d === n);
-  });
-}
-function _jtAllStates() { return ['jtStateSelect','jtStateReviewAnim','jtStateReview','jtStateTailorAnim','jtStateResults']; }
-function _jtShow(id) { _jtAllStates().forEach(s => g(s).classList.remove('show')); g(id).classList.add('show'); }
-
-function _jtStartAnim(opts) {
-  const steps = opts.steps || [];
-  const checklistEl = g(opts.checklistId);
-  if (checklistEl) {
-    checklistEl.innerHTML = steps.map(s =>
-      `<div class="jt-check-item"><span class="jt-check-dot"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>${esc(s)}</div>`
-    ).join('');
-  }
-  const stepEls = checklistEl ? Array.from(checklistEl.querySelectorAll('.jt-check-item')) : [];
-  const ring = document.getElementById(opts.ringId);
-  const pct  = document.getElementById(opts.pctId);
-  const fill = document.getElementById(opts.fillId);
-  const RING_CIRC = 358.14;
-  const STEP_CAP = 90;
-  const setProgress = (p) => {
-    if (ring) ring.style.strokeDashoffset = String(RING_CIRC * (1 - p / 100));
-    if (pct) pct.textContent = p + '%';
-    if (fill) fill.style.width = p + '%';
-  };
-  setProgress(0);
-  let i = 0;
-  const interval = setInterval(() => {
-    if (i < stepEls.length) {
-      stepEls[i].classList.add('done');
-      i++;
-      setProgress(Math.round((i / stepEls.length) * STEP_CAP));
-    } else {
-      clearInterval(interval);
-    }
-  }, 600);
-  return { finish: () => {
-    clearInterval(interval);
-    stepEls.forEach(el => el.classList.add('done'));
-    setProgress(100);
-  } };
-}
-
-// Entry point — opens the panel immediately; resumes are fetched right as
-// it opens (fast single GET), no separate loading screen beforehand.
-window.tailorResumeForJob = async function() {
-  const j = window._fjCurrentJob;
-  if (!j) return;
-  _jtJob = {
-    title:        j.title || '',
-    company:      j.company || '',
-    location:     j.location || '',
-    description:  j.description || j.snippet || '',
-    requirements: j.requirements || '',
-  };
-  _jtPickedId = null;
-  _jtSourceResume = null;
-  _jtReview = null;
-  _jtNewResume = null;
-
-  const jl = g('jtJobLine');
-  if (jl) jl.textContent = `${_jtJob.title}${_jtJob.company ? ' at ' + _jtJob.company : ''}`;
-
-  g('jtPanel').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  _jtSetStep(1);
-  _jtShow('jtStateSelect');
-
-  const listEl = g('jtResumePickerList');
-  listEl.innerHTML = `<div style="text-align:center;padding:24px 0;color:#94a3b8;font-size:13px">Loading your resumes…</div>`;
-  g('jtContinueBtn').disabled = true;
-
-  try {
-    const data = await api('GET', '/api/resumes');
-    // Job-tailored resumes never appear here — only general-purpose ones can
-    // be the source for a new tailoring pass.
-    _jtAllResumes = (data.resumes || data || []).filter(r => !r.isJobTailored);
-    _jtRenderPicker();
-  } catch (err) {
-    listEl.innerHTML = `<div style="text-align:center;padding:24px 0;color:#dc2626;font-size:13px">Couldn't load your resumes — try again.</div>`;
-  }
-};
-
-function _jtRenderPicker() {
-  const listEl = g('jtResumePickerList');
-  const merged = _jtAllResumes || [];
-  if (!merged.length) {
-    listEl.innerHTML = `<div style="font-size:13px;color:#64748b;padding:16px 0;text-align:center">No resumes yet — <a href="/dashboard" style="color:#7c3aed;font-weight:700;text-decoration:none">create one first</a></div>`;
-    return;
-  }
-  listEl.innerHTML = merged.map(r => `
-    <div class="jt-picker-card" data-id="${r.id}" onclick="_jtSelectResumeCard('${r.id}')">
-      <div class="jt-picker-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
-      <div class="jt-picker-body">
-        <div class="jt-picker-name">${esc(r.resumeName)}</div>
-        <div class="jt-picker-meta">${esc(r.resumeData?.jobTitle || 'Updated ' + fmtDate(r.updatedAt))}</div>
-      </div>
-      <div class="jt-picker-score">${typeof r.atsScore === 'number' ? r.atsScore + ' ATS' : 'Not scored'}</div>
-      <div class="jt-picker-check"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
-    </div>`).join('');
-}
-
-window._jtSelectResumeCard = function(id) {
-  _jtPickedId = id;
-  document.querySelectorAll('#jtResumePickerList .jt-picker-card').forEach(c => c.classList.remove('selected'));
-  const card = document.querySelector(`#jtResumePickerList .jt-picker-card[data-id="${id}"]`);
-  if (card) card.classList.add('selected');
-  g('jtContinueBtn').disabled = false;
-};
-
-window.closeJobTailorPanel = function() {
-  g('jtPanel').classList.remove('open');
-  document.body.style.overflow = '';
-};
-
-window._jtContinueFromPicker = async function() {
-  if (!_jtPickedId) return;
-  _jtSourceResume = (_jtAllResumes || []).find(r => r.id === _jtPickedId);
-  if (!_jtSourceResume) { toast('Resume not found', 'err'); return; }
-
-  _jtSetStep(2);
-  _jtShow('jtStateReviewAnim');
-  const anim = _jtStartAnim({
-    checklistId: 'jtCheckList', ringId: 'jtAnimProgressRing', pctId: 'jtAnimPct', fillId: 'jtAnimProgressFill',
-    steps: ['Reading job requirements', 'Scanning your resume', 'Matching keywords', 'Scoring your fit'],
-  });
-
-  try {
-    const result = await api('POST', '/api/job-tailor-review', {
-      resumeData: _jtSourceResume.resumeData,
-      jobTitle: _jtJob.title, jobCompany: _jtJob.company,
-      jobDescription: _jtJob.description, jobRequirements: _jtJob.requirements,
-    });
-    anim.finish();
-    _jtReview = result;
-    setTimeout(() => { _jtSetStep(2); _jtPopulateReview(result); _jtShow('jtStateReview'); }, 400);
-  } catch (err) {
-    anim.finish();
-    toast(err.message || 'Match review failed — try again', 'err');
-    _jtSetStep(1);
-    _jtShow('jtStateSelect');
-  }
-};
-
-function _jtVerdict(score) {
-  if (score >= 80) return "Excellent match — you're a strong fit for this role!";
-  if (score >= 60) return 'Good match — tailoring can push this further.';
-  if (score >= 40) return 'Moderate match — tailoring will help close the gaps.';
-  return 'Low match — tailoring can meaningfully improve your fit.';
-}
-
-function _jtColorForScore(score) {
-  if (score >= 70) return '#16a34a';
-  if (score >= 50) return '#f59e0b';
-  return '#dc2626';
-}
-
-function _jtPopulateReview(r) {
-  const score = Math.min(100, Math.max(0, r.matchScore || 0));
-  const sc = _jtColorForScore(score);
-  const circumference = 2 * Math.PI * 52;
-  const dash = circumference - (score / 100) * circumference;
-  const gaugeFill = g('jtGaugeFill');
-  gaugeFill.setAttribute('stroke', sc);
-  gaugeFill.setAttribute('stroke-dasharray', circumference);
-  gaugeFill.setAttribute('stroke-dashoffset', dash);
-  g('jtMatchScore').textContent = score;
-  g('jtMatchScore').style.color = sc;
-  g('jtGaugeVerdict').textContent = _jtVerdict(score);
-
-  const matched = r.keywordsMatched || [];
-  const missing = r.keywordsMissing || [];
-  g('jtKwMatched').innerHTML = matched.length
-    ? matched.map(k => `<span class="jt-kw-chip matched">${esc(k)}</span>`).join('')
-    : `<span style="font-size:12px;color:#94a3b8">None found</span>`;
-  g('jtKwMissing').innerHTML = missing.length
-    ? missing.map(k => `<span class="jt-kw-chip missing">${esc(k)}</span>`).join('')
-    : `<span style="font-size:12px;color:#94a3b8">Nothing missing — great coverage!</span>`;
-
-  const fit = r.requirementsFit || [];
-  g('jtReqFitList').innerHTML = fit.length
-    ? fit.map(f => `
-        <div class="jt-issue-item">
-          <div class="jt-issue-ico" style="background:${f.met ? '#f0fdf4' : '#fef3e2'};color:${f.met ? '#16a34a' : '#ea580c'}">
-            ${f.met
-              ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
-              : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`}
-          </div>
-          <div style="flex:1;min-width:0"><div class="jt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')"><strong>${esc(f.requirement||'')}</strong> — ${esc(f.note||'')}</div><div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div></div>
-        </div>`).join('')
-    : `<div style="font-size:13px;color:#64748b;padding:8px 0">No specific requirements extracted from this posting.</div>`;
-}
-
-// The real paywall moment — the review above (match score/gaps) is free,
-// same split as ATS Checker → Fix My Resume.
-window.runJobTailor = async function() {
-  if (!_jtSourceResume || !_jtReview) { toast('Something went wrong — try again.', 'err'); return; }
-
-  _jtSetStep(3);
-  _jtShow('jtStateTailorAnim');
-  const anim = _jtStartAnim({
-    checklistId: 'jtCheckList2', ringId: 'jtAnimProgressRing2', pctId: 'jtAnimPct2', fillId: 'jtAnimProgressFill2',
-    steps: ['Reframing your title', 'Rewriting your summary', 'Reordering your skills', 'Sharpening your bullet points'],
-  });
-
-  try {
-    const r = await fetch('/api/job-tailor', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
-      body: JSON.stringify({
-        resumeData:        _jtSourceResume.resumeData,
-        oldMatchScore:      _jtReview.matchScore || 0,
-        sourceResumeId:    _jtSourceResume.id,
-        sourceResumeName:  _jtSourceResume.resumeName,
-        jobTitle:          _jtJob.title,
-        jobCompany:        _jtJob.company,
-        jobLocation:       _jtJob.location,
-        jobDescription:    _jtJob.description,
-        jobRequirements:   _jtJob.requirements,
-        templateType:      _jtSourceResume.templateType || 'classic',
-        primaryColor:      _jtSourceResume.primaryColor || '#7c3aed',
-        fontFamily:        _jtSourceResume.fontFamily   || 'sans',
-      }),
-    });
-    if (!r.ok) {
-      const errBody = await r.json().catch(() => ({}));
-      if (errBody.error === 'plan_locked') {
-        anim.finish();
-        toast(errBody.message || 'Tailoring your resume to a specific job is a paid feature.', 'err');
-        _jtSetStep(2);
-        _jtShow('jtStateReview');
-        return;
-      }
-      throw new Error(errBody.message || errBody.error || 'Tailoring failed');
-    }
-    const data = await r.json();
-    anim.finish();
-    _jtNewResume = data;
-
-    setTimeout(() => {
-      _jtSetStep(3);
-      _jtPopulateResults(data);
-      _jtShow('jtStateResults');
-    }, 500);
-  } catch (err) {
-    anim.finish();
-    toast(err.message || 'Tailoring failed — try again', 'err');
-    _jtSetStep(2);
-    _jtShow('jtStateReview');
-  }
-};
-
-function _jtPopulateResults(data) {
-  g('jtOldScore').textContent = data.oldMatchScore || 0;
-  g('jtNewScore').textContent = data.newMatchScore || 0;
-  const jl = g('jtResultJobLine');
-  if (jl) jl.textContent = `${_jtJob.title}${_jtJob.company ? ' at ' + _jtJob.company : ''}`;
-
-  const ba = Array.isArray(data.beforeAfter) ? data.beforeAfter : [];
-  const improvements = Array.isArray(data.improvements) && data.improvements.length
-    ? data.improvements
-    : ["Reframed your resume to better match this job's requirements"];
-  g('jtImproveList').innerHTML = improvements.map(t =>
-    `<div class="jt-improve-item"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><div style="flex:1;min-width:0"><span class="detail-clamp" onclick="this.classList.toggle('expanded')">${esc(t)}</span><div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div></div></div>`
-  ).join('');
-
-  const baWrap = g('jtBeforeAfterWrap');
-  if (ba.length) {
-    baWrap.style.display = '';
-    g('jtBeforeAfterList').innerHTML = ba.map(pair => `
-      <div class="jt-ba-card">
-        <div class="jt-ba-before"><div class="jt-ba-lbl">BEFORE</div><div class="jt-ba-text">${esc(pair.before||'')}</div></div>
-        <div class="jt-ba-after"><div class="jt-ba-lbl">AFTER</div><div class="jt-ba-text">${esc(pair.after||'')}</div></div>
-      </div>`).join('');
-  } else {
-    baWrap.style.display = 'none';
-  }
-
-  const unmet = (_jtReview?.requirementsFit || []).filter(f => !f.met);
-  const origEl = g('jtOrigIssueList');
-  if (origEl) {
-    origEl.innerHTML = unmet.length
-      ? unmet.map(f => `
-          <div class="jt-issue-item">
-            <div class="jt-issue-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
-            <div style="flex:1;min-width:0"><div class="jt-issue-title detail-clamp" onclick="this.classList.toggle('expanded')"><strong>${esc(f.requirement||'')}</strong> — ${esc(f.note||'')}</div><div class="detail-clamp-hint" onclick="this.previousElementSibling.classList.toggle('expanded')">Tap to read more</div></div>
-          </div>`).join('')
-      : `<div style="font-size:13px;color:#64748b;padding:8px 0">Your resume already covered every requirement KIE could find — tailoring focused on emphasis and framing.</div>`;
-  }
-  _jtSwitchResultTab('after');
-}
-
-window._jtSwitchResultTab = function(which) {
-  const isAfter = which === 'after';
-  g('jtTabAfter').classList.toggle('active', isAfter);
-  g('jtTabBefore').classList.toggle('active', !isAfter);
-  g('jtPanelAfter').classList.toggle('active', isAfter);
-  g('jtPanelBefore').classList.toggle('active', !isAfter);
-};
-
-// Already saved server-side the moment tailoring finished — "Save" confirms
-// it, "Discard" actually deletes that doc.
-window.saveJobTailoredResume = function() {
-  closeJobTailorPanel();
-  showJobTailorSavedOverlay();
-};
-
-window.showJobTailorSavedOverlay = function() {
-  const sub = g('jtSavedSub');
-  if (sub && _jtJob) {
-    const roleBit = _jtJob.title ? `<b>${esc(_jtJob.title)}</b>${_jtJob.company ? ' at <b>' + esc(_jtJob.company) + '</b>' : ''}` : '<b>this role</b>';
-    sub.innerHTML = `Your resume for ${roleBit} is ready in My Resumes.`;
-  }
-  g('jtSavedOverlay').classList.add('show');
-};
-
-window.closeJobTailorSavedOverlay = function() {
-  g('jtSavedOverlay').classList.remove('show');
-};
-
-window.viewTailoredResume = function() {
-  window.location.href = '/dashboard?view=allresumes&tab=tailored';
-};
-
-window.discardJobTailoredResume = async function() {
-  if (!_jtNewResume || !_jtNewResume.id) { closeJobTailorPanel(); return; }
-  try {
-    await api('DELETE', '/api/resumes/' + _jtNewResume.id);
-  } catch (err) {
-    toast(err.message || 'Could not discard — try again', 'err');
-    return;
-  }
-  toast('Changes discarded', 'ok');
-  closeJobTailorPanel();
-};
 </script>
 <script src="/dashboard/app-sidebar.js"></script>
-<script src="/dashboard/coachmark.js"></script>
-<script>
-// First coachmark: point at the bookmark icon on the first job card so
-// people discover Saved Jobs. Jobs render async, so watch #jobsGrid until
-// a card shows up rather than assuming it's there on load.
-(function () {
-  var grid = document.getElementById('jobsGrid');
-  if (!grid) return;
-
-  function tryShow() {
-    var btn = grid.querySelector('.job-bookmark-btn');
-    if (!btn) return false;
-    Coachmark.show('find-jobs-save-btn', btn, {
-      text: 'Tap to save this job — find it later under Saved Jobs.'
-    });
-    return true;
-  }
-
-  if (tryShow()) return;
-  var obs = new MutationObserver(function () {
-    if (tryShow()) obs.disconnect();
-  });
-  obs.observe(grid, { childList: true, subtree: true });
-})();
-</script>
-
 </body>
 </html>
