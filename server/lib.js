@@ -1282,7 +1282,7 @@ async function sendJobAlertEmail(email, name, jobs, jobTitle, countryName, findJ
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td valign="top">
-                <p style="margin:0 0 3px 0;font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:#7C3AED;">${(j.company||'').replace(/</g,'&lt;').slice(0,60)}</p>
+                <p style="margin:0 0 3px 0;font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:#4f46e5;">${(j.company||'').replace(/</g,'&lt;').slice(0,60)}</p>
                 <p style="margin:0 0 6px 0;font-family:'Sora',Arial,sans-serif;font-size:15.5px;font-weight:700;color:#0A0A0B;">${(j.title||'').replace(/</g,'&lt;').slice(0,90)}</p>
                 <p style="margin:0 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;color:#9CA3AF;">${(j.location||countryName||'').replace(/</g,'&lt;')}${j.remote ? ' · Remote' : ''}</p>
                 <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;line-height:20px;color:#6B7280;">${(j.snippet||'').replace(/</g,'&lt;').slice(0,140)}</p>
@@ -1345,7 +1345,7 @@ async function sendWeeklyDigest(email, name, apps) {
     if (!newThisWeek.length && !interviews.length && !offers.length && !goingStale.length) return;
 
     const html = `<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:480px;margin:0 auto;color:#0f0e17;line-height:1.6">
-      <h2 style="color:#7c3aed;margin-bottom:4px">Your week on Kievora</h2>
+      <h2 style="color:#4f46e5;margin-bottom:4px">Your week on Kievora</h2>
       <p style="color:#475569">Hey ${name||'there'}, here's what happened in your job search this week:</p>
       <ul style="padding-left:18px;color:#0f0e17">
         <li><b>${newThisWeek.length}</b> new application${newThisWeek.length===1?'':'s'} tracked</li>
@@ -1353,7 +1353,7 @@ async function sendWeeklyDigest(email, name, apps) {
         <li><b>${offers.length}</b> offer${offers.length===1?'':'s'} pending response</li>
         <li><b>${goingStale.length}</b> going stale — could use a follow-up</li>
       </ul>
-      <a href="https://kievora.onrender.com/dashboard" style="background:#7c3aed;color:#fff;padding:11px 20px;border-radius:9px;text-decoration:none;display:inline-block;margin-top:10px;font-weight:600">Open Kievora</a>
+      <a href="https://kievora.onrender.com/dashboard" style="background:#4f46e5;color:#fff;padding:11px 20px;border-radius:9px;text-decoration:none;display:inline-block;margin-top:10px;font-weight:600">Open Kievora</a>
       <p style="color:#94a3b8;font-size:12px;margin-top:20px">You're getting this because Gmail Intelligence is connected — manage it anytime from Settings.</p>
     </div>`;
     const subject = offers.length ? `🎉 You have an offer — plus your week on Kievora`
