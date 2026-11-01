@@ -2413,7 +2413,7 @@
     }
 
     function buildPrevHTML(d, tpl, c, fc) {
-      c = c || '#7c3aed';
+      c = c || '#4f46e5';
       const raw = renderTplRaw(d, tpl, c, fc);
       const scale = computeContentScale(d);
       if (Math.abs(scale - 1) < 0.01) return raw; // near-baseline content: no distortion needed
@@ -10822,7 +10822,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
     function _optRenderPreviewInto(scalerId, wrapId, resumeData, tplId) {
       const scaler = g(scalerId);
       if (!scaler || !resumeData) return;
-      const tpl = (window.TPLS_REF || []).find(t => t.id === tplId) || { bg: '#7c3aed' };
+      const tpl = (window.TPLS_REF || []).find(t => t.id === tplId) || { bg: '#4f46e5' };
       scaler.innerHTML = buildPrevHTML(resumeData, tplId, tpl.bg, 'rf-sans');
       requestAnimationFrame(() => {
         const wrap = g(wrapId);
@@ -12147,7 +12147,7 @@ Return ONLY valid JSON, no markdown, no explanation.`;
       // result preview AND the downloaded PDF look like the actual chosen template.
       const CL_TPL_ACCENTS = {
         classic:   '#1e293b',
-        modern:    '#7c3aed',
+        modern:    '#4f46e5',
         executive: '#1e293b',
         minimal:   '#111827',
       };
