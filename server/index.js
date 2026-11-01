@@ -54,6 +54,9 @@ app.post('/api/billing/webhook', express.raw({ type: '*/*' }), async (req, res) 
 
 app.use(express.json({ limit: '10mb' }));          // raised for base64 photo payloads
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Adds /kievora-theme.js to every HTML page automatically (see theme-inject.js) — keeps the whole
+// platform on the one indigo/cyan palette without editing any page. KIEVORA_THEME=off disables it.
+app.use(require('./theme-inject')());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 
