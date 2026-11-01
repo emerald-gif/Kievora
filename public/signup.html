@@ -33,8 +33,8 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --p:#4f46e5;--p2:#818cf8;--p3:#e0e7ff;--p4:#eef2ff;--p-deep:#3730a3;
-  --ink:#111827;--sub:#667085;--sub-dim:#9a99a8;
+  --p:#4f46e5;--p2:#06b6d4;--p3:#e0e7ff;--p4:#eef2ff;--p-deep:#3730a3;
+  --ink:#0f172a;--sub:#667085;--sub-dim:#9a99a8;
   --line:#e0e7ff;--line-soft:#f2effa;
   --card:#ffffff;
   --success-bg:#f0fdf4;--success-line:#bbf7d0;--success-text:#166534;
@@ -113,7 +113,7 @@ nav{
 /* ── RIGHT FORM ── */
 .right{
   width:100%;max-width:540px;
-  background:linear-gradient(160deg,#fdfcff 0%,#faf8ff 100%);
+  background:linear-gradient(160deg,#fdfcff 0%,#f8fafc 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:44px 36px;overflow-y:auto;
 }
@@ -485,7 +485,7 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
       clearTimeout(_unTimer);
       if(!val){ el.textContent=''; return; }
       if(!/^[a-z0-9_]{3,20}$/.test(val)){
-        el.style.color='#e11d48'; el.textContent='3–20 chars · letters, numbers, underscores only'; return;
+        el.style.color='#ef4444'; el.textContent='3–20 chars · letters, numbers, underscores only'; return;
       }
       el.style.color='#94a3b8'; el.textContent='Checking…';
       _unTimer = setTimeout(async()=>{
@@ -493,7 +493,7 @@ small.hint{color:var(--sub-dim);font-size:11px;display:block;margin-top:5px}
           const r = await fetch(`/api/check-username?username=${encodeURIComponent(val)}`);
           const j = await r.json();
           if(j.available){ el.style.color='#059669'; el.textContent='✓ Available'; window._signupUsernameOk=true; }
-          else{ el.style.color='#e11d48'; el.textContent='✗ Already taken — choose another'; window._signupUsernameOk=false; }
+          else{ el.style.color='#ef4444'; el.textContent='✗ Already taken — choose another'; window._signupUsernameOk=false; }
         }catch{ el.style.color='#94a3b8'; el.textContent='Could not verify'; window._signupUsernameOk=true; }
       }, 500);
     });

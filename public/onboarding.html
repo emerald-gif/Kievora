@@ -21,10 +21,10 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --p:#4f46e5;--p2:#818cf8;--p3:#e0e7ff;--p4:#eef2ff;
-  --g:linear-gradient(135deg,#4f46e5,#818cf8);
-  --txt:#0f0e17;--sub:#6b7280;--mute:#9ca3af;--border:#e7e6ec;
-  --bg:#fafafa;--card:#fff;
+  --p:#4f46e5;--p2:#06b6d4;--p3:#e0e7ff;--p4:#eef2ff;
+  --g:linear-gradient(90deg,#4f46e5,#06b6d4);
+  --txt:#0f172a;--sub:#6b7280;--mute:#9ca3af;--border:#e2e8f0;
+  --bg:#f8fafc;--card:#fff;
 }
 html,body{height:100%;font-family:'Inter',sans-serif;color:var(--txt);background:var(--bg);overflow-x:hidden}
 body{display:flex;flex-direction:column;min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -124,7 +124,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-fi
 .skip-link:hover{color:var(--sub)}
 
 /* ── LOADING OVERLAY ── */
-.loading-overlay{position:fixed;inset:0;background:rgba(15,10,30,.55);z-index:999;
+.loading-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:999;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .loading-overlay.show{display:flex}
 .loading-card{background:#fff;border-radius:18px;padding:28px 38px;text-align:center;
@@ -358,7 +358,7 @@ const CATEGORIES = [
   { id:'Design & Creative',      icon:'palette',    color:'#db2777' },
   { id:'Marketing & Growth',     icon:'megaphone',  color:'#f59e0b' },
   { id:'Product & Strategy',     icon:'layers',     color:'#0891b2' },
-  { id:'Finance & Banking',      icon:'landmark',   color:'#16a34a' },
+  { id:'Finance & Banking',      icon:'landmark',   color:'#059669' },
   { id:'Healthcare',             icon:'heartPulse', color:'#ef4444' },
   { id:'Sales & Business Dev',   icon:'trendingUp', color:'#6366f1' },
   { id:'Operations',             icon:'sliders',    color:'#0d9488' },
