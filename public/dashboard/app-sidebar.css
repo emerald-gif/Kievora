@@ -16,7 +16,7 @@
     position:fixed;top:0;left:0;height:100vh;width:var(--app-sb-w);
     background:#fff;border-right:1px solid rgba(0,0,0,.06);
     z-index:1000;overflow-y:auto;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',system-ui,sans-serif;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   }
   .app-sb-brand{
     display:flex;align-items:center;gap:9px;
