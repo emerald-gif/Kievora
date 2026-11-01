@@ -13,8 +13,6 @@ module.exports = function registerToolsRoutes(app) {
     cloudinary,
   } = require('./lib');
   const { recordFileHistory } = require('./files');
-  const dns = require('dns').promises;
-  const net = require('net');
 
   app.get('/api/resumes', authenticate, async (req, res) => {
     console.log('GET /api/resumes — uid:', req.user.uid);
@@ -573,11 +571,9 @@ module.exports = function registerToolsRoutes(app) {
     "atsScore": 0,
     "grade": "",
     "beforeAfter": [{"before":"","after":""}],
-    "improvements": [],
-    "templateSuggestion": ""
+    "improvements": []
   }
 
-  "templateSuggestion": pick the single best-fit visual template for THIS candidate from [classic,modern,bold,minimal,vivid,elegant,slate,coral,split,ink,executive,nova,tribune]. Match: executive/senior → executive or nova; creative → vivid or coral; tech → modern or slate; default → classic or split. Never leave this blank — always pick one.
   "beforeAfter": pick the 2-3 bullet rewrites with the clearest visible improvement — "before" is the exact original text, "after" is the rewritten version.
   "improvements": 3-5 SPECIFIC statements about what you actually changed in THIS resume — reference real content (a role, a skill you added, a number you quantified), never generic filler like "Improved clarity" or "Better formatting." Examples of the right specificity: "Quantified your Software Engineer bullets with real metrics (40% faster deploys, 3 team members led)" or "Added AWS and Docker to skills — both appear in your experience but were missing from the list" or "Rewrote your summary to lead with 5 years of backend experience instead of a generic objective statement." If a category genuinely didn't change (e.g. no skills were added), don't force an entry for it.
   "atsScore": score the REWRITTEN resume 0-100 (integer) using the SAME STRICT rubric the ATS Checker uses (contact info, summary, experience, education, skills, formatting) — grade on quality, not presence, and hold this to the exact same skeptical standard: real ATS tools rarely give 85+, most well-written resumes land 70-84. It should be meaningfully higher than the original score of ${oldScore || 0} (since bullets are now quantified and keyword-rich) — but do not hand out an inflated number just to show a bigger jump. If a fair strict grade isn't meaningfully higher, that's fine — never fabricate metrics or embellish to force the score up.
@@ -596,12 +592,6 @@ module.exports = function registerToolsRoutes(app) {
       );
 
       const newScore = Math.min(100, Math.max(0, Math.round(result.atsScore || 0)));
-      // Pick the actual best-fit template instead of silently defaulting to
-      // Classic — the frontend has no real suggestion of its own to send here
-      // (analyze-resume never returns one), so the AI's own read of THIS
-      // resume's content/seniority is the real source of truth for template.
-      const VALID_TPL_IDS = ['classic','modern','bold','minimal','vivid','elegant','slate','coral','split','ink','executive','nova','tribune'];
-      const suggestedTpl = VALID_TPL_IDS.includes(result.templateSuggestion) ? result.templateSuggestion : null;
       const optimizedResumeData = {
         fullName: result.fullName || resumeData.fullName || '',
         jobTitle: result.jobTitle || resumeData.jobTitle || '',
@@ -619,7 +609,7 @@ module.exports = function registerToolsRoutes(app) {
 
       // Never overwrite the source resume — always a new doc, clearly labeled
       // with the score jump and linked back via sourceResumeId for lineage.
-      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\((Optimized|Tailored)[^)]*\)\s*/gi, '').trim();
+      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\(Optimized.*?\)\s*$/i, '');
       const oldScoreNum = Math.min(100, Math.max(0, Math.round(oldScore || 0)));
       const newName = `${baseName} (Optimized \u00b7 ${oldScoreNum}\u2192${newScore})`;
 
@@ -627,7 +617,7 @@ module.exports = function registerToolsRoutes(app) {
       const docData = {
         userId:       req.user.uid,
         resumeName:   newName,
-        templateType: suggestedTpl || templateType || 'classic',
+        templateType: templateType || 'classic',
         primaryColor: primaryColor || '#4f46e5',
         fontFamily:   fontFamily   || 'sans',
         resumeData:   optimizedResumeData,
@@ -658,414 +648,6 @@ module.exports = function registerToolsRoutes(app) {
       }
       console.error('POST /api/resume-optimize ERROR:', err.message);
       res.status(500).json({ error: 'Resume optimization failed. Please try again.' });
-    }
-  });
-
-  // ─── POST /api/job-tailor-review — match score + gap analysis (free) ──────────
-  // Called from the "Tailor My Resume for This Job" flow, Screen 2. This is the
-  // diagnostic half — same "diagnostics free, deep action paid" split as ATS
-  // Checker → Fix My Resume. Only the actual rewrite (/api/job-tailor below) is
-  // plan-gated. Uses AI credits like every other AI call, but no plan_locked gate.
-  app.post('/api/job-tailor-review', authenticate, async (req, res) => {
-    const groqKey = process.env.GROQ_API_KEY;
-    if (!groqKey) return res.status(503).json({ error: 'AI review not configured.' });
-
-    const planKey = await getUserPlanKey(req.user.uid);
-    const planCfg = getPlanConfig(planKey);
-
-    const { resumeData, jobTitle, jobCompany, jobDescription, jobRequirements } = req.body;
-    if (!resumeData) return res.status(400).json({ error: 'resumeData is required.' });
-    if (!jobTitle || !jobTitle.trim()) return res.status(400).json({ error: 'jobTitle is required.' });
-
-    const jobCtx = `Job Title: ${jobTitle}\nCompany: ${jobCompany || ''}\nDescription:\n${(jobDescription || '').slice(0, 3000)}\nRequirements:\n${(jobRequirements || '').slice(0, 1500)}`;
-
-    const prompt = `You are an expert recruiter comparing a candidate's resume against a specific job posting. Be honest and specific — this is a diagnostic, not a sales pitch.
-
-  JOB POSTING:
-  ${jobCtx}
-
-  CANDIDATE'S RESUME (JSON):
-  ${JSON.stringify(resumeData).slice(0, 6000)}
-
-  Return ONLY valid JSON in this exact shape — no markdown, no commentary:
-  {
-    "matchScore": 0,
-    "keywordsMatched": [],
-    "keywordsMissing": [],
-    "requirementsFit": [{"requirement":"","met":true,"note":""}]
-  }
-
-  - matchScore: integer 0-100, how well THIS resume fits THIS specific job — be a strict, honest grader. A resume with no relevant experience for the role should score low (20-40), a strong match with most requirements covered scores 70+. Do not inflate.
-  - keywordsMatched: 3-8 specific skills/terms from the job posting that DO appear (in some form) in the resume
-  - keywordsMissing: 3-8 specific skills/terms the job posting wants that are genuinely absent from the resume — these are what tailoring will need to address
-  - requirementsFit: 3-5 of the job's actual stated requirements, each with "met" (true/false/partially — use true only for a genuine match) and a one-sentence "note" explaining why, referencing the resume's actual content`;
-
-    try {
-      const { data: result } = await callKieAIJson(
-        planCfg.kieModel,
-        'You are an expert recruiter and resume-to-job matching analyst. Always respond with valid JSON only — no extra text, no markdown.',
-        [{ role: 'user', content: prompt }],
-        { max_tokens: 2000, temperature: 0.2 },
-        { uid: req.user.uid, planKey }
-      );
-
-      const matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
-      console.log(`POST /api/job-tailor-review — uid:${req.user.uid} job:"${jobTitle}" score:${matchScore} plan:${planKey}`);
-
-      res.json({
-        matchScore,
-        keywordsMatched:  Array.isArray(result.keywordsMatched)  ? result.keywordsMatched.slice(0, 8)  : [],
-        keywordsMissing:  Array.isArray(result.keywordsMissing)  ? result.keywordsMissing.slice(0, 8)  : [],
-        requirementsFit:  Array.isArray(result.requirementsFit)  ? result.requirementsFit.slice(0, 5)  : [],
-      });
-    } catch (err) {
-      if (err.code === 'CREDITS_EXHAUSTED') {
-        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
-      }
-      console.error('POST /api/job-tailor-review ERROR:', err.message);
-      res.status(500).json({ error: 'Job match review failed. Please try again.' });
-    }
-  });
-
-  // ─── POST /api/job-tailor — "Tailor My Resume for This Job" (Pro+ only) ───────
-  // Rewrites job title framing, summary, skills, and experience bullets to fit
-  // ONE specific job posting, then ALWAYS saves as a brand-new resume doc,
-  // flagged isJobTailored so it never shows up in normal resume pickers
-  // (cover letter source, Optimize My Resume source, etc.) or gets used as the
-  // source for another tailoring pass — it's scoped to that one job only.
-  app.post('/api/job-tailor', authenticate, async (req, res) => {
-    const groqKey = process.env.GROQ_API_KEY;
-    if (!groqKey) return res.status(503).json({ error: 'AI tailoring not configured.' });
-
-    const planKey = await getUserPlanKey(req.user.uid);
-    const planCfg = getPlanConfig(planKey);
-    if (!planCfg.jobTailorResume) {
-      return res.status(403).json({ error: 'plan_locked', message: UPGRADE_MESSAGES.jobTailorResume() });
-    }
-
-    const {
-      resumeData, oldMatchScore, sourceResumeId, sourceResumeName,
-      jobTitle, jobCompany, jobLocation, jobDescription, jobRequirements,
-      templateType, primaryColor, fontFamily,
-    } = req.body;
-    if (!resumeData) return res.status(400).json({ error: 'resumeData is required.' });
-    if (!jobTitle || !jobTitle.trim()) return res.status(400).json({ error: 'jobTitle is required.' });
-
-    const jobCtx = `Job Title: ${jobTitle}\nCompany: ${jobCompany || ''}\nDescription:\n${(jobDescription || '').slice(0, 3000)}\nRequirements:\n${(jobRequirements || '').slice(0, 1500)}`;
-
-    const prompt = `You are an expert resume writer tailoring a candidate's resume to ONE specific job posting. Never invent employers, job titles, dates, degrees, or metrics that aren't truthfully implied by the original resume — you're reframing and prioritizing real content to fit this job, not fabricating new experience.
-
-  JOB POSTING:
-  ${jobCtx}
-
-  Tailor the resume:
-  - jobTitle: reframe to the resume's own headline/title so it reads as aligned with "${jobTitle}" (do not claim the candidate already held this exact title if they didn't — a truthful professional title that signals fit)
-  - summary: rewrite to lead with the experience/skills this specific job cares about most, 40-60 words
-  - skills: reorder so the skills this job actually wants come first; add any skill clearly implied by the resume's real experience but missing from the list — never add a skill with no basis in the resume
-  - workExperience: rewrite bullets in "description" to foreground the achievements most relevant to this job's requirements, quantify wherever plausible — keep the same jobs/dates/companies, just re-emphasize what matters for this posting
-  - Keep the structure identical — same number of jobs/education/skills entries as the original, just rewritten/reordered
-
-  Return ONLY valid JSON in this exact shape — no markdown, no commentary:
-  {
-    "fullName": "", "jobTitle": "", "email": "", "phone": "", "location": "",
-    "summary": "",
-    "workExperience": [{"position":"","company":"","startDate":"","endDate":"","description":""}],
-    "education": [{"degree":"","field":"","school":"","graduationDate":""}],
-    "skills": [],
-    "certifications": [{"name":"","issuer":"","date":""}],
-    "projects": [{"name":"","url":"","description":""}],
-    "languages": [{"language":"","proficiency":""}],
-    "matchScore": 0,
-    "beforeAfter": [{"before":"","after":""}],
-    "improvements": []
-  }
-
-  "beforeAfter": pick the 2-3 bullet rewrites with the clearest visible re-framing toward this job — "before" is the exact original text, "after" is the rewritten version.
-  "improvements": 3-5 SPECIFIC statements about what you changed to fit THIS job — reference the job's actual requirements and the resume's actual content, never generic filler. Example: "Moved AWS and Kubernetes to the top of your skills — both are explicitly required in this posting" or "Reframed your Team Lead bullet to emphasize the cross-functional coordination this role asks for."
-  "matchScore": score the TAILORED resume against this specific job, 0-100, strict and honest — should be meaningfully higher than the original match score of ${oldMatchScore || 0} if the tailoring genuinely improved fit, but never inflate past what's truthfully supported.
-
-  ORIGINAL RESUME JSON:
-  ${JSON.stringify(resumeData).slice(0, 6000)}`;
-
-    try {
-      const { data: result } = await callKieAIJson(
-        planCfg.kieModel,
-        'You are an expert resume writer specializing in tailoring resumes to specific job postings. Always respond with valid JSON only — no extra text, no markdown.',
-        [{ role: 'user', content: prompt }],
-        { max_tokens: 4096, temperature: 0.4 },
-        { uid: req.user.uid, planKey }
-      );
-
-      const newMatchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
-      const tailoredResumeData = {
-        fullName: result.fullName || resumeData.fullName || '',
-        jobTitle: result.jobTitle || resumeData.jobTitle || '',
-        email:    result.email    || resumeData.email    || '',
-        phone:    result.phone    || resumeData.phone    || '',
-        location: result.location || resumeData.location || '',
-        summary:  result.summary  || '',
-        workExperience: Array.isArray(result.workExperience) && result.workExperience.length ? result.workExperience : (resumeData.workExperience || []),
-        education:      Array.isArray(result.education)      ? result.education      : (resumeData.education || []),
-        skills:         Array.isArray(result.skills)          ? result.skills         : (resumeData.skills || []),
-        certifications: Array.isArray(result.certifications)  ? result.certifications : (resumeData.certifications || []),
-        projects:       Array.isArray(result.projects)        ? result.projects       : (resumeData.projects || []),
-        languages:      Array.isArray(result.languages)       ? result.languages      : (resumeData.languages || []),
-      };
-
-      // Never overwrite the source resume, and never let this become pickable
-      // as a normal resume elsewhere in the app — isJobTailored + tailoredForJob
-      // are what every resume picker in the client filters on.
-      // Strip ANY existing decorated suffix (Optimized or Tailored) — the
-      // source for tailoring is often itself a Fix My Resume output like
-      // "Jane Doe Resume (Optimized · 65→78)", and without stripping that
-      // first the new name stacked both suffixes: "...(Optimized · 65→78)
-      // (Tailored for X)". Only job-tailored resumes are excluded as a
-      // tailoring source, so an already-optimized source is real and reachable.
-      const baseName = (sourceResumeName || resumeData.fullName || 'Resume').replace(/\s*\((Optimized|Tailored)[^)]*\)\s*/gi, '').trim();
-      const oldScoreNum = Math.min(100, Math.max(0, Math.round(oldMatchScore || 0)));
-      const newName = `${baseName} (Tailored for ${jobTitle})`;
-
-      const now = admin.firestore.FieldValue.serverTimestamp();
-      const docData = {
-        userId:       req.user.uid,
-        resumeName:   newName,
-        templateType: templateType || 'classic',
-        primaryColor: primaryColor || '#4f46e5',
-        fontFamily:   fontFamily   || 'sans',
-        resumeData:   tailoredResumeData,
-        atsScore:     0, // not an ATS-scored resume in the general sense — matchScore is what matters here
-        isJobTailored: true,
-        tailoredForJob: {
-          title:    jobTitle,
-          company:  jobCompany  || '',
-          location: jobLocation || '',
-        },
-        oldMatchScore: oldScoreNum,
-        newMatchScore,
-        createdAt: now,
-        updatedAt: now,
-      };
-      if (sourceResumeId) docData.tailoredFromResumeId = sourceResumeId;
-
-      const docRef  = await db.collection(RESUMES).add(docData);
-      const created = await docRef.get();
-
-      console.log(`POST /api/job-tailor — uid:${req.user.uid} job:"${jobTitle}" ${oldScoreNum}->${newMatchScore} newDoc:${docRef.id} plan:${planKey}`);
-
-      res.status(201).json({
-        id: docRef.id,
-        ...created.data(),
-        oldMatchScore: oldScoreNum,
-        newMatchScore,
-        beforeAfter:   Array.isArray(result.beforeAfter)   ? result.beforeAfter.slice(0, 3)   : [],
-        improvements:  Array.isArray(result.improvements)  ? result.improvements.slice(0, 5)  : [],
-      });
-    } catch (err) {
-      if (err.code === 'CREDITS_EXHAUSTED') {
-        return res.status(403).json({ error: 'credits_exhausted', message: UPGRADE_MESSAGES.creditsExhausted(planKey), upsellType: err.status?.upsellType });
-      }
-      console.error('POST /api/job-tailor ERROR:', err.message);
-      res.status(500).json({ error: 'Resume tailoring failed. Please try again.' });
-    }
-  });
-
-  // ─── POST /api/job-full-description — best-effort scrape for truncated jobs ──
-  // Adzuna/Jooble/Careerjet only ever hand back a short snippet, never the full
-  // JD. Instead of just linking out, we try to fetch the real posting server-side
-  // and pull out the actual description text. This is inherently fragile (every
-  // job site markup is different, some block bots or need JS), so it ALWAYS
-  // degrades gracefully: on any failure it returns { ok:false } and the client
-  // falls back to snippet + "View full listing" link exactly as before.
-  const JOB_SCRAPE_TIMEOUT_MS = 6000;
-  const JOB_SCRAPE_MAX_CHARS  = 12000;
-
-  // Strip script/style/nav/header/footer blocks, decode entities, collapse
-  // whitespace. Deliberately simple/regex-based — no DOM dependency needed
-  // since we just want readable text, not structured data.
-  function _stripHtmlNoise(html) {
-    return html
-      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-      .replace(/<(nav|header|footer)[\s\S]*?<\/\1>/gi, ' ')
-      .replace(/<!--[\s\S]*?-->/g, ' ');
-  }
-
-  function _decodeEntities(str) {
-    return str
-      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-      .replace(/&rsquo;/g, '’').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—');
-  }
-
-  // Heuristic extraction: job pages almost always wrap the description in a
-  // container with "description"/"job-desc"/"posting"/"details"/"content" in
-  // its class or id. Grab the largest matching block; if nothing matches,
-  // fall back to the largest <article>/<main>, then to body text as a last resort.
-  function _extractJobDescription(html) {
-    const cleaned = _stripHtmlNoise(html);
-    const candidates = [];
-    const containerRe = /<(div|section|article)\b[^>]*(?:class|id)="[^"]*(?:job[-_]?desc|description|posting|vacancy|details|job[-_]?content|content)[^"]*"[^>]*>([\s\S]*?)<\/\1>/gi;
-    let m;
-    while ((m = containerRe.exec(cleaned)) !== null) candidates.push(m[2]);
-
-    let raw = '';
-    if (candidates.length) {
-      raw = candidates.reduce((a, b) => (b.length > a.length ? b : a), '');
-    } else {
-      const articleMatch = cleaned.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)
-        || cleaned.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
-      raw = articleMatch ? articleMatch[1] : cleaned;
-    }
-
-    // Convert common block/line-break tags to newlines before stripping tags,
-    // so paragraphs and bullet points don't collapse into one wall of text.
-    const text = _decodeEntities(
-      raw
-        .replace(/<li[^>]*>/gi, '\n• ')
-        .replace(/<\/(p|div|li|h[1-6]|br)>/gi, '\n')
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<[^>]+>/g, ' ')
-    )
-      .replace(/[ \t]+/g, ' ')
-      .replace(/\n[ \t]+/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-
-    return text.slice(0, JOB_SCRAPE_MAX_CHARS);
-  }
-
-  // Sites we scrape sometimes serve an anti-bot verification/CAPTCHA page
-  // instead of the real content (Cloudflare "Just a moment", "unusual
-  // traffic" interstitials, etc). These return 200 + text/html and are often
-  // long enough to pass the length check, so they need their own detection —
-  // otherwise we'd confidently show a CAPTCHA page as the "full job description".
-  //
-  // Two separate lists on purpose: the HTML-level list only matches
-  // interstitial-template markers that never appear on a real content page.
-  // Plain "recaptcha"/"g-recaptcha" is deliberately NOT checked against raw
-  // HTML — lots of legitimate job pages embed a recaptcha on their apply
-  // form while the actual JD is still perfectly scrapable elsewhere on the
-  // page, so that would false-positive and needlessly reject good scrapes.
-  const BOT_CHALLENGE_HTML_PATTERNS = [
-    /cf-browser-verification/i,
-    /cf-chl-widget/i,
-    /just a moment\.{3}\s*<\/title>/i,
-    /checking your browser before accessing/i,
-    /attention required.{0,20}cloudflare/i,
-  ];
-  const BOT_CHALLENGE_TEXT_PATTERNS = [
-    /unusual traffic/i,
-    /verify (you are|you're) (a )?human/i,
-    /are you a robot/i,
-    /access denied/i,
-    /pardon our interruption/i,
-    /this page checks to see if it'?s really you/i,
-    /please enable (javascript|cookies) (and|to) (reload|continue)/i,
-  ];
-  function _isBotChallengeHtml(html) {
-    return BOT_CHALLENGE_HTML_PATTERNS.some(re => re.test(html));
-  }
-  function _isBotChallengeText(text) {
-    return BOT_CHALLENGE_TEXT_PATTERNS.some(re => re.test(text));
-  }
-
-  // SSRF guard — /api/job-full-description takes a client-supplied url and
-  // fetches it server-side. Without this, any authenticated user could point
-  // it at http://169.254.169.254/... (cloud metadata), http://localhost:...,
-  // or an internal 10.x/172.16-31.x/192.168.x address and use Kievora's own
-  // server as a proxy into infrastructure it can't otherwise reach. Job
-  // postings only ever live on public internet hosts, so blocking anything
-  // that resolves to a private/loopback/link-local range costs nothing
-  // functionally and closes that off.
-  function _isPrivateOrReservedIp(ip) {
-    const type = net.isIP(ip);
-    if (!type) return true; // not a valid IP at all — treat as unsafe
-    if (type === 4) {
-      const o = ip.split('.').map(Number);
-      if (o[0] === 127) return true;                                   // loopback
-      if (o[0] === 10) return true;                                    // 10.0.0.0/8
-      if (o[0] === 172 && o[1] >= 16 && o[1] <= 31) return true;        // 172.16.0.0/12
-      if (o[0] === 192 && o[1] === 168) return true;                   // 192.168.0.0/16
-      if (o[0] === 169 && o[1] === 254) return true;                   // 169.254.0.0/16 — includes cloud metadata
-      if (o[0] === 0) return true;                                     // 0.0.0.0/8
-      if (o[0] >= 224) return true;                                    // multicast/reserved
-      return false;
-    }
-    // IPv6
-    const lower = ip.toLowerCase();
-    if (lower === '::1') return true;                                  // loopback
-    if (lower.startsWith('fe80:') || lower.startsWith('fe8') || lower.startsWith('fc') || lower.startsWith('fd')) return true; // link-local / unique-local
-    if (lower.startsWith('::ffff:')) return _isPrivateOrReservedIp(lower.replace('::ffff:', '')); // IPv4-mapped
-    return false;
-  }
-  async function _isSafeExternalUrl(urlStr) {
-    let u;
-    try { u = new URL(urlStr); } catch { return false; }
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
-    const hostname = u.hostname.toLowerCase();
-    if (hostname === 'localhost' || hostname.endsWith('.local') || hostname.endsWith('.internal')) return false;
-    // If it's already a literal IP, check it directly.
-    if (net.isIP(hostname)) return !_isPrivateOrReservedIp(hostname);
-    try {
-      const records = await dns.lookup(hostname, { all: true, verbatim: true });
-      if (!records.length) return false;
-      return records.every(r => !_isPrivateOrReservedIp(r.address));
-    } catch {
-      return false; // DNS failure — fail closed
-    }
-  }
-
-  app.post('/api/job-full-description', authenticate, async (req, res) => {
-    const { url } = req.body;
-    if (!url || !/^https?:\/\//i.test(url)) {
-      return res.status(400).json({ ok: false, error: 'valid url is required' });
-    }
-    if (!(await _isSafeExternalUrl(url))) {
-      console.warn(`/api/job-full-description — blocked unsafe target url:"${url}" uid:${req.user.uid}`);
-      return res.status(400).json({ ok: false, error: 'url not allowed' });
-    }
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), JOB_SCRAPE_TIMEOUT_MS);
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml',
-        },
-      }).finally(() => clearTimeout(timer));
-
-      // Re-check after redirects: the initial hostname could resolve safely
-      // but redirect to an internal address (classic SSRF-via-redirect). The
-      // request already happened by this point, but we still refuse to
-      // process/return anything that landed somewhere unsafe.
-      if (response.redirected && !(await _isSafeExternalUrl(response.url))) {
-        console.warn(`/api/job-full-description — blocked unsafe redirect target url:"${url}" → "${response.url}" uid:${req.user.uid}`);
-        return res.json({ ok: false, error: 'redirected to disallowed url' });
-      }
-
-      if (!response.ok) return res.json({ ok: false, error: `upstream ${response.status}` });
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('text/html')) return res.json({ ok: false, error: 'not html' });
-
-      const html = await response.text();
-      if (_isBotChallengeHtml(html)) return res.json({ ok: false, error: 'bot challenge page' });
-
-      const description = _extractJobDescription(html);
-
-      // Sanity floor — if extraction produced something suspiciously short
-      // (nav crumbs, cookie banner, etc.) it's not worth showing over the
-      // snippet we already have.
-      if (!description || description.length < 200) {
-        return res.json({ ok: false, error: 'extraction too short' });
-      }
-      if (_isBotChallengeText(description)) {
-        return res.json({ ok: false, error: 'bot challenge page' });
-      }
-      res.json({ ok: true, description });
-    } catch (err) {
-      console.error(`/api/job-full-description — failed for url:"${url}":`, err.message);
-      res.json({ ok: false, error: 'fetch failed' });
     }
   });
 
@@ -1150,9 +732,8 @@ module.exports = function registerToolsRoutes(app) {
         source:   'JSearch',
         posted:   j.job_posted_at_datetime_utc || '',
         snippet:  (j.job_description || '').replace(/\n/g, ' ').replace(/<[^>]+>/g,'').slice(0,200) + '…',
-        description: (j.job_description || '').replace(/<[^>]+>/g,'').slice(0, 8000),
+        description: (j.job_description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
         requirements: (j.job_required_skills || []).join(', ') || '',
-        truncated: false,
       }));
     } catch { return []; }
   }
@@ -1198,7 +779,6 @@ module.exports = function registerToolsRoutes(app) {
           snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
           description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
           requirements: '',
-          truncated: true, // Adzuna's API only ever returns a short snippet, never the full JD
         }));
       } catch { /* skip this country */ }
     }));
@@ -1244,9 +824,8 @@ module.exports = function registerToolsRoutes(app) {
         source:   'Remotive',
         posted:   j.publication_date || '',
         snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
-        description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 8000),
+        description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
         requirements: '',
-        truncated: false,
       }));
     } catch { return []; }
   }
@@ -1307,7 +886,6 @@ module.exports = function registerToolsRoutes(app) {
         snippet:  (j.snippet || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
         description: (j.snippet || '').replace(/<[^>]+>/g,'').slice(0, 3000),
         requirements: '',
-        truncated: true, // Jooble's API only ever returns a short snippet, never the full JD
       }));
     } catch (err) {
       console.error(`_fetchJooble — request threw for query:"${query}":`, err.message);
@@ -1381,7 +959,6 @@ module.exports = function registerToolsRoutes(app) {
         snippet:  (j.description || '').replace(/<[^>]+>/g,'').slice(0,200) + '…',
         description: (j.description || '').replace(/<[^>]+>/g,'').slice(0, 3000),
         requirements: '',
-        truncated: true, // Careerjet's API only ever returns a short snippet, never the full JD
       }));
     } catch (err) {
       console.error(`_fetchCareerjet — request threw for query:"${query}":`, err.message);
@@ -1468,13 +1045,14 @@ module.exports = function registerToolsRoutes(app) {
     }
   });
 
-  // ─── findJobsCore — shared by the /api/find-jobs route AND the weekly job
-  // alerts cron (server/job-alerts.js). Runs the multi-provider search, merges,
-  // dedupes, and relevance-filters. Exported at the bottom of this file via
-  // registerToolsRoutes.findJobsCore so job-alerts.js can call it outside of
-  // any HTTP request (no req/res, no req.ip — Careerjet falls back to a
-  // default IP in that case, see _fetchCareerjet above).
-  async function findJobsCore(query, countryCode = 'worldwide', location = '', limit = 20, userIp = '') {
+  app.post('/api/find-jobs', authenticate, async (req, res) => {
+    // Plan gate: free users can see the listing cards but can't open/apply to jobs.
+    const planKey = await getUserPlanKey(req.user.uid);
+    const canClick = getPlanConfig(planKey).findJobsClick;
+
+    const { query, limit = 20, countryCode = 'worldwide', location = '' } = req.body;
+    if (!query) return res.status(400).json({ error: 'query is required' });
+
     const isLocal = countryCode && countryCode !== 'worldwide';
     const countryName = isLocal ? (COUNTRY_NAMES[countryCode] || countryCode.toUpperCase()) : '';
 
@@ -1483,7 +1061,7 @@ module.exports = function registerToolsRoutes(app) {
       _fetchAdzuna(query, limit, countryCode),
       _fetchRemotive(query, 10, countryCode),
       _fetchJooble(query, limit, countryCode, countryName, location),
-      _fetchCareerjet(query, limit, countryCode, countryName, location, userIp),
+      _fetchCareerjet(query, limit, countryCode, countryName, location, req.ip),
     ]);
 
     let jobs = [
@@ -1527,19 +1105,7 @@ module.exports = function registerToolsRoutes(app) {
 
     jobs = jobs.slice(0, limit);
 
-    console.log(`findJobsCore — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'} Careerjet:${r5.status==='fulfilled'?r5.value.length:'err'})`);
-    return jobs;
-  }
-
-  app.post('/api/find-jobs', authenticate, async (req, res) => {
-    // Plan gate: free users can see the listing cards but can't open/apply to jobs.
-    const planKey = await getUserPlanKey(req.user.uid);
-    const canClick = getPlanConfig(planKey).findJobsClick;
-
-    const { query, limit = 20, countryCode = 'worldwide', location = '' } = req.body;
-    if (!query) return res.status(400).json({ error: 'query is required' });
-
-    const jobs = await findJobsCore(query, countryCode, location, limit, req.ip);
+    console.log(`POST /api/find-jobs — "${query}" [${countryCode}${location ? ' / ' + location : ''}] → ${jobs.length} jobs (JSearch:${r1.status==='fulfilled'?r1.value.length:'err'} Adzuna:${r2.status==='fulfilled'?r2.value.length:'err'} Remotive:${r3.status==='fulfilled'?r3.value.length:'err'} Jooble:${r4.status==='fulfilled'?r4.value.length:'err'} Careerjet:${r5.status==='fulfilled'?r5.value.length:'err'})`);
 
     if (!canClick) {
       const gatedJobs = jobs.map(({ url, description, ...rest }) => rest);
@@ -2475,15 +2041,23 @@ Rules:
     }
   });
 
-  // ─── POST /api/resume/pdf — PDFBolt HTML-to-PDF (hosted Chrome, WYSIWYG) ─────
+  // ─── POST /api/resume/pdf — Puppeteer HTML-to-PDF (WYSIWYG) ──────────────────
   // Renders the exact same HTML as the on-screen template preview → pixel-perfect PDF.
-  // Uses PDFBolt (https://pdfbolt.com) instead of a locally-run Puppeteer/Chromium —
-  // no browser binary to install, update, or keep warm on this server. Needs
-  // PDFBOLT_API_KEY in the environment (free tier: 100 PDFs/mo, no card required;
-  // Basic plan is $19/mo for 2,000 PDFs/mo — see https://pdfbolt.com/pricing).
+  // Run:  npm install puppeteer   (one-time — ~300MB Chromium download)
+  let _puppeteer = null;
+  function getPuppeteer() {
+    if (!_puppeteer) {
+      try { _puppeteer = require('puppeteer'); }
+      catch (e) {
+        console.error('❌ puppeteer not installed. Run: npm install puppeteer');
+      }
+    }
+    return _puppeteer;
+  }
+
   app.post('/api/resume/pdf', authenticate, async (req, res) => {
-    const apiKey = process.env.PDFBOLT_API_KEY;
-    if (!apiKey) return res.status(503).json({ error: 'PDF service unavailable — set PDFBOLT_API_KEY on the server.' });
+    const pp = getPuppeteer();
+    if (!pp) return res.status(503).json({ error: 'PDF service unavailable — run: npm install puppeteer on the server.' });
 
     const { html, resumeName } = req.body;
     if (!html || typeof html !== 'string' || html.length < 20)
@@ -2492,9 +2066,25 @@ Rules:
     const safeName = (resumeName || 'resume')
       .replace(/[^a-z0-9\s\-]/gi, '').trim().replace(/\s+/g, '_').slice(0, 80) || 'resume';
 
-    // Wrap the template HTML in a complete, print-ready document — identical
-    // wrapper to the old Puppeteer version, so every template renders the same.
-    const fullHtml = `<!DOCTYPE html>
+    let browser;
+    try {
+      browser = await pp.launch({
+        headless: 'new',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-zygote',
+          '--disable-gpu',
+        ],
+      });
+
+      const page = await browser.newPage();
+
+      // Wrap the template HTML in a complete, print-ready document.
+      // Google Inter font loaded inline — same font the preview uses on-screen.
+      const fullHtml = `<!DOCTYPE html>
   <html lang="en">
   <head>
     <meta charset="UTF-8">
@@ -2520,35 +2110,22 @@ Rules:
   <body>${html}</body>
   </html>`;
 
-    try {
-      const pdfRes = await fetch('https://api.pdfbolt.com/v1/direct', {
-        method: 'POST',
-        headers: {
-          'API-KEY': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          html:            Buffer.from(fullHtml, 'utf-8').toString('base64'),
-          format:          'A4',
-          printBackground: true,
-          margin:          { top: '0px', right: '0px', bottom: '0px', left: '0px' },
-        }),
+      await page.setContent(fullHtml, { waitUntil: 'domcontentloaded', timeout: 10000 });
+
+      // Wait for fonts — graceful timeout so PDF still renders if CDN is slow
+      try { await page.waitForFunction(() => document.fonts.ready, { timeout: 5000 }); } catch (_) {}
+
+      const pdfBuffer = await page.pdf({
+        format:          'A4',
+        printBackground: true,
+        margin:          { top: '0', right: '0', bottom: '0', left: '0' },
       });
-
-      if (!pdfRes.ok) {
-        const errText = await pdfRes.text().catch(() => '');
-        console.error('PDFBolt error:', pdfRes.status, errText.slice(0, 500));
-        return res.status(502).json({ error: 'PDF generation failed. Please try again.' });
-      }
-
-      const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
 
       console.log(`POST /api/resume/pdf — uid:${req.user.uid} name:"${safeName}" bytes:${pdfBuffer.length}`);
       recordFileHistory({
         admin, db, cloudinary, uid: req.user.uid, name: `${safeName}.pdf`,
         mimeType: 'application/pdf', buffer: pdfBuffer, source: 'ai_generated',
       }).catch(() => {});
-
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${safeName}.pdf"`);
       res.setHeader('Content-Length', pdfBuffer.length);
@@ -2557,14 +2134,8 @@ Rules:
     } catch (err) {
       console.error('POST /api/resume/pdf ERROR:', err.message);
       res.status(500).json({ error: 'PDF generation failed. Please try again.' });
+    } finally {
+      if (browser) { try { await browser.close(); } catch (_) {} }
     }
   });
-
-  // Expose findJobsCore on the exported function itself so job-alerts.js's
-  // weekly cron (which runs outside any HTTP request) can call the same
-  // search/merge/dedupe logic the /api/find-jobs route uses. Must be assigned
-  // here, inside the function body, since it only exists once
-  // registerToolsRoutes(app) has actually been invoked — see the comment at
-  // the top of job-alerts.js.
-  registerToolsRoutes.findJobsCore = findJobsCore;
 }; // end registerToolsRoutes
