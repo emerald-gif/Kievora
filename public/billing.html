@@ -19,9 +19,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --p:#7c3aed;--p2:#6d28d9;--g:linear-gradient(135deg,#7c3aed,#a855f7);
-  --txt:#0f0a1e;--sub:#6b7280;--mute:#9ca3af;
-  --bg:#f8f7ff;--card:#fff;--border:#e5e7eb;--border2:#f0eefc;
+  --p:#4f46e5;--p2:#4338ca;--g:linear-gradient(135deg,#4f46e5,#818cf8);
+  --txt:#0f172a;--sub:#6b7280;--mute:#9ca3af;
+  --bg:#f5f7ff;--card:#fff;--border:#e5e7eb;--border2:#f0eefc;
   --red:#ef4444;--green:#059669;--orange:#f59e0b;--radius:16px;
 }
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding-bottom:60px}
@@ -79,19 +79,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .plan-feat-list li svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;stroke:var(--green);fill:none;stroke-width:2.5}
 
 /* Gmail Intelligence / Integrations block */
-.plan-integrations{margin-top:14px;padding-top:14px;border-top:1.5px dashed #e9d5ff}
-.plan-int-label{font-size:10px;font-weight:800;color:#a78bfa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:5px}
-.plan-int-label::before{content:'';display:inline-block;width:14px;height:1.5px;background:#e9d5ff}
-.plan-int-label::after{content:'';flex:1;height:1.5px;background:#e9d5ff}
-.plan-int-card{background:rgba(124,58,237,.05);border:1.5px solid #ede9fe;border-radius:12px;padding:12px 13px 11px}
+.plan-integrations{margin-top:14px;padding-top:14px;border-top:1.5px dashed #c7d2fe}
+.plan-int-label{font-size:10px;font-weight:800;color:#818cf8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.plan-int-label::before{content:'';display:inline-block;width:14px;height:1.5px;background:#c7d2fe}
+.plan-int-label::after{content:'';flex:1;height:1.5px;background:#c7d2fe}
+.plan-int-card{background:rgba(79,70,229,.05);border:1.5px solid #e0e7ff;border-radius:12px;padding:12px 13px 11px}
 .plan-int-header{display:flex;align-items:center;gap:9px;margin-bottom:10px}
-.plan-int-logo{width:26px;height:26px;border-radius:7px;object-fit:contain;background:#fff;padding:3px;border:1px solid #ede9fe;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.plan-int-logo{width:26px;height:26px;border-radius:7px;object-fit:contain;background:#fff;padding:3px;border:1px solid #e0e7ff;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .plan-int-name-wrap{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .plan-int-name{font-size:13px;font-weight:900;color:#0f0e17;letter-spacing:-.2px}
-.plan-int-badge{font-size:9px;font-weight:800;color:#7c3aed;background:#ede9fe;padding:2px 7px;border-radius:99px;letter-spacing:.2px;white-space:nowrap}
+.plan-int-badge{font-size:9px;font-weight:800;color:#4f46e5;background:#e0e7ff;padding:2px 7px;border-radius:99px;letter-spacing:.2px;white-space:nowrap}
 .plan-int-feat-list{list-style:none;display:flex;flex-direction:column;gap:5.5px}
-.plan-int-feat-list li{font-size:11.5px;color:#5b21b6;display:flex;gap:7px;align-items:flex-start;line-height:1.4}
-.plan-int-feat-list li svg{width:13px;height:13px;flex-shrink:0;margin-top:1px;stroke:#7c3aed;fill:none;stroke-width:2.5}
+.plan-int-feat-list li{font-size:11.5px;color:#3730a3;display:flex;gap:7px;align-items:flex-start;line-height:1.4}
+.plan-int-feat-list li svg{width:13px;height:13px;flex-shrink:0;margin-top:1px;stroke:#4f46e5;fill:none;stroke-width:2.5}
 .plan-int-desc{font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:6px}
 .btn-upgrade{width:100%;margin-top:14px;padding:13px;border-radius:12px;border:none;
   background:var(--g);color:#fff;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;transition:.15s}
@@ -104,9 +104,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
    colors/type. ═══ */
 .upsell-hero{padding:36px 24px 30px;text-align:center;position:relative;overflow:hidden}
 .upsell-hero::before{content:'';position:absolute;inset:-60% -20% auto -20%;height:340px;
-  background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.16),transparent 65%);pointer-events:none}
+  background:radial-gradient(ellipse at 50% 0%,rgba(79,70,229,.16),transparent 65%);pointer-events:none}
 .upsell-mark{width:68px;height:68px;border-radius:20px;margin:0 auto 20px;position:relative;
-  background:var(--card);box-shadow:0 14px 32px -10px rgba(124,58,237,.45),0 0 0 1px var(--border2);
+  background:var(--card);box-shadow:0 14px 32px -10px rgba(79,70,229,.45),0 0 0 1px var(--border2);
   display:flex;align-items:center;justify-content:center;overflow:hidden}
 .upsell-mark::before{content:'';position:absolute;inset:-40% -40% auto -40%;height:140%;
   background:var(--g);opacity:.14;pointer-events:none}
@@ -222,9 +222,9 @@ body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
   <div class="upsell-title" id="upsellTitle">Unlock the best of <em>KIE</em></div>
   <div class="upsell-sub" id="upsellSub">More AI credits, sharper models, and every tool unlocked — Gmail &amp; Drive built in.</div>
   <div class="upsell-tools" aria-hidden="true">
-    <div class="upsell-tool-ico" title="Resume Builder"><svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
-    <div class="upsell-tool-ico" title="Cover Letters"><svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg></div>
-    <div class="upsell-tool-ico" title="KIE Chat"><svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-8.5 8.5H4l3.4-3.4A8.4 8.4 0 1121 11.5z"/></svg></div>
+    <div class="upsell-tool-ico" title="Resume Builder"><svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+    <div class="upsell-tool-ico" title="Cover Letters"><svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg></div>
+    <div class="upsell-tool-ico" title="KIE Chat"><svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-8.5 8.5H4l3.4-3.4A8.4 8.4 0 1121 11.5z"/></svg></div>
     <div class="upsell-tool-ico" title="Gmail Intelligence"><svg viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg></div>
     <div class="upsell-tool-ico" title="Google Drive"><svg viewBox="0 0 24 24" fill="none"><path d="M8.15 3.5L1.6 14.87l3.4 5.9 6.55-11.35L8.15 3.5z" fill="#0066da"/><path d="M15.85 3.5H8.15l3.4 5.92h7.7L15.85 3.5z" fill="#00ac47"/><path d="M12.75 9.42l-6.55 11.35h13.1l3.35-5.9-3.35-5.45h-6.55z" fill="#ffba00"/></svg></div>
   </div>
