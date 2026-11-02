@@ -29,6 +29,7 @@
     slate: true,        // zinc / warm / old-gray neutrals → slate (MindShift neutrals)
     tokens: true,       // normalize --p / --p2 / --g / --border … on :root
     gradientEnd: true,  // brand gradients end in cyan
+    tintBlue: true,     // translucent indigo/purple tints (≤ .35 alpha) become clean blue rgba(37,99,235,α)
     extras: true        // accent-color, ::selection, focus caret
   };
   var user = window.KIEVORA_THEME_CONFIG;
@@ -146,13 +147,24 @@
     return 'rgb(' + Math.round(rgb[0]) + ', ' + Math.round(rgb[1]) + ', ' + Math.round(rgb[2]) + ')';
   }
 
+  /* MindShift builds every translucent tint (chips, pills, tiles, glows, shadows, borders) from clean blue,
+     rgba(37,99,235,α), and keeps indigo for solid buttons / text. Indigo at low alpha over white reads
+     grey-lavender, so any indigo/purple at alpha ≤ .35 becomes that blue. */
+  function mapFull(p) {
+    var m = mapRGB(p.r, p.g, p.b), base = m || [p.r, p.g, p.b];
+    if (CFG.tintBlue && p.a <= 0.35 && (p.hasAlpha || p.a < 1)) {
+      var h = rgb2hsl(base[0], base[1], base[2]);
+      if (h[0] >= 232 && h[0] <= 250 && h[1] >= 0.4 && h[2] >= 0.2 && h[2] <= 0.8) return h[2] > 0.65 ? [59, 130, 246] : [37, 99, 235];
+    }
+    return m;
+  }
   var tokenCache = Object.create(null);
   function mapToken(tok) {
     var hit = tokenCache[tok];
     if (hit !== undefined) return hit;
     var out = tok, p = parse(tok);
     if (p) {
-      var m = mapRGB(p.r, p.g, p.b);
+      var m = mapFull(p);
       if (m) out = fmt(m, p.a, p.hasAlpha, p.kind);
     }
     return (tokenCache[tok] = out);
@@ -182,7 +194,7 @@
     toks.forEach(function (t) {
       t.out = t.tok;
       if (!t.p) return;
-      var nm = mapRGB(t.p.r, t.p.g, t.p.b);
+      var nm = mapFull(t.p);
       t.rgb = nm || [t.p.r, t.p.g, t.p.b];
       if (nm) t.out = fmt(nm, t.p.a, t.p.hasAlpha, t.p.kind);
     });
@@ -229,7 +241,13 @@
      source is the only way to see every color. Only declaration bodies  { … }  are touched, never selectors. */
   function transformCssSource(src) {
     return src.replace(/\{([^{}]*)\}/g, function (m, body) {
-      return QUICK_RE.test(body) ? '{' + transform(body) + '}' : m;
+      var out = QUICK_RE.test(body) ? transform(body) : body;
+      /* a closed bottom sheet (translateY(100%)) with an upward shadow leaks that shadow into the page as a
+         tinted band above the browser toolbar — push it far enough off-screen that the shadow can't reach */
+      if (out.indexOf('translateY(100%)') > -1 && /box-shadow:\s*0\s+-\d+px/.test(out)) {
+        out = out.replace(/translateY\(100%\)/g, 'translateY(calc(100% + 90px))');
+      }
+      return out === body ? m : '{' + out + '}';
     });
   }
   function processStyleEl(el) {
@@ -249,6 +267,12 @@
           if (c && QUICK_RE.test(c) && !/:\s*;/.test(c)) {   // an empty "prop: ;" means a var() shorthand the API can't show — never rewrite those
             var n = transform(c);
             if (n !== c) r.style.cssText = n;
+          }
+        }
+        if (r.style && r.style.getPropertyValue) {          // linked CSS: same closed-sheet shadow fix as transformCssSource
+          var tf = r.style.getPropertyValue('transform'), bs = r.style.getPropertyValue('box-shadow');
+          if (tf && tf.indexOf('translateY(100%)') > -1 && bs && /^0(px)?\s+-\d+px/.test(bs.replace(/^rgba?\([^)]*\)\s*/, '').trim())) {
+            r.style.setProperty('transform', tf.replace(/translateY\(100%\)/g, 'translateY(calc(100% + 90px))'), r.style.getPropertyPriority('transform'));
           }
         }
         if (r.cssRules && r.cssRules.length) processRules(r.cssRules);
