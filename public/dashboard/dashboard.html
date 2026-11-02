@@ -28,7 +28,7 @@
     </button>
     <div style="flex:1;min-width:0">
       <div style="font-size:17px;font-weight:700;color:#000;letter-spacing:-.4px">Gmail Intelligence</div>
-      <div style="font-size:11px;color:#8e8e93;font-weight:500;margin-top:0px">Automatic job search tracking</div>
+      <div style="font-size:11px;color:#94a3b8;font-weight:500;margin-top:0px">Automatic job search tracking</div>
     </div>
     <div id="gmailHeaderBadge" style="display:none;background:rgba(52,199,89,.15);color:#248a3d;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.3px;flex-shrink:0;display:flex;align-items:center;gap:4px">
       <span style="width:6px;height:6px;background:#34c759;border-radius:50%;display:inline-block"></span>Live
@@ -42,7 +42,7 @@
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#ff3b30" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14A2 2 0 004 21h16a2 2 0 001.89-3.14l-8.18-14a2 2 0 00-3.42 0z"/></svg>
       <div style="flex:1;min-width:0">
         <div style="font-size:12.5px;font-weight:700;color:#000">Connection trouble</div>
-        <div style="font-size:12px;color:#8e8e93;margin-top:1px;line-height:1.45" id="gmailConnErrorText">Couldn't reach Gmail. Check your connection and try again.</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:1px;line-height:1.45" id="gmailConnErrorText">Couldn't reach Gmail. Check your connection and try again.</div>
       </div>
       <button onclick="_gmailRetryAfterError()" style="background:none;border:none;color:#4f46e5;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0;padding:2px">Retry</button>
     </div>
@@ -55,7 +55,7 @@
           <img src="/gmail.jpg" alt="Gmail" style="width:30px;height:30px;object-fit:contain" onerror="this.outerHTML='<svg width=&quot;26&quot; height=&quot;26&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot;><path d=&quot;M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z&quot; fill=&quot;#ea4335&quot; opacity=&quot;.2&quot;/><path d=&quot;M20 4H4L12 13l8-9z&quot; fill=&quot;#ea4335&quot;/></svg>'"/>
         </div>
         <div style="font-size:18px;font-weight:700;color:#000;margin-bottom:7px;letter-spacing:-.3px">Connect your Gmail</div>
-        <div style="font-size:13px;color:#8e8e93;line-height:1.55;margin-bottom:22px">KIE automatically tracks applications, interviews, recruiter messages and offers — no manual logging ever.</div>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.55;margin-bottom:22px">KIE automatically tracks applications, interviews, recruiter messages and offers — no manual logging ever.</div>
         <button onclick="connectGmail()" id="gmailConnectBtn" style="background:#4f46e5;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;letter-spacing:-.1px">Connect Gmail →</button>
       </div>
       <!-- Trust signals — iOS grouped list -->
@@ -64,19 +64,19 @@
           <div style="width:28px;height:28px;background:rgba(52,199,89,.13);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#34c759" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <div><div style="font-size:13px;font-weight:600;color:#000">Auto-tracks everything</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">Confirmations, interviews, recruiter messages, rejections, offers</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:#000">Auto-tracks everything</div><div style="font-size:11.5px;color:#94a3b8;margin-top:2px;line-height:1.4">Confirmations, interviews, recruiter messages, rejections, offers</div></div>
         </div>
         <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:.5px solid rgba(60,60,67,.13)">
-          <div style="width:28px;height:28px;background:rgba(79,70,229,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+          <div style="width:28px;height:28px;background:rgba(37,99,235,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           </div>
-          <div><div style="font-size:13px;font-weight:600;color:#000">Read-only access</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">KIE never sends emails or reads personal messages</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:#000">Read-only access</div><div style="font-size:11.5px;color:#94a3b8;margin-top:2px;line-height:1.4">KIE never sends emails or reads personal messages</div></div>
         </div>
         <div style="padding:13px 16px;display:flex;align-items:flex-start;gap:12px">
           <div style="width:28px;height:28px;background:rgba(255,159,10,.14);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#ff9f0a" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
-          <div><div style="font-size:13px;font-weight:600;color:#000">Disconnect anytime</div><div style="font-size:11.5px;color:#8e8e93;margin-top:2px;line-height:1.4">One tap removes all stored email data permanently</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:#000">Disconnect anytime</div><div style="font-size:11.5px;color:#94a3b8;margin-top:2px;line-height:1.4">One tap removes all stored email data permanently</div></div>
         </div>
       </div>
     </div>
@@ -93,7 +93,7 @@
       <div style="display:flex;align-items:center;gap:9px;padding:2px 2px 14px">
         <div id="gmailStatusDot" style="width:7px;height:7px;border-radius:50%;background:#34c759;box-shadow:0 0 0 3px rgba(52,199,89,.15);flex-shrink:0;transition:background .25s,box-shadow .25s"></div>
         <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:#3c3c43" id="gmailEmailLabel">Connected</div>
-        <div style="font-size:11px;color:#8e8e93;font-weight:500;flex-shrink:0" id="gmailLastSynced">—</div>
+        <div style="font-size:11px;color:#94a3b8;font-weight:500;flex-shrink:0" id="gmailLastSynced">—</div>
         <button onclick="syncGmailNow()" id="gmailSyncBtn" style="display:flex;align-items:center;gap:5px;background:none;border:none;padding:4px 2px;font-size:12px;font-weight:600;color:#4f46e5;cursor:pointer;font-family:inherit;flex-shrink:0">
           <svg id="gmailSyncIcon" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           <span id="gmailSyncBtnLabel">Sync</span>
@@ -108,15 +108,15 @@
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr">
           <div style="text-align:center;border-right:.5px solid rgba(60,60,67,.13)">
             <div style="font-size:26px;font-weight:800;color:#000;line-height:1;letter-spacing:-.8px" id="gmailStatApps">—</div>
-            <div style="font-size:10px;color:#8e8e93;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.4px">Companies</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.4px">Companies</div>
           </div>
           <div style="text-align:center;border-right:.5px solid rgba(60,60,67,.13)">
             <div style="font-size:26px;font-weight:800;color:#000;line-height:1;letter-spacing:-.8px" id="gmailStatActions">—</div>
-            <div style="font-size:10px;color:#8e8e93;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.4px">Actions</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.4px">Actions</div>
           </div>
           <div style="text-align:center">
             <div style="font-size:26px;font-weight:800;color:#000;line-height:1;letter-spacing:-.8px" id="gmailStatEmails">—</div>
-            <div style="font-size:10px;color:#8e8e93;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.4px">Emails</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.4px">Emails</div>
           </div>
         </div>
         <div style="height:.5px;background:rgba(60,60,67,.13);margin:15px 0 13px"></div>
@@ -227,18 +227,18 @@
 
         <!-- Slide 1 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#eef2ff,#c7d2fe);box-shadow:0 10px 22px rgba(79,70,229,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card ds-c-indigo">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#e0e7ff;color:#4f46e5">AI</span>
+                <span class="ds-tag-ico">AI</span>
                 <span class="ds-tag-label">Resume Optimizing</span>
               </div>
               <div class="ds-card-heading">Get a higher<br>ATS score</div>
               <div class="ds-card-sub">KIE scans your resume, shows you what's wrong, then fixes it for you.</div>
-              <button class="ds-card-cta" style="background:#4f46e5" onclick="openOptimizeEntry()">
+              <button class="ds-card-cta" onclick="openOptimizeEntry()">
                 Optimize my resume
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -277,18 +277,18 @@
 
         <!-- Slide 2 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#ecfeff,#a5f3fc);box-shadow:0 10px 22px rgba(6,182,212,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card ds-c-cyan">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#cffafe;color:#0891b2">AI</span>
+                <span class="ds-tag-ico">AI</span>
                 <span class="ds-tag-label">Resume Building</span>
               </div>
               <div class="ds-card-heading">Get a new resume<br>in 5 minutes</div>
               <div class="ds-card-sub">Quickly build a resume that works. It's easy with AI.</div>
-              <button class="ds-card-cta" style="background:#06b6d4" onclick="showView('tpick')">
+              <button class="ds-card-cta" onclick="showView('tpick')">
                 Quick-build your resume
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -327,18 +327,18 @@
 
         <!-- Slide 3 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#eef2ff,#c7d2fe);box-shadow:0 10px 22px rgba(79,70,229,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card ds-c-indigo">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#e0e7ff;color:#4f46e5">AI</span>
+                <span class="ds-tag-ico">AI</span>
                 <span class="ds-tag-label">ATS Checking</span>
               </div>
               <div class="ds-card-heading">Beat the<br>ATS filters</div>
               <div class="ds-card-sub">Get your ATS score, strengths, and weaknesses in seconds.</div>
-              <button class="ds-card-cta" style="background:#4f46e5" onclick="openUploadView()">
+              <button class="ds-card-cta" onclick="openUploadView()">
                 Check my resume
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -377,18 +377,18 @@
 
         <!-- Slide 4 -->
         <div class="ds-slide">
-          <div class="ds-card" style="background:linear-gradient(160deg,#ecfeff,#a5f3fc);box-shadow:0 10px 22px rgba(6,182,212,.14)">
-            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
-            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+          <div class="ds-card ds-c-cyan">
+            <svg class="ds-sparkle" style="top:22px;right:66px;width:22px;height:22px;opacity:.5" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="top:150px;right:40px;width:13px;height:13px;opacity:.4" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+            <svg class="ds-sparkle" style="bottom:60px;left:130px;width:11px;height:11px;opacity:.35" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
             <div class="ds-card-body">
               <div class="ds-tag">
-                <span class="ds-tag-ico" style="background:#cffafe;color:#0891b2">AI</span>
+                <span class="ds-tag-ico">AI</span>
                 <span class="ds-tag-label">Cover Letter Crafting</span>
               </div>
               <div class="ds-card-heading">Craft a<br>cover letter</div>
               <div class="ds-card-sub">Use AI to generate a strong cover letter in minutes.</div>
-              <button class="ds-card-cta" style="background:#06b6d4" onclick="openKieTool('coverletter')">
+              <button class="ds-card-cta" onclick="openKieTool('coverletter')">
                 Craft a cover letter
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
@@ -437,13 +437,13 @@
     <!-- Recent Resumes — after Quick Actions -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.25)">
+        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(37,99,235,.25)">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
         <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px">Recent Resumes</span>
         <span class="sh-badge" id="rCount" style="font-size:10px;padding:2px 8px">0</span>
       </div>
-      <a id="shAllLink" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(79,70,229,.08);border:1.5px solid rgba(79,70,229,.18);padding:5px 13px;border-radius:99px;transition:all .15s" onmouseover="this.style.background='rgba(79,70,229,.14)'" onmouseout="this.style.background='rgba(79,70,229,.08)'">View all<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+      <a id="shAllLink" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(37,99,235,.08);border:1.5px solid rgba(37,99,235,.18);padding:5px 13px;border-radius:99px;transition:all .15s" onmouseover="this.style.background='rgba(37,99,235,.14)'" onmouseout="this.style.background='rgba(37,99,235,.08)'">View all<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
     </div>
     <div class="opt-res-tabs" id="homeRTabs" style="margin:0 0 14px">
       <div class="opt-res-tab active" onclick="switchHomeResumeTab('all')">Resumes</div>
@@ -486,7 +486,7 @@
     <!-- Jobs skeleton — shown by default until renderJobsSwiper() decides what to show -->
     <div class="jobs-home-section" id="jobsHomeSkeleton">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.25)">
+        <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(37,99,235,.25)">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
         </div>
         <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px">Jobs for You</span>
@@ -532,15 +532,15 @@
     <div class="jobs-home-section" id="jobsHomeSection" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px">
         <div style="display:flex;align-items:center;gap:8px;min-width:0">
-          <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.25)">
+          <div style="width:28px;height:28px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(37,99,235,.25)">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
           </div>
           <span style="font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Jobs for You</span>
         </div>
-        <a href="/find-jobs" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(79,70,229,.08);border:1.5px solid rgba(79,70,229,.18);padding:5px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        <a href="/find-jobs" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--p);text-decoration:none;background:rgba(37,99,235,.08);border:1.5px solid rgba(37,99,235,.18);padding:5px 13px;border-radius:99px;flex-shrink:0">View All<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-        <div id="jobsHomeProfPill" style="font-size:11px;color:#4f46e5;font-weight:700;background:rgba(79,70,229,.08);border:1px solid rgba(79,70,229,.15);border-radius:99px;padding:2px 10px;display:inline-block"></div>
+        <div id="jobsHomeProfPill" style="font-size:11px;color:#4f46e5;font-weight:700;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.15);border-radius:99px;padding:2px 10px;display:inline-block"></div>
         <a href="/find-jobs" style="font-size:11px;color:#9ca3af;font-weight:600;text-decoration:none">Change →</a>
       </div>
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:none" id="jobsHomeTrack">
@@ -552,12 +552,12 @@
 
     <!-- no-profession CTA -->
     <div class="jobs-home-cta" id="jobsHomeCta" style="display:none">
-      <div style="display:flex;align-items:center;gap:14px;background:#f5f7ff;border:1.5px dashed rgba(79,70,229,.25);border-radius:16px;padding:16px 18px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:14px;background:#f5f7ff;border:1.5px dashed rgba(37,99,235,.25);border-radius:16px;padding:16px 18px;margin-bottom:20px">
         <div style="width:42px;height:42px;background:linear-gradient(135deg,#4f46e5,#06b6d4);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:2px">Find jobs matching your resume</div>
+          <div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:2px">Find jobs matching your resume</div>
           <div style="font-size:12px;color:#6b7280">Create or upload a resume and we'll show you live job offers matched to your profession.</div>
         </div>
         <a href="/find-jobs" style="flex-shrink:0;background:var(--g);color:#fff;border-radius:99px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">Find Jobs</a>
@@ -680,7 +680,7 @@
       </button>
     </div>
     <div class="tpick-hdr">
-      <h2>Choose Your <span style="background:linear-gradient(135deg,#4f46e5,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Template</span></h2>
+      <h2>Choose Your <span style="background:linear-gradient(135deg,#4f46e5,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Template</span></h2>
       <p>Pick one below, or let us find the best fit for you</p>
     </div>
     <!-- Helper card -->
@@ -746,8 +746,8 @@
         </div>
         <div class="f"><label>Resume Name</label><input id="bRName" type="text" placeholder="e.g. Software Engineer Resume"/></div>
         <div class="g2">
-          <div class="f"><label>Full Name <span style="color:#e11d48;font-size:11px">*</span></label><input id="bFull" type="text" placeholder="Alex Johnson" required/></div>
-          <div class="f"><label>Job Title <span style="color:#e11d48;font-size:11px">*</span></label><input id="bTitle" type="text" placeholder="Product Manager" required/></div>
+          <div class="f"><label>Full Name <span style="color:#ef4444;font-size:11px">*</span></label><input id="bFull" type="text" placeholder="Alex Johnson" required/></div>
+          <div class="f"><label>Job Title <span style="color:#ef4444;font-size:11px">*</span></label><input id="bTitle" type="text" placeholder="Product Manager" required/></div>
         </div>
         <div class="g2">
           <div class="f"><label>Email</label><input id="bEmail" type="email" placeholder="you@email.com"/></div>
@@ -783,7 +783,7 @@
           </div>
           Work Experience
         </div>
-        <p class="step-sub">Add your jobs starting from the most recent. <span style="color:#e11d48;font-size:11px;font-weight:700">* At least one entry (work or education) is required</span></p>
+        <p class="step-sub">Add your jobs starting from the most recent. <span style="color:#ef4444;font-size:11px;font-weight:700">* At least one entry (work or education) is required</span></p>
         <div id="wCont" style="margin-bottom:4px"></div>
         <div class="add-box">
           <div class="g2">
@@ -927,8 +927,8 @@
     <div id="step3" class="step-panel">
       <div class="step-card">
         <div class="step-title">
-          <div style="width:32px;height:32px;background:#fff1f2;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#e11d48" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <div style="width:32px;height:32px;background:#fff1f1;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
           Skills
         </div>
@@ -1000,12 +1000,12 @@
         Create Cover Letter
       </button>
       <!-- Secondary: Keep Editing -->
-      <button id="sEditBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;font-size:14px;font-weight:700;background:#fff;color:#374151;border:1.5px solid #e2e8f0;border-radius:14px;cursor:pointer;font-family:inherit;transition:all .2s">
+      <button id="sEditBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;font-size:14px;font-weight:700;background:#fff;color:#334155;border:1.5px solid #e2e8f0;border-radius:14px;cursor:pointer;font-family:inherit;transition:all .2s">
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         Keep Editing
       </button>
       <!-- Tertiary: Dashboard -->
-      <button id="sDashBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(79,70,229,.28);transition:all .2s">
+      <button id="sDashBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(37,99,235,.28);transition:all .2s">
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Go to Dashboard
       </button>
@@ -1222,23 +1222,23 @@
             <div class="cl-tcard-tick"><svg width="11" height="11" fill="none" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M2 5.5l3 3 4.5-5"/></svg></div>
             <div class="cl-tcard-prev">
               <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-                <rect width="200" height="160" fill="#fafafa"/>
-                <text x="14" y="22" font-family="'Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="bold" fill="#111827">Alex Johnson</text>
+                <rect width="200" height="160" fill="#f8fafc"/>
+                <text x="14" y="22" font-family="'Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="bold" fill="#0f172a">Alex Johnson</text>
                 <text x="14" y="32" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6" fill="#9ca3af">alex@email.com · Lagos, Nigeria</text>
-                <line x1="14" y1="40" x2="186" y2="40" stroke="#f3f4f6" stroke-width="1"/>
+                <line x1="14" y1="40" x2="186" y2="40" stroke="#f1f5f9" stroke-width="1"/>
                 <text x="14" y="54" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6" fill="#9ca3af">June 8, 2026</text>
-                <text x="14" y="66" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6.5" font-weight="bold" fill="#111827">Dear Hiring Manager,</text>
-                <rect x="14" y="72" width="172" height="3" rx="1.5" fill="#f3f4f6"/>
-                <rect x="14" y="78" width="156" height="3" rx="1.5" fill="#f3f4f6"/>
-                <rect x="14" y="84" width="165" height="3" rx="1.5" fill="#f3f4f6"/>
+                <text x="14" y="66" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6.5" font-weight="bold" fill="#0f172a">Dear Hiring Manager,</text>
+                <rect x="14" y="72" width="172" height="3" rx="1.5" fill="#f1f5f9"/>
+                <rect x="14" y="78" width="156" height="3" rx="1.5" fill="#f1f5f9"/>
+                <rect x="14" y="84" width="165" height="3" rx="1.5" fill="#f1f5f9"/>
                 <rect x="14" y="93" width="172" height="3" rx="1.5" fill="#eeeeee"/>
                 <rect x="14" y="99" width="148" height="3" rx="1.5" fill="#eeeeee"/>
                 <rect x="14" y="105" width="160" height="3" rx="1.5" fill="#eeeeee"/>
-                <rect x="14" y="114" width="172" height="3" rx="1.5" fill="#f3f4f6"/>
-                <rect x="14" y="120" width="140" height="3" rx="1.5" fill="#f3f4f6"/>
-                <rect x="14" y="126" width="154" height="3" rx="1.5" fill="#f3f4f6"/>
+                <rect x="14" y="114" width="172" height="3" rx="1.5" fill="#f1f5f9"/>
+                <rect x="14" y="120" width="140" height="3" rx="1.5" fill="#f1f5f9"/>
+                <rect x="14" y="126" width="154" height="3" rx="1.5" fill="#f1f5f9"/>
                 <text x="14" y="143" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6" fill="#9ca3af">Best regards,</text>
-                <text x="14" y="152" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6.5" font-weight="bold" fill="#111827">Alex Johnson</text>
+                <text x="14" y="152" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6.5" font-weight="bold" fill="#0f172a">Alex Johnson</text>
               </svg>
             </div>
             <div class="cl-tcard-foot">
@@ -1275,13 +1275,13 @@
             <div>
               <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Full Name *</label>
               <input id="clFullName" type="text" placeholder="Alex Johnson" oninput="clCheckStep3Ready()"
-                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;transition:border-color .15s"
                 onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
             </div>
             <div>
               <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Job Title *</label>
               <input id="clJobTitle" type="text" placeholder="Product Manager" oninput="clCheckStep3Ready()"
-                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;transition:border-color .15s"
                 onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
             </div>
           </div>
@@ -1289,20 +1289,20 @@
             <div>
               <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Email *</label>
               <input id="clEmail" type="email" placeholder="alex@email.com" oninput="clCheckStep3Ready()"
-                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;transition:border-color .15s"
                 onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
             </div>
             <div>
               <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Phone</label>
               <input id="clPhone" type="tel" placeholder="+234 801 234 5678"
-                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+                style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;transition:border-color .15s"
                 onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
             </div>
           </div>
           <div>
             <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Address</label>
             <input id="clAddress" type="text" placeholder="Lagos, Nigeria"
-              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;transition:border-color .15s"
               onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
           </div>
         </div>
@@ -1314,13 +1314,13 @@
           <div>
             <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Company Name *</label>
             <input id="clCompanyName" type="text" placeholder="Google" oninput="clCheckStep3Ready()"
-              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;transition:border-color .15s"
               onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
           </div>
           <div>
             <label style="font-size:10.5px;font-weight:700;color:var(--mute);display:block;margin-bottom:5px">Hiring Manager</label>
             <input id="clHiringManager" type="text" placeholder="Optional"
-              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;transition:border-color .15s"
+              style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;transition:border-color .15s"
               onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'">
           </div>
         </div>
@@ -1336,7 +1336,7 @@
         </div>
         <div id="clKeyDetailsWrap" style="display:none;margin-top:10px">
           <textarea id="clKeyDetails" rows="4" placeholder="e.g. Led a 6-person team that shipped X ahead of schedule; drawn to this company's focus on Y; want to highlight my Z certification"
-            style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--txt);background:#fafafa;outline:none;box-sizing:border-box;resize:vertical;line-height:1.5"
+            style="width:100%;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--txt);background:#f8fafc;outline:none;box-sizing:border-box;resize:vertical;line-height:1.5"
             onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
         </div>
       </div>
@@ -1365,7 +1365,7 @@
                   <stop offset="100%" stop-color="#22d3ee"/>
                 </linearGradient>
               </defs>
-              <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(79,70,229,.12)" stroke-width="4"/>
+              <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(37,99,235,.12)" stroke-width="4"/>
               <circle id="clAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#clAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
             </svg>
             <div class="opt-anim-orb-ring"></div>
@@ -1411,11 +1411,11 @@
 
         <!-- Action buttons -->
         <div style="display:flex;flex-direction:column;gap:10px">
-          <button onclick="clDownloadPDF()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(79,70,229,.25)">
+          <button onclick="clDownloadPDF()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;font-size:14px;font-weight:800;background:var(--g);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(37,99,235,.25)">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Download PDF
           </button>
-          <button id="clDashBtn" onclick="loadResumes().then(()=>showView('home'))" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;font-size:13px;font-weight:700;background:#fff;color:#374151;border:1.5px solid #e2e8f0;border-radius:14px;cursor:pointer;font-family:inherit">
+          <button id="clDashBtn" onclick="loadResumes().then(()=>showView('home'))" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;font-size:13px;font-weight:700;background:#fff;color:#334155;border:1.5px solid #e2e8f0;border-radius:14px;cursor:pointer;font-family:inherit">
             ← Back to Dashboard
           </button>
         </div>
@@ -1470,7 +1470,7 @@
         <div id="detAtsStatus" style="font-size:14px;font-weight:800;margin-bottom:6px"></div>
         <button id="detAtsInfoBtn" data-rid=""
           onclick="openATSDrawer(this.dataset.rid)"
-          style="display:inline-flex;align-items:center;gap:5px;background:none;border:1.5px solid rgba(79,70,229,.25);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--p);cursor:pointer;font-family:inherit">
+          style="display:inline-flex;align-items:center;gap:5px;background:none;border:1.5px solid rgba(37,99,235,.25);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--p);cursor:pointer;font-family:inherit">
           <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
           What is ATS &amp; how to improve
         </button>
@@ -1570,7 +1570,7 @@
             <div class="ksb-set-row-title">Gmail Intelligence</div>
             <div class="ksb-set-row-sub" id="gmailSettingsSub">Connect to track your job search</div>
           </div>
-          <div id="gmailSettingsBadge" style="display:none;background:#dcfce7;color:#16a34a;border:1.5px solid #bbf7d0;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">LIVE</div>
+          <div id="gmailSettingsBadge" style="display:none;background:#dcfce7;color:#059669;border:1.5px solid #bbf7d0;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">LIVE</div>
           <svg class="ksb-set-row-arr" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
       </div>
@@ -1615,7 +1615,7 @@
       <span class="ksb-set-section-label">Legal</span>
       <div class="ksb-set-card">
         <a href="/privacy" class="ksb-set-row" style="text-decoration:none">
-          <div class="ksb-set-row-ico" style="background:rgba(79,70,229,.12)">
+          <div class="ksb-set-row-ico" style="background:rgba(37,99,235,.12)">
             <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div class="ksb-set-row-txt">
@@ -1864,7 +1864,7 @@
 
       <!-- Bottom hint -->
       <div class="kie-welcome-hint">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path stroke="#b0b0c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
         Or type your own question below
       </div>
     </div>
@@ -1949,7 +1949,7 @@
           <div style="font-size:10px;font-weight:800;color:#4f46e5" id="kieFloatAlertLabel">KIE spotted something</div>
           <div style="font-size:12px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="kieFloatAlertMsg"></div>
         </div>
-        <button onclick="event.stopPropagation();dismissFloatAlert()" style="width:20px;height:20px;border:none;background:rgba(79,70,229,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0"><svg width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        <button onclick="event.stopPropagation();dismissFloatAlert()" style="width:20px;height:20px;border:none;background:rgba(37,99,235,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0"><svg width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
       </div>
     </div>
     <div class="kie-input-wrap">
@@ -2188,9 +2188,9 @@
       </div>
     </div>
 
-    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('jobmatch')" style="--tile-c:#16a34a;--tile-tint:#e8f6ed">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('jobmatch')" style="--tile-c:#059669;--tile-tint:#e8f6ed">
       <div class="mto-tile-top">
-        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
       </div>
       <div class="mto-tile-body">
         <div class="mto-tile-name">Job Match Analyzer</div>
@@ -2216,9 +2216,9 @@
       </div>
     </div>
 
-    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('resignation')" style="--tile-c:#e11d48;--tile-tint:#fce8ed">
+    <div class="mto-tile" data-cat="resume" onclick="closeMoreTools();openKieTool('resignation')" style="--tile-c:#ef4444;--tile-tint:#fce8ed">
       <div class="mto-tile-top">
-        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 19H6a2 2 0 01-2-2V7a2 2 0 012-2h5m8 10l-4-4m0 0l4-4m-4 4H9"/></svg></div>
+        <div class="mto-tile-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M11 19H6a2 2 0 01-2-2V7a2 2 0 012-2h5m8 10l-4-4m0 0l4-4m-4 4H9"/></svg></div>
       </div>
       <div class="mto-tile-body">
         <div class="mto-tile-name">Resignation Letter</div>
@@ -2512,8 +2512,8 @@
     <!-- Strengths + Weaknesses side by side -->
     <div class="analysis-grid">
       <div class="an-card">
-        <div class="an-card-title" style="color:#16a34a">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <div class="an-card-title" style="color:#059669">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
           Strengths
         </div>
         <div id="analysisStrengths"></div>
@@ -2593,7 +2593,7 @@
               <stop offset="100%" stop-color="#22d3ee"/>
             </linearGradient>
           </defs>
-          <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(79,70,229,.12)" stroke-width="4"/>
+          <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(37,99,235,.12)" stroke-width="4"/>
           <circle id="atsAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#atsAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
         </svg>
         <div class="opt-anim-orb-ring"></div>
@@ -2783,7 +2783,7 @@
                 <stop offset="100%" stop-color="#22d3ee"/>
               </linearGradient>
             </defs>
-            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(79,70,229,.12)" stroke-width="4"/>
+            <circle cx="64" cy="64" r="57" fill="none" stroke="rgba(37,99,235,.12)" stroke-width="4"/>
             <circle id="optAnimProgressRing" class="opt-anim-progress-ring" cx="64" cy="64" r="57" fill="none" stroke="url(#optAnimGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="358.14" stroke-dashoffset="358.14"/>
           </svg>
           <div class="opt-anim-orb-ring"></div>
